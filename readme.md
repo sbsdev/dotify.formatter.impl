@@ -1,9 +1,7 @@
 [![Build Status](https://travis-ci.org/brailleapps/dotify.formatter.impl.svg?branch=master)](https://travis-ci.org/brailleapps/dotify.formatter.impl)
 
 # dotify.formatter.impl #
-dotify.formatter.impl contains an implementation of the formatter interfaces of [dotify.api](https://github.com/joeha480/dotify/tree/master/dotify.api).
-
-[Here](http://joeha480.github.io/dotify.formatter.impl/tests/org.daisy.dotify.engine.impl.resource-files.tests-overview.html) are a few OBFL examples.
+dotify.formatter.impl contains an implementation of the formatter interfaces of [dotify.api](https://github.com/brailleapps/dotify.api).
 
 ## Using ##
 Download the [latest release](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.daisy.dotify%22%20%20a%3A%22dotify.formatter.impl%22) from maven central and add it to your runtime environment.
