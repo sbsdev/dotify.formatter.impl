@@ -508,6 +508,9 @@ public class ObflParser extends XMLParserBase {
 				report(event);
 			}
 		}
+		if (ret == null) {
+			ret = MarkerIndicatorRegion.ofWidth(width).build();
+		}
 		return ret;
 	}
 	

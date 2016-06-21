@@ -17,6 +17,11 @@ public class MarkerIndicatorTest extends AbstractFormatterEngineTest {
 		        "resource-files/dp2/empty-margin-region-expected.pef", false);
 	}
 	@Test
+	public void testEmptyMarginRegion2() throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
+		testPEF("resource-files/dp2/empty-margin-region2-input.obfl",
+		        "resource-files/dp2/empty-margin-region2-expected.pef", false);
+	}
+	@Test
 	public void testMarkerIndicator() throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
 		testPEF("resource-files/dp2/marker-indicator-input.obfl",
 		        "resource-files/dp2/marker-indicator-expected.pef", false);
