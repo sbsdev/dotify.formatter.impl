@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/brailleapps/dotify.formatter.impl.svg?branch=master)](https://travis-ci.org/brailleapps/dotify.formatter.impl)
+[![Type](https://img.shields.io/badge/type-service_bundle-blue.svg)](https://github.com/brailleapps/wiki/wiki/Types)
 
 # dotify.formatter.impl #
 dotify.formatter.impl contains an implementation of the formatter interfaces of [dotify.api](https://github.com/brailleapps/dotify.api).
