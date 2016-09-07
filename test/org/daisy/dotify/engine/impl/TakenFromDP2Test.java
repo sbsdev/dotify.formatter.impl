@@ -347,6 +347,12 @@ public class TakenFromDP2Test extends AbstractFormatterEngineTest {
 		testPEF("resource-files/dp2/block-underline-with-child-block-input.obfl",
 		        "resource-files/dp2/block-underline-with-child-block-expected.pef", false);
 	}
+	@Ignore // see https://github.com/joeha480/dotify/issues/195
+	@Test
+	public void testMarginRegionAndBorders() throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
+		testPEF("resource-files/dp2/margin-region-and-borders-input.obfl",
+		        "resource-files/dp2/margin-region-and-borders-expected.pef", true);
+	}
 	@Ignore // see https://github.com/joeha480/dotify/issues/196
 	@Test
 	public void testRowSpacingAndFooter() throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
