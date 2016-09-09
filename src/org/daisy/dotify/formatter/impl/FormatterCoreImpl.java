@@ -122,12 +122,32 @@ class FormatterCoreImpl extends Stack<Block> implements FormatterCore, BlockGrou
 		Block c = newBlock(blockId, rdp.build());
 		if (propsContext.size()>0) {
 			if (propsContext.peek().getBlockProperties().getListType()!=FormattingTypes.ListStyle.NONE) {
-				String listLabel;
+				String listLabel = p.getListItemLabel();
 				switch (propsContext.peek().getBlockProperties().getListType()) {
 				case OL:
-					listLabel = propsContext.peek().nextListNumber()+""; break;
+					Integer item = null;
+					if (listLabel!=null) {
+						try {
+							item = Integer.parseInt(listLabel);
+							propsContext.peek().setListNumber(item);
+						} catch (NumberFormatException e) {
+							logger.log(Level.FINE, "Failed to convert a list item label to an integer.", e);
+						}
+					} else {
+						item = propsContext.peek().nextListNumber();
+					}
+					if (item!=null) {
+						NumeralStyle f = propsContext.peek().getBlockProperties().getListNumberFormat();
+						listLabel = f.format(item.intValue());
+					}
+					break;
 				case UL:
-					listLabel = "•";
+					if (listLabel==null) {
+						listLabel = propsContext.peek().getBlockProperties().getDefaultListLabel();
+						if (listLabel==null) {
+							listLabel = "•";
+						}
+					}
 					break;
 				case PL: default:
 					listLabel = "";
