@@ -39,12 +39,12 @@ public class VolumeProvider {
 			@Override
 			public double getCost(List<Sheet> units, int index) {
 				int contentSheetTarget = targetSheetsInVolume - overhead;
-				Sheet lastSheet = units.get(index);
-				if (lastSheet.shouldStartNewVolume()) { 
+				if (units.size()>index+1 && units.get(index+1).shouldStartNewVolume()) { 
 					// The closer to 0 index is, the better. 
 					// By giving it a negative cost, it is always preferred over the options below.
 					return index-units.size();
 				} else {
+					Sheet lastSheet = units.get(index);
 					double priorityPenalty = 0;
 					int sheetCount = index + 1;
 					// Calculates a maximum offset based on the maximum possible number of sheets
