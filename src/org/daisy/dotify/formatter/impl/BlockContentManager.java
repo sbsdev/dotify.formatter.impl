@@ -27,8 +27,8 @@ import org.daisy.dotify.common.text.StringTools;
  * @author Joel Håkansson
  */
 class BlockContentManager extends AbstractBlockContentManager {
-	private final static Pattern softHyphenPattern  = Pattern.compile("\u00ad");
-	private final static Pattern trailingWsBraillePattern = Pattern.compile("[\\s\u2800]+\\z");
+	private static final Pattern softHyphenPattern  = Pattern.compile("\u00ad");
+	private static final Pattern trailingWsBraillePattern = Pattern.compile("[\\s\u2800]+\\z");
 
 	private final Stack<RowImpl> rows;
 	private final CrossReferenceHandler refs;

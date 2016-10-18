@@ -32,7 +32,7 @@ import org.daisy.dotify.formatter.impl.DefaultContext.Space;
  * @author Joel Håkansson
  */
 public class FormatterImpl implements Formatter {
-	private final static int DEFAULT_SPLITTER_MAX = 50;
+	private static final int DEFAULT_SPLITTER_MAX = 50;
 	
 	private final HashMap<String, TableOfContentsImpl> tocs;
 	private final Stack<VolumeTemplate> volumeTemplates;

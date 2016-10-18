@@ -30,8 +30,8 @@ import org.daisy.dotify.common.text.StringTools;
  * @author Joel Håkansson
  */
 class PageImpl implements Page {
-	private final static Pattern trailingWs = Pattern.compile("\\s*\\z");
-	private final static Pattern softHyphen = Pattern.compile("\u00ad");
+	private static final Pattern trailingWs = Pattern.compile("\\s*\\z");
+	private static final Pattern softHyphen = Pattern.compile("\u00ad");
 	private PageSequence parent;
 	private final LayoutMaster master;
 	private final FormatterContext fcontext;

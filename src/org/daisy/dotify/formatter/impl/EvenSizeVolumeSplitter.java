@@ -3,7 +3,7 @@ package org.daisy.dotify.formatter.impl;
 import java.util.logging.Logger;
 
 class EvenSizeVolumeSplitter implements VolumeSplitter {
-	private final static Logger logger = Logger.getLogger(EvenSizeVolumeSplitter.class.getCanonicalName());
+	private static final Logger logger = Logger.getLogger(EvenSizeVolumeSplitter.class.getCanonicalName());
 	private EvenSizeVolumeSplitterCalculator sdc;
 	private final SplitterLimit splitterMax;
 	int volumeOffset = 0;

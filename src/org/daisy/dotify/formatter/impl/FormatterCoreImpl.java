@@ -40,7 +40,7 @@ class FormatterCoreImpl extends Stack<Block> implements FormatterCore, BlockGrou
 	 * 
 	 */
 	private static final long serialVersionUID = -7775469339792146048L;
-	private final static Logger logger = Logger.getLogger(FormatterCoreImpl.class.getCanonicalName());
+	private static final Logger logger = Logger.getLogger(FormatterCoreImpl.class.getCanonicalName());
 	protected final Stack<AncestorContext> propsContext;
 	private Margin leftMargin;
 	private Margin rightMargin;
