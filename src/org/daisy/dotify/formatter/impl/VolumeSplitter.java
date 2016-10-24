@@ -12,4 +12,6 @@ interface VolumeSplitter {
 	public int sheetsInVolume(int volIndex);
 	
 	void adjustVolumeCount(int sheets);
+	
+	int getVolumeCount();
 }

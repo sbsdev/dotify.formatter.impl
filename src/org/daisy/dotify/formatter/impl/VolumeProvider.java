@@ -35,7 +35,7 @@ public class VolumeProvider {
 		this.fcontext = fcontext;
 		this.crh = crh;
 		this.volSplitter = new SplitPointHandler<>();
-		this.splitter = new EvenSizeVolumeSplitter(crh, splitterLimit);
+		this.splitter = new EvenSizeVolumeSplitter(splitterLimit);
 		
 		//FIXME: delete the following try/catch
 		//This code is here for compatibility with regression tests and can be removed once
@@ -44,6 +44,7 @@ public class VolumeProvider {
 			// make a preliminary calculation based on a contents only
 			List<Sheet> ps = new PageStructBuilder(fcontext, blocks, crh).paginate(new DefaultContext.Builder().space(Space.BODY).build());
 			splitter.updateSheetCount(ps.size());
+			crh.setVolumeCount(splitter.getVolumeCount());
 		} catch (PaginatorException e) {
 			throw new RuntimeException("Error while formatting.", e);
 		}
@@ -121,6 +122,7 @@ public class VolumeProvider {
 	
 	void update() {
 		splitter.updateSheetCount(countTotalSheets());
+		crh.setVolumeCount(splitter.getVolumeCount());
 	}
 	
 	void adjustVolumeCount() {

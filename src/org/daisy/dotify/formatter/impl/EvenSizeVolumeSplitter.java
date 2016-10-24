@@ -8,10 +8,8 @@ class EvenSizeVolumeSplitter implements VolumeSplitter {
 	private final SplitterLimit splitterMax;
 	int volumeOffset = 0;
 	int volsMin = Integer.MAX_VALUE;
-	private final CrossReferenceHandler vh;
 
-	EvenSizeVolumeSplitter(CrossReferenceHandler vh, SplitterLimit splitterMax) {
-		this.vh = vh;
+	EvenSizeVolumeSplitter(SplitterLimit splitterMax) {
 		this.splitterMax = splitterMax;
 	}
 	
@@ -28,7 +26,6 @@ class EvenSizeVolumeSplitter implements VolumeSplitter {
 		volsMin = Math.min(esc.getVolumeCount(), volsMin);
 		
 		sdc = esc;
-		vh.setVolumeCount(sdc.getVolumeCount());
 	}
 	
 	@Override
@@ -48,5 +45,10 @@ class EvenSizeVolumeSplitter implements VolumeSplitter {
 	@Override
 	public int sheetsInVolume(int volIndex) {
 		return sdc.sheetsInVolume(volIndex);
+	}
+
+	@Override
+	public int getVolumeCount() {
+		return sdc.getVolumeCount();
 	}
 }
