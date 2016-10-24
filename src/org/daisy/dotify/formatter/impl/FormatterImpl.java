@@ -136,71 +136,42 @@ public class FormatterImpl implements Formatter {
 	}
 
 	private Iterable<? extends Volume> getVolumes() {
-		int totalOverheadCount = 0;
-		SplitterLimit splitterLimit = new VolumeSplitterLimit();
-		VolumeSplitter splitter = new EvenSizeVolumeSplitter(crh, splitterLimit);
+		VolumeProvider volumeProvider = new VolumeProvider(blocks, new VolumeSplitterLimit(), context.getFormatterContext(), crh);
+
 		ArrayList<VolumeImpl> ret;
 		ArrayList<AnchorData> ad;
-		//FIXME: delete the following try/catch
-		//This code is here for compatibility with regression tests and can be removed once
-		//differences have been checked and accepted
-		try {
-			// make a preliminary calculation based on a contents only
-			List<Sheet> ps = new PageStructBuilder(context.getFormatterContext(), blocks, crh).paginate(new DefaultContext.Builder().space(Space.BODY).build());
-			splitter.updateSheetCount(ps.size() + totalOverheadCount);
-		} catch (PaginatorException e) {
-			throw new RuntimeException("Error while formatting.", e);
-		}
-		
-		for (int j=1;j<=10;j++) {
-			int sheetCount = 0;
-			totalOverheadCount = 0;
-			ret = new ArrayList<>();
-			
-			VolumeProvider volumeProvider = new VolumeProvider(new PageStructBuilder(context.getFormatterContext(), blocks, crh), crh, new DefaultContext.Builder().space(Space.BODY).build());
 
+		for (int j=1;j<=10;j++) {
+			ret = new ArrayList<>();
+			volumeProvider.prepare();
 			for (int i=1;i<= crh.getVolumeCount();i++) {
 				VolumeImpl volume = getVolume(i);
 				ad = new ArrayList<>();
-
 				volume.setPreVolData(updateVolumeContents(i, ad, true));
-
-				totalOverheadCount += volume.getOverhead();
-
-				{
-					int split = splitterLimit.getSplitterLimit(i);
-					List<Sheet> contents = volumeProvider.nextVolume(
-							(i==crh.getVolumeCount()?split:splitter.sheetsInVolume(i)),
-							volume.getOverhead(),
-							split, ad
-							);
-					
-					volume.setBody(contents);
-					sheetCount += volume.getBodySize();
+				volume.setBody(volumeProvider.nextVolume(volume.getOverhead(), ad));
+				
+				if (logger.isLoggable(Level.FINE)) {
 					logger.fine("Sheets  in volume " + i + ": " + (volume.getVolumeSize()) + 
 							", content:" + volume.getBodySize() +
 							", overhead:" + volume.getOverhead());
-					
-					volume.setPostVolData(updateVolumeContents(i, ad, false));
-					crh.setSheetsInVolume(i, volume.getBodySize() + volume.getOverhead());
-					//crh.setPagesInVolume(i, value);
-					crh.setAnchorData(i, ad);
-
-					ret.add(volume);
 				}
+				volume.setPostVolData(updateVolumeContents(i, ad, false));
+				crh.setSheetsInVolume(i, volume.getBodySize() + volume.getOverhead());
+				//crh.setPagesInVolume(i, value);
+				crh.setAnchorData(i, ad);
+				ret.add(volume);
 			}
-			int pagesRemaining = 0;
-			if (volumeProvider.hasNext()) {
-				sheetCount += volumeProvider.getRemaining().size();
-				pagesRemaining += countPages(volumeProvider.getRemaining());
-			}
-			crh.setSheetsInDocument(sheetCount + totalOverheadCount);
+
+			volumeProvider.update();
+			crh.setSheetsInDocument(volumeProvider.countTotalSheets());
 			//crh.setPagesInDocument(value);
-			splitter.updateSheetCount(sheetCount + totalOverheadCount);
 			if (volumeProvider.hasNext()) {
-				logger.fine("There is more content... sheets: " + volumeProvider.getRemaining() + ", pages: " +pagesRemaining);
+				if (logger.isLoggable(Level.FINE)) {
+					int pagesRemaining = volumeProvider.countRemainingPages();
+					logger.fine("There is more content... sheets: " + volumeProvider.getRemaining() + ", pages: " +pagesRemaining);
+				}
 				if (!isDirty() && j>1) {
-					splitter.adjustVolumeCount(sheetCount+totalOverheadCount);
+					volumeProvider.adjustVolumeCount();
 				}
 			}
 			if (!isDirty() && !volumeProvider.hasNext()) {
@@ -212,14 +183,6 @@ public class FormatterImpl implements Formatter {
 			}
 		}
 		throw new RuntimeException("Failed to complete volume division.");
-	}
-	
-	static int countPages(List<Sheet> sheets) {
-		int ret = 0;
-		for (Sheet s : sheets) {
-			ret += s.getPages().size();
-		}
-		return ret;
 	}
 
 	private List<Sheet> updateVolumeContents(int volumeNumber, ArrayList<AnchorData> ad, boolean pre) {

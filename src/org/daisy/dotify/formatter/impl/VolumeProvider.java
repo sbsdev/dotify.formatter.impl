@@ -6,6 +6,7 @@ import java.util.List;
 import org.daisy.dotify.common.layout.SplitPoint;
 import org.daisy.dotify.common.layout.SplitPointCost;
 import org.daisy.dotify.common.layout.SplitPointHandler;
+import org.daisy.dotify.formatter.impl.DefaultContext.Space;
 
 /**
  * Provides contents for a volume 
@@ -13,28 +14,59 @@ import org.daisy.dotify.common.layout.SplitPointHandler;
  *
  */
 public class VolumeProvider {
+	private final Iterable<BlockSequence> blocks;
+	private final FormatterContext fcontext;
+	private final  CrossReferenceHandler crh;
 	private List<Sheet> units;
 	private final SplitPointHandler<Sheet> volSplitter;
-	private final  CrossReferenceHandler crh;
-	private final PageStructBuilder contentPaginator;
-	//PageStruct ps;
+	
+	private PageStructBuilder contentPaginator;
 	private int pageIndex = 0;
-	//private int totalPageCount = 0;
 	private int i=0;
+	
+	private final SplitterLimit splitterLimit;
+	private final VolumeSplitter splitter;
+	private int totalOverheadCount = 0;
+	private int sheetCount = 0;
 
-	public VolumeProvider(PageStructBuilder contentPaginator, CrossReferenceHandler crh, DefaultContext rcontext) {
+	public VolumeProvider(Iterable<BlockSequence> blocks, SplitterLimit splitterLimit, FormatterContext fcontext, CrossReferenceHandler crh) {
+		this.blocks = blocks;
+		this.splitterLimit = splitterLimit;
+		this.fcontext = fcontext;
 		this.crh = crh;
-		this.contentPaginator = contentPaginator;
 		this.volSplitter = new SplitPointHandler<>();
+		this.splitter = new EvenSizeVolumeSplitter(crh, splitterLimit);
+		
+		//FIXME: delete the following try/catch
+		//This code is here for compatibility with regression tests and can be removed once
+		//differences have been checked and accepted
 		try {
-			units = contentPaginator.paginate(rcontext);
+			// make a preliminary calculation based on a contents only
+			List<Sheet> ps = new PageStructBuilder(fcontext, blocks, crh).paginate(new DefaultContext.Builder().space(Space.BODY).build());
+			splitter.updateSheetCount(ps.size());
 		} catch (PaginatorException e) {
-			throw new RuntimeException("Error while reformatting.", e);
+			throw new RuntimeException("Error while formatting.", e);
 		}
 	}
 	
-	List<Sheet> nextVolume(final int targetSheetsInVolume, final int overhead, final int splitterMax, ArrayList<AnchorData> ad) {
+	void prepare() {
+		contentPaginator = new PageStructBuilder(fcontext, blocks, crh);
+		try {
+			units = contentPaginator.paginate(new DefaultContext.Builder().space(Space.BODY).build());
+		} catch (PaginatorException e) {
+			throw new RuntimeException("Error while reformatting.", e);
+		}
+		pageIndex = 0;
+		i=0;
+		totalOverheadCount = 0;
+		sheetCount = 0;
+	}
+	
+	List<Sheet> nextVolume(final int overhead, ArrayList<AnchorData> ad) {
 		i++;
+		totalOverheadCount += overhead;
+		final int splitterMax = splitterLimit.getSplitterLimit(i);
+		final int targetSheetsInVolume = (i==crh.getVolumeCount()?splitterMax:splitter.sheetsInVolume(i));
 		volSplitter.setCost(new SplitPointCost<Sheet>(){
 			@Override
 			public double getCost(List<Sheet> units, int index) {
@@ -68,7 +100,7 @@ public class VolumeProvider {
 		SplitPoint<Sheet> sp = getSplitPoint(splitterMax-overhead);
 		units = sp.getTail();
 		List<Sheet> contents = sp.getHead();
-		int pageCount = FormatterImpl.countPages(contents);
+		int pageCount = countPages(contents);
 		// TODO: In a volume-by-volume scenario, how can we make this work
 		contentPaginator.setVolumeScope(i, pageIndex, pageIndex+pageCount); 
 		pageIndex += pageCount;
@@ -83,7 +115,24 @@ public class VolumeProvider {
 				}
 			}
 		}
+		sheetCount += contents.size();
 		return contents;
+	}
+	
+	void update() {
+		splitter.updateSheetCount(countTotalSheets());
+	}
+	
+	void adjustVolumeCount() {
+		splitter.adjustVolumeCount(countTotalSheets());
+	}
+	
+	int countTotalSheets() {
+		return sheetCount + totalOverheadCount + getRemaining().size();
+	}
+	
+	int countRemainingPages() {
+		return countPages(getRemaining());
 	}
 	
 	/**
@@ -131,5 +180,12 @@ public class VolumeProvider {
 		return units;
 	}
 
+	static int countPages(List<Sheet> sheets) {
+		int ret = 0;
+		for (Sheet s : sheets) {
+			ret += s.getPages().size();
+		}
+		return ret;
+	}
 
 }
