@@ -136,14 +136,10 @@ public class FormatterImpl implements Formatter {
 	}
 
 	private Iterable<? extends Volume> getVolumes() {
-
-		int j = 1;
-		boolean ok = false;
 		int totalOverheadCount = 0;
-		
 		SplitterLimit splitterLimit = new VolumeSplitterLimit();
 		VolumeSplitter splitter = new EvenSizeVolumeSplitter(crh, splitterLimit);
-		ArrayList<VolumeImpl> ret = new ArrayList<>();
+		ArrayList<VolumeImpl> ret;
 		ArrayList<AnchorData> ad;
 		//FIXME: delete the following try/catch
 		//This code is here for compatibility with regression tests and can be removed once
@@ -156,10 +152,8 @@ public class FormatterImpl implements Formatter {
 			throw new RuntimeException("Error while formatting.", e);
 		}
 		
-		while (!ok) {
+		for (int j=1;j<=10;j++) {
 			int sheetCount = 0;
-			//System.out.println("volcount "+volumeCount() + " sheets " + sheets);
-			boolean ok2 = true;
 			totalOverheadCount = 0;
 			ret = new ArrayList<>();
 			
@@ -195,33 +189,29 @@ public class FormatterImpl implements Formatter {
 					ret.add(volume);
 				}
 			}
-			int totalPageCount = volumeProvider.getTotalPageCount();
+			int pagesRemaining = 0;
 			if (volumeProvider.hasNext()) {
 				sheetCount += volumeProvider.getRemaining().size();
-				totalPageCount += countPages(volumeProvider.getRemaining());
+				pagesRemaining += countPages(volumeProvider.getRemaining());
 			}
 			crh.setSheetsInDocument(sheetCount + totalOverheadCount);
 			//crh.setPagesInDocument(value);
 			splitter.updateSheetCount(sheetCount + totalOverheadCount);
 			if (volumeProvider.hasNext()) {
-				ok2 = false;
-				logger.fine("There is more content... sheets: " + volumeProvider.getRemaining() + ", pages: " +(totalPageCount-volumeProvider.getPageIndex()));
+				logger.fine("There is more content... sheets: " + volumeProvider.getRemaining() + ", pages: " +pagesRemaining);
 				if (!isDirty() && j>1) {
 					splitter.adjustVolumeCount(sheetCount+totalOverheadCount);
 				}
 			}
-			if (!isDirty() && volumeProvider.getPageIndex()==totalPageCount && ok2) {
+			if (!isDirty() && !volumeProvider.hasNext()) {
 				//everything fits
-				ok = true;
-			} else if (j>9) {
-				throw new RuntimeException("Failed to complete volume division.");
+				return ret;
 			} else {
-				j++;
 				setDirty(false);
 				logger.info("Things didn't add up, running another iteration (" + j + ")");
 			}
 		}
-		return ret;
+		throw new RuntimeException("Failed to complete volume division.");
 	}
 	
 	static int countPages(List<Sheet> sheets) {

@@ -91,15 +91,6 @@ public class VolumeProvider {
 	 * @return the number of pages
 	 */
 	int getTotalPageCount() {
-		//return totalPageCount;
-		return pageIndex;
-	}
-	
-	/**
-	 * Gets the current page index.
-	 * @return returns the page index
-	 */
-	int getPageIndex() {
 		return pageIndex;
 	}
 	
