@@ -1,21 +1,37 @@
 package org.daisy.dotify.formatter.impl;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-public class SheetGroupManager {
+class SheetGroupManager {
+	private final SplitterLimit splitterLimit;
 	private final List<SheetGroup> groups;
+	private int indexInGroup = 0;
 	private int index = 0;
+	
+	SheetGroupManager(SplitterLimit splitterLimit) {
+		this.groups = new ArrayList<>();
+		this.splitterLimit = splitterLimit;
+	}
 
-	public SheetGroupManager(List<SheetGroup> groups) {
-		this.groups = new ArrayList<>(groups);
+	SheetGroup add() {
+		SheetGroup ret = new SheetGroup();
+		ret.setSplitter(new EvenSizeVolumeSplitter(new SplitterLimit() {
+			private final int groupIndex = groups.size();
+			
+			@Override
+			public int getSplitterLimit(int volume) {
+				int offset = 0;
+				for (int i=0; i<groupIndex; i++) {
+					offset += groups.get(i).getSplitter().getVolumeCount();
+				}
+				return splitterLimit.getSplitterLimit(volume + offset);
+			}
+		}));
+		groups.add(ret);
+		return ret;
 	}
-	
-	public SheetGroupManager(SheetGroup ... groups) {
-		this.groups = Arrays.asList(groups);
-	}
-	
+		
 	SheetGroup atIndex(int index) {
 		return groups.get(index);
 	}
@@ -28,8 +44,28 @@ public class SheetGroupManager {
 		return groups.get(index);
 	}
 	
+	void nextVolume() {
+		if (indexInGroup+1>=currentGroup().getSplitter().getVolumeCount()) {
+			nextGroup();
+			indexInGroup = 0;
+		} else {
+			indexInGroup++;
+		}
+	}
+	
+	boolean lastInGroup() {
+		return indexInGroup==currentGroup().getSplitter().getVolumeCount();
+	}
+
+	int sheetsInCurrentVolume() {
+		return currentGroup().getSplitter().sheetsInVolume(1+indexInGroup);
+	}
+	
 	void nextGroup() {
 		index++;
+		if (groups.size()<index) {
+			throw new IllegalStateException("No more groups.");
+		}
 	}
 	
 	void resetAll() {
@@ -37,6 +73,7 @@ public class SheetGroupManager {
 			g.reset();
 		}
 		index = 0;
+		indexInGroup = 0;
 	}
 	
 	boolean hasNext() {

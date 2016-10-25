@@ -2,14 +2,18 @@ package org.daisy.dotify.formatter.impl;
 
 import java.util.List;
 
-public class SheetGroup {
+/**
+ * Provides a list of sheets.
+ * @author Joel Håkansson
+ *
+ */
+class SheetGroup {
 	private List<Sheet> units;
-	private final VolumeSplitter splitter;
+	private VolumeSplitter splitter;
 	private int overheadCount;
 	private int sheetCount;
 
-	public SheetGroup(VolumeSplitter splitter) {
-		this.splitter = splitter;
+	SheetGroup() {
 		reset();
 	}
 	
@@ -40,6 +44,10 @@ public class SheetGroup {
 
 	void setUnits(List<Sheet> units) {
 		this.units = units;
+	}
+	
+	void setSplitter(VolumeSplitter splitter) {
+		this.splitter = splitter;
 	}
 
 	VolumeSplitter getSplitter() {

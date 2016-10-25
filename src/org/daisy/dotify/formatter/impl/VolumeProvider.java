@@ -22,7 +22,7 @@ public class VolumeProvider {
 	
 	private PageStructBuilder contentPaginator;
 	private int pageIndex = 0;
-	private int i=0;
+	private int currentVolumeNumber=0;
 	
 	private final SplitterLimit splitterLimit;
 
@@ -32,17 +32,26 @@ public class VolumeProvider {
 		this.fcontext = fcontext;
 		this.crh = crh;
 		this.volSplitter = new SplitPointHandler<>();
-		this.groups = new SheetGroupManager(new SheetGroup(new EvenSizeVolumeSplitter(splitterLimit)));
 		
+		this.groups = new SheetGroupManager(splitterLimit);
+		init();
+	}
+	
+	private void init() {
 		//FIXME: delete the following try/catch
 		//This code is here for compatibility with regression tests and can be removed once
 		//differences have been checked and accepted
 		try {
 			// make a preliminary calculation based on a contents only
-			List<Sheet> ps = new PageStructBuilder(fcontext, blocks, crh).paginate(new DefaultContext.Builder().space(Space.BODY).build());
-			groups.atIndex(0).setUnits(ps);
-			groups.atIndex(0).getSplitter().updateSheetCount(ps.size());
-			crh.setVolumeCount(groups.atIndex(0).getSplitter().getVolumeCount());
+			List<List<Sheet>> allUnits = new PageStructBuilder(fcontext, blocks, crh).paginateGrouped(new DefaultContext.Builder().space(Space.BODY).build());
+			int volCount = 0;
+			for (int i=0; i<allUnits.size(); i++) {
+				SheetGroup g = groups.add();
+				g.setUnits(allUnits.get(i));
+				g.getSplitter().updateSheetCount(allUnits.get(i).size());
+				volCount += g.getSplitter().getVolumeCount();
+			}
+			crh.setVolumeCount(volCount);
 		} catch (PaginatorException e) {
 			throw new RuntimeException("Error while formatting.", e);
 		}
@@ -51,21 +60,24 @@ public class VolumeProvider {
 	void prepare() {
 		contentPaginator = new PageStructBuilder(fcontext, blocks, crh);
 		try {
-			groups.atIndex(0).setUnits(contentPaginator.paginate(new DefaultContext.Builder().space(Space.BODY).build()));
+			List<List<Sheet>> allUnits = contentPaginator.paginateGrouped(new DefaultContext.Builder().space(Space.BODY).build());
+			for (int i=0; i<allUnits.size(); i++) {
+				groups.atIndex(i).setUnits(allUnits.get(i));
+			}
 		} catch (PaginatorException e) {
 			throw new RuntimeException("Error while reformatting.", e);
 		}
 		pageIndex = 0;
-		i=0;
+		currentVolumeNumber=0;
 
 		groups.resetAll();
 	}
 	
 	List<Sheet> nextVolume(final int overhead, ArrayList<AnchorData> ad) {
-		i++;
+		currentVolumeNumber++;
 		groups.currentGroup().setOverheadCount(groups.currentGroup().getOverheadCount() + overhead);
-		final int splitterMax = splitterLimit.getSplitterLimit(i);
-		final int targetSheetsInVolume = (i==crh.getVolumeCount()?splitterMax:groups.currentGroup().getSplitter().sheetsInVolume(i));
+		final int splitterMax = splitterLimit.getSplitterLimit(currentVolumeNumber);
+		final int targetSheetsInVolume = (groups.lastInGroup()?splitterMax:groups.sheetsInCurrentVolume());
 		volSplitter.setCost(new SplitPointCost<Sheet>(){
 			@Override
 			public double getCost(List<Sheet> units, int index) {
@@ -101,13 +113,12 @@ public class VolumeProvider {
 		List<Sheet> contents = sp.getHead();
 		int pageCount = countPages(contents);
 		// TODO: In a volume-by-volume scenario, how can we make this work
-		contentPaginator.setVolumeScope(i, pageIndex, pageIndex+pageCount); 
+		contentPaginator.setVolumeScope(currentVolumeNumber, pageIndex, pageIndex+pageCount); 
 		pageIndex += pageCount;
-		//totalPageCount += pageCount;
 		for (Sheet sheet : contents) {
 			for (PageImpl p : sheet.getPages()) {
 				for (String id : p.getIdentifiers()) {
-					crh.setVolumeNumber(id, i);
+					crh.setVolumeNumber(id, currentVolumeNumber);
 				}
 				if (p.getAnchors().size()>0) {
 					ad.add(new AnchorData(p.getPageIndex(), p.getAnchors()));
@@ -115,16 +126,20 @@ public class VolumeProvider {
 			}
 		}
 		groups.currentGroup().setSheetCount(groups.currentGroup().getSheetCount() + contents.size());
+		groups.nextVolume();
 		return contents;
 	}
 	
 	void update() {
 		groups.updateAll();
-		crh.setVolumeCount(groups.getVolumeCount());
 	}
 	
 	void adjustVolumeCount() {
 		groups.adjustVolumeCount();
+	}
+	
+	int getVolumeCount() {
+		return groups.getVolumeCount();
 	}
 	
 	int countTotalSheets() {
@@ -148,32 +163,7 @@ public class VolumeProvider {
 	}
 	
 	private SplitPoint<Sheet> getSplitPoint(int contentSheets) {
-		if (groups.currentGroup().getUnits().size()<=contentSheets) {
-			SplitPoint<Sheet> ret = findManualVolumeBreak(contentSheets);
-			if (ret!=null) {
-				return ret;
-			}
-		}
 		return volSplitter.split(contentSheets, true, groups.currentGroup().getUnits());
-	}
-	
-	/**
-	 * Since the cost function isn't used when units.size()<=contentSheets, we need this code in that case. 
-	 * @param contentSheets
-	 * @return returns the split point, or null if not found
-	 */
-	private SplitPoint<Sheet> findManualVolumeBreak(int contentSheets) {
-		int i = 0;
-		for (Sheet s : groups.currentGroup().getUnits()) {
-			if (s.shouldStartNewVolume() && i>0) {
-				return new SplitPoint<Sheet>(groups.currentGroup().getUnits().subList(0, i), null, groups.currentGroup().getUnits().subList(i, groups.currentGroup().getUnits().size()), null, false);
-			}
-			if (i>=contentSheets) {
-				break;
-			}
-			i++;
-		}
-		return null;
 	}
 	
 	boolean hasNext() {

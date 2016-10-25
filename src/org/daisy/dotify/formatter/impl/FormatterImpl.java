@@ -163,6 +163,7 @@ public class FormatterImpl implements Formatter {
 			}
 
 			volumeProvider.update();
+			crh.setVolumeCount(volumeProvider.getVolumeCount());
 			crh.setSheetsInDocument(volumeProvider.countTotalSheets());
 			//crh.setPagesInDocument(value);
 			if (volumeProvider.hasNext()) {
