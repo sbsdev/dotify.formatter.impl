@@ -22,6 +22,7 @@
       <pre-content>
          <toc-sequence master="master" range="volume" toc="toc"/>
       </pre-content>
+   	<post-content/>
    </volume-template>
    <sequence master="master">
       <block id="a">⠿⠿⠿⠿⠿</block>

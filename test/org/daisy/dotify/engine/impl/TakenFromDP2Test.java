@@ -364,4 +364,10 @@ public class TakenFromDP2Test extends AbstractFormatterEngineTest {
 		testPEF("resource-files/dp2/row-spacing-and-footer-input.obfl",
 		        "resource-files/dp2/row-spacing-and-footer-expected.pef", true);
 	}
+	
+	@Test
+	public void testManualVolumeBreakingTOC() throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
+		testPEF("resource-files/dp2/manual-volume-breaking-toc-input.obfl",
+		        "resource-files/dp2/manual-volume-breaking-toc-expected.pef", false);
+	}
 }
