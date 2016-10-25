@@ -17,7 +17,7 @@ public class VolumeProvider {
 	private final Iterable<BlockSequence> blocks;
 	private final FormatterContext fcontext;
 	private final  CrossReferenceHandler crh;
-	private List<Sheet> units;
+	private final SheetGroupManager groups;
 	private final SplitPointHandler<Sheet> volSplitter;
 	
 	private PageStructBuilder contentPaginator;
@@ -25,9 +25,6 @@ public class VolumeProvider {
 	private int i=0;
 	
 	private final SplitterLimit splitterLimit;
-	private final VolumeSplitter splitter;
-	private int totalOverheadCount = 0;
-	private int sheetCount = 0;
 
 	public VolumeProvider(Iterable<BlockSequence> blocks, SplitterLimit splitterLimit, FormatterContext fcontext, CrossReferenceHandler crh) {
 		this.blocks = blocks;
@@ -35,7 +32,7 @@ public class VolumeProvider {
 		this.fcontext = fcontext;
 		this.crh = crh;
 		this.volSplitter = new SplitPointHandler<>();
-		this.splitter = new EvenSizeVolumeSplitter(splitterLimit);
+		this.groups = new SheetGroupManager(new SheetGroup(new EvenSizeVolumeSplitter(splitterLimit)));
 		
 		//FIXME: delete the following try/catch
 		//This code is here for compatibility with regression tests and can be removed once
@@ -43,8 +40,9 @@ public class VolumeProvider {
 		try {
 			// make a preliminary calculation based on a contents only
 			List<Sheet> ps = new PageStructBuilder(fcontext, blocks, crh).paginate(new DefaultContext.Builder().space(Space.BODY).build());
-			splitter.updateSheetCount(ps.size());
-			crh.setVolumeCount(splitter.getVolumeCount());
+			groups.atIndex(0).setUnits(ps);
+			groups.atIndex(0).getSplitter().updateSheetCount(ps.size());
+			crh.setVolumeCount(groups.atIndex(0).getSplitter().getVolumeCount());
 		} catch (PaginatorException e) {
 			throw new RuntimeException("Error while formatting.", e);
 		}
@@ -53,21 +51,21 @@ public class VolumeProvider {
 	void prepare() {
 		contentPaginator = new PageStructBuilder(fcontext, blocks, crh);
 		try {
-			units = contentPaginator.paginate(new DefaultContext.Builder().space(Space.BODY).build());
+			groups.atIndex(0).setUnits(contentPaginator.paginate(new DefaultContext.Builder().space(Space.BODY).build()));
 		} catch (PaginatorException e) {
 			throw new RuntimeException("Error while reformatting.", e);
 		}
 		pageIndex = 0;
 		i=0;
-		totalOverheadCount = 0;
-		sheetCount = 0;
+
+		groups.resetAll();
 	}
 	
 	List<Sheet> nextVolume(final int overhead, ArrayList<AnchorData> ad) {
 		i++;
-		totalOverheadCount += overhead;
+		groups.currentGroup().setOverheadCount(groups.currentGroup().getOverheadCount() + overhead);
 		final int splitterMax = splitterLimit.getSplitterLimit(i);
-		final int targetSheetsInVolume = (i==crh.getVolumeCount()?splitterMax:splitter.sheetsInVolume(i));
+		final int targetSheetsInVolume = (i==crh.getVolumeCount()?splitterMax:groups.currentGroup().getSplitter().sheetsInVolume(i));
 		volSplitter.setCost(new SplitPointCost<Sheet>(){
 			@Override
 			public double getCost(List<Sheet> units, int index) {
@@ -99,7 +97,7 @@ public class VolumeProvider {
 				}
 			}});
 		SplitPoint<Sheet> sp = getSplitPoint(splitterMax-overhead);
-		units = sp.getTail();
+		groups.currentGroup().setUnits(sp.getTail());
 		List<Sheet> contents = sp.getHead();
 		int pageCount = countPages(contents);
 		// TODO: In a volume-by-volume scenario, how can we make this work
@@ -116,25 +114,29 @@ public class VolumeProvider {
 				}
 			}
 		}
-		sheetCount += contents.size();
+		groups.currentGroup().setSheetCount(groups.currentGroup().getSheetCount() + contents.size());
 		return contents;
 	}
 	
 	void update() {
-		splitter.updateSheetCount(countTotalSheets());
-		crh.setVolumeCount(splitter.getVolumeCount());
+		groups.updateAll();
+		crh.setVolumeCount(groups.getVolumeCount());
 	}
 	
 	void adjustVolumeCount() {
-		splitter.adjustVolumeCount(countTotalSheets());
+		groups.adjustVolumeCount();
 	}
 	
 	int countTotalSheets() {
-		return sheetCount + totalOverheadCount + getRemaining().size();
+		return groups.countTotalSheets();
 	}
 	
 	int countRemainingPages() {
-		return countPages(getRemaining());
+		return groups.countRemainingPages();
+	}
+	
+	int countRemainingSheets() {
+		return groups.countRemainingSheets();
 	}
 	
 	/**
@@ -146,13 +148,13 @@ public class VolumeProvider {
 	}
 	
 	private SplitPoint<Sheet> getSplitPoint(int contentSheets) {
-		if (units.size()<=contentSheets) {
+		if (groups.currentGroup().getUnits().size()<=contentSheets) {
 			SplitPoint<Sheet> ret = findManualVolumeBreak(contentSheets);
 			if (ret!=null) {
 				return ret;
 			}
 		}
-		return volSplitter.split(contentSheets, true, units);
+		return volSplitter.split(contentSheets, true, groups.currentGroup().getUnits());
 	}
 	
 	/**
@@ -162,9 +164,9 @@ public class VolumeProvider {
 	 */
 	private SplitPoint<Sheet> findManualVolumeBreak(int contentSheets) {
 		int i = 0;
-		for (Sheet s : units) {
+		for (Sheet s : groups.currentGroup().getUnits()) {
 			if (s.shouldStartNewVolume() && i>0) {
-				return new SplitPoint<Sheet>(units.subList(0, i), null, units.subList(i, units.size()), null, false);
+				return new SplitPoint<Sheet>(groups.currentGroup().getUnits().subList(0, i), null, groups.currentGroup().getUnits().subList(i, groups.currentGroup().getUnits().size()), null, false);
 			}
 			if (i>=contentSheets) {
 				break;
@@ -175,11 +177,7 @@ public class VolumeProvider {
 	}
 	
 	boolean hasNext() {
-		return !units.isEmpty();
-	}
-	
-	List<Sheet> getRemaining() {
-		return units;
+		return groups.hasNext();
 	}
 
 	static int countPages(List<Sheet> sheets) {

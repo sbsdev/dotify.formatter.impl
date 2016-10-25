@@ -167,8 +167,7 @@ public class FormatterImpl implements Formatter {
 			//crh.setPagesInDocument(value);
 			if (volumeProvider.hasNext()) {
 				if (logger.isLoggable(Level.FINE)) {
-					int pagesRemaining = volumeProvider.countRemainingPages();
-					logger.fine("There is more content... sheets: " + volumeProvider.getRemaining() + ", pages: " +pagesRemaining);
+					logger.fine("There is more content (sheets: " + volumeProvider.countRemainingSheets() + ", pages: " + volumeProvider.countRemainingPages() + ")");
 				}
 				if (!isDirty() && j>1) {
 					volumeProvider.adjustVolumeCount();
