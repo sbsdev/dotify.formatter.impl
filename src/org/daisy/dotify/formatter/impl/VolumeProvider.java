@@ -9,7 +9,8 @@ import org.daisy.dotify.common.layout.SplitPointHandler;
 import org.daisy.dotify.formatter.impl.DefaultContext.Space;
 
 /**
- * Provides contents for a volume 
+ * Provides contents in volumes.
+ *  
  * @author Joel Håkansson
  *
  */
@@ -26,6 +27,13 @@ public class VolumeProvider {
 	
 	private final SplitterLimit splitterLimit;
 
+	/**
+	 * Creates a new volume provider with the specifed parameters
+	 * @param blocks the block sequences
+	 * @param splitterLimit the splitter limit
+	 * @param fcontext the formatter context
+	 * @param crh the cross reference handler
+	 */
 	public VolumeProvider(Iterable<BlockSequence> blocks, SplitterLimit splitterLimit, FormatterContext fcontext, CrossReferenceHandler crh) {
 		this.blocks = blocks;
 		this.splitterLimit = splitterLimit;
@@ -57,6 +65,9 @@ public class VolumeProvider {
 		}
 	}
 	
+	/**
+	 * Resets the volume provider to its initial state (with some information preserved). 
+	 */
 	void prepare() {
 		contentPaginator = new PageStructBuilder(fcontext, blocks, crh);
 		try {
@@ -73,6 +84,12 @@ public class VolumeProvider {
 		groups.resetAll();
 	}
 	
+	/**
+	 * Gets the contents of the next volume
+	 * @param overhead the number of sheets in this volume that's not part of the main body of text
+	 * @param ad the anchor data
+	 * @return returns the contents of the next volume
+	 */
 	List<Sheet> nextVolume(final int overhead, ArrayList<AnchorData> ad) {
 		currentVolumeNumber++;
 		groups.currentGroup().setOverheadCount(groups.currentGroup().getOverheadCount() + overhead);
@@ -130,26 +147,49 @@ public class VolumeProvider {
 		return contents;
 	}
 	
+	/**
+	 * Informs the volume provider that the caller has finished requesting volumes.  
+	 */
 	void update() {
 		groups.updateAll();
+		//TODO: call adjustVolumeCount from here and remove it from the caller's responsibility
 	}
 	
+	/**
+	 * Informs the volume provider to adjust its volume calculation.
+	 */
 	void adjustVolumeCount() {
 		groups.adjustVolumeCount();
 	}
 	
+	/**
+	 * Gets the total number of volumes.
+	 * @return returns the number of volumes
+	 */
 	int getVolumeCount() {
 		return groups.getVolumeCount();
 	}
 	
+	/**
+	 * Counts the total number of sheets.
+	 * @return returns the total number of sheets.
+	 */
 	int countTotalSheets() {
 		return groups.countTotalSheets();
 	}
 	
+	/**
+	 * Counts the remaining pages.
+	 * @return returns the number of remaining pages
+	 */
 	int countRemainingPages() {
 		return groups.countRemainingPages();
 	}
 	
+	/**
+	 * Counts the remaining sheets.
+	 * @return returns the number of remaining sheets
+	 */
 	int countRemainingSheets() {
 		return groups.countRemainingSheets();
 	}
@@ -166,10 +206,19 @@ public class VolumeProvider {
 		return volSplitter.split(contentSheets, true, groups.currentGroup().getUnits());
 	}
 	
+	/**
+	 * Returns true if there is content left or left behind.
+	 * @return returns true if there is more content, false otherwise
+	 */
 	boolean hasNext() {
 		return groups.hasNext();
 	}
 
+	/**
+	 * Counts the number of pages
+	 * @param sheets the list of sheets to count
+	 * @return returns the number of pages
+	 */
 	static int countPages(List<Sheet> sheets) {
 		int ret = 0;
 		for (Sheet s : sheets) {
