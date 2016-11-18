@@ -43,7 +43,7 @@ the OBFL and PEF files need to be placed in
 to the pattern `foo-input.obfl`/`foo-expected.pef`.
 
 ## Requirements & Compatibility ##
-- Requires JDK 7
+- Requires Java 8
 - Compatible with SPI and OSGi
 
 ## Limitations ##

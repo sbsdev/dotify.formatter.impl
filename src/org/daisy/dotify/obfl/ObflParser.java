@@ -131,9 +131,7 @@ public class ObflParser extends XMLParserBase {
 		this.locale = FilterLocale.parse(config.getLocale());
 		this.mode = config.getTranslationMode();
 		this.hyphGlobal = config.isHyphenating();
-		//this.masters = new HashMap<String, LayoutMaster>();
 		this.meta = new ArrayList<>();
-		formatter.open();
 		XMLEvent event;
 		TextProperties tp = new TextProperties.Builder(this.locale.toString()).translationMode(mode).hyphenate(hyphGlobal).build();
 		
@@ -168,12 +166,7 @@ public class ObflParser extends XMLParserBase {
 				report(event);
 			}
 		}
-		try {
-			input.close();
-			formatter.close();
-		} catch (IOException e) {
-			throw new OBFLParserException(e);
-		}
+		input.close();
 	}
 
 	private void parseMeta(XMLEvent event, XMLEventReader input) throws XMLStreamException {
