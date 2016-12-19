@@ -113,17 +113,6 @@ public class ObflParser extends XMLParserBase {
 		this.fm = fm;
 		this.logger = Logger.getLogger(this.getClass().getCanonicalName());
 	}
-	/**
-	 * 
-	 * @param input
-	 * @throws XMLStreamException
-	 * @throws OBFLParserException
-	 * @deprecated use parse(input, formatter)
-	 */
-	@Deprecated
-	public void parse(XMLEventReader input) throws XMLStreamException, OBFLParserException {
-		parse(input, fm.getFormatterFactory().newFormatter(locale.toString(), mode));
-	}
 	
 	public void parse(XMLEventReader input, Formatter formatter) throws XMLStreamException, OBFLParserException {
 		this.formatter = formatter;
@@ -1564,17 +1553,6 @@ public class ObflParser extends XMLParserBase {
 			}
 		}
 		return translate;
-	}
-	
-	/**
-	 * 
-	 * @param writer
-	 * @throws IOException
-	 * @deprecated use parse(input, formatter) and then formatter.write(writer)
-	 */
-	@Deprecated
-	public void writeResult(PagedMediaWriter writer) throws IOException {
-		formatter.write(writer);
 	}
 
 	public List<MetaDataItem> getMetaData() {
