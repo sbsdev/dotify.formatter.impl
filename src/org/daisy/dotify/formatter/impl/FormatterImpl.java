@@ -47,7 +47,12 @@ public class FormatterImpl implements Formatter {
 	private LazyFormatterContext context;
 
 	/**
-	 * Creates a new formatter
+	 * Creates a new formatter.
+	 * @param translatorFactory a braille translator factory maker service
+	 * @param tbf a text border factory maker service
+	 * @param mpf a marker processor factory maker service
+	 * @param locale a locale
+	 * @param mode a braille mode
 	 */
 	public FormatterImpl(BrailleTranslatorFactoryMakerService translatorFactory, TextBorderFactoryMakerService tbf, MarkerProcessorFactoryMakerService mpf, String locale, String mode) {
 		this.context = new LazyFormatterContext(translatorFactory, tbf, mpf, FormatterConfiguration.with(locale, mode).build());
