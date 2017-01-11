@@ -141,18 +141,9 @@ public abstract class AbstractBlockContentManager implements Iterable<RowImpl> {
 		return innerPreContentRows;
 	}
 
-	/*public int countPostContentRows() {
-		return postContentRows.size();
-	}*/
-	
 	public List<RowImpl> getPostContentRows() {
 		return postContentRows;
 	}
-	/*
-	public int countSkippablePostContentRows() {
-		return skippablePostContentRows.size();
-	}*/
-	
 	public List<RowImpl> getSkippablePostContentRows() {
 		return skippablePostContentRows;
 	}

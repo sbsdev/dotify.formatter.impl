@@ -290,30 +290,6 @@ class BlockContentManager extends AbstractBlockContentManager {
 		}
 	}
 
-	/**
-	 * 
-	 * @param margin rdp.getSpaceBefore()
-	 * @return
-	 *//*
-	public List<RowImpl> getPreContentRows(int margin, Float marginRowSpacing) {
-		List<RowImpl> preContentRows = new ArrayList<>();
-		for (int i=0; i<margin;i++) {
-			RowImpl row = new RowImpl("", leftParent, rightParent);
-			//row.setAlignment(rdp.getAlignment());
-			row.setRowSpacing(marginRowSpacing);
-			preContentRows.add(row);
-		}
-		if (rdp.getLeadingDecoration()!=null) {
-			preContentRows.add(makeDecorationRow(flowWidth, rdp.getLeadingDecoration(), leftParent, rightParent));
-		}
-		for (int i=0; i<rdp.getInnerSpaceBefore(); i++) {
-			MarginProperties ret = new MarginProperties(leftMargin.getContent()+StringTools.fill(fcontext.getSpaceCharacter(), rdp.getTextIndent()), leftMargin.isSpaceOnly());
-			preContentRows.add(createAndConfigureEmptyNewRow(ret));
-		}
-
-		return preContentRows;
-	}*/
-
 	public int getRowCount() {
 		return rows.size();
 	}

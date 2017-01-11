@@ -1,6 +1,5 @@
 package org.daisy.dotify.obfl;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -80,7 +79,6 @@ import org.daisy.dotify.api.translator.TextBorderConfigurationException;
 import org.daisy.dotify.api.translator.TextBorderFactory;
 import org.daisy.dotify.api.translator.TextBorderStyle;
 import org.daisy.dotify.api.writer.MetaDataItem;
-import org.daisy.dotify.api.writer.PagedMediaWriter;
 import org.daisy.dotify.common.text.FilterLocale;
 import org.daisy.dotify.engine.impl.FactoryManager;
 import org.w3c.dom.Document;

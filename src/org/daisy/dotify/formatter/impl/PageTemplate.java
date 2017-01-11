@@ -61,8 +61,6 @@ class PageTemplate implements PageTemplateBuilder {
 	 * @return returns a List of FieldList
 	 */
 	List<FieldList> getHeader() {
-		//ArrayList<ArrayList<Object>> ret = new ArrayList<ArrayList<Object>>();
-		//ret.add(header);
 		return header;
 	}
 	
@@ -74,8 +72,6 @@ class PageTemplate implements PageTemplateBuilder {
 	 * @return returns a List of FieldList
 	 */
 	List<FieldList> getFooter() {
-		//ArrayList<ArrayList<Object>> ret = new ArrayList<ArrayList<Object>>();
-		//ret.add(footer);
 		return footer;
 	}
 

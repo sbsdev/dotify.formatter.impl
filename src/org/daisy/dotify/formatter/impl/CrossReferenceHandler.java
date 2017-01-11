@@ -1,8 +1,5 @@
 package org.daisy.dotify.formatter.impl;
 
-import java.util.HashSet;
-import java.util.Set;
-
 class CrossReferenceHandler {
 	private final LookupHandler<String, Integer> pageRefs;
 	private final LookupHandler<String, Integer> volumeRefs;
@@ -14,8 +11,6 @@ class CrossReferenceHandler {
 	private static final String SHEETS_IN_DOCUMENT = "sheets-in-document";
 	private static final String PAGES_IN_VOLUME = "pages-in-volume-";
 	private static final String PAGES_IN_DOCUMENT = "pages-in-document";
-	// private HashSet<String> pageIds;
-	// private HashSet<String> pageIdsMark;
 	
 	CrossReferenceHandler() {
 		this.pageRefs = new LookupHandler<>();
@@ -23,7 +18,6 @@ class CrossReferenceHandler {
 		this.anchorRefs = new LookupHandler<>();
 		this.variables = new LookupHandler<>();
 		this.breakable = new LookupHandler<>();
-		// this.pageIds = new HashSet<>();
 	}
 	
 	/**
@@ -50,9 +44,6 @@ class CrossReferenceHandler {
 	
 	void setPageNumber(String refid, int page) {
 		pageRefs.put(refid, page);
-		// if (!pageIds.add(refid)) {
-		// 	throw new IllegalArgumentException("Identifier not unique: " + refid);
-		// }
 	}
 	
 	public Iterable<AnchorData> getAnchorData(int volume) {
@@ -131,23 +122,5 @@ class CrossReferenceHandler {
 		variables.setDirty(value);
 		breakable.setDirty(value);
 	}
-	
-	// void markUniqueChecks() {
-	// 	pageIdsMark = (HashSet<String>)pageIds.clone();
-	// }
 
-	// void resetUniqueChecks() {
-	// 	if (pageIdsMark == null) {
-	// 		throw new RuntimeException("mark has not been set");
-	// 	} else if (pageIds.size() != pageIdsMark.size()) {
-	// 		pageIds = (HashSet<String>)pageIdsMark.clone();
-	// 	}
-	// }
-
-	// void rewindUniqueChecks() {
-	// 	if (!pageIds.isEmpty()) {
-	// 		pageIds = new HashSet<>();
-	// 	}
-	// 	pageIdsMark = null;
-	// }
 }
