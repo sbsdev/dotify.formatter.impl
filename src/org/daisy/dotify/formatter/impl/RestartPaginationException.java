@@ -1,5 +1,12 @@
 package org.daisy.dotify.formatter.impl;
 
+/**
+ * Indicates that the pagination failed and should be restarted
+ * from the beginning. If this exception is thrown, then all 
+ * previously successful sequences may be compromised.
+ * 
+ * @author Joel Håkansson
+ */
 class RestartPaginationException extends Exception {
 
 	/**

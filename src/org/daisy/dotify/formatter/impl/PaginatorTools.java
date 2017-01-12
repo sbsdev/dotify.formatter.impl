@@ -130,6 +130,7 @@ class PaginatorTools {
 	 * @param padding the padding pattern to use as separator
 	 * @param mode the distribution mode to use
 	 * @return returns a string of <tt>width</tt> chars 
+	 * @throws PaginatorToolsException if distribution fails
 	 */
 	static String distribute(ArrayList<String> units, int width, String padding, DistributeMode mode) throws PaginatorToolsException {
 		switch (mode) {
@@ -149,6 +150,7 @@ class PaginatorTools {
 	 *         <tt>unit</tt> corresponds with element 2*i in the returned list. Elements i*2+1 for
 	 *         i=(0..N-1) is padding between units. The sum of the lengths of all strings equals
 	 *         <tt>width</tt>.
+	 * @throws PaginatorToolsException if distribution fails
 	 */
 	static List<String> distributeRetain(ArrayList<String> units, int width, String padding, DistributeMode mode) throws PaginatorToolsException {
 		switch (mode) {

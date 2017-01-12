@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 import org.daisy.dotify.formatter.impl.EvenSizeVolumeSplitterCalculator;
 import org.junit.Test;
 
+@SuppressWarnings("javadoc")
 public class EvenSizeVolumeSplitterCalculatorTest {
 
 	@Test

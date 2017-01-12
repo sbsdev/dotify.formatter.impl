@@ -6,6 +6,7 @@ import static org.junit.Assert.*;
 
 import org.daisy.dotify.api.formatter.BlockProperties;
 import org.daisy.dotify.formatter.impl.Margin.Type;
+@SuppressWarnings("javadoc")
 public class FormatterCoreImplTest {
 
 	@Test

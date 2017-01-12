@@ -1,5 +1,10 @@
 package org.daisy.dotify.formatter.impl;
 
+/**
+ * Indicates a pagination problem.
+ * 
+ * @author Joel Håkansson
+ */
 class PaginatorException extends Exception {
 
 	/**

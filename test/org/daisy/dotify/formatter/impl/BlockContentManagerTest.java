@@ -18,6 +18,7 @@ import org.daisy.dotify.consumer.translator.MarkerProcessorFactoryMaker;
 import org.daisy.dotify.consumer.translator.TextBorderFactoryMaker;
 import org.junit.Test;
 
+@SuppressWarnings("javadoc")
 public class BlockContentManagerTest {
 	
 	@Test

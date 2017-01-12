@@ -141,7 +141,7 @@ class RowImpl implements Row {
 
 	/**
 	 * Add a collection of markers to the Row
-	 * @param list
+	 * @param list the list of markers
 	 */
 	public void addMarkers(List<Marker> list) {
 		markers.addAll(list);
@@ -149,7 +149,10 @@ class RowImpl implements Row {
 	
 	/**
 	 * Add a collection of markers to the Row
-	 * @param list
+	 * @param index the position in the marker list to insert the markers
+	 * @param list the list of markers
+     * @throws IndexOutOfBoundsException if the index is out of range
+     *         (<tt>index &lt; 0 || index &gt; getMarkers().size()</tt>)
 	 */
 	public void addMarkers(int index, List<Marker> list) {
 		markers.addAll(index, list);

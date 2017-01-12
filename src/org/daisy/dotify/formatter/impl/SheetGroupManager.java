@@ -49,7 +49,7 @@ class SheetGroupManager {
 		
 	/**
 	 * Gets the sheet group at the given index, zero based.
-	 * @param index, zero based
+	 * @param index the index, zero based
 	 * @return returns the sheet group
 	 */
 	SheetGroup atIndex(int index) {

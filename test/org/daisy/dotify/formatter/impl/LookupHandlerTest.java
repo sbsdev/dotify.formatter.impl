@@ -3,6 +3,7 @@ package org.daisy.dotify.formatter.impl;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
+@SuppressWarnings("javadoc")
 public class LookupHandlerTest {
 	private static final String key1 = "key1";
 	private static final String value1 = "value1";

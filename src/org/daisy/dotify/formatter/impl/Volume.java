@@ -1,5 +1,10 @@
 package org.daisy.dotify.formatter.impl;
 
+/**
+ * Provides a volume of braille.
+ * 
+ * @author Joel Håkansson
+ */
 public interface Volume {
 
 	/**

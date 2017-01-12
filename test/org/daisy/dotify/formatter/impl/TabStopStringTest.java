@@ -8,6 +8,7 @@ import org.daisy.dotify.formatter.impl.TabStopString;
 import org.daisy.dotify.formatter.impl.TabStopString.Alignment;
 import org.junit.Test;
 
+@SuppressWarnings("javadoc")
 public class TabStopStringTest {
 
 	@Test

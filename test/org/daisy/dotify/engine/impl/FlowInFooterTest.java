@@ -8,6 +8,7 @@ import org.daisy.dotify.api.writer.PagedMediaWriterConfigurationException;
 import org.junit.Ignore;
 import org.junit.Test;
 
+@SuppressWarnings("javadoc")
 public class FlowInFooterTest extends AbstractFormatterEngineTest {
 	
 	@Test

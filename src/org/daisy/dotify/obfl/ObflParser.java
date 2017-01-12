@@ -108,6 +108,10 @@ public class ObflParser extends XMLParserBase {
 	Map<String, Node> fileRefs = new HashMap<>();
 	Map<String, List<RendererInfo>> renderers = new HashMap<>();
 
+	/**
+	 * Creates a new obfl parser with the specified factory manager.
+	 * @param fm the factory manager
+	 */
 	public ObflParser(FactoryManager fm) {
 		this.fm = fm;
 		this.logger = Logger.getLogger(this.getClass().getCanonicalName());

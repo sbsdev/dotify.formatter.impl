@@ -220,7 +220,6 @@ public class FormatterImpl implements Formatter {
 		 * Gets the volume max size based on the supplied information.
 		 * 
 		 * @param volumeNumber the volume number, one based
-		 * @param volumeCount the number of volumes
 		 * @return returns the maximum number of sheets in the volume
 		 */
 		public int getSplitterLimit(int volumeNumber) {
