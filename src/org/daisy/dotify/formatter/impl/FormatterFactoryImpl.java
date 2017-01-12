@@ -30,7 +30,7 @@ public class FormatterFactoryImpl implements FormatterFactory {
 		this.translatorFactory = translatorFactory;
 	}
 
-	public void unsetTranslator() {
+	public void unsetTranslator(BrailleTranslatorFactoryMakerService service) {
 		this.translatorFactory = null;
 	}
 	
@@ -39,7 +39,7 @@ public class FormatterFactoryImpl implements FormatterFactory {
 		this.borderFactory = borderFactory;
 	}
 	
-	public void unsetTextBorderFactory() {
+	public void unsetTextBorderFactory(TextBorderFactoryMakerService service) {
 		this.borderFactory = null;
 	}
 	
@@ -47,8 +47,8 @@ public class FormatterFactoryImpl implements FormatterFactory {
 	public void setMarkerProcessorFactory(MarkerProcessorFactoryMakerService markerProcessorFactory) {
 		this.markerProcessorFactory = markerProcessorFactory;
 	}
-	
-	public void unsetMarkerProcessorFactory() {
+
+	public void unsetMarkerProcessorFactory(MarkerProcessorFactoryMakerService service) {
 		this.markerProcessorFactory = null;
 	}
 
