@@ -6,6 +6,7 @@ import org.daisy.dotify.api.text.Integer2TextFactoryMakerService;
 import org.daisy.dotify.formatter.impl.SPIHelper;
 
 import aQute.bnd.annotation.component.Component;
+import aQute.bnd.annotation.component.Reference;
 
 @Component
 public class ExpressionFactoryImpl implements ExpressionFactory {
@@ -16,7 +17,8 @@ public class ExpressionFactoryImpl implements ExpressionFactory {
 		return new ExpressionImpl(itf);
 	}
 
-	private void setInteger2TextFactory(Integer2TextFactoryMakerService itf) {
+	@Reference
+	public void setInteger2TextFactory(Integer2TextFactoryMakerService itf) {
 		this.itf = itf;
 	}
 
