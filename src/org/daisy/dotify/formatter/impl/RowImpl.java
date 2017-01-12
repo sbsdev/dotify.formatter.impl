@@ -152,7 +152,7 @@ class RowImpl implements Row {
 	 * @param list
 	 */
 	public void addMarkers(int index, List<Marker> list) {
-		markers.addAll(0, list);
+		markers.addAll(index, list);
 	}
 
 	/**
