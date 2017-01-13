@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class LookupHandler<K, V> {
+class LookupHandler<K, V> {
 	private final Map<K, V> keyValueMap;
 	private final Map<K, V> uncommitted;
 	private final Set<K> requestedKeys;

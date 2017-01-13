@@ -3,9 +3,9 @@ package org.daisy.dotify.formatter.impl;
 import org.daisy.dotify.api.formatter.RenderingScenario;
 import org.daisy.dotify.formatter.impl.Segment.SegmentType;
 
-public class RegularBlock extends Block {
+class RegularBlock extends Block {
 
-	public RegularBlock(String blockId, RowDataProperties rdp, RenderingScenario scenario) {
+	RegularBlock(String blockId, RowDataProperties rdp, RenderingScenario scenario) {
 		super(blockId, rdp, scenario);
 	}
 	

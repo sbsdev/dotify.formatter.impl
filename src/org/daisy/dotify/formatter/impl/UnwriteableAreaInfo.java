@@ -3,19 +3,19 @@ package org.daisy.dotify.formatter.impl;
 import java.util.HashMap;
 import java.util.Map;
 
-public class UnwriteableAreaInfo {
+class UnwriteableAreaInfo {
 	
-	public static class UnwriteableArea {
+	static class UnwriteableArea {
 		
-		public enum Side {
+		enum Side {
 			RIGHT,
 			LEFT
 		}
 		
-		public final Side side;
-		public final int width;
+		final Side side;
+		final int width;
 		
-		public UnwriteableArea(Side side, int width) {
+		UnwriteableArea(Side side, int width) {
 			this.side = side;
 			this.width = width;
 		}
@@ -105,7 +105,7 @@ public class UnwriteableAreaInfo {
 	private Map<Position,UnwriteableArea> beforeMark = new HashMap<>();
 	private boolean dirty = false;
 	
-	public UnwriteableArea getUnwriteableArea(Block block, int positionInBlock) {
+	UnwriteableArea getUnwriteableArea(Block block, int positionInBlock) {
 		Position pos = new Position(block, positionInBlock);
 		UnwriteableArea area = map.get(pos);
 		if (area == null) {
@@ -114,7 +114,7 @@ public class UnwriteableAreaInfo {
 		return area;
 	}
 	
-	public void setUnwriteableArea(Block block, int positionInBlock, UnwriteableArea area) {
+	void setUnwriteableArea(Block block, int positionInBlock, UnwriteableArea area) {
 		if (block == null || area == null) {
 			throw new IllegalArgumentException("null");
 		}
@@ -127,14 +127,14 @@ public class UnwriteableAreaInfo {
 		}
 	}
 	
-	public boolean isDirty() {
+	boolean isDirty() {
 		if (!dirty && (unstaged.size() + staged.size()) < map.size()) {
 			dirty = true;
 		}
 		return dirty;
 	}
 	
-	public void commit() {
+	void commit() {
 		map.clear();
 		map.putAll(staged);
 		map.putAll(unstaged);
@@ -144,7 +144,7 @@ public class UnwriteableAreaInfo {
 		dirtyStaged = false;
 	}
 	
-	public void mark() {
+	void mark() {
 		if (!(unstaged.isEmpty() && staged.isEmpty())) {
 			throw new IllegalStateException("uncommitted values");
 		}
@@ -152,7 +152,7 @@ public class UnwriteableAreaInfo {
 		map.clear();
 	}
 	
-	public void reset() {
+	void reset() {
 		unstaged.clear();
 		staged.clear();
 		dirty = false;
@@ -161,18 +161,18 @@ public class UnwriteableAreaInfo {
 	
 	private boolean dirtyStaged;
 	
-	public void markUncommitted() {
+	void markUncommitted() {
 		staged.putAll(unstaged);
 		unstaged.clear();
 		dirtyStaged = dirty;
 	}
 	
-	public void resetUncommitted() {
+	void resetUncommitted() {
 		unstaged.clear();
 		dirty = dirtyStaged;
 	}
 	
-	public void rewind() {
+	void rewind() {
 		unstaged.clear();
 		staged.clear();
 		dirty = false;

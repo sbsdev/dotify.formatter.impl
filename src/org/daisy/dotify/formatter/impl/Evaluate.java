@@ -22,26 +22,26 @@ class Evaluate implements Segment {
 	}
 	
 	/**
-	 * @param style Array of styles to apply (from outer to inner).
+	 * @param textStyle Array of styles to apply (from outer to inner).
 	 */
-	public Evaluate(DynamicContent expression, TextProperties props, String[] textStyle) {
+	Evaluate(DynamicContent expression, TextProperties props, String[] textStyle) {
 		this.expression = expression;
 		this.props = props;
 		this.textStyle = textStyle;
 	}
 	
-	public DynamicContent getExpression() {
+	DynamicContent getExpression() {
 		return expression;
 	}
 
-	public TextProperties getTextProperties() {
+	TextProperties getTextProperties() {
 		return props;
 	}
 
 	/**
 	 * @param width The width of the evaluated expression.
 	 */
-	public TextAttribute getTextAttribute(int width) {
+	TextAttribute getTextAttribute(int width) {
 		if (textStyle == null || textStyle.length == 0) {
 			return null;
 		} else {

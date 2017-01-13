@@ -11,7 +11,7 @@ class PaginatorTools {
 	/**
 	 * Distribution modes 
 	 */
-	public enum DistributeMode {
+	enum DistributeMode {
 		/**
 		 * Distribute so that the spaces between strings are kept equal
 		 */
@@ -131,7 +131,7 @@ class PaginatorTools {
 	 * @param mode the distribution mode to use
 	 * @return returns a string of <tt>width</tt> chars 
 	 */
-	public static String distribute(ArrayList<String> units, int width, String padding, DistributeMode mode) throws PaginatorToolsException {
+	static String distribute(ArrayList<String> units, int width, String padding, DistributeMode mode) throws PaginatorToolsException {
 		switch (mode) {
 		case UNISIZE_TABLE_CELL:
 			return distributeTable(units, width, padding);
@@ -150,7 +150,7 @@ class PaginatorTools {
 	 *         i=(0..N-1) is padding between units. The sum of the lengths of all strings equals
 	 *         <tt>width</tt>.
 	 */
-	public static List<String> distributeRetain(ArrayList<String> units, int width, String padding, DistributeMode mode) throws PaginatorToolsException {
+	static List<String> distributeRetain(ArrayList<String> units, int width, String padding, DistributeMode mode) throws PaginatorToolsException {
 		switch (mode) {
 		case EQUAL_SPACING:
 			return distributeEqualSpacing(units, width, padding, false);
@@ -161,7 +161,7 @@ class PaginatorTools {
 		}
 	}
 
-	public static String distribute(Collection<TabStopString> units) {
+	static String distribute(Collection<TabStopString> units) {
 		TreeSet<TabStopString> sortedUnits = new TreeSet<>();
 		sortedUnits.addAll(units);
 		StringBuffer sb = new StringBuffer();

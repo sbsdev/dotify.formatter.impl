@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.daisy.dotify.api.writer.SectionProperties;
 
-public class SectionImpl implements Section {
+class SectionImpl implements Section {
 	private final List<Page> pages;
 	private final SectionProperties props;
 
