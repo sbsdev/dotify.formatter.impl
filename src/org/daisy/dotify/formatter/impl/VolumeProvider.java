@@ -128,7 +128,7 @@ public class VolumeProvider {
 		SplitPoint<Sheet> sp = getSplitPoint(splitterMax-overhead);
 		groups.currentGroup().setUnits(sp.getTail());
 		List<Sheet> contents = sp.getHead();
-		int pageCount = countPages(contents);
+		int pageCount = Sheet.countPages(contents);
 		// TODO: In a volume-by-volume scenario, how can we make this work
 		contentPaginator.setVolumeScope(currentVolumeNumber, pageIndex, pageIndex+pageCount); 
 		pageIndex += pageCount;
@@ -212,19 +212,6 @@ public class VolumeProvider {
 	 */
 	boolean hasNext() {
 		return groups.hasNext();
-	}
-
-	/**
-	 * Counts the number of pages
-	 * @param sheets the list of sheets to count
-	 * @return returns the number of pages
-	 */
-	static int countPages(List<Sheet> sheets) {
-		int ret = 0;
-		for (Sheet s : sheets) {
-			ret += s.getPages().size();
-		}
-		return ret;
 	}
 
 }

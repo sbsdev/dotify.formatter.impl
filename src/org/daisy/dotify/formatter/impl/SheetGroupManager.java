@@ -185,7 +185,7 @@ class SheetGroupManager {
 	int countRemainingPages() {
 		int ret = 0;
 		for (SheetGroup g : groups) {
-			ret += VolumeProvider.countPages(g.getUnits());
+			ret += Sheet.countPages(g.getUnits());
 		}
 		return ret;
 	}

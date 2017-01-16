@@ -124,5 +124,19 @@ class Sheet implements SplitPointUnit {
 		return "Sheet [pages=" + pages + ", breakable=" + breakable + ", skippable=" + skippable
 				+ ", collapsible=" + collapsible + "]";
 	}
+	
+	
+	/**
+	 * Counts the number of pages
+	 * @param sheets the list of sheets to count
+	 * @return returns the number of pages
+	 */
+	static int countPages(List<Sheet> sheets) {
+		int ret = 0;
+		for (Sheet s : sheets) {
+			ret += s.getPages().size();
+		}
+		return ret;
+	}
 
 }
