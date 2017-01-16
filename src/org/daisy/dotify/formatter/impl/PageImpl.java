@@ -25,6 +25,7 @@ import org.daisy.dotify.api.translator.TranslationException;
 import org.daisy.dotify.api.writer.Row;
 import org.daisy.dotify.common.text.StringTools;
 import org.daisy.dotify.formatter.impl.UnwriteableAreaInfo.UnwriteableArea;
+import org.daisy.dotify.writer.impl.Page;
 
 
 //FIXME: scope spread is currently implemented using document wide scope, i.e. across volume boundaries. This is wrong, but is better than the previous sequence scope.

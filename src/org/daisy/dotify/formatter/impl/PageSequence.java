@@ -3,6 +3,7 @@ package org.daisy.dotify.formatter.impl;
 import java.lang.ref.WeakReference;
 
 import org.daisy.dotify.api.writer.SectionProperties;
+import org.daisy.dotify.writer.impl.Section;
 
 /**
  * Provides a sequence of pages.

@@ -1,4 +1,4 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.writer.impl;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -10,18 +10,21 @@ import org.daisy.dotify.api.writer.Row;
  * Provides a method for writing pages to a PagedMediaWriter.
  * @author Joel Håkansson
  */
-class WriterHandler implements Closeable {
+public class WriterHandler implements Closeable {
 	private final PagedMediaWriter writer;
 	
-	WriterHandler(PagedMediaWriter writer) {
+	/**
+	 * Creates a new writer handler.
+	 * @param writer the PagedMediaWriter to write to
+	 */
+	public WriterHandler(PagedMediaWriter writer) {
 		this.writer = writer;
 	}
 	/**
 	 * Writes this structure to the suppled PagedMediaWriter.
-	 * @param writer the PagedMediaWriter to write to
-	 * @throws IOException if IO fails
+	 * @param volumes the volumes to write
 	 */
-	void write(Iterable<? extends Volume> volumes) {
+	public void write(Iterable<? extends Volume> volumes) {
 		for (Volume v : volumes) {
 			writeVolume(v);
 		}

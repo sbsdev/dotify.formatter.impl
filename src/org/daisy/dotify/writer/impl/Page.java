@@ -1,4 +1,4 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.writer.impl;
 
 import java.util.List;
 
@@ -9,7 +9,7 @@ import org.daisy.dotify.api.writer.Row;
  * 
  * @author Joel Håkansson
  */
-interface Page {
+public interface Page {
 
 	/**
 	 * Gets the rows on this page

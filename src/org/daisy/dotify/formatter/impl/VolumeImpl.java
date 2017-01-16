@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 
+import org.daisy.dotify.writer.impl.Section;
+import org.daisy.dotify.writer.impl.Volume;
+
 /**
  * Provides a container for a physical volume of braille
  * @author Joel Håkansson
