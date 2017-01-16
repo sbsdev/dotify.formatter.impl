@@ -54,8 +54,6 @@ class RowImpl implements Row {
 	 */
 	RowImpl(RowImpl template) {
 		this.chars = template.chars;
-		this.leftMargin = template.leftMargin;
-		this.rightMargin = template.rightMargin;
 		this.markers = new ArrayList<>(template.markers);
 		this.anchors = new ArrayList<>(template.anchors);
 		this.leftMargin = template.leftMargin;
