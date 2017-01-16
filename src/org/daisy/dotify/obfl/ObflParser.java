@@ -80,7 +80,7 @@ import org.daisy.dotify.api.translator.TextBorderFactory;
 import org.daisy.dotify.api.translator.TextBorderStyle;
 import org.daisy.dotify.api.writer.MetaDataItem;
 import org.daisy.dotify.common.text.FilterLocale;
-import org.daisy.dotify.engine.impl.FactoryManager;
+import org.daisy.dotify.formatter.impl.FactoryManager;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 

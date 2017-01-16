@@ -15,6 +15,7 @@ import org.daisy.dotify.api.obfl.ExpressionFactory;
 import org.daisy.dotify.api.translator.MarkerProcessorFactoryMakerService;
 import org.daisy.dotify.api.translator.TextBorderFactoryMakerService;
 import org.daisy.dotify.api.writer.PagedMediaWriter;
+import org.daisy.dotify.formatter.impl.FactoryManager;
 import org.daisy.dotify.formatter.impl.SPIHelper;
 
 import aQute.bnd.annotation.component.Component;
