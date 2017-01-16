@@ -145,7 +145,7 @@ class PageSequenceBuilder2 {
 	
 	PageImpl nextPage() throws PaginatorException,
 		                       RestartPaginationException, // pagination must be restarted in PageStructBuilder.paginateInner
-		                       RestartPaginationException2 // pagination must be restarted in PageStructBuilder.newSequence
+		                       RestartPaginationOfSequenceException // pagination must be restarted in PageStructBuilder.newSequence
 	{
 		if (nextPages != null && nextPages.hasNext()) {
 			return nextPages.next();
@@ -233,7 +233,7 @@ class PageSequenceBuilder2 {
 									// has rows in an already return page. Because we can't easily predict this
 									// situation we simply propagate the exception to PageStructBuilder.newSequence and
 									// start all over.
-									throw new RestartPaginationException2();
+									throw new RestartPaginationOfSequenceException();
 								}
 								int effectiveFlowHeight = e.getEffectiveFlowHeight();
 								if (effectiveFlowHeight > flowHeight) {
@@ -251,7 +251,7 @@ class PageSequenceBuilder2 {
 										pages = pages.subList(0, pageCountBeforeDataGroup);
 										continue restartRowGroupSequence;
 									} catch (IllegalStateException ee) {
-										throw new RestartPaginationException2();
+										throw new RestartPaginationOfSequenceException();
 									}
 								} else {
 									flowHeight = effectiveFlowHeight;

@@ -116,7 +116,7 @@ class PageStructBuilder {
 				PageImpl p; {
 					try {
 						p = psb.nextPage();
-					} catch (RestartPaginationException2 e) {
+					} catch (RestartPaginationOfSequenceException e) {
 						if (!uai.isDirty()) {
 							throw new RuntimeException("coding error");
 						} else {

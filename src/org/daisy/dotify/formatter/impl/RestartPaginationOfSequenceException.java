@@ -6,7 +6,7 @@ package org.daisy.dotify.formatter.impl;
  * 
  * @author Bert Frees
  */
-class RestartPaginationException2 extends Exception {
+class RestartPaginationOfSequenceException extends Exception {
 
 	private static final long serialVersionUID = 2956822200395197106L;
 	
