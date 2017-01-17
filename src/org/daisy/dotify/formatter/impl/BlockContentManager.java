@@ -69,6 +69,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 		}
 		// the following may not qualify as "volatile" but what matters is the
 		// result, namely that the BlockContentManager is recreated
+		// this is incorrect, see https://github.com/brailleapps/dotify.formatter.impl/issues/20
 		if (uai != null) {
 			for (int i = 0; i < getRowCount(); i++) {
 				UnwriteableArea newArea = uai.getUnwriteableArea(thisBlock, i);
