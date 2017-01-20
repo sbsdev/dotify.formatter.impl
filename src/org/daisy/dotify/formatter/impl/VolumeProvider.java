@@ -152,7 +152,8 @@ public class VolumeProvider {
 	}
 	
 	/**
-	 * Informs the volume provider that the caller has finished requesting volumes.  
+	 * Informs the volume provider that the caller has finished requesting volumes.
+	 * <b>Note: only use after all volumes have been calculated.</b>  
 	 */
 	void update() {
 		groups.updateAll();
@@ -161,6 +162,7 @@ public class VolumeProvider {
 	
 	/**
 	 * Informs the volume provider to adjust its volume calculation.
+	 * <b>Note: only use after all volumes have been calculated.</b>
 	 */
 	void adjustVolumeCount() {
 		groups.adjustVolumeCount();
@@ -176,6 +178,7 @@ public class VolumeProvider {
 	
 	/**
 	 * Counts the total number of sheets.
+	 * <b>Note: only use after all volumes have been calculated.</b>
 	 * @return returns the total number of sheets.
 	 */
 	int countTotalSheets() {
@@ -183,7 +186,8 @@ public class VolumeProvider {
 	}
 	
 	/**
-	 * Counts the remaining pages.
+	 * Counts the remaining pages. 
+	 * <b>Note: only use after all volumes have been calculated.</b>
 	 * @return returns the number of remaining pages
 	 */
 	int countRemainingPages() {
@@ -192,6 +196,7 @@ public class VolumeProvider {
 	
 	/**
 	 * Counts the remaining sheets.
+	 * <b>Note: only use after all volumes have been calculated.</b>
 	 * @return returns the number of remaining sheets
 	 */
 	int countRemainingSheets() {

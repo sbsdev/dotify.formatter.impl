@@ -97,6 +97,7 @@ class SheetGroup {
 	
 	/**
 	 * Gets the total sheet count, including processed sheets, overhead sheets and remaining sheets.
+	 * <b>Note: only use after all volumes have been calculated.</b>
 	 * @return returns the total sheet count
 	 */
 	int countTotalSheets() {

@@ -136,6 +136,7 @@ class SheetGroupManager {
 	
 	/**
 	 * Updates the sheet count in every group.
+	 * <b>Note: only use after all volumes have been calculated.</b>
 	 */
 	void updateAll() {
 		for (SheetGroup g : groups) {
@@ -145,6 +146,7 @@ class SheetGroupManager {
 	
 	/**
 	 * Adjusts the volume count in every group (if needed).
+	 * <b>Note: only use after all volumes have been calculated.</b>
 	 */
 	void adjustVolumeCount() {
 		for (SheetGroup g : groups) {
@@ -156,6 +158,7 @@ class SheetGroupManager {
 	
 	/**
 	 * Counts the total number of sheets.
+	 * <b>Note: only use after all volumes have been calculated.</b>
 	 * @return returns the sheet count
 	 */
 	int countTotalSheets() {
@@ -168,6 +171,7 @@ class SheetGroupManager {
 	
 	/**
 	 * Counts the remaining sheets.
+	 * <b>Note: only use after all volumes have been calculated.</b>
 	 * @return returns the number of remaining sheets
 	 */
 	int countRemainingSheets() {
@@ -180,6 +184,7 @@ class SheetGroupManager {
 	
 	/**
 	 * Counts the remaining pages.
+	 * <b>Note: only use after all volumes have been calculated.</b>
 	 * @return returns the number of remaining pages
 	 */
 	int countRemainingPages() {
