@@ -17,10 +17,12 @@ import org.daisy.dotify.api.formatter.RenameFallbackRule;
 import org.daisy.dotify.api.translator.Translatable;
 import org.daisy.dotify.api.translator.TranslationException;
 import org.daisy.dotify.common.collection.SplitList;
-import org.daisy.dotify.common.layout.SplitPoint;
-import org.daisy.dotify.common.layout.SplitPointData;
-import org.daisy.dotify.common.layout.SplitPointHandler;
-import org.daisy.dotify.common.layout.Supplements;
+import org.daisy.dotify.common.split.SplitPoint;
+import org.daisy.dotify.common.split.SplitPointDataList;
+import org.daisy.dotify.common.split.SplitPointDataSource;
+import org.daisy.dotify.common.split.SplitPointHandler;
+import org.daisy.dotify.common.split.StandardSplitOption;
+import org.daisy.dotify.common.split.Supplements;
 
 class PageSequenceBuilder2 {
 	private final FormatterContext context;
@@ -193,14 +195,14 @@ class PageSequenceBuilder2 {
 					addProperties(rg);
 				}
 				data = sl.getSecondPart();
-				SplitPointData<RowGroup> spd = new SplitPointData<>(data, new CollectionData(blockContext));
+				SplitPointDataList<RowGroup> spd = new SplitPointDataList<>(data, new CollectionData(blockContext));
 				int flowHeight = currentPage().getFlowHeight();
 				SplitPoint<RowGroup> res;
 				List<RowGroup> head;
 				State stateBeforeSplit = (State)state.clone();
 				uai.markUncommitted();
 			  restartSplit: while (true) {
-					res = sph.split(flowHeight, force, spd);
+					res = sph.split(flowHeight, spd, force?StandardSplitOption.ALLOW_FORCE:null);
 					if (res.getHead().size()==0 && force) {
 						if (firstUnitHasSupplements(spd) && hasPageAreaCollection()) {
 							reassignCollection();
@@ -210,7 +212,7 @@ class PageSequenceBuilder2 {
 						}
 					}
 					force = res.getHead().size()==0;
-					data = res.getTail();
+					data = res.getTail().getRemaining();
 					head = res.getHead();
 					for (RowGroup rg : head) {
 						addProperties(rg);
@@ -309,8 +311,8 @@ class PageSequenceBuilder2 {
 		}
 	}
 	
-	private boolean firstUnitHasSupplements(SplitPointData<RowGroup> spd) {
-		return !spd.getUnits().isEmpty() && !spd.getUnits().get(0).getSupplementaryIDs().isEmpty();
+	private boolean firstUnitHasSupplements(SplitPointDataSource<RowGroup> spd) {
+		return !spd.isEmpty() && !spd.get(0).getSupplementaryIDs().isEmpty();
 	}
 	
 	private boolean hasPageAreaCollection() {

@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.daisy.dotify.common.layout.SplitPointUnit;
+import org.daisy.dotify.common.split.SplitPointUnit;
 class Sheet implements SplitPointUnit {
 	private static final List<String> SUPPLEMENTS = Collections.unmodifiableList(new ArrayList<String>()); 
 	private final List<PageImpl> pages;

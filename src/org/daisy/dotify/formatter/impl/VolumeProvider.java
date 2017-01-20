@@ -3,9 +3,11 @@ package org.daisy.dotify.formatter.impl;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.daisy.dotify.common.layout.SplitPoint;
-import org.daisy.dotify.common.layout.SplitPointCost;
-import org.daisy.dotify.common.layout.SplitPointHandler;
+import org.daisy.dotify.common.split.SplitPoint;
+import org.daisy.dotify.common.split.SplitPointCost;
+import org.daisy.dotify.common.split.SplitPointHandler;
+import org.daisy.dotify.common.split.StandardSplitOption;
+import org.daisy.dotify.common.split.SplitPointDataSource;
 import org.daisy.dotify.formatter.impl.DefaultContext.Space;
 
 /**
@@ -95,14 +97,15 @@ public class VolumeProvider {
 		groups.currentGroup().setOverheadCount(groups.currentGroup().getOverheadCount() + overhead);
 		final int splitterMax = splitterLimit.getSplitterLimit(currentVolumeNumber);
 		final int targetSheetsInVolume = (groups.lastInGroup()?splitterMax:groups.sheetsInCurrentVolume());
-		volSplitter.setCost(new SplitPointCost<Sheet>(){
+		//Not using lambda for now, because it's noticeably slower.
+		SplitPointCost<Sheet> cost = new SplitPointCost<Sheet>(){
 			@Override
-			public double getCost(List<Sheet> units, int index) {
+			public double getCost(SplitPointDataSource<Sheet> units, int index, int breakpoint) {
 				int contentSheetTarget = targetSheetsInVolume - overhead;
-				if (units.size()>index+1 && units.get(index+1).shouldStartNewVolume()) { 
+				if (units.hasElementAt(index+1) && units.get(index+1).shouldStartNewVolume()) { 
 					// The closer to 0 index is, the better. 
 					// By giving it a negative cost, it is always preferred over the options below.
-					return index-units.size();
+					return index-breakpoint;
 				} else {
 					Sheet lastSheet = units.get(index);
 					double priorityPenalty = 0;
@@ -124,9 +127,9 @@ public class VolumeProvider {
 					int unbreakablePenalty = lastSheet.isBreakable()?0:100;
 					return distancePenalty + priorityPenalty + unbreakablePenalty;
 				}
-			}});
-		SplitPoint<Sheet> sp = getSplitPoint(splitterMax-overhead);
-		groups.currentGroup().setUnits(sp.getTail());
+			}};
+		SplitPoint<Sheet> sp = volSplitter.split(splitterMax-overhead, groups.currentGroup().getUnits(), cost, StandardSplitOption.ALLOW_FORCE);
+		groups.currentGroup().setUnits(sp.getTail().getRemaining());
 		List<Sheet> contents = sp.getHead();
 		int pageCount = Sheet.countPages(contents);
 		// TODO: In a volume-by-volume scenario, how can we make this work
@@ -201,11 +204,7 @@ public class VolumeProvider {
 	int getTotalPageCount() {
 		return pageIndex;
 	}
-	
-	private SplitPoint<Sheet> getSplitPoint(int contentSheets) {
-		return volSplitter.split(contentSheets, true, groups.currentGroup().getUnits());
-	}
-	
+
 	/**
 	 * Returns true if there is content left or left behind.
 	 * @return returns true if there is more content, false otherwise
