@@ -54,12 +54,12 @@ public class VolumeProvider {
 		//differences have been checked and accepted
 		try {
 			// make a preliminary calculation based on a contents only
-			List<List<Sheet>> allUnits = new PageStructBuilder(fcontext, blocks, crh).paginateGrouped(new DefaultContext.Builder().space(Space.BODY).build());
+			List<SplitPointDataSource<Sheet>> allUnits = new PageStructBuilder(fcontext, blocks, crh).paginateGrouped(new DefaultContext.Builder().space(Space.BODY).build());
 			int volCount = 0;
-			for (int i=0; i<allUnits.size(); i++) {
+			for (SplitPointDataSource<Sheet> data : allUnits) {
 				SheetGroup g = groups.add();
-				g.setUnits(new SplitPointDataList<Sheet>(allUnits.get(i)));
-				g.getSplitter().updateSheetCount(allUnits.get(i).size());
+				g.setUnits(data);
+				g.getSplitter().updateSheetCount(data.getRemaining().size());
 				volCount += g.getSplitter().getVolumeCount();
 			}
 			crh.setVolumeCount(volCount);
@@ -74,9 +74,9 @@ public class VolumeProvider {
 	void prepare() {
 		contentPaginator = new PageStructBuilder(fcontext, blocks, crh);
 		try {
-			List<List<Sheet>> allUnits = contentPaginator.paginateGrouped(new DefaultContext.Builder().space(Space.BODY).build());
+			List<SplitPointDataSource<Sheet>> allUnits = contentPaginator.paginateGrouped(new DefaultContext.Builder().space(Space.BODY).build());
 			for (int i=0; i<allUnits.size(); i++) {
-				groups.atIndex(i).setUnits(new SplitPointDataList<Sheet>(allUnits.get(i)));
+				groups.atIndex(i).setUnits(allUnits.get(i));
 			}
 		} catch (PaginatorException e) {
 			throw new RuntimeException("Error while reformatting.", e);

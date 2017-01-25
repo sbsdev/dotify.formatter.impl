@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.daisy.dotify.api.formatter.SequenceProperties.SequenceBreakBefore;
+import org.daisy.dotify.common.split.SplitPointDataList;
+import org.daisy.dotify.common.split.SplitPointDataSource;
 
 class PageStructBuilder {
 
@@ -19,19 +21,18 @@ class PageStructBuilder {
 		this.crh = crh;
 	}
 	
-	List<Sheet> paginate(DefaultContext rcontext) throws PaginatorException {
-		List<List<Sheet>> ret = paginateInner(rcontext, false);
+	SplitPointDataSource<Sheet> paginate(DefaultContext rcontext) throws PaginatorException {
+		List<SplitPointDataSource<Sheet>> ret = paginateInner(rcontext, false);
 		return ret.get(0);
 	}
 	
-	List<List<Sheet>> paginateGrouped(DefaultContext rcontext) throws PaginatorException {
+	List<SplitPointDataSource<Sheet>> paginateGrouped(DefaultContext rcontext) throws PaginatorException {
 		return paginateInner(rcontext, true);
 	}
 
-	private List<List<Sheet>> paginateInner(DefaultContext rcontext, boolean groupVolumeBreaks) throws PaginatorException {
+	private List<SplitPointDataSource<Sheet>> paginateInner(DefaultContext rcontext, boolean groupVolumeBreaks) throws PaginatorException {
 		try {
 		restart:while (true) {
-			// crh.rewindUniqueChecks();
 			struct = new PageStruct();
 			List<List<Sheet>> groups = new ArrayList<>();
 			List<Sheet> currentGroup = new ArrayList<>();
@@ -98,7 +99,11 @@ class PageStructBuilder {
 					continue restart;
 				}
 			}
-			return groups;
+			List<SplitPointDataSource<Sheet>> ret = new ArrayList<>();
+			for (List<Sheet> glist : groups) {
+				ret.add(new SplitPointDataList<>(glist));
+			}
+			return ret;
 		}
 		} finally {
 			crh.commitBreakable();

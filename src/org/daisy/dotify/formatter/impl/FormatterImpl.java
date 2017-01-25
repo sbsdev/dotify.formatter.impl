@@ -202,7 +202,7 @@ public class FormatterImpl implements Formatter {
 					break;
 				}
 			}
-			List<Sheet> ret = new PageStructBuilder(context.getFormatterContext(), ib, crh).paginate(c);
+			List<Sheet> ret = new PageStructBuilder(context.getFormatterContext(), ib, crh).paginate(c).getRemaining();
 			for (Sheet ps : ret) {
 				for (PageImpl p : ps.getPages()) {
 					if (p.getAnchors().size()>0) {
