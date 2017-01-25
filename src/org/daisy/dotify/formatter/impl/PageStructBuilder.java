@@ -31,7 +31,6 @@ class PageStructBuilder {
 	}
 
 	private List<SplitPointDataSource<Sheet>> paginateInner(DefaultContext rcontext, boolean groupVolumeBreaks) throws PaginatorException {
-		try {
 		restart:while (true) {
 			struct = new PageStruct();
 			List<List<Sheet>> groups = new ArrayList<>();
@@ -103,10 +102,8 @@ class PageStructBuilder {
 			for (List<Sheet> glist : groups) {
 				ret.add(new SplitPointDataList<>(glist));
 			}
-			return ret;
-		}
-		} finally {
 			crh.commitBreakable();
+			return ret;
 		}
 	}
 
