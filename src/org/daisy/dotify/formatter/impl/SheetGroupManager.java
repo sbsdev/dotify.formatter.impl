@@ -173,7 +173,7 @@ class SheetGroupManager {
 	int countRemainingSheets() {
 		int ret = 0;
 		for (SheetGroup g : groups) {
-			ret += g.getUnits().size();
+			ret += g.getUnits().getRemaining().size();
 		}
 		return ret;
 	}
@@ -185,7 +185,7 @@ class SheetGroupManager {
 	int countRemainingPages() {
 		int ret = 0;
 		for (SheetGroup g : groups) {
-			ret += Sheet.countPages(g.getUnits());
+			ret += Sheet.countPages(g.getUnits().getRemaining());
 		}
 		return ret;
 	}

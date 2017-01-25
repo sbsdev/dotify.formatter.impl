@@ -5,9 +5,10 @@ import java.util.List;
 
 import org.daisy.dotify.common.split.SplitPoint;
 import org.daisy.dotify.common.split.SplitPointCost;
+import org.daisy.dotify.common.split.SplitPointDataList;
+import org.daisy.dotify.common.split.SplitPointDataSource;
 import org.daisy.dotify.common.split.SplitPointHandler;
 import org.daisy.dotify.common.split.StandardSplitOption;
-import org.daisy.dotify.common.split.SplitPointDataSource;
 import org.daisy.dotify.formatter.impl.DefaultContext.Space;
 
 /**
@@ -57,7 +58,7 @@ public class VolumeProvider {
 			int volCount = 0;
 			for (int i=0; i<allUnits.size(); i++) {
 				SheetGroup g = groups.add();
-				g.setUnits(allUnits.get(i));
+				g.setUnits(new SplitPointDataList<Sheet>(allUnits.get(i)));
 				g.getSplitter().updateSheetCount(allUnits.get(i).size());
 				volCount += g.getSplitter().getVolumeCount();
 			}
@@ -75,7 +76,7 @@ public class VolumeProvider {
 		try {
 			List<List<Sheet>> allUnits = contentPaginator.paginateGrouped(new DefaultContext.Builder().space(Space.BODY).build());
 			for (int i=0; i<allUnits.size(); i++) {
-				groups.atIndex(i).setUnits(allUnits.get(i));
+				groups.atIndex(i).setUnits(new SplitPointDataList<Sheet>(allUnits.get(i)));
 			}
 		} catch (PaginatorException e) {
 			throw new RuntimeException("Error while reformatting.", e);
@@ -129,7 +130,7 @@ public class VolumeProvider {
 				}
 			}};
 		SplitPoint<Sheet> sp = volSplitter.split(splitterMax-overhead, groups.currentGroup().getUnits(), cost, StandardSplitOption.ALLOW_FORCE);
-		groups.currentGroup().setUnits(sp.getTail().getRemaining());
+		groups.currentGroup().setUnits(sp.getTail());
 		List<Sheet> contents = sp.getHead();
 		int pageCount = Sheet.countPages(contents);
 		// TODO: In a volume-by-volume scenario, how can we make this work
