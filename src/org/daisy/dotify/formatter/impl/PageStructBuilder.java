@@ -1,6 +1,7 @@
 package org.daisy.dotify.formatter.impl;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.daisy.dotify.api.formatter.SequenceProperties.SequenceBreakBefore;
@@ -32,7 +33,7 @@ class PageStructBuilder {
 		}
 	}
 	
-	List<SplitPointDataSource<Sheet>> paginateGrouped(DefaultContext rcontext) throws PaginatorException {
+	Iterable<SplitPointDataSource<Sheet>> paginateGrouped(DefaultContext rcontext) {
 		List<Iterable<BlockSequence>> volGroups = new ArrayList<>();
 		List<BlockSequence> currentGroup = new ArrayList<>();
 		volGroups.add(currentGroup);
@@ -43,7 +44,15 @@ class PageStructBuilder {
 			}
 			currentGroup.add(bs);
 		}
-		return paginateGrouped(rcontext, volGroups);
+		return new Iterable<SplitPointDataSource<Sheet>>(){
+			@Override
+			public Iterator<SplitPointDataSource<Sheet>> iterator() {
+				try {
+					return paginateGrouped(rcontext, volGroups).iterator();
+				} catch (PaginatorException e) {
+					throw new RuntimeException(e);
+				}
+			}};
 	}
 
 	private List<SplitPointDataSource<Sheet>> paginateGrouped(DefaultContext rcontext, Iterable<Iterable<BlockSequence>> volGroups) throws PaginatorException {

@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.daisy.dotify.common.split.SplitPoint;
 import org.daisy.dotify.common.split.SplitPointCost;
-import org.daisy.dotify.common.split.SplitPointDataList;
 import org.daisy.dotify.common.split.SplitPointDataSource;
 import org.daisy.dotify.common.split.SplitPointHandler;
 import org.daisy.dotify.common.split.StandardSplitOption;
@@ -52,20 +51,19 @@ public class VolumeProvider {
 		//FIXME: delete the following try/catch
 		//This code is here for compatibility with regression tests and can be removed once
 		//differences have been checked and accepted
-		try {
-			// make a preliminary calculation based on a contents only
-			List<SplitPointDataSource<Sheet>> allUnits = new PageStructBuilder(fcontext, blocks, crh).paginateGrouped(new DefaultContext.Builder().space(Space.BODY).build());
-			int volCount = 0;
-			for (SplitPointDataSource<Sheet> data : allUnits) {
-				SheetGroup g = groups.add();
-				g.setUnits(data);
-				g.getSplitter().updateSheetCount(data.getRemaining().size());
-				volCount += g.getSplitter().getVolumeCount();
-			}
-			crh.setVolumeCount(volCount);
-		} catch (PaginatorException e) {
-			throw new RuntimeException("Error while formatting.", e);
+		// make a preliminary calculation based on a contents only
+		Iterable<SplitPointDataSource<Sheet>> allUnits = new PageStructBuilder(fcontext, blocks, crh).paginateGrouped(new DefaultContext.Builder().space(Space.BODY).build());
+		int volCount = 0;
+		for (SplitPointDataSource<Sheet> data : allUnits) {
+			SheetGroup g = groups.add();
+			g.setUnits(data);
+			g.getSplitter().updateSheetCount(data.getRemaining().size());
+			volCount += g.getSplitter().getVolumeCount();
 		}
+		crh.setVolumeCount(volCount);
+		/*catch (PaginatorException e) {
+			throw new RuntimeException("Error while formatting.", e);
+		}*/
 	}
 	
 	/**
@@ -73,14 +71,15 @@ public class VolumeProvider {
 	 */
 	void prepare() {
 		contentPaginator = new PageStructBuilder(fcontext, blocks, crh);
-		try {
-			List<SplitPointDataSource<Sheet>> allUnits = contentPaginator.paginateGrouped(new DefaultContext.Builder().space(Space.BODY).build());
-			for (int i=0; i<allUnits.size(); i++) {
-				groups.atIndex(i).setUnits(allUnits.get(i));
-			}
-		} catch (PaginatorException e) {
-			throw new RuntimeException("Error while reformatting.", e);
+		Iterable<SplitPointDataSource<Sheet>> allUnits = contentPaginator.paginateGrouped(new DefaultContext.Builder().space(Space.BODY).build());
+		int i=0;
+		for (SplitPointDataSource<Sheet> unit : allUnits) {
+			groups.atIndex(i).setUnits(unit);
+			i++;
 		}
+		/* catch (PaginatorException e) {
+			throw new RuntimeException("Error while reformatting.", e);
+		}*/
 		pageIndex = 0;
 		currentVolumeNumber=0;
 
