@@ -66,8 +66,31 @@ class PageStructBuilder {
 		List<Sheet> currentGroup = new ArrayList<>();
 		boolean volBreakAllowed = true;
 		for (BlockSequence bs : seqs) {
-			PageSequence seq = newSequence(bs, rcontext);
-			LayoutMaster lm = seq.getLayoutMaster();
+			int offset = getCurrentPageOffset();
+			UnwriteableAreaInfo uai = new UnwriteableAreaInfo();
+			PageSequence seq = null;
+			restart: while (seq==null) {
+				PageSequenceBuilder2 psb = new PageSequenceBuilder2(struct, bs.getLayoutMaster(), bs.getInitialPageNumber()!=null?bs.getInitialPageNumber() - 1:offset, crh, uai, bs, context, rcontext);
+				while (psb.hasNext()) {
+					try {
+						psb.nextPage();
+					} catch (RestartPaginationOfSequenceException e) {
+						if (!uai.isDirty()) {
+							throw new RuntimeException("coding error");
+						} else {
+							uai.commit();
+							uai.rewind();
+							continue restart;
+						}
+					}
+				}
+				if (uai.isDirty()) {
+					throw new RuntimeException("coding error");
+				}
+				struct.add(psb.getSequence());
+				seq = psb.getSequence();
+			}
+			LayoutMaster lm = bs.getLayoutMaster();
 			Sheet.Builder s = null;
 			SheetIdentity si = null;
 			List<PageImpl> pages = seq.getPages();
@@ -114,32 +137,6 @@ class PageStructBuilder {
 		return new SplitPointDataList<>(currentGroup);
 	}
 
-	private PageSequence newSequence(BlockSequence seq, DefaultContext rcontext) throws PaginatorException, RestartPaginationException {
-		int offset = getCurrentPageOffset();
-		UnwriteableAreaInfo uai = new UnwriteableAreaInfo();
-	  restart: while (true) {
-			PageSequenceBuilder2 psb = new PageSequenceBuilder2(struct, seq.getLayoutMaster(), seq.getInitialPageNumber()!=null?seq.getInitialPageNumber() - 1:offset, crh, uai, seq, context, rcontext);
-			while (psb.hasNext()) {
-				try {
-					psb.nextPage();
-				} catch (RestartPaginationOfSequenceException e) {
-					if (!uai.isDirty()) {
-						throw new RuntimeException("coding error");
-					} else {
-						uai.commit();
-						uai.rewind();
-						continue restart;
-					}
-				}
-			}
-			if (uai.isDirty()) {
-				throw new RuntimeException("coding error");
-			}
-			struct.add(psb.getSequence());
-			return psb.getSequence();
-		}
-	}
-	
 	private int getCurrentPageOffset() {
 		if (struct.size()>0) {
 			PageSequence prv = (PageSequence)struct.peek();
