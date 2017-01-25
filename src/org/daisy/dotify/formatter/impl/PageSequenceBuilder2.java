@@ -32,7 +32,7 @@ class PageSequenceBuilder2 {
 	private final PageAreaProperties areaProps;
 
 	private ContentCollectionImpl collection;
-	private BlockContext blockContext;
+	private final BlockContext blockContext;
 	private final PageSequence target;
 	private final LayoutMaster master;
 	private final int pageNumberOffset;
@@ -151,6 +151,21 @@ class PageSequenceBuilder2 {
 	private Iterator<PageImpl> nextPages;
 	
 	PageImpl nextPage() throws PaginatorException,
+    RestartPaginationException, // pagination must be restarted in PageStructBuilder.paginateInner
+    RestartPaginationOfSequenceException // pagination must be restarted in PageStructBuilder.newSequence
+	{
+		PageImpl ret = nextPageInner();
+		//This is for pre/post volume contents, where the volume number is known
+		if (blockContext.getContext().getCurrentVolume()!=null) {
+			for (String id : ret.getIdentifiers()) {
+				crh.setVolumeNumber(id, blockContext.getContext().getCurrentVolume());
+			}
+		}
+		getSequence().addPage(ret);
+		return ret;
+	}
+
+	PageImpl nextPageInner() throws PaginatorException,
 		                       RestartPaginationException, // pagination must be restarted in PageStructBuilder.paginateInner
 		                       RestartPaginationOfSequenceException // pagination must be restarted in PageStructBuilder.newSequence
 	{

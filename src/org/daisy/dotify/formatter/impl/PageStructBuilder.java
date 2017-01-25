@@ -117,31 +117,20 @@ class PageStructBuilder {
 	private PageSequence newSequence(BlockSequence seq, DefaultContext rcontext) throws PaginatorException, RestartPaginationException {
 		int offset = getCurrentPageOffset();
 		UnwriteableAreaInfo uai = new UnwriteableAreaInfo();
-		// crh.markUniqueChecks();
 	  restart: while (true) {
 			PageSequenceBuilder2 psb = new PageSequenceBuilder2(struct, seq.getLayoutMaster(), seq.getInitialPageNumber()!=null?seq.getInitialPageNumber() - 1:offset, crh, uai, seq, context, rcontext);
 			while (psb.hasNext()) {
-				PageImpl p; {
-					try {
-						p = psb.nextPage();
-					} catch (RestartPaginationOfSequenceException e) {
-						if (!uai.isDirty()) {
-							throw new RuntimeException("coding error");
-						} else {
-							uai.commit();
-							uai.rewind();
-							// crh.resetUniqueChecks();
-							continue restart;
-						}
+				try {
+					psb.nextPage();
+				} catch (RestartPaginationOfSequenceException e) {
+					if (!uai.isDirty()) {
+						throw new RuntimeException("coding error");
+					} else {
+						uai.commit();
+						uai.rewind();
+						continue restart;
 					}
 				}
-				//This is for pre/post volume contents, where the volume number is known
-				if (rcontext.getCurrentVolume()!=null) {
-					for (String id : p.getIdentifiers()) {
-						crh.setVolumeNumber(id, rcontext.getCurrentVolume());
-					}
-				}
-				psb.getSequence().addPage(p);
 			}
 			if (uai.isDirty()) {
 				throw new RuntimeException("coding error");
