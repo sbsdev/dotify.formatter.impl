@@ -62,11 +62,12 @@ class PageSequenceBuilder2 {
 		}
 	}
 
-	PageSequenceBuilder2(PageSequence target, LayoutMaster master, int pageNumberOffset, CrossReferenceHandler crh, UnwriteableAreaInfo uai,
+	PageSequenceBuilder2(PageStruct parent, LayoutMaster master, int pageOffset, CrossReferenceHandler crh, UnwriteableAreaInfo uai,
 	                     BlockSequence seq, FormatterContext context, DefaultContext rcontext) {
-		this.target = target;
-		this.master = master;
-		this.pageNumberOffset = pageNumberOffset;
+		//PageSequence target, LayoutMaster master, int pageNumberOffset, 
+		this.target = new PageSequence(parent, master, pageOffset);
+		this.master = target.getLayoutMaster();
+		this.pageNumberOffset = target.getPageNumberOffset();
 		this.context = context;
 		this.crh = crh;
 		this.uai = uai;
@@ -84,6 +85,10 @@ class PageSequenceBuilder2 {
 		this.blockContext = new BlockContext(seq.getLayoutMaster().getFlowWidth(), crh, rcontext, context);
 		this.staticAreaContent = new PageAreaContent(seq.getLayoutMaster().getPageAreaBuilder(), blockContext, uai);
 		this.dataGroups = new RowGroupBuilder(master, seq, blockContext, uai).getResult();
+	}
+	
+	PageSequence getSequence() {
+		return target;
 	}
 
 	private PageImpl newPage() {

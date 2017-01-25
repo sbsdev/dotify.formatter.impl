@@ -119,8 +119,7 @@ class PageStructBuilder {
 		UnwriteableAreaInfo uai = new UnwriteableAreaInfo();
 		// crh.markUniqueChecks();
 	  restart: while (true) {
-			PageSequence ps = new PageSequence(struct, seq.getLayoutMaster(), seq.getInitialPageNumber()!=null?seq.getInitialPageNumber() - 1:offset);
-			PageSequenceBuilder2 psb = new PageSequenceBuilder2(ps, ps.getLayoutMaster(), ps.getPageNumberOffset(), crh, uai, seq, context, rcontext);
+			PageSequenceBuilder2 psb = new PageSequenceBuilder2(struct, seq.getLayoutMaster(), seq.getInitialPageNumber()!=null?seq.getInitialPageNumber() - 1:offset, crh, uai, seq, context, rcontext);
 			while (psb.hasNext()) {
 				PageImpl p; {
 					try {
@@ -142,13 +141,13 @@ class PageStructBuilder {
 						crh.setVolumeNumber(id, rcontext.getCurrentVolume());
 					}
 				}
-				ps.addPage(p);
+				psb.getSequence().addPage(p);
 			}
 			if (uai.isDirty()) {
 				throw new RuntimeException("coding error");
 			}
-			struct.add(ps);
-			return ps;
+			struct.add(psb.getSequence());
+			return psb.getSequence();
 		}
 	}
 	
