@@ -66,52 +66,48 @@ class PageStructBuilder {
 		List<Sheet> currentGroup = new ArrayList<>();
 		boolean volBreakAllowed = true;
 		for (BlockSequence bs : seqs) {
-			try {
-				PageSequence seq = newSequence(bs, rcontext);
-				LayoutMaster lm = seq.getLayoutMaster();
-				Sheet.Builder s = null;
-				SheetIdentity si = null;
-				List<PageImpl> pages = seq.getPages();
-				int sheetIndex = 0;
-				for (int pageIndex = 0; pageIndex<pages.size(); pageIndex++) {
-					PageImpl p = pages.get(pageIndex);
-					if (!lm.duplex() || pageIndex % 2 == 0) {
-						volBreakAllowed = true;
-						if (s!=null) {
-							Sheet r = s.build();
-							currentGroup.add(r);
-						}
-						s = new Sheet.Builder();
-						si = new SheetIdentity(rcontext.getSpace(), rcontext.getCurrentVolume()==null?0:rcontext.getCurrentVolume(), currentGroup.size());
-						sheetIndex++;
+			PageSequence seq = newSequence(bs, rcontext);
+			LayoutMaster lm = seq.getLayoutMaster();
+			Sheet.Builder s = null;
+			SheetIdentity si = null;
+			List<PageImpl> pages = seq.getPages();
+			int sheetIndex = 0;
+			for (int pageIndex = 0; pageIndex<pages.size(); pageIndex++) {
+				PageImpl p = pages.get(pageIndex);
+				if (!lm.duplex() || pageIndex % 2 == 0) {
+					volBreakAllowed = true;
+					if (s!=null) {
+						Sheet r = s.build();
+						currentGroup.add(r);
 					}
-					s.avoidVolumeBreakAfterPriority(p.getAvoidVolumeBreakAfter());
-					if (pageIndex==pages.size()-1) {
-						s.avoidVolumeBreakAfterPriority(null);
-						//Don't get or store this value in crh as it is transient and not a property of the sheet context
-						s.breakable(true);
-					} else {
-						boolean br = crh.getBreakable(si);
-						//TODO: the following is a low effort way of giving existing uses of non-breakable units a high priority, but it probably shouldn't be done this way
-						if (!br) {
-							s.avoidVolumeBreakAfterPriority(1);
-						}
-						s.breakable(br);
+					s = new Sheet.Builder();
+					si = new SheetIdentity(rcontext.getSpace(), rcontext.getCurrentVolume()==null?0:rcontext.getCurrentVolume(), currentGroup.size());
+					sheetIndex++;
+				}
+				s.avoidVolumeBreakAfterPriority(p.getAvoidVolumeBreakAfter());
+				if (pageIndex==pages.size()-1) {
+					s.avoidVolumeBreakAfterPriority(null);
+					//Don't get or store this value in crh as it is transient and not a property of the sheet context
+					s.breakable(true);
+				} else {
+					boolean br = crh.getBreakable(si);
+					//TODO: the following is a low effort way of giving existing uses of non-breakable units a high priority, but it probably shouldn't be done this way
+					if (!br) {
+						s.avoidVolumeBreakAfterPriority(1);
 					}
+					s.breakable(br);
+				}
 
-					setPreviousSheet(si.getSheetIndex()-1, Math.min(p.keepPreviousSheets(), sheetIndex-1), rcontext);
-					volBreakAllowed &= p.allowsVolumeBreak();
-					if (!lm.duplex() || pageIndex % 2 == 1) {
-						crh.keepBreakable(si, volBreakAllowed);
-					}
-					s.add(p);
+				setPreviousSheet(si.getSheetIndex()-1, Math.min(p.keepPreviousSheets(), sheetIndex-1), rcontext);
+				volBreakAllowed &= p.allowsVolumeBreak();
+				if (!lm.duplex() || pageIndex % 2 == 1) {
+					crh.keepBreakable(si, volBreakAllowed);
 				}
-				if (s!=null) {
-					//Last page in the sequence doesn't need volume keep priority
-					currentGroup.add(s.build());
-				}
-			} catch (RestartPaginationException e) {
-				throw e;
+				s.add(p);
+			}
+			if (s!=null) {
+				//Last page in the sequence doesn't need volume keep priority
+				currentGroup.add(s.build());
 			}
 		}
 		crh.commitBreakable();
