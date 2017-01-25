@@ -9,13 +9,11 @@ class Sheet implements SplitPointUnit {
 	private static final List<String> SUPPLEMENTS = Collections.unmodifiableList(new ArrayList<String>()); 
 	private final List<PageImpl> pages;
 	private final boolean breakable, skippable, collapsible;
-	private final boolean startNewVolume;
 	private final Integer avoidVolumeBreakAfterPriority;
 	
 	static class Builder {
 		private final List<PageImpl> pages;
 		private boolean breakable = false;
-		private boolean startNewVolume = false;
 		private Integer avoidVolumeBreakAfterPriority = null;
 		
 		Builder() {
@@ -33,11 +31,6 @@ class Sheet implements SplitPointUnit {
 
 		Builder breakable(boolean value) {
 			this.breakable = value;
-			return this;
-		}
-		
-		Builder startNewVolume(boolean value) {
-			this.startNewVolume = value;
 			return this;
 		}
 
@@ -60,15 +53,10 @@ class Sheet implements SplitPointUnit {
 		this.avoidVolumeBreakAfterPriority = builder.avoidVolumeBreakAfterPriority;
 		this.skippable = pages.isEmpty();
 		this.collapsible = pages.isEmpty();
-		this.startNewVolume = builder.startNewVolume;
 	}
 	
 	List<PageImpl> getPages() {
 		return pages;
-	}
-	
-	boolean shouldStartNewVolume() {
-		return startNewVolume;
 	}
 
 	@Override

@@ -22,89 +22,96 @@ class PageStructBuilder {
 	}
 	
 	SplitPointDataSource<Sheet> paginate(DefaultContext rcontext) throws PaginatorException {
-		List<SplitPointDataSource<Sheet>> ret = paginateInner(rcontext, false);
+		List<Iterable<BlockSequence>> volGroups = new ArrayList<>();
+		volGroups.add(fs);
+		List<SplitPointDataSource<Sheet>> ret = paginateGrouped(rcontext, volGroups);
 		return ret.get(0);
 	}
 	
 	List<SplitPointDataSource<Sheet>> paginateGrouped(DefaultContext rcontext) throws PaginatorException {
-		return paginateInner(rcontext, true);
+		List<Iterable<BlockSequence>> volGroups = new ArrayList<>();
+		List<BlockSequence> currentGroup = new ArrayList<>();
+		volGroups.add(currentGroup);
+		for (BlockSequence bs : fs) {
+			if (bs.getSequenceProperties().getBreakBeforeType()==SequenceBreakBefore.VOLUME) {
+				currentGroup = new ArrayList<>();
+				volGroups.add(currentGroup);
+			}
+			currentGroup.add(bs);
+		}
+		return paginateGrouped(rcontext, volGroups);
 	}
 
-	private List<SplitPointDataSource<Sheet>> paginateInner(DefaultContext rcontext, boolean groupVolumeBreaks) throws PaginatorException {
+	private List<SplitPointDataSource<Sheet>> paginateGrouped(DefaultContext rcontext, Iterable<Iterable<BlockSequence>> volGroups) throws PaginatorException {
 		restart:while (true) {
 			struct = new PageStruct();
-			List<List<Sheet>> groups = new ArrayList<>();
-			List<Sheet> currentGroup = new ArrayList<>();
-			groups.add(currentGroup);
-			boolean volBreakAllowed = true;
-			for (BlockSequence bs : fs) {
-				try {
-					PageSequence seq = newSequence(bs, rcontext);
-					LayoutMaster lm = seq.getLayoutMaster();
-					Sheet.Builder s = null;
-					SheetIdentity si = null;
-					List<PageImpl> pages = seq.getPages();
-					int sheetIndex = 0;
-					for (int pageIndex = 0; pageIndex<pages.size(); pageIndex++) {
-						PageImpl p = pages.get(pageIndex);
-						if (!lm.duplex() || pageIndex % 2 == 0) {
-							volBreakAllowed = true;
-							if (s!=null) {
-								Sheet r = s.build();
-								if (r.shouldStartNewVolume() && groupVolumeBreaks) {
-									currentGroup = new ArrayList<>();
-									groups.add(currentGroup);
-								}
-								currentGroup.add(r);
-							}
-							s = new Sheet.Builder();
-							si = new SheetIdentity(rcontext.getSpace(), rcontext.getCurrentVolume()==null?0:rcontext.getCurrentVolume(), currentGroup.size());
-							sheetIndex++;
-						}
-						s.avoidVolumeBreakAfterPriority(p.getAvoidVolumeBreakAfter());
-						if (sheetIndex==1 && bs.getSequenceProperties().getBreakBeforeType()==SequenceBreakBefore.VOLUME) {
-							s.startNewVolume(true);
-						}
-						if (pageIndex==pages.size()-1) {
-							s.avoidVolumeBreakAfterPriority(null);
-							//Don't get or store this value in crh as it is transient and not a property of the sheet context
-							s.breakable(true);
-						} else {
-							boolean br = crh.getBreakable(si);
-							//TODO: the following is a low effort way of giving existing uses of non-breakable units a high priority, but it probably shouldn't be done this way
-							if (!br) {
-								s.avoidVolumeBreakAfterPriority(1);
-							}
-							s.breakable(br);
-						}
 
-						setPreviousSheet(si.getSheetIndex()-1, Math.min(p.keepPreviousSheets(), sheetIndex-1), rcontext);
-						volBreakAllowed &= p.allowsVolumeBreak();
-						if (!lm.duplex() || pageIndex % 2 == 1) {
-							crh.keepBreakable(si, volBreakAllowed);
-						}
-						s.add(p);
-					}
-					if (s!=null) {
-						//Last page in the sequence doesn't need volume keep priority
-						Sheet r = s.build();
-						if (r.shouldStartNewVolume() && groupVolumeBreaks) {
-							currentGroup = new ArrayList<>();
-							groups.add(currentGroup);
-						}
-						currentGroup.add(r);
-					}
+			List<SplitPointDataSource<Sheet>> ret = new ArrayList<>();
+			for (Iterable<BlockSequence> glist : volGroups) {
+				try {
+					ret.add(paginate(rcontext, glist));
 				} catch (RestartPaginationException e) {
 					continue restart;
 				}
 			}
-			List<SplitPointDataSource<Sheet>> ret = new ArrayList<>();
-			for (List<Sheet> glist : groups) {
-				ret.add(new SplitPointDataList<>(glist));
-			}
 			crh.commitBreakable();
 			return ret;
 		}
+	}
+	
+	private SplitPointDataSource<Sheet> paginate(DefaultContext rcontext, Iterable<BlockSequence> seqs) throws PaginatorException, RestartPaginationException {
+		List<Sheet> currentGroup = new ArrayList<>();
+		boolean volBreakAllowed = true;
+		for (BlockSequence bs : seqs) {
+			try {
+				PageSequence seq = newSequence(bs, rcontext);
+				LayoutMaster lm = seq.getLayoutMaster();
+				Sheet.Builder s = null;
+				SheetIdentity si = null;
+				List<PageImpl> pages = seq.getPages();
+				int sheetIndex = 0;
+				for (int pageIndex = 0; pageIndex<pages.size(); pageIndex++) {
+					PageImpl p = pages.get(pageIndex);
+					if (!lm.duplex() || pageIndex % 2 == 0) {
+						volBreakAllowed = true;
+						if (s!=null) {
+							Sheet r = s.build();
+							currentGroup.add(r);
+						}
+						s = new Sheet.Builder();
+						si = new SheetIdentity(rcontext.getSpace(), rcontext.getCurrentVolume()==null?0:rcontext.getCurrentVolume(), currentGroup.size());
+						sheetIndex++;
+					}
+					s.avoidVolumeBreakAfterPriority(p.getAvoidVolumeBreakAfter());
+					if (pageIndex==pages.size()-1) {
+						s.avoidVolumeBreakAfterPriority(null);
+						//Don't get or store this value in crh as it is transient and not a property of the sheet context
+						s.breakable(true);
+					} else {
+						boolean br = crh.getBreakable(si);
+						//TODO: the following is a low effort way of giving existing uses of non-breakable units a high priority, but it probably shouldn't be done this way
+						if (!br) {
+							s.avoidVolumeBreakAfterPriority(1);
+						}
+						s.breakable(br);
+					}
+
+					setPreviousSheet(si.getSheetIndex()-1, Math.min(p.keepPreviousSheets(), sheetIndex-1), rcontext);
+					volBreakAllowed &= p.allowsVolumeBreak();
+					if (!lm.duplex() || pageIndex % 2 == 1) {
+						crh.keepBreakable(si, volBreakAllowed);
+					}
+					s.add(p);
+				}
+				if (s!=null) {
+					//Last page in the sequence doesn't need volume keep priority
+					currentGroup.add(s.build());
+				}
+			} catch (RestartPaginationException e) {
+				throw e;
+			}
+		}
+		return new SplitPointDataList<>(currentGroup);
 	}
 
 	private PageSequence newSequence(BlockSequence seq, DefaultContext rcontext) throws PaginatorException, RestartPaginationException {

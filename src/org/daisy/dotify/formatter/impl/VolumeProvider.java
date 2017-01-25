@@ -103,31 +103,25 @@ public class VolumeProvider {
 			@Override
 			public double getCost(SplitPointDataSource<Sheet> units, int index, int breakpoint) {
 				int contentSheetTarget = targetSheetsInVolume - overhead;
-				if (units.hasElementAt(index+1) && units.get(index+1).shouldStartNewVolume()) { 
-					// The closer to 0 index is, the better. 
-					// By giving it a negative cost, it is always preferred over the options below.
-					return index-breakpoint;
-				} else {
-					Sheet lastSheet = units.get(index);
-					double priorityPenalty = 0;
-					int sheetCount = index + 1;
-					// Calculates a maximum offset based on the maximum possible number of sheets
-					double range = splitterMax * 0.2;
-					if (!units.isEmpty()) {
-						Integer avoid = lastSheet.getAvoidVolumeBreakAfterPriority();
-						if (avoid!=null) {
-							// Reverses 1-9 to 9-1 with bounds control and normalizes that to [1/9, 1]
-							double normalized = ((10 - Math.max(1, Math.min(avoid, 9)))/9d);
-							// Calculates a number of sheets that a high priority can beat
-							priorityPenalty = range * normalized;
-						}
+				Sheet lastSheet = units.get(index);
+				double priorityPenalty = 0;
+				int sheetCount = index + 1;
+				// Calculates a maximum offset based on the maximum possible number of sheets
+				double range = splitterMax * 0.2;
+				if (!units.isEmpty()) {
+					Integer avoid = lastSheet.getAvoidVolumeBreakAfterPriority();
+					if (avoid!=null) {
+						// Reverses 1-9 to 9-1 with bounds control and normalizes that to [1/9, 1]
+						double normalized = ((10 - Math.max(1, Math.min(avoid, 9)))/9d);
+						// Calculates a number of sheets that a high priority can beat
+						priorityPenalty = range * normalized;
 					}
-					// sets the preferred value to targetSheetsInVolume, where cost will be 0
-					// including a small preference for bigger volumes
-					double distancePenalty = Math.abs(contentSheetTarget - sheetCount) + (contentSheetTarget-sheetCount)*0.001;
-					int unbreakablePenalty = lastSheet.isBreakable()?0:100;
-					return distancePenalty + priorityPenalty + unbreakablePenalty;
 				}
+				// sets the preferred value to targetSheetsInVolume, where cost will be 0
+				// including a small preference for bigger volumes
+				double distancePenalty = Math.abs(contentSheetTarget - sheetCount) + (contentSheetTarget-sheetCount)*0.001;
+				int unbreakablePenalty = lastSheet.isBreakable()?0:100;
+				return distancePenalty + priorityPenalty + unbreakablePenalty;
 			}};
 		SplitPoint<Sheet> sp = volSplitter.split(splitterMax-overhead, groups.currentGroup().getUnits(), cost, StandardSplitOption.ALLOW_FORCE);
 		groups.currentGroup().setUnits(sp.getTail());
