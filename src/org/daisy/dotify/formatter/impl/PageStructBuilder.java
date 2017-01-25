@@ -22,10 +22,14 @@ class PageStructBuilder {
 	}
 	
 	SplitPointDataSource<Sheet> paginate(DefaultContext rcontext) throws PaginatorException {
-		List<Iterable<BlockSequence>> volGroups = new ArrayList<>();
-		volGroups.add(fs);
-		List<SplitPointDataSource<Sheet>> ret = paginateGrouped(rcontext, volGroups);
-		return ret.get(0);
+		restart:while (true) {
+			struct = new PageStruct();
+			try {
+				return paginate(rcontext, fs);
+			} catch (RestartPaginationException e) {
+				continue restart;
+			}
+		}
 	}
 	
 	List<SplitPointDataSource<Sheet>> paginateGrouped(DefaultContext rcontext) throws PaginatorException {
@@ -54,7 +58,6 @@ class PageStructBuilder {
 					continue restart;
 				}
 			}
-			crh.commitBreakable();
 			return ret;
 		}
 	}
@@ -111,6 +114,7 @@ class PageStructBuilder {
 				throw e;
 			}
 		}
+		crh.commitBreakable();
 		return new SplitPointDataList<>(currentGroup);
 	}
 
