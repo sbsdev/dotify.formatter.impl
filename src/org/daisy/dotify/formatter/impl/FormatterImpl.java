@@ -44,8 +44,8 @@ public class FormatterImpl implements Formatter {
 	private final Stack<BlockSequence> blocks;
 	
 	//CrossReferenceHandler
-	private CrossReferenceHandler crh;
-	private LazyFormatterContext context;
+	private final CrossReferenceHandler crh;
+	private final LazyFormatterContext context;
 
 	/**
 	 * Creates a new formatter.
@@ -145,30 +145,15 @@ public class FormatterImpl implements Formatter {
             }
         };
 
-		VolumeProvider volumeProvider = new VolumeProvider(blocks, limit, context.getFormatterContext(), crh);
+		VolumeProvider volumeProvider = new VolumeProvider(blocks, volumeTemplates, limit, context, crh);
 
 		ArrayList<VolumeImpl> ret;
-		ArrayList<AnchorData> ad;
 
 		for (int j=1;j<=10;j++) {
 			ret = new ArrayList<>();
 			volumeProvider.prepare();
 			for (int i=1;i<= crh.getVolumeCount();i++) {
-				VolumeImpl volume = crh.getVolume(i);
-				ad = new ArrayList<>();
-				volume.setPreVolData(updateVolumeContents(i, ad, true));
-				volume.setBody(volumeProvider.nextVolume(volume.getOverhead(), ad));
-				
-				if (logger.isLoggable(Level.FINE)) {
-					logger.fine("Sheets  in volume " + i + ": " + (volume.getVolumeSize()) + 
-							", content:" + volume.getBodySize() +
-							", overhead:" + volume.getOverhead());
-				}
-				volume.setPostVolData(updateVolumeContents(i, ad, false));
-				crh.setSheetsInVolume(i, volume.getBodySize() + volume.getOverhead());
-				//crh.setPagesInVolume(i, value);
-				crh.setAnchorData(i, ad);
-				ret.add(volume);
+				ret.add(volumeProvider.nextVolume());
 			}
 
 			volumeProvider.update();
@@ -192,39 +177,6 @@ public class FormatterImpl implements Formatter {
 			}
 		}
 		throw new RuntimeException("Failed to complete volume division.");
-	}
-
-	private List<Sheet> updateVolumeContents(int volumeNumber, ArrayList<AnchorData> ad, boolean pre) {
-		DefaultContext c = new DefaultContext.Builder()
-						.currentVolume(volumeNumber)
-						.referenceHandler(crh)
-						.space(pre?Space.PRE_CONTENT:Space.POST_CONTENT)
-						.build();
-		try {
-			ArrayList<BlockSequence> ib = new ArrayList<>();
-			for (VolumeTemplate t : volumeTemplates) {
-				if (t.appliesTo(c)) {
-					for (VolumeSequence seq : (pre?t.getPreVolumeContent():t.getPostVolumeContent())) {
-						BlockSequence s = seq.getBlockSequence(context.getFormatterContext(), c, crh);
-						if (s!=null) {
-							ib.add(s);
-						}
-					}
-					break;
-				}
-			}
-			List<Sheet> ret = new PageStructBuilder(context.getFormatterContext(), ib, crh).paginate(c).getRemaining();
-			for (Sheet ps : ret) {
-				for (PageImpl p : ps.getPages()) {
-					if (p.getAnchors().size()>0) {
-						ad.add(new AnchorData(p.getPageIndex(), p.getAnchors()));
-					}
-				}
-			}
-			return ret;
-		} catch (PaginatorException e) {
-			return null;
-		}
 	}
 
 }

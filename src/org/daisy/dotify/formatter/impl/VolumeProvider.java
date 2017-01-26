@@ -2,6 +2,9 @@ package org.daisy.dotify.formatter.impl;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.daisy.dotify.common.split.SplitPoint;
 import org.daisy.dotify.common.split.SplitPointCost;
@@ -17,6 +20,7 @@ import org.daisy.dotify.formatter.impl.DefaultContext.Space;
  *
  */
 public class VolumeProvider {
+	private static final Logger logger = Logger.getLogger(VolumeProvider.class.getCanonicalName());
 	private final Iterable<BlockSequence> blocks;
 	private final FormatterContext fcontext;
 	private final  CrossReferenceHandler crh;
@@ -28,18 +32,23 @@ public class VolumeProvider {
 	private int currentVolumeNumber=0;
 	
 	private final SplitterLimit splitterLimit;
+    private final Stack<VolumeTemplate> volumeTemplates;
+    private final LazyFormatterContext context;
 
 	/**
 	 * Creates a new volume provider with the specifed parameters
 	 * @param blocks the block sequences
+	 * @param volumeTemplates volume templates
 	 * @param splitterLimit the splitter limit
-	 * @param fcontext the formatter context
+	 * @param context the formatter context
 	 * @param crh the cross reference handler
 	 */
-	public VolumeProvider(Iterable<BlockSequence> blocks, SplitterLimit splitterLimit, FormatterContext fcontext, CrossReferenceHandler crh) {
+	public VolumeProvider(Iterable<BlockSequence> blocks, Stack<VolumeTemplate> volumeTemplates, SplitterLimit splitterLimit, LazyFormatterContext context, CrossReferenceHandler crh) {
 		this.blocks = blocks;
 		this.splitterLimit = splitterLimit;
-		this.fcontext = fcontext;
+		this.volumeTemplates = volumeTemplates;
+		this.fcontext = context.getFormatterContext();
+		this.context = context;
 		this.crh = crh;
 		this.volSplitter = new SplitPointHandler<>();
 		
@@ -86,14 +95,33 @@ public class VolumeProvider {
 		groups.resetAll();
 	}
 	
+	VolumeImpl nextVolume() {
+		currentVolumeNumber++;
+		VolumeImpl volume = crh.getVolume(currentVolumeNumber);
+		ArrayList<AnchorData> ad = new ArrayList<>();
+		volume.setPreVolData(updateVolumeContents(currentVolumeNumber, ad, true));
+		volume.setBody(nextBodyContents(volume.getOverhead(), ad));
+		
+		if (logger.isLoggable(Level.FINE)) {
+			logger.fine("Sheets  in volume " + currentVolumeNumber + ": " + (volume.getVolumeSize()) + 
+					", content:" + volume.getBodySize() +
+					", overhead:" + volume.getOverhead());
+		}
+		volume.setPostVolData(updateVolumeContents(currentVolumeNumber, ad, false));
+		crh.setSheetsInVolume(currentVolumeNumber, volume.getBodySize() + volume.getOverhead());
+		//crh.setPagesInVolume(i, value);
+		crh.setAnchorData(currentVolumeNumber, ad);
+		return volume;
+
+	}
+	
 	/**
 	 * Gets the contents of the next volume
 	 * @param overhead the number of sheets in this volume that's not part of the main body of text
 	 * @param ad the anchor data
 	 * @return returns the contents of the next volume
 	 */
-	List<Sheet> nextVolume(final int overhead, ArrayList<AnchorData> ad) {
-		currentVolumeNumber++;
+	private List<Sheet> nextBodyContents(final int overhead, ArrayList<AnchorData> ad) {
 		groups.currentGroup().setOverheadCount(groups.currentGroup().getOverheadCount() + overhead);
 		final int splitterMax = splitterLimit.getSplitterLimit(currentVolumeNumber);
 		final int targetSheetsInVolume = (groups.lastInGroup()?splitterMax:groups.sheetsInCurrentVolume());
@@ -142,6 +170,39 @@ public class VolumeProvider {
 		groups.currentGroup().setSheetCount(groups.currentGroup().getSheetCount() + contents.size());
 		groups.nextVolume();
 		return contents;
+	}
+	
+	private List<Sheet> updateVolumeContents(int volumeNumber, ArrayList<AnchorData> ad, boolean pre) {
+		DefaultContext c = new DefaultContext.Builder()
+						.currentVolume(volumeNumber)
+						.referenceHandler(crh)
+						.space(pre?Space.PRE_CONTENT:Space.POST_CONTENT)
+						.build();
+		try {
+			ArrayList<BlockSequence> ib = new ArrayList<>();
+			for (VolumeTemplate t : volumeTemplates) {
+				if (t.appliesTo(c)) {
+					for (VolumeSequence seq : (pre?t.getPreVolumeContent():t.getPostVolumeContent())) {
+						BlockSequence s = seq.getBlockSequence(context.getFormatterContext(), c, crh);
+						if (s!=null) {
+							ib.add(s);
+						}
+					}
+					break;
+				}
+			}
+			List<Sheet> ret = new PageStructBuilder(context.getFormatterContext(), ib, crh).paginate(c).getRemaining();
+			for (Sheet ps : ret) {
+				for (PageImpl p : ps.getPages()) {
+					if (p.getAnchors().size()>0) {
+						ad.add(new AnchorData(p.getPageIndex(), p.getAnchors()));
+					}
+				}
+			}
+			return ret;
+		} catch (PaginatorException e) {
+			return null;
+		}
 	}
 	
 	/**
