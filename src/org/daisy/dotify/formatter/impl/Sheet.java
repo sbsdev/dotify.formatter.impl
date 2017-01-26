@@ -120,11 +120,7 @@ class Sheet implements SplitPointUnit {
 	 * @return returns the number of pages
 	 */
 	static int countPages(List<Sheet> sheets) {
-		int ret = 0;
-		for (Sheet s : sheets) {
-			ret += s.getPages().size();
-		}
-		return ret;
+		return sheets.stream().mapToInt(s -> s.getPages().size()).sum();
 	}
 
 }

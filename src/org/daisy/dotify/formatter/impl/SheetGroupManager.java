@@ -126,12 +126,7 @@ class SheetGroupManager {
 	 * @return returns true if the manager has content, false otherwise
 	 */
 	boolean hasNext() {
-		for (SheetGroup g : groups) {
-			if (g.hasNext()) {
-				return true;
-			}
-		}
-		return false;
+		return groups.stream().anyMatch(g -> g.hasNext());
 	}
 	
 	/**
@@ -162,11 +157,7 @@ class SheetGroupManager {
 	 * @return returns the sheet count
 	 */
 	int countTotalSheets() {
-		int ret = 0;
-		for (SheetGroup g : groups) {
-			ret += g.countTotalSheets();
-		}
-		return ret;
+		return groups.stream().mapToInt(g -> g.countTotalSheets()).sum();
 	}
 	
 	/**
@@ -175,11 +166,7 @@ class SheetGroupManager {
 	 * @return returns the number of remaining sheets
 	 */
 	int countRemainingSheets() {
-		int ret = 0;
-		for (SheetGroup g : groups) {
-			ret += g.getUnits().getRemaining().size();
-		}
-		return ret;
+		return groups.stream().mapToInt(g -> g.getUnits().getRemaining().size()).sum();
 	}
 	
 	/**
@@ -188,11 +175,7 @@ class SheetGroupManager {
 	 * @return returns the number of remaining pages
 	 */
 	int countRemainingPages() {
-		int ret = 0;
-		for (SheetGroup g : groups) {
-			ret += Sheet.countPages(g.getUnits().getRemaining());
-		}
-		return ret;
+		return groups.stream().map(g -> g.getUnits().getRemaining()).mapToInt(Sheet::countPages).sum();
 	}
 	
 	/**
@@ -200,11 +183,7 @@ class SheetGroupManager {
 	 * @return returns the total number of volumes
 	 */
 	int getVolumeCount() {
-		int ret = 0;
-		for (SheetGroup g : groups) {
-			ret += g.getSplitter().getVolumeCount();
-		}
-		return ret;
+		return groups.stream().mapToInt(g -> g.getSplitter().getVolumeCount()).sum();
 	}
 
 }
