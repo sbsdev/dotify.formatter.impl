@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -134,7 +135,21 @@ public class FormatterImpl implements Formatter {
 	}
 
 	private Iterable<? extends Volume> getVolumes() {
-		VolumeProvider volumeProvider = new VolumeProvider(blocks, new VolumeSplitterLimit(), context.getFormatterContext(), crh);
+        SplitterLimit limit = volumeNumber -> {
+            final DefaultContext c = new DefaultContext.Builder()
+                    .currentVolume(volumeNumber)
+                    .referenceHandler(crh)
+                    .build();
+            Optional<VolumeTemplate> ot = volumeTemplates.stream().filter(t -> t.appliesTo(c)).findFirst();
+            if (ot.isPresent()) {
+                return ot.get().getVolumeMaxSize();
+            } else {
+                logger.fine("Found no applicable volume template.");
+                return DEFAULT_SPLITTER_MAX;                
+            }
+        };
+
+		VolumeProvider volumeProvider = new VolumeProvider(blocks, limit, context.getFormatterContext(), crh);
 
 		ArrayList<VolumeImpl> ret;
 		ArrayList<AnchorData> ad;
@@ -213,32 +228,6 @@ public class FormatterImpl implements Formatter {
 			return ret;
 		} catch (PaginatorException e) {
 			return null;
-		}
-	}
-	
-	
-	private class VolumeSplitterLimit implements SplitterLimit {
-		/**
-		 * Gets the volume max size based on the supplied information.
-		 * 
-		 * @param volumeNumber the volume number, one based
-		 * @return returns the maximum number of sheets in the volume
-		 */
-		public int getSplitterLimit(int volumeNumber) {
-			for (VolumeTemplate t : volumeTemplates) {
-				if (t==null) {
-					logger.warning("A volume template is null.");
-					continue;
-				}
-				if (t.appliesTo(new DefaultContext.Builder()
-							.currentVolume(volumeNumber)
-							.referenceHandler(crh)
-							.build())) {
-					return t.getVolumeMaxSize();
-				}
-			}
-			logger.fine("Found no applicable volume template.");
-			return DEFAULT_SPLITTER_MAX;
 		}
 	}
 	
