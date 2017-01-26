@@ -97,10 +97,10 @@ public class VolumeProvider {
 	
 	VolumeImpl nextVolume() {
 		currentVolumeNumber++;
-		VolumeImpl volume = crh.getVolume(currentVolumeNumber);
+		VolumeImpl volume = new VolumeImpl(crh.getOverhead(currentVolumeNumber));
 		ArrayList<AnchorData> ad = new ArrayList<>();
 		volume.setPreVolData(updateVolumeContents(currentVolumeNumber, ad, true));
-		volume.setBody(nextBodyContents(volume.getOverhead(), ad));
+		volume.setBody(nextBodyContents(volume.getOverhead().total(), ad));
 		
 		if (logger.isLoggable(Level.FINE)) {
 			logger.fine("Sheets  in volume " + currentVolumeNumber + ": " + (volume.getVolumeSize()) + 
@@ -108,9 +108,10 @@ public class VolumeProvider {
 					", overhead:" + volume.getOverhead());
 		}
 		volume.setPostVolData(updateVolumeContents(currentVolumeNumber, ad, false));
-		crh.setSheetsInVolume(currentVolumeNumber, volume.getBodySize() + volume.getOverhead());
+		crh.setSheetsInVolume(currentVolumeNumber, volume.getBodySize() + volume.getOverhead().total());
 		//crh.setPagesInVolume(i, value);
 		crh.setAnchorData(currentVolumeNumber, ad);
+		crh.setOverhead(currentVolumeNumber, volume.getOverhead());
 		return volume;
 
 	}

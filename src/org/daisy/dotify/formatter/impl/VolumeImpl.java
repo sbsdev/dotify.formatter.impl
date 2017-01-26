@@ -2,7 +2,6 @@ package org.daisy.dotify.formatter.impl;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Stack;
 
 import org.daisy.dotify.writer.impl.Section;
 import org.daisy.dotify.writer.impl.Volume;
@@ -15,13 +14,11 @@ class VolumeImpl implements Volume {
 	private List<Section> body;
 	private List<Section> preVolData;
 	private List<Section> postVolData;
-	private int preVolSize;
-	private int postVolSize;
+	private Overhead overhead;
 	private int bodyVolSize;
 	
-	VolumeImpl() {
-		this.preVolSize = 0;
-		this.postVolSize = 0;
+	VolumeImpl(Overhead overhead) {
+		this.overhead = overhead;
 		this.bodyVolSize = 0;
 	}
 
@@ -32,18 +29,18 @@ class VolumeImpl implements Volume {
 	
 	public void setPreVolData(SectionBuilder preVolData) {
 		//use the highest value to avoid oscillation
-		preVolSize = Math.max(preVolSize, preVolData.getSheetCount());
+		overhead = overhead.withPreContentSize(Math.max(overhead.getPreContentSize(), preVolData.getSheetCount()));
 		this.preVolData = preVolData.getSections();
 	}
 
 	public void setPostVolData(SectionBuilder postVolData) {
 		//use the highest value to avoid oscillation
-		postVolSize = Math.max(postVolSize, postVolData.getSheetCount());
+		overhead = overhead.withPostContentSize(Math.max(overhead.getPostContentSize(), postVolData.getSheetCount()));
 		this.postVolData = postVolData.getSections();
 	}
 	
-	public int getOverhead() {
-		return preVolSize + postVolSize;
+	public Overhead getOverhead() {
+		return overhead;
 	}
 	
 	public int getBodySize() {
@@ -51,7 +48,7 @@ class VolumeImpl implements Volume {
 	}
 	
 	public int getVolumeSize() {
-		return preVolSize + postVolSize + bodyVolSize;
+		return overhead.total() + bodyVolSize;
 	}
 
 	@Override

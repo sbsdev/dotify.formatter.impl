@@ -9,7 +9,7 @@ class CrossReferenceHandler {
 	private final LookupHandler<Integer, Iterable<AnchorData>> anchorRefs;
 	private final LookupHandler<String, Integer> variables;
 	private final LookupHandler<SheetIdentity, Boolean> breakable;
-	private final Map<Integer, VolumeImpl> volumes;
+	private final Map<Integer, Overhead> volumeOverhead;
 	private static final String VOLUMES_KEY = "volumes";
 	private static final String SHEETS_IN_VOLUME = "sheets-in-volume-";
 	private static final String SHEETS_IN_DOCUMENT = "sheets-in-document";
@@ -23,7 +23,7 @@ class CrossReferenceHandler {
 		this.anchorRefs = new LookupHandler<>();
 		this.variables = new LookupHandler<>();
 		this.breakable = new LookupHandler<>();
-		this.volumes = new HashMap<>();
+		this.volumeOverhead = new HashMap<>();
 	}
 	
 	/**
@@ -88,15 +88,19 @@ class CrossReferenceHandler {
 		breakable.commit();
 	}
 	
-	VolumeImpl getVolume(int volumeNumber) {
+	Overhead getOverhead(int volumeNumber) {
 		if (volumeNumber<1) {
 			throw new IndexOutOfBoundsException("Volume must be greater than or equal to 1");
 		}
-		if (volumes.get(volumeNumber)==null) {
-			volumes.put(volumeNumber, new VolumeImpl());
+		if (volumeOverhead.get(volumeNumber)==null) {
+			volumeOverhead.put(volumeNumber, new Overhead(0, 0));
 			overheadDirty = true;
 		}
-		return volumes.get(volumeNumber);
+		return volumeOverhead.get(volumeNumber);
+	}
+	
+	void setOverhead(int volumeNumber, Overhead overhead) {
+		volumeOverhead.put(volumeNumber, overhead);
 	}
 
 	/**
