@@ -45,7 +45,6 @@ public class FormatterImpl implements Formatter {
 	
 	//CrossReferenceHandler
 	private final Map<Integer, VolumeImpl> volumes;
-	private boolean isDirty;
 	private CrossReferenceHandler crh;
 	private LazyFormatterContext context;
 
@@ -68,7 +67,6 @@ public class FormatterImpl implements Formatter {
 		
 		//CrossReferenceHandler
 		this.volumes = new HashMap<>();
-		this.isDirty = false;
 		this.crh = new CrossReferenceHandler();
 	}
 	
@@ -183,15 +181,15 @@ public class FormatterImpl implements Formatter {
 				if (logger.isLoggable(Level.FINE)) {
 					logger.fine("There is more content (sheets: " + volumeProvider.countRemainingSheets() + ", pages: " + volumeProvider.countRemainingPages() + ")");
 				}
-				if (!isDirty() && j>1) {
+				if (!crh.isDirty() && j>1) {
 					volumeProvider.adjustVolumeCount();
 				}
 			}
-			if (!isDirty() && !volumeProvider.hasNext()) {
+			if (!crh.isDirty() && !volumeProvider.hasNext()) {
 				//everything fits
 				return ret;
 			} else {
-				setDirty(false);
+				crh.setDirty(false);
 				logger.info("Things didn't add up, running another iteration (" + j + ")");
 			}
 		}
@@ -237,18 +235,9 @@ public class FormatterImpl implements Formatter {
 		}
 		if (volumes.get(volumeNumber)==null) {
 			volumes.put(volumeNumber, new VolumeImpl());
-			setDirty(true);
+			crh.setDirty(true);
 		}
 		return volumes.get(volumeNumber);
-	}
-	
-	private boolean isDirty() {
-		return isDirty || crh.isDirty();
-	}
-
-	private void setDirty(boolean isDirty) {
-		this.isDirty = isDirty;
-		crh.setDirty(isDirty);
 	}
 
 }
