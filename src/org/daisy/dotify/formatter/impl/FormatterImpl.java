@@ -44,7 +44,6 @@ public class FormatterImpl implements Formatter {
 	private final Stack<BlockSequence> blocks;
 	
 	//CrossReferenceHandler
-	private final Map<Integer, VolumeImpl> volumes;
 	private CrossReferenceHandler crh;
 	private LazyFormatterContext context;
 
@@ -66,7 +65,6 @@ public class FormatterImpl implements Formatter {
 		this.logger = Logger.getLogger(this.getClass().getCanonicalName());
 		
 		//CrossReferenceHandler
-		this.volumes = new HashMap<>();
 		this.crh = new CrossReferenceHandler();
 	}
 	
@@ -156,7 +154,7 @@ public class FormatterImpl implements Formatter {
 			ret = new ArrayList<>();
 			volumeProvider.prepare();
 			for (int i=1;i<= crh.getVolumeCount();i++) {
-				VolumeImpl volume = getVolume(i);
+				VolumeImpl volume = crh.getVolume(i);
 				ad = new ArrayList<>();
 				volume.setPreVolData(updateVolumeContents(i, ad, true));
 				volume.setBody(volumeProvider.nextVolume(volume.getOverhead(), ad));
@@ -227,17 +225,6 @@ public class FormatterImpl implements Formatter {
 		} catch (PaginatorException e) {
 			return null;
 		}
-	}
-	
-	private VolumeImpl getVolume(int volumeNumber) {
-		if (volumeNumber<1) {
-			throw new IndexOutOfBoundsException("Volume must be greater than or equal to 1");
-		}
-		if (volumes.get(volumeNumber)==null) {
-			volumes.put(volumeNumber, new VolumeImpl());
-			crh.setDirty(true);
-		}
-		return volumes.get(volumeNumber);
 	}
 
 }

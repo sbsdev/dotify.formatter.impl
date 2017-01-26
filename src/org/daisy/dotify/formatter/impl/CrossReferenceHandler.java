@@ -1,16 +1,21 @@
 package org.daisy.dotify.formatter.impl;
 
+import java.util.HashMap;
+import java.util.Map;
+
 class CrossReferenceHandler {
 	private final LookupHandler<String, Integer> pageRefs;
 	private final LookupHandler<String, Integer> volumeRefs;
 	private final LookupHandler<Integer, Iterable<AnchorData>> anchorRefs;
 	private final LookupHandler<String, Integer> variables;
 	private final LookupHandler<SheetIdentity, Boolean> breakable;
+	private final Map<Integer, VolumeImpl> volumes;
 	private static final String VOLUMES_KEY = "volumes";
 	private static final String SHEETS_IN_VOLUME = "sheets-in-volume-";
 	private static final String SHEETS_IN_DOCUMENT = "sheets-in-document";
 	private static final String PAGES_IN_VOLUME = "pages-in-volume-";
 	private static final String PAGES_IN_DOCUMENT = "pages-in-document";
+	private boolean overheadDirty = false;
 	
 	CrossReferenceHandler() {
 		this.pageRefs = new LookupHandler<>();
@@ -18,6 +23,7 @@ class CrossReferenceHandler {
 		this.anchorRefs = new LookupHandler<>();
 		this.variables = new LookupHandler<>();
 		this.breakable = new LookupHandler<>();
+		this.volumes = new HashMap<>();
 	}
 	
 	/**
@@ -82,6 +88,16 @@ class CrossReferenceHandler {
 		breakable.commit();
 	}
 	
+	VolumeImpl getVolume(int volumeNumber) {
+		if (volumeNumber<1) {
+			throw new IndexOutOfBoundsException("Volume must be greater than or equal to 1");
+		}
+		if (volumes.get(volumeNumber)==null) {
+			volumes.put(volumeNumber, new VolumeImpl());
+			overheadDirty = true;
+		}
+		return volumes.get(volumeNumber);
+	}
 
 	/**
 	 * Gets the number of volumes.
@@ -112,7 +128,7 @@ class CrossReferenceHandler {
 	}
 
 	boolean isDirty() {
-		return pageRefs.isDirty() || volumeRefs.isDirty() || anchorRefs.isDirty() || variables.isDirty() || breakable.isDirty();
+		return pageRefs.isDirty() || volumeRefs.isDirty() || anchorRefs.isDirty() || variables.isDirty() || breakable.isDirty() || overheadDirty;
 	}
 	
 	void setDirty(boolean value) {
@@ -121,6 +137,7 @@ class CrossReferenceHandler {
 		anchorRefs.setDirty(value);
 		variables.setDirty(value);
 		breakable.setDirty(value);
+		overheadDirty = value;
 	}
 
 }
