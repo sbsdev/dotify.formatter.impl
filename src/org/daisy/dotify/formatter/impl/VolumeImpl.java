@@ -18,48 +18,28 @@ class VolumeImpl implements Volume {
 	private int preVolSize;
 	private int postVolSize;
 	private int bodyVolSize;
-	private int targetVolSize;
 	
 	VolumeImpl() {
 		this.preVolSize = 0;
 		this.postVolSize = 0;
 		this.bodyVolSize = 0;
-		this.targetVolSize = 0;
 	}
 
-	public void setBody(List<Sheet> body) {
-		bodyVolSize = body.size();
-		this.body = sequencesFromSheets(body);
+	public void setBody(SectionBuilder body) {
+		bodyVolSize = body.getSheetCount();
+		this.body = body.getSections();
 	}
 	
-	private static List<Section> sequencesFromSheets(List<Sheet> sheets) {
-		Stack<Section> ret = new Stack<Section>();
-		PageSequence currentSeq = null;
-		for (Sheet s : sheets) {
-			for (PageImpl p : s.getPages()) {
-				if (ret.isEmpty() || currentSeq!=p.getSequenceParent()) {
-					currentSeq = p.getSequenceParent();
-					ret.add(
-							new SectionImpl(currentSeq.getSectionProperties())
-							//new PageSequence(ret, currentSeq.getLayoutMaster(), currentSeq.getPageNumberOffset())
-							);
-				}
-				((SectionImpl)ret.peek()).addPage(p);
-			}
-		}
-		return ret;
+	public void setPreVolData(SectionBuilder preVolData) {
+		//use the highest value to avoid oscillation
+		preVolSize = Math.max(preVolSize, preVolData.getSheetCount());
+		this.preVolData = preVolData.getSections();
 	}
 
-	public void setPreVolData(List<Sheet> preVolData) {
+	public void setPostVolData(SectionBuilder postVolData) {
 		//use the highest value to avoid oscillation
-		preVolSize = Math.max(preVolSize, preVolData.size());
-		this.preVolData = sequencesFromSheets(preVolData);
-	}
-
-	public void setPostVolData(List<Sheet> postVolData) {
-		//use the highest value to avoid oscillation
-		postVolSize = Math.max(postVolSize, postVolData.size());
-		this.postVolData = sequencesFromSheets(postVolData);
+		postVolSize = Math.max(postVolSize, postVolData.getSheetCount());
+		this.postVolData = postVolData.getSections();
 	}
 	
 	public int getOverhead() {
@@ -72,14 +52,6 @@ class VolumeImpl implements Volume {
 	
 	public int getVolumeSize() {
 		return preVolSize + postVolSize + bodyVolSize;
-	}
-
-	public int getTargetSize() {
-		return targetVolSize;
-	}
-
-	public void setTargetVolSize(int targetVolSize) {
-		this.targetVolSize = targetVolSize;
 	}
 
 	@Override

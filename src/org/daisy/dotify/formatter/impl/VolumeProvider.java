@@ -121,7 +121,7 @@ public class VolumeProvider {
 	 * @param ad the anchor data
 	 * @return returns the contents of the next volume
 	 */
-	private List<Sheet> nextBodyContents(final int overhead, ArrayList<AnchorData> ad) {
+	private SectionBuilder nextBodyContents(final int overhead, ArrayList<AnchorData> ad) {
 		groups.currentGroup().setOverheadCount(groups.currentGroup().getOverheadCount() + overhead);
 		final int splitterMax = splitterLimit.getSplitterLimit(currentVolumeNumber);
 		final int targetSheetsInVolume = (groups.lastInGroup()?splitterMax:groups.sheetsInCurrentVolume());
@@ -157,6 +157,7 @@ public class VolumeProvider {
 		// TODO: In a volume-by-volume scenario, how can we make this work
 		contentPaginator.setVolumeScope(currentVolumeNumber, pageIndex, pageIndex+pageCount); 
 		pageIndex += pageCount;
+		SectionBuilder sb = new SectionBuilder();
 		for (Sheet sheet : contents) {
 			for (PageImpl p : sheet.getPages()) {
 				for (String id : p.getIdentifiers()) {
@@ -166,13 +167,14 @@ public class VolumeProvider {
 					ad.add(new AnchorData(p.getPageIndex(), p.getAnchors()));
 				}
 			}
+			sb.addSheet(sheet);
 		}
 		groups.currentGroup().setSheetCount(groups.currentGroup().getSheetCount() + contents.size());
 		groups.nextVolume();
-		return contents;
+		return sb;
 	}
 	
-	private List<Sheet> updateVolumeContents(int volumeNumber, ArrayList<AnchorData> ad, boolean pre) {
+	private SectionBuilder updateVolumeContents(int volumeNumber, ArrayList<AnchorData> ad, boolean pre) {
 		DefaultContext c = new DefaultContext.Builder()
 						.currentVolume(volumeNumber)
 						.referenceHandler(crh)
@@ -192,14 +194,16 @@ public class VolumeProvider {
 				}
 			}
 			List<Sheet> ret = new PageStructBuilder(context.getFormatterContext(), ib, crh).paginate(c).getRemaining();
+			SectionBuilder sb = new SectionBuilder();
 			for (Sheet ps : ret) {
 				for (PageImpl p : ps.getPages()) {
 					if (p.getAnchors().size()>0) {
 						ad.add(new AnchorData(p.getPageIndex(), p.getAnchors()));
 					}
 				}
+				sb.addSheet(ps);
 			}
-			return ret;
+			return sb;
 		} catch (PaginatorException e) {
 			return null;
 		}
