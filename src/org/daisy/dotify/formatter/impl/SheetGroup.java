@@ -1,7 +1,5 @@
 package org.daisy.dotify.formatter.impl;
 
-import java.util.List;
-
 import org.daisy.dotify.common.split.SplitPointDataSource;
 
 /**

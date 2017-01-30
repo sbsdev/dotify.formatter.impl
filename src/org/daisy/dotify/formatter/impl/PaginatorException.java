@@ -5,7 +5,7 @@ package org.daisy.dotify.formatter.impl;
  * 
  * @author Joel Håkansson
  */
-class PaginatorException extends Exception {
+class PaginatorException extends RuntimeException {
 
 	/**
 	 * 

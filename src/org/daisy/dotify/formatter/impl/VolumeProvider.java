@@ -24,12 +24,13 @@ public class VolumeProvider {
 	private final Iterable<BlockSequence> blocks;
 	private final FormatterContext fcontext;
 	private final  CrossReferenceHandler crh;
-	private final SheetGroupManager groups;
+	private SheetGroupManager groups;
 	private final SplitPointHandler<Sheet> volSplitter;
 	
 	private PageStructBuilder contentPaginator;
 	private int pageIndex = 0;
 	private int currentVolumeNumber=0;
+	private boolean init = false;
 	
 	private final SplitterLimit splitterLimit;
     private final Stack<VolumeTemplate> volumeTemplates;
@@ -51,34 +52,35 @@ public class VolumeProvider {
 		this.context = context;
 		this.crh = crh;
 		this.volSplitter = new SplitPointHandler<>();
+	}
 		
-		this.groups = new SheetGroupManager(splitterLimit);
-		init();
-	}
-	
-	private void init() {
-		//FIXME: delete the following try/catch
-		//This code is here for compatibility with regression tests and can be removed once
-		//differences have been checked and accepted
-		// make a preliminary calculation based on a contents only
-		Iterable<SplitPointDataSource<Sheet>> allUnits = new PageStructBuilder(fcontext, blocks, crh).paginateGrouped(new DefaultContext.Builder().space(Space.BODY).build());
-		int volCount = 0;
-		for (SplitPointDataSource<Sheet> data : allUnits) {
-			SheetGroup g = groups.add();
-			g.setUnits(data);
-			g.getSplitter().updateSheetCount(data.getRemaining().size());
-			volCount += g.getSplitter().getVolumeCount();
-		}
-		crh.setVolumeCount(volCount);
-		/*catch (PaginatorException e) {
-			throw new RuntimeException("Error while formatting.", e);
-		}*/
-	}
-	
 	/**
 	 * Resets the volume provider to its initial state (with some information preserved). 
+	 * @throws RestartPaginationException
 	 */
 	void prepare() {
+		if (!init) {
+			groups = new SheetGroupManager(splitterLimit);
+
+			//FIXME: delete the following try/catch
+			//This code is here for compatibility with regression tests and can be removed once
+			//differences have been checked and accepted
+			// make a preliminary calculation based on a contents only
+			Iterable<SplitPointDataSource<Sheet>> allUnits = new PageStructBuilder(fcontext, blocks, crh).paginateGrouped(new DefaultContext.Builder().space(Space.BODY).build());
+			int volCount = 0;
+			for (SplitPointDataSource<Sheet> data : allUnits) {
+				SheetGroup g = groups.add();
+				g.setUnits(data);
+				g.getSplitter().updateSheetCount(data.getRemaining().size());
+				volCount += g.getSplitter().getVolumeCount();
+			}
+			crh.setVolumeCount(volCount);
+			/*catch (PaginatorException e) {
+				throw new RuntimeException("Error while formatting.", e);
+			}*/
+			//if there is an error, we won't have a proper initialization and have to retry from the beginning
+			init = true;
+		}
 		contentPaginator = new PageStructBuilder(fcontext, blocks, crh);
 		Iterable<SplitPointDataSource<Sheet>> allUnits = contentPaginator.paginateGrouped(new DefaultContext.Builder().space(Space.BODY).build());
 		int i=0;
@@ -95,6 +97,10 @@ public class VolumeProvider {
 		groups.resetAll();
 	}
 	
+	/**
+	 * @return returns the next volume
+	 * @throws RestartPaginationException if pagination should be restarted
+	 */
 	VolumeImpl nextVolume() {
 		currentVolumeNumber++;
 		VolumeImpl volume = new VolumeImpl(crh.getOverhead(currentVolumeNumber));

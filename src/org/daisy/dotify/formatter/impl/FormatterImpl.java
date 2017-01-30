@@ -3,8 +3,6 @@ package org.daisy.dotify.formatter.impl;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Stack;
 import java.util.logging.Level;
@@ -24,7 +22,6 @@ import org.daisy.dotify.api.translator.BrailleTranslatorFactoryMakerService;
 import org.daisy.dotify.api.translator.MarkerProcessorFactoryMakerService;
 import org.daisy.dotify.api.translator.TextBorderFactoryMakerService;
 import org.daisy.dotify.api.writer.PagedMediaWriter;
-import org.daisy.dotify.formatter.impl.DefaultContext.Space;
 import org.daisy.dotify.writer.impl.Volume;
 import org.daisy.dotify.writer.impl.WriterHandler;
 
@@ -150,30 +147,35 @@ public class FormatterImpl implements Formatter {
 		ArrayList<VolumeImpl> ret;
 
 		for (int j=1;j<=10;j++) {
-			ret = new ArrayList<>();
-			volumeProvider.prepare();
-			for (int i=1;i<= crh.getVolumeCount();i++) {
-				ret.add(volumeProvider.nextVolume());
-			}
-
-			volumeProvider.update();
-			crh.setVolumeCount(volumeProvider.getVolumeCount());
-			crh.setSheetsInDocument(volumeProvider.countTotalSheets());
-			//crh.setPagesInDocument(value);
-			if (volumeProvider.hasNext()) {
-				if (logger.isLoggable(Level.FINE)) {
-					logger.fine("There is more content (sheets: " + volumeProvider.countRemainingSheets() + ", pages: " + volumeProvider.countRemainingPages() + ")");
+			try {
+				ret = new ArrayList<>();
+				volumeProvider.prepare();
+				for (int i=1;i<= crh.getVolumeCount();i++) {
+					ret.add(volumeProvider.nextVolume());
 				}
-				if (!crh.isDirty() && j>1) {
-					volumeProvider.adjustVolumeCount();
+	
+				volumeProvider.update();
+				crh.setVolumeCount(volumeProvider.getVolumeCount());
+				crh.setSheetsInDocument(volumeProvider.countTotalSheets());
+				//crh.setPagesInDocument(value);
+				if (volumeProvider.hasNext()) {
+					if (logger.isLoggable(Level.FINE)) {
+						logger.fine("There is more content (sheets: " + volumeProvider.countRemainingSheets() + ", pages: " + volumeProvider.countRemainingPages() + ")");
+					}
+					if (!crh.isDirty() && j>1) {
+						volumeProvider.adjustVolumeCount();
+					}
 				}
-			}
-			if (!crh.isDirty() && !volumeProvider.hasNext()) {
-				//everything fits
-				return ret;
-			} else {
-				crh.setDirty(false);
-				logger.info("Things didn't add up, running another iteration (" + j + ")");
+				if (!crh.isDirty() && !volumeProvider.hasNext()) {
+					//everything fits
+					return ret;
+				} else {
+					crh.setDirty(false);
+					logger.info("Things didn't add up, running another iteration (" + j + ")");
+				}
+			} catch (RestartPaginationException e) {
+				// don't count this round, simply restart
+				j--;
 			}
 		}
 		throw new RuntimeException("Failed to complete volume division.");
