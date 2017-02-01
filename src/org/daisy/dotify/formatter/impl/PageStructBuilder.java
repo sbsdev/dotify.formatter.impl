@@ -10,23 +10,21 @@ import org.daisy.dotify.common.split.SplitPointDataSource;
 class PageStructBuilder {
 
 	private final FormatterContext context;
-	private final Iterable<BlockSequence> fs;
 	private final CrossReferenceHandler crh;
 	private PageStruct struct;
 	
 
-	public PageStructBuilder(FormatterContext context, Iterable<BlockSequence> fs, CrossReferenceHandler crh) {
+	public PageStructBuilder(FormatterContext context,  CrossReferenceHandler crh) {
 		this.context = context;
-		this.fs = fs;
 		this.crh = crh;
 	}
 	
-	SplitPointDataSource<Sheet> prepareToPaginate(DefaultContext rcontext) throws PaginatorException {
+	SplitPointDataSource<Sheet> prepareToPaginate(Iterable<BlockSequence> fs, DefaultContext rcontext) throws PaginatorException {
 		struct = new PageStruct();
 		return prepareToPaginate(rcontext, fs);
 	}
 	
-	Iterable<SplitPointDataSource<Sheet>> prepareToPaginateWithVolumeGroups(DefaultContext rcontext) {
+	Iterable<SplitPointDataSource<Sheet>> prepareToPaginateWithVolumeGroups(Iterable<BlockSequence> fs, DefaultContext rcontext) {
 		List<Iterable<BlockSequence>> volGroups = new ArrayList<>();
 		List<BlockSequence> currentGroup = new ArrayList<>();
 		volGroups.add(currentGroup);

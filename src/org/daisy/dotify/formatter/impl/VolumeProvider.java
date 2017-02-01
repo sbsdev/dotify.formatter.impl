@@ -52,7 +52,7 @@ public class VolumeProvider {
 		this.context = context;
 		this.crh = crh;
 		this.volSplitter = new SplitPointHandler<>();
-		this.contentPaginator = new PageStructBuilder(fcontext, blocks, crh);
+		this.contentPaginator = new PageStructBuilder(fcontext, crh);
 	}
 		
 	/**
@@ -67,7 +67,7 @@ public class VolumeProvider {
 			//This code is here for compatibility with regression tests and can be removed once
 			//differences have been checked and accepted
 			// make a preliminary calculation based on a contents only
-			Iterable<SplitPointDataSource<Sheet>> allUnits = contentPaginator.prepareToPaginateWithVolumeGroups(new DefaultContext.Builder().space(Space.BODY).build());
+			Iterable<SplitPointDataSource<Sheet>> allUnits = contentPaginator.prepareToPaginateWithVolumeGroups(blocks, new DefaultContext.Builder().space(Space.BODY).build());
 			int volCount = 0;
 			for (SplitPointDataSource<Sheet> data : allUnits) {
 				SheetGroup g = groups.add();
@@ -82,7 +82,7 @@ public class VolumeProvider {
 			//if there is an error, we won't have a proper initialization and have to retry from the beginning
 			init = true;
 		}
-		Iterable<SplitPointDataSource<Sheet>> allUnits = contentPaginator.prepareToPaginateWithVolumeGroups(new DefaultContext.Builder().space(Space.BODY).build());
+		Iterable<SplitPointDataSource<Sheet>> allUnits = contentPaginator.prepareToPaginateWithVolumeGroups(blocks, new DefaultContext.Builder().space(Space.BODY).build());
 		int i=0;
 		for (SplitPointDataSource<Sheet> unit : allUnits) {
 			groups.atIndex(i).setUnits(unit);
@@ -200,7 +200,7 @@ public class VolumeProvider {
 					break;
 				}
 			}
-			List<Sheet> ret = new PageStructBuilder(context.getFormatterContext(), ib, crh).prepareToPaginate(c).getRemaining();
+			List<Sheet> ret = new PageStructBuilder(fcontext, crh).prepareToPaginate(ib, c).getRemaining();
 			SectionBuilder sb = new SectionBuilder();
 			for (Sheet ps : ret) {
 				for (PageImpl p : ps.getPages()) {
