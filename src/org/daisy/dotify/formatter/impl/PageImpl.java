@@ -50,8 +50,8 @@ class PageImpl implements Page, Cloneable {
 	private ArrayList<String> anchors;
 	private ArrayList<String> identifiers;
 	private final int pageIndex;
-	private int textFlowIntoHeaderHeight;
-	private int textFlowIntoFooterHeight;
+	private final int textFlowIntoHeaderHeight;
+	private final int textFlowIntoFooterHeight;
 	private final int headerHeight;
 	private final int footerHeight;
 	private final int flowHeight;
@@ -88,67 +88,8 @@ class PageImpl implements Page, Cloneable {
 		this.volumeNumber = 0;
 		
 		// validate/analyze header and footer
-		this.textFlowIntoHeaderHeight = 0;
-		this.textFlowIntoFooterHeight = 0;
-		for (int i = 0; i <= 1; i++) {
-			List<FieldList> rows; {
-				if (i == 0) {
-					rows = new ArrayList<>();
-					rows.addAll(template.getHeader());
-					Collections.reverse(rows);
-				} else {
-					rows = template.getFooter();
-				}
-			}
-			int j = 0;
-			int height = 0;
-			for (FieldList row : rows) {
-				int k = 0;
-				boolean hasEmptyField = false;
-				for (Field f : row.getFields()) {
-					if (f instanceof NoField) {
-						if (hasEmptyField) {
-							throw new RuntimeException("At most one empty <field/> allowed.");
-						} else if (k > 0) {
-							throw new RuntimeException("Empty <field/> only allowed on the left.");
-						} else {
-							hasEmptyField = true;
-						}
-					}
-					k++;
-				}
-				if (hasEmptyField) {
-					if (k == 1) {
-						throw new RuntimeException("Empty <field/> does not make sense as single child.");
-					} else if (k > 2) {
-						throw new RuntimeException("Empty <field/> only allowed in combination with a single non-empty <field/>.");
-					}
-					float rowSpacing; {
-						if (row.getRowSpacing() != null) {
-							rowSpacing = row.getRowSpacing();
-						} else {
-							rowSpacing = master.getRowSpacing();
-						}
-					}
-					if (rowSpacing != 1.0f) {
-						throw new RuntimeException("Empty <field/> only allowed when row-spacing is '1'.");
-					}
-				if (height == j) {
-					height++;
-				} else {
-						throw new RuntimeException("Empty <field/> only allowed if all "
-						                           + (i == 0 ? "<header/> below" : "<footer/> above")
-						                           + " have an empty <field/> as well.");
-					}
-				}
-				j++;
-			}
-			if (i == 0) {
-				this.textFlowIntoHeaderHeight = height;
-			} else {
-				this.textFlowIntoFooterHeight = height;
-			}
-		}
+		this.textFlowIntoHeaderHeight = validateAndAnalyzeHeaderFooter(master, template, true);
+		this.textFlowIntoFooterHeight = validateAndAnalyzeHeaderFooter(master, template, false);
 		
 		this.headerHeight = (int)Math.ceil(getHeight(template.getHeader(), master.getRowSpacing()));
 		this.footerHeight = (int)Math.ceil(getHeight(template.getFooter(), master.getRowSpacing()));
@@ -158,6 +99,59 @@ class PageImpl implements Page, Cloneable {
 				- this.headerHeight + this.textFlowIntoHeaderHeight
 				- this.footerHeight + this.textFlowIntoFooterHeight
 				- (master.getBorder() != null ? (int)Math.ceil(distributeRowSpacing(null, false).spacing*2) : 0);
+	}
+	
+	private static int validateAndAnalyzeHeaderFooter(LayoutMaster master, PageTemplate template, boolean header) {
+		List<FieldList> rows;
+		if (header) {
+			rows = new ArrayList<>(template.getHeader());
+			Collections.reverse(rows);
+		} else {
+			rows = template.getFooter();
+		}
+		int j = 0;
+		int height = 0;
+		for (FieldList row : rows) {
+			int k = 0;
+			boolean hasEmptyField = false;
+			for (Field f : row.getFields()) {
+				if (f instanceof NoField) {
+					if (hasEmptyField) {
+						throw new RuntimeException("At most one empty <field/> allowed.");
+					} else if (k > 0) {
+						throw new RuntimeException("Empty <field/> only allowed on the left.");
+					} else {
+						hasEmptyField = true;
+					}
+				}
+				k++;
+			}
+			if (hasEmptyField) {
+				if (k == 1) {
+					throw new RuntimeException("Empty <field/> does not make sense as single child.");
+				} else if (k > 2) {
+					throw new RuntimeException("Empty <field/> only allowed in combination with a single non-empty <field/>.");
+				}
+				float rowSpacing;
+				if (row.getRowSpacing() != null) {
+					rowSpacing = row.getRowSpacing();
+				} else {
+					rowSpacing = master.getRowSpacing();
+				}
+				if (rowSpacing != 1.0f) {
+					throw new RuntimeException("Empty <field/> only allowed when row-spacing is '1'.");
+				}
+				if (height == j) {
+					height++;
+				} else {
+					throw new RuntimeException("Empty <field/> only allowed if all "
+						                           + (header ? "<header/> below" : "<footer/> above")
+						                           + " have an empty <field/> as well.");
+				}
+			}
+			j++;
+		}
+		return height;
 	}
 	
 	static float getHeight(List<FieldList> list, float def) {
