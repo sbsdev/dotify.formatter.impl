@@ -154,7 +154,7 @@ public class FormatterImpl implements Formatter {
 					ret.add(volumeProvider.nextVolume());
 				}
 	
-				if (volumeProvider.update()) {
+				if (volumeProvider.done()) {
 					//everything fits
 					return ret;
 				}

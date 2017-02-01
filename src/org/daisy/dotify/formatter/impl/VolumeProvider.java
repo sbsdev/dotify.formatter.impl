@@ -64,10 +64,6 @@ public class VolumeProvider {
 	void prepare() {
 		if (!init) {
 			groups = new SheetGroupManager(splitterLimit);
-
-			//FIXME: delete the following try/catch
-			//This code is here for compatibility with regression tests and can be removed once
-			//differences have been checked and accepted
 			// make a preliminary calculation based on a contents only
 			struct = new PageStruct();
 			Iterable<SplitPointDataSource<Sheet>> allUnits = prepareToPaginateWithVolumeGroups(struct, blocks, new DefaultContext.Builder().space(Space.BODY).build());
@@ -79,9 +75,6 @@ public class VolumeProvider {
 				volCount += g.getSplitter().getVolumeCount();
 			}
 			crh.setVolumeCount(volCount);
-			/*catch (PaginatorException e) {
-				throw new RuntimeException("Error while formatting.", e);
-			}*/
 			//if there is an error, we won't have a proper initialization and have to retry from the beginning
 			init = true;
 		}
@@ -92,9 +85,6 @@ public class VolumeProvider {
 			groups.atIndex(i).setUnits(unit);
 			i++;
 		}
-		/* catch (PaginatorException e) {
-			throw new RuntimeException("Error while reformatting.", e);
-		}*/
 		pageIndex = 0;
 		currentVolumeNumber=0;
 
@@ -264,7 +254,7 @@ public class VolumeProvider {
 	 * <b>Note: only use after all volumes have been calculated.</b>
 	 * @return returns true if the volumes can be accepted, false otherwise  
 	 */
-	boolean update() {
+	boolean done() {
 		groups.updateAll();
 		crh.setVolumeCount(groups.getVolumeCount());
 		crh.setSheetsInDocument(groups.countTotalSheets());
