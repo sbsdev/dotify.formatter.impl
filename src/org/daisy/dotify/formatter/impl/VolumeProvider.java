@@ -266,18 +266,18 @@ public class VolumeProvider {
 	 */
 	boolean update() {
 		groups.updateAll();
-		crh.setVolumeCount(getVolumeCount());
-		crh.setSheetsInDocument(countTotalSheets());
+		crh.setVolumeCount(groups.getVolumeCount());
+		crh.setSheetsInDocument(groups.countTotalSheets());
 		//crh.setPagesInDocument(value);
-		if (hasNext()) {
+		if (groups.hasNext()) {
 			if (logger.isLoggable(Level.FINE)) {
-				logger.fine("There is more content (sheets: " + countRemainingSheets() + ", pages: " + countRemainingPages() + ")");
+				logger.fine("There is more content (sheets: " + groups.countRemainingSheets() + ", pages: " + groups.countRemainingPages() + ")");
 			}
 			if (!crh.isDirty() && j>1) {
-				adjustVolumeCount();
+				groups.adjustVolumeCount();
 			}
 		}
-		if (!crh.isDirty() && !hasNext()) {
+		if (!crh.isDirty() && !groups.hasNext()) {
 			return true;
 		} else {
 			crh.setDirty(false);
@@ -285,65 +285,6 @@ public class VolumeProvider {
 		}
 		j++;
 		return false;
-	}
-	
-	/**
-	 * Informs the volume provider to adjust its volume calculation.
-	 * <b>Note: only use after all volumes have been calculated.</b>
-	 */
-	void adjustVolumeCount() {
-		groups.adjustVolumeCount();
-	}
-	
-	/**
-	 * Gets the total number of volumes.
-	 * @return returns the number of volumes
-	 */
-	int getVolumeCount() {
-		return groups.getVolumeCount();
-	}
-	
-	/**
-	 * Counts the total number of sheets.
-	 * <b>Note: only use after all volumes have been calculated.</b>
-	 * @return returns the total number of sheets.
-	 */
-	int countTotalSheets() {
-		return groups.countTotalSheets();
-	}
-	
-	/**
-	 * Counts the remaining pages. 
-	 * <b>Note: only use after all volumes have been calculated.</b>
-	 * @return returns the number of remaining pages
-	 */
-	int countRemainingPages() {
-		return groups.countRemainingPages();
-	}
-	
-	/**
-	 * Counts the remaining sheets.
-	 * <b>Note: only use after all volumes have been calculated.</b>
-	 * @return returns the number of remaining sheets
-	 */
-	int countRemainingSheets() {
-		return groups.countRemainingSheets();
-	}
-	
-	/**
-	 * The total number of pages provided so far
-	 * @return the number of pages
-	 */
-	int getTotalPageCount() {
-		return pageIndex;
-	}
-
-	/**
-	 * Returns true if there is content left or left behind.
-	 * @return returns true if there is more content, false otherwise
-	 */
-	boolean hasNext() {
-		return groups.hasNext();
 	}
 
 }
