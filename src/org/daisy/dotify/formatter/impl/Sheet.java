@@ -4,20 +4,24 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.daisy.dotify.api.writer.SectionProperties;
 import org.daisy.dotify.common.split.SplitPointUnit;
 class Sheet implements SplitPointUnit {
-	private static final List<String> SUPPLEMENTS = Collections.unmodifiableList(new ArrayList<String>()); 
+	private static final List<String> SUPPLEMENTS = Collections.unmodifiableList(new ArrayList<String>());
+	private final PageSequence master;
 	private final List<PageImpl> pages;
 	private final boolean breakable, skippable, collapsible;
 	private final Integer avoidVolumeBreakAfterPriority;
 	
 	static class Builder {
+		private final PageSequence master;
 		private final List<PageImpl> pages;
 		private boolean breakable = false;
 		private Integer avoidVolumeBreakAfterPriority = null;
-		
-		Builder() {
-			pages = new ArrayList<>();
+
+		Builder(PageSequence master) {
+			this.master = master;
+			this.pages = new ArrayList<>();
 		}
 	
 		Builder add(PageImpl value) {
@@ -48,11 +52,16 @@ class Sheet implements SplitPointUnit {
 		if (builder.pages.size()>2) {
 			throw new IllegalArgumentException("A sheet can not contain more than two pages.");
 		}
+		this.master = builder.master;
 		this.pages = Collections.unmodifiableList(new ArrayList<>(builder.pages));
 		this.breakable = builder.breakable && builder.avoidVolumeBreakAfterPriority==null;
 		this.avoidVolumeBreakAfterPriority = builder.avoidVolumeBreakAfterPriority;
 		this.skippable = pages.isEmpty();
 		this.collapsible = pages.isEmpty();
+	}
+	
+	PageSequence getPageSequence() {
+		return master;
 	}
 	
 	List<PageImpl> getPages() {

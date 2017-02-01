@@ -9,22 +9,16 @@ class SectionBuilder {
     private Stack<Section> ret = new Stack<Section>();
     private PageSequence currentSeq = null;
     private int sheets = 0;
-    
-    private void addPage(PageImpl p) {
-        if (ret.isEmpty() || currentSeq!=p.getSequenceParent()) {
-            currentSeq = p.getSequenceParent();
-            ret.add(
-                    new SectionImpl(currentSeq.getSectionProperties())
-                    //new PageSequence(ret, currentSeq.getLayoutMaster(), currentSeq.getPageNumberOffset())
-                    );
-        }
-        ((SectionImpl)ret.peek()).addPage(p);
-    }
-    
+
     void addSheet(Sheet s) {
         sheets++;
+        if (ret.isEmpty() || currentSeq!=s.getPageSequence()) {
+            currentSeq = s.getPageSequence();
+            ret.add(new SectionImpl(currentSeq.getSectionProperties()));
+        }
+        SectionImpl sect = ((SectionImpl)ret.peek()); 
         for (PageImpl p : s.getPages()) {
-            addPage(p);
+        	sect.addPage(p);
         }
     }
     

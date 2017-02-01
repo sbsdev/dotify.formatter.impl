@@ -504,7 +504,7 @@ class PageImpl implements Page, Cloneable {
 		return getSequenceParent().getGlobalStartIndex()+getPageOrdinal();
 	}
 
-	public PageSequence getSequenceParent() {
+	private PageSequence getSequenceParent() {
 		return parent;
 	}
 	
