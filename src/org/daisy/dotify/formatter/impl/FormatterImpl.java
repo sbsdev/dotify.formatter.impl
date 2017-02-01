@@ -3,7 +3,6 @@ package org.daisy.dotify.formatter.impl;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Optional;
 import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -31,8 +30,7 @@ import org.daisy.dotify.writer.impl.WriterHandler;
  * @author Joel Håkansson
  */
 public class FormatterImpl implements Formatter {
-	private static final int DEFAULT_SPLITTER_MAX = 50;
-	
+
 	private final HashMap<String, TableOfContentsImpl> tocs;
 	private final Stack<VolumeTemplate> volumeTemplates;
 	private final Logger logger;
@@ -128,21 +126,8 @@ public class FormatterImpl implements Formatter {
 	}
 
 	private Iterable<? extends Volume> getVolumes() {
-        SplitterLimit limit = volumeNumber -> {
-            final DefaultContext c = new DefaultContext.Builder()
-                    .currentVolume(volumeNumber)
-                    .referenceHandler(crh)
-                    .build();
-            Optional<VolumeTemplate> ot = volumeTemplates.stream().filter(t -> t.appliesTo(c)).findFirst();
-            if (ot.isPresent()) {
-                return ot.get().getVolumeMaxSize();
-            } else {
-                logger.fine("Found no applicable volume template.");
-                return DEFAULT_SPLITTER_MAX;                
-            }
-        };
 
-		VolumeProvider volumeProvider = new VolumeProvider(blocks, volumeTemplates, limit, context, crh);
+		VolumeProvider volumeProvider = new VolumeProvider(blocks, volumeTemplates, context, crh);
 
 		ArrayList<VolumeImpl> ret;
 

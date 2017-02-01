@@ -3,6 +3,7 @@ package org.daisy.dotify.formatter.impl;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -23,6 +24,7 @@ import org.daisy.dotify.formatter.impl.DefaultContext.Space;
  */
 public class VolumeProvider {
 	private static final Logger logger = Logger.getLogger(VolumeProvider.class.getCanonicalName());
+	private static final int DEFAULT_SPLITTER_MAX = 50;
 	private final Iterable<BlockSequence> blocks;
 	private final FormatterContext fcontext;
 	private final CrossReferenceHandler crh;
@@ -43,13 +45,24 @@ public class VolumeProvider {
 	 * Creates a new volume provider with the specifed parameters
 	 * @param blocks the block sequences
 	 * @param volumeTemplates volume templates
-	 * @param splitterLimit the splitter limit
 	 * @param context the formatter context
 	 * @param crh the cross reference handler
 	 */
-	public VolumeProvider(Iterable<BlockSequence> blocks, Stack<VolumeTemplate> volumeTemplates, SplitterLimit splitterLimit, LazyFormatterContext context, CrossReferenceHandler crh) {
+	public VolumeProvider(Iterable<BlockSequence> blocks, Stack<VolumeTemplate> volumeTemplates, LazyFormatterContext context, CrossReferenceHandler crh) {
 		this.blocks = blocks;
-		this.splitterLimit = splitterLimit;
+		this.splitterLimit = volumeNumber -> {
+            final DefaultContext c = new DefaultContext.Builder()
+                    .currentVolume(volumeNumber)
+                    .referenceHandler(crh)
+                    .build();
+            Optional<VolumeTemplate> ot = volumeTemplates.stream().filter(t -> t.appliesTo(c)).findFirst();
+            if (ot.isPresent()) {
+                return ot.get().getVolumeMaxSize();
+            } else {
+                logger.fine("Found no applicable volume template.");
+                return DEFAULT_SPLITTER_MAX;                
+            }
+        };
 		this.volumeTemplates = volumeTemplates;
 		this.fcontext = context.getFormatterContext();
 		this.context = context;
