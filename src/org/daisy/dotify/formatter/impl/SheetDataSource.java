@@ -34,7 +34,7 @@ class SheetDataSource implements SplitPointDataSource<Sheet> {
 	}
 
 	@Override
-	public Sheet get(int index) {
+	public Sheet get(int index) throws RestartPaginationException {
 		if (!ensureBuffer(index)) {
 			throw new IndexOutOfBoundsException("" + index);
 		}
@@ -42,7 +42,7 @@ class SheetDataSource implements SplitPointDataSource<Sheet> {
 	}
 
 	@Override
-	public List<Sheet> head(int toIndex) {
+	public List<Sheet> head(int toIndex) throws RestartPaginationException {
 		if (!ensureBuffer(toIndex-1)) {
 			throw new IndexOutOfBoundsException();
 		}
@@ -50,13 +50,13 @@ class SheetDataSource implements SplitPointDataSource<Sheet> {
 	}
 
 	@Override
-	public List<Sheet> getRemaining() {
+	public List<Sheet> getRemaining() throws RestartPaginationException {
 		ensureBuffer(-1);
 		return sheetBuffer;
 	}
 
 	@Override
-	public SplitPointDataSource<Sheet> tail(int fromIndex) {
+	public SplitPointDataSource<Sheet> tail(int fromIndex) throws RestartPaginationException {
 		List<Sheet> newBuffer;
 		if (!ensureBuffer(fromIndex)) {
 			newBuffer = new ArrayList<>();
@@ -67,12 +67,12 @@ class SheetDataSource implements SplitPointDataSource<Sheet> {
 	}
 
 	@Override
-	public boolean hasElementAt(int index) {
+	public boolean hasElementAt(int index) throws RestartPaginationException {
 		return ensureBuffer(index);
 	}
 
 	@Override
-	public int getSize(int limit) {
+	public int getSize(int limit)  throws RestartPaginationException {
 		if (!ensureBuffer(limit-1))  {
 			//we have buffered all elements
 			return sheetBuffer.size();

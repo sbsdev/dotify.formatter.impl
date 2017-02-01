@@ -21,18 +21,12 @@ class PageStructBuilder {
 		this.crh = crh;
 	}
 	
-	SplitPointDataSource<Sheet> paginate(DefaultContext rcontext) throws PaginatorException {
-		restart:while (true) {
-			struct = new PageStruct();
-			try {
-				return paginate(rcontext, fs);
-			} catch (RestartPaginationException e) {
-				continue restart;
-			}
-		}
+	SplitPointDataSource<Sheet> prepareToPaginate(DefaultContext rcontext) throws PaginatorException {
+		struct = new PageStruct();
+		return prepareToPaginate(rcontext, fs);
 	}
 	
-	Iterable<SplitPointDataSource<Sheet>> paginateGrouped(DefaultContext rcontext) {
+	Iterable<SplitPointDataSource<Sheet>> prepareToPaginateWithVolumeGroups(DefaultContext rcontext) {
 		List<Iterable<BlockSequence>> volGroups = new ArrayList<>();
 		List<BlockSequence> currentGroup = new ArrayList<>();
 		volGroups.add(currentGroup);
@@ -47,30 +41,24 @@ class PageStructBuilder {
 			@Override
 			public Iterator<SplitPointDataSource<Sheet>> iterator() {
 				try {
-					return paginateGrouped(rcontext, volGroups).iterator();
+					return prepareToPaginateWithVolumeGroups(rcontext, volGroups).iterator();
 				} catch (PaginatorException e) {
 					throw new RuntimeException(e);
 				}
 			}};
 	}
 
-	private List<SplitPointDataSource<Sheet>> paginateGrouped(DefaultContext rcontext, Iterable<Iterable<BlockSequence>> volGroups) throws PaginatorException {
-		restart:while (true) {
-			struct = new PageStruct();
+	private List<SplitPointDataSource<Sheet>> prepareToPaginateWithVolumeGroups(DefaultContext rcontext, Iterable<Iterable<BlockSequence>> volGroups) throws PaginatorException {
+		struct = new PageStruct();
 
-			List<SplitPointDataSource<Sheet>> ret = new ArrayList<>();
-			for (Iterable<BlockSequence> glist : volGroups) {
-				try {
-					ret.add(paginate(rcontext, glist));
-				} catch (RestartPaginationException e) {
-					continue restart;
-				}
-			}
-			return ret;
+		List<SplitPointDataSource<Sheet>> ret = new ArrayList<>();
+		for (Iterable<BlockSequence> glist : volGroups) {
+			ret.add(prepareToPaginate(rcontext, glist));
 		}
+		return ret;
 	}
 	
-	private SplitPointDataSource<Sheet> paginate(DefaultContext rcontext, Iterable<BlockSequence> seqs) throws PaginatorException, RestartPaginationException {
+	private SplitPointDataSource<Sheet> prepareToPaginate(DefaultContext rcontext, Iterable<BlockSequence> seqs) throws PaginatorException {
 		return new SheetDataSource(struct, crh, context, rcontext, seqs.iterator());
 	}
 
