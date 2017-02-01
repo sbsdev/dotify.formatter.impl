@@ -154,25 +154,11 @@ public class FormatterImpl implements Formatter {
 					ret.add(volumeProvider.nextVolume());
 				}
 	
-				volumeProvider.update();
-				crh.setVolumeCount(volumeProvider.getVolumeCount());
-				crh.setSheetsInDocument(volumeProvider.countTotalSheets());
-				//crh.setPagesInDocument(value);
-				if (volumeProvider.hasNext()) {
-					if (logger.isLoggable(Level.FINE)) {
-						logger.fine("There is more content (sheets: " + volumeProvider.countRemainingSheets() + ", pages: " + volumeProvider.countRemainingPages() + ")");
-					}
-					if (!crh.isDirty() && j>1) {
-						volumeProvider.adjustVolumeCount();
-					}
-				}
-				if (!crh.isDirty() && !volumeProvider.hasNext()) {
+				if (volumeProvider.update()) {
 					//everything fits
 					return ret;
-				} else {
-					crh.setDirty(false);
-					logger.info("Things didn't add up, running another iteration (" + j + ")");
 				}
+
 			} catch (RestartPaginationException e) {
 				// don't count this round, simply restart
 				j--;

@@ -32,6 +32,7 @@ public class VolumeProvider {
 	private int pageIndex = 0;
 	private int currentVolumeNumber=0;
 	private boolean init = false;
+	private int j = 1;
 	
 	private final SplitterLimit splitterLimit;
     private final Stack<VolumeTemplate> volumeTemplates;
@@ -260,11 +261,30 @@ public class VolumeProvider {
 	
 	/**
 	 * Informs the volume provider that the caller has finished requesting volumes.
-	 * <b>Note: only use after all volumes have been calculated.</b>  
+	 * <b>Note: only use after all volumes have been calculated.</b>
+	 * @return returns true if the volumes can be accepted, false otherwise  
 	 */
-	void update() {
+	boolean update() {
 		groups.updateAll();
-		//TODO: call adjustVolumeCount from here and remove it from the caller's responsibility
+		crh.setVolumeCount(getVolumeCount());
+		crh.setSheetsInDocument(countTotalSheets());
+		//crh.setPagesInDocument(value);
+		if (hasNext()) {
+			if (logger.isLoggable(Level.FINE)) {
+				logger.fine("There is more content (sheets: " + countRemainingSheets() + ", pages: " + countRemainingPages() + ")");
+			}
+			if (!crh.isDirty() && j>1) {
+				adjustVolumeCount();
+			}
+		}
+		if (!crh.isDirty() && !hasNext()) {
+			return true;
+		} else {
+			crh.setDirty(false);
+			logger.info("Things didn't add up, running another iteration (" + j + ")");
+		}
+		j++;
+		return false;
 	}
 	
 	/**
