@@ -35,6 +35,7 @@ public class VolumeProvider {
 	private final SplitterLimit splitterLimit;
     private final Stack<VolumeTemplate> volumeTemplates;
     private final LazyFormatterContext context;
+    private PageStruct struct;
 
 	/**
 	 * Creates a new volume provider with the specifed parameters
@@ -67,7 +68,8 @@ public class VolumeProvider {
 			//This code is here for compatibility with regression tests and can be removed once
 			//differences have been checked and accepted
 			// make a preliminary calculation based on a contents only
-			Iterable<SplitPointDataSource<Sheet>> allUnits = contentPaginator.prepareToPaginateWithVolumeGroups(blocks, new DefaultContext.Builder().space(Space.BODY).build());
+			struct = new PageStruct();
+			Iterable<SplitPointDataSource<Sheet>> allUnits = contentPaginator.prepareToPaginateWithVolumeGroups(struct, blocks, new DefaultContext.Builder().space(Space.BODY).build());
 			int volCount = 0;
 			for (SplitPointDataSource<Sheet> data : allUnits) {
 				SheetGroup g = groups.add();
@@ -82,7 +84,8 @@ public class VolumeProvider {
 			//if there is an error, we won't have a proper initialization and have to retry from the beginning
 			init = true;
 		}
-		Iterable<SplitPointDataSource<Sheet>> allUnits = contentPaginator.prepareToPaginateWithVolumeGroups(blocks, new DefaultContext.Builder().space(Space.BODY).build());
+		struct = new PageStruct();
+		Iterable<SplitPointDataSource<Sheet>> allUnits = contentPaginator.prepareToPaginateWithVolumeGroups(struct, blocks, new DefaultContext.Builder().space(Space.BODY).build());
 		int i=0;
 		for (SplitPointDataSource<Sheet> unit : allUnits) {
 			groups.atIndex(i).setUnits(unit);
@@ -162,7 +165,8 @@ public class VolumeProvider {
 		List<Sheet> contents = sp.getHead();
 		int pageCount = Sheet.countPages(contents);
 		// TODO: In a volume-by-volume scenario, how can we make this work
-		contentPaginator.setVolumeScope(currentVolumeNumber, pageIndex, pageIndex+pageCount); 
+		struct.setVolumeScope(currentVolumeNumber, pageIndex, pageIndex+pageCount);
+
 		pageIndex += pageCount;
 		SectionBuilder sb = new SectionBuilder();
 		for (Sheet sheet : contents) {
@@ -200,7 +204,7 @@ public class VolumeProvider {
 					break;
 				}
 			}
-			List<Sheet> ret = new PageStructBuilder(fcontext, crh).prepareToPaginate(ib, c).getRemaining();
+			List<Sheet> ret = new PageStructBuilder(fcontext, crh).prepareToPaginate(new PageStruct(), ib, c).getRemaining();
 			SectionBuilder sb = new SectionBuilder();
 			for (Sheet ps : ret) {
 				for (PageImpl p : ps.getPages()) {
