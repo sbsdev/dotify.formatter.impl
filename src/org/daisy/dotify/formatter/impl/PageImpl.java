@@ -37,7 +37,7 @@ import org.daisy.dotify.writer.impl.Page;
 class PageImpl implements Page, Cloneable {
 	private static final Pattern trailingWs = Pattern.compile("\\s*\\z");
 	private static final Pattern softHyphen = Pattern.compile("\u00ad");
-	private PageSequence parent;
+	private final PageSequence parent;
 	private final LayoutMaster master;
 	private final FormatterContext fcontext;
 	private final UnwriteableAreaInfo unwriteableAreaInfo;
@@ -64,8 +64,9 @@ class PageImpl implements Page, Cloneable {
 	private int volumeNumber;
 	
 	
-	public PageImpl(LayoutMaster master, FormatterContext fcontext, int pageIndex, List<RowImpl> before, List<RowImpl> after,
+	public PageImpl(PageSequence parent, LayoutMaster master, FormatterContext fcontext, int pageIndex, List<RowImpl> before, List<RowImpl> after,
 	                UnwriteableAreaInfo unwriteableAreaInfo) {
+		this.parent = parent;
 		this.master = master;
 		this.fcontext = fcontext;
 		this.bodyRows = new ArrayList<>();
@@ -79,7 +80,6 @@ class PageImpl implements Page, Cloneable {
 		this.identifiers = new ArrayList<>();
 		this.pageIndex = pageIndex;
 		contentMarkersBegin = 0;
-		this.parent = null;
 		this.template = master.getTemplate(pageIndex+1);
 		this.isVolBreak = false;
 		this.isVolBreakAllowed = true;
@@ -506,10 +506,6 @@ class PageImpl implements Page, Cloneable {
 
 	public PageSequence getSequenceParent() {
 		return parent;
-	}
-	
-	public void setSequenceParent(PageSequence seq) {
-		this.parent = seq;
 	}
 	
 	/**
