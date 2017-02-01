@@ -1,11 +1,13 @@
 package org.daisy.dotify.formatter.impl;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.daisy.dotify.api.formatter.SequenceProperties.SequenceBreakBefore;
 import org.daisy.dotify.common.split.SplitPoint;
 import org.daisy.dotify.common.split.SplitPointCost;
 import org.daisy.dotify.common.split.SplitPointDataSource;
@@ -23,11 +25,10 @@ public class VolumeProvider {
 	private static final Logger logger = Logger.getLogger(VolumeProvider.class.getCanonicalName());
 	private final Iterable<BlockSequence> blocks;
 	private final FormatterContext fcontext;
-	private final  CrossReferenceHandler crh;
+	private final CrossReferenceHandler crh;
 	private SheetGroupManager groups;
 	private final SplitPointHandler<Sheet> volSplitter;
-	
-	private final PageStructBuilder contentPaginator;
+
 	private int pageIndex = 0;
 	private int currentVolumeNumber=0;
 	private boolean init = false;
@@ -53,7 +54,6 @@ public class VolumeProvider {
 		this.context = context;
 		this.crh = crh;
 		this.volSplitter = new SplitPointHandler<>();
-		this.contentPaginator = new PageStructBuilder(fcontext, crh);
 	}
 		
 	/**
@@ -69,7 +69,7 @@ public class VolumeProvider {
 			//differences have been checked and accepted
 			// make a preliminary calculation based on a contents only
 			struct = new PageStruct();
-			Iterable<SplitPointDataSource<Sheet>> allUnits = contentPaginator.prepareToPaginateWithVolumeGroups(struct, blocks, new DefaultContext.Builder().space(Space.BODY).build());
+			Iterable<SplitPointDataSource<Sheet>> allUnits = prepareToPaginateWithVolumeGroups(struct, blocks, new DefaultContext.Builder().space(Space.BODY).build());
 			int volCount = 0;
 			for (SplitPointDataSource<Sheet> data : allUnits) {
 				SheetGroup g = groups.add();
@@ -85,7 +85,7 @@ public class VolumeProvider {
 			init = true;
 		}
 		struct = new PageStruct();
-		Iterable<SplitPointDataSource<Sheet>> allUnits = contentPaginator.prepareToPaginateWithVolumeGroups(struct, blocks, new DefaultContext.Builder().space(Space.BODY).build());
+		Iterable<SplitPointDataSource<Sheet>> allUnits = prepareToPaginateWithVolumeGroups(struct, blocks, new DefaultContext.Builder().space(Space.BODY).build());
 		int i=0;
 		for (SplitPointDataSource<Sheet> unit : allUnits) {
 			groups.atIndex(i).setUnits(unit);
@@ -204,7 +204,7 @@ public class VolumeProvider {
 					break;
 				}
 			}
-			List<Sheet> ret = new PageStructBuilder(fcontext, crh).prepareToPaginate(new PageStruct(), ib, c).getRemaining();
+			List<Sheet> ret = prepareToPaginate(new PageStruct(), ib, c).getRemaining();
 			SectionBuilder sb = new SectionBuilder();
 			for (Sheet ps : ret) {
 				for (PageImpl p : ps.getPages()) {
@@ -218,6 +218,44 @@ public class VolumeProvider {
 		} catch (PaginatorException e) {
 			return null;
 		}
+	}
+	
+	private SplitPointDataSource<Sheet> prepareToPaginate(PageStruct struct, Iterable<BlockSequence> fs, DefaultContext rcontext) throws PaginatorException {
+		return prepareToPaginate(struct, rcontext, fs);
+	}
+	
+	private Iterable<SplitPointDataSource<Sheet>> prepareToPaginateWithVolumeGroups(PageStruct struct, Iterable<BlockSequence> fs, DefaultContext rcontext) {
+		List<Iterable<BlockSequence>> volGroups = new ArrayList<>();
+		List<BlockSequence> currentGroup = new ArrayList<>();
+		volGroups.add(currentGroup);
+		for (BlockSequence bs : fs) {
+			if (bs.getSequenceProperties().getBreakBeforeType()==SequenceBreakBefore.VOLUME) {
+				currentGroup = new ArrayList<>();
+				volGroups.add(currentGroup);
+			}
+			currentGroup.add(bs);
+		}
+		return new Iterable<SplitPointDataSource<Sheet>>(){
+			@Override
+			public Iterator<SplitPointDataSource<Sheet>> iterator() {
+				try {
+					return prepareToPaginateWithVolumeGroups(struct, rcontext, volGroups).iterator();
+				} catch (PaginatorException e) {
+					throw new RuntimeException(e);
+				}
+			}};
+	}
+
+	private List<SplitPointDataSource<Sheet>> prepareToPaginateWithVolumeGroups(PageStruct struct, DefaultContext rcontext, Iterable<Iterable<BlockSequence>> volGroups) throws PaginatorException {
+		List<SplitPointDataSource<Sheet>> ret = new ArrayList<>();
+		for (Iterable<BlockSequence> glist : volGroups) {
+			ret.add(prepareToPaginate(struct, rcontext, glist));
+		}
+		return ret;
+	}
+	
+	private SplitPointDataSource<Sheet> prepareToPaginate(PageStruct struct, DefaultContext rcontext, Iterable<BlockSequence> seqs) throws PaginatorException {
+		return new SheetDataSource(struct, crh, fcontext, rcontext, seqs.iterator());
 	}
 	
 	/**
