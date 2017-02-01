@@ -110,7 +110,6 @@ class SheetDataSource implements SplitPointDataSource<Sheet> {
 			PageSequence seq = null;
 			restart: while (seq==null) {
 				PageSequenceBuilder2 psb = new PageSequenceBuilder2(struct, bs.getLayoutMaster(), bs.getInitialPageNumber()!=null?bs.getInitialPageNumber() - 1:offset, crh, uai, bs, context, rcontext);
-				struct.add(psb.getSequence());
 				LayoutMaster lm = bs.getLayoutMaster();
 				Sheet.Builder s = null;
 				SheetIdentity si = null;
@@ -168,6 +167,7 @@ class SheetDataSource implements SplitPointDataSource<Sheet> {
 				if (uai.isDirty()) {
 					throw new RuntimeException("coding error");
 				}
+				struct.add(psb.getSequence());
 				seq = psb.getSequence();
 			}
 		}
