@@ -1,14 +1,24 @@
 package org.daisy.dotify.formatter.impl;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.daisy.dotify.api.formatter.Marker;
+
 class PageDetails {
 	private final boolean duplex;
 	private final int ordinal;
 	private final int globalStartIndex;
+	int contentMarkersBegin;
+	ArrayList<Marker> markers;
 	
 	PageDetails(boolean duplex, int ordinal, int globalStartIndex) {
 		this.duplex = duplex;
 		this.ordinal = ordinal;
 		this.globalStartIndex = globalStartIndex;
+		//FIXME: for this to work as intended, the markers have to have some way of remaining while being updated
+		this.markers = new ArrayList<>();
+		this.contentMarkersBegin = 0;
 	}
 
 	boolean duplex() {
@@ -53,6 +63,22 @@ class PageDetails {
 					(offset == -1 && getOrdinal() % 2 == 0 && other.duplex()==true && other.getOrdinal() % 2 == 1)
 				);
 		}
+	}
+	
+	/**
+	 * Get all markers for this page
+	 * @return returns a list of all markers on a page
+	 */
+	List<Marker> getMarkers() {
+		return markers;
+	}
+	
+	/**
+	 * Get markers for this page excluding markers before text content
+	 * @return returns a list of markers on a page
+	 */
+	List<Marker> getContentMarkers() {
+		return markers.subList(contentMarkersBegin, markers.size());
 	}
 
 	

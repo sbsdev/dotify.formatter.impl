@@ -48,7 +48,6 @@ class PageImpl implements Page, Cloneable {
 	private ArrayList<RowImpl> bodyRows;
 	private ArrayList<RowImpl> pageArea;
 	private ArrayList<RowImpl> pageRows;
-	private ArrayList<Marker> markers;
 	private ArrayList<String> anchors;
 	private ArrayList<String> identifiers;
 	private final int pageIndex;
@@ -58,7 +57,7 @@ class PageImpl implements Page, Cloneable {
 	private final int footerHeight;
 	private final int flowHeight;
 	private final PageTemplate template;
-	private int contentMarkersBegin;
+
 	private boolean isVolBreakAllowed;
 	private int keepPreviousSheets;
 	private Integer volumeBreakAfterPriority;
@@ -78,11 +77,9 @@ class PageImpl implements Page, Cloneable {
 		this.unwriteableAreaInfo = unwriteableAreaInfo;
 
 		this.pageArea = new ArrayList<>();
-		this.markers = new ArrayList<>();
 		this.anchors = new ArrayList<>();
 		this.identifiers = new ArrayList<>();
 		this.pageIndex = pageIndex;
-		contentMarkersBegin = 0;
 		this.template = master.getTemplate(pageIndex+1);
 		this.isVolBreakAllowed = true;
 		this.keepPreviousSheets = 0;
@@ -174,12 +171,12 @@ class PageImpl implements Page, Cloneable {
 	
 	void newRow(RowImpl r) throws PageFullException {
 		if (rowsOnPage()==0) {
-			contentMarkersBegin = markers.size();
+			details.contentMarkersBegin = details.markers.size();
 		}
 		float spaceUsed = spaceNeeded();
 		bodyRows.add(r);
-		int markerCountBefore = markers.size();
-		markers.addAll(r.getMarkers());
+		int markerCountBefore = details.markers.size();
+		details.markers.addAll(r.getMarkers());
 		if (Math.ceil(spaceUsed) >= flowHeight - textFlowIntoHeaderHeight - textFlowIntoFooterHeight) {
 			try {
 				if (textFlowIntoHeaderHeight + textFlowIntoFooterHeight == 0) {
@@ -192,7 +189,7 @@ class PageImpl implements Page, Cloneable {
 				pageRows = buildPageRows(border);
 			} catch (PageFullException e) {
 				bodyRows.remove(bodyRows.size() - 1);
-				markers.subList(markerCountBefore, markers.size()).clear();
+				details.markers.subList(markerCountBefore, details.markers.size()).clear();
 				throw e;
 			} catch (PaginatorException e) {
 				throw new RuntimeException("Pagination failed.", e);
@@ -210,23 +207,7 @@ class PageImpl implements Page, Cloneable {
 	}
 	
 	void addMarkers(List<Marker> m) {
-		markers.addAll(m);
-	}
-	
-	/**
-	 * Get all markers for this page
-	 * @return returns a list of all markers on a page
-	 */
-	private List<Marker> getMarkers() {
-		return markers;
-	}
-	
-	/**
-	 * Get markers for this page excluding markers before text content
-	 * @return returns a list of markers on a page
-	 */
-	private List<Marker> getContentMarkers() {
-		return markers.subList(contentMarkersBegin, markers.size());
+		details.markers.addAll(m);
 	}
 	
 	List<String> getAnchors() {
@@ -718,9 +699,9 @@ class PageImpl implements Page, Cloneable {
 			}
 		}
 		if (skipLeading) {
-			m = page.getContentMarkers();
+			m = page.details.getContentMarkers();
 		} else {
-			m = page.getMarkers();
+			m = page.details.getMarkers();
 		}
 		if (markerRef.getSearchDirection() == MarkerReferenceField.MarkerSearchDirection.BACKWARD) {
 			dir = -1;
@@ -976,7 +957,7 @@ class PageImpl implements Page, Cloneable {
 		}
 		clone.bodyRows = (ArrayList<RowImpl>)bodyRows.clone();
 		clone.pageArea = (ArrayList<RowImpl>)pageArea.clone();
-		clone.markers = (ArrayList<Marker>)markers.clone();
+		clone.details.markers = (ArrayList<Marker>)details.markers.clone();
 		clone.anchors = (ArrayList<String>)anchors.clone();
 		clone.identifiers = (ArrayList<String>)identifiers.clone();
 		if (pageRows != null) {
