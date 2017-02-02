@@ -53,14 +53,17 @@ class PageStruct implements Iterable<PageSequence> {
 		return pages;
 	}
 
+	@Deprecated
 	View<PageImpl> getPageView() {
 		return new View<PageImpl>(pages, 0, pages.size());
 	}
 
+	@Deprecated
 	View<PageImpl> getContentsInVolume(int volumeNumber) {
 		return volumeViews.get(volumeNumber);
 	}
 
+	@Deprecated
 	void setVolumeScope(int volumeNumber, int fromIndex, int toIndex) {
 		View<PageImpl> pw = new View<PageImpl>(pages, fromIndex, toIndex);
 		for (PageImpl p : pw.getItems()) {

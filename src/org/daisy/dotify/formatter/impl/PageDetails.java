@@ -9,6 +9,7 @@ class PageDetails {
 	private final boolean duplex;
 	private final int ordinal;
 	private final int globalStartIndex;
+	private int volumeNumber;
 	int contentMarkersBegin;
 	ArrayList<Marker> markers;
 	
@@ -19,6 +20,7 @@ class PageDetails {
 		//FIXME: for this to work as intended, the markers have to have some way of remaining while being updated
 		this.markers = new ArrayList<>();
 		this.contentMarkersBegin = 0;
+		this.volumeNumber = 0;
 	}
 
 	boolean duplex() {
@@ -35,6 +37,10 @@ class PageDetails {
 	
 	int getPageId() {
 		return globalStartIndex + ordinal;
+	}
+	
+	void setVolumeNumber(int volNumber) {
+		this.volumeNumber = volNumber;
 	}
 	
 	/*
