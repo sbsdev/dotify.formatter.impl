@@ -57,7 +57,6 @@ class PageImpl implements Page, Cloneable {
 	private final int flowHeight;
 	private final PageTemplate template;
 	private int contentMarkersBegin;
-	private boolean isVolBreak;
 	private boolean isVolBreakAllowed;
 	private int keepPreviousSheets;
 	private Integer volumeBreakAfterPriority;
@@ -81,7 +80,6 @@ class PageImpl implements Page, Cloneable {
 		this.pageIndex = pageIndex;
 		contentMarkersBegin = 0;
 		this.template = master.getTemplate(pageIndex+1);
-		this.isVolBreak = false;
 		this.isVolBreakAllowed = true;
 		this.keepPreviousSheets = 0;
 		this.volumeBreakAfterPriority = null;
@@ -170,7 +168,7 @@ class PageImpl implements Page, Cloneable {
 		pageArea.addAll(block);
 	}
 	
-	public void newRow(RowImpl r) throws PageFullException {
+	void newRow(RowImpl r) throws PageFullException {
 		if (rowsOnPage()==0) {
 			contentMarkersBegin = markers.size();
 		}
@@ -203,11 +201,11 @@ class PageImpl implements Page, Cloneable {
 	 * Gets the number of rows on this page
 	 * @return returns the number of rows on this page
 	 */
-	public int rowsOnPage() {
+	private int rowsOnPage() {
 		return bodyRows.size();
 	}
 	
-	public void addMarkers(List<Marker> m) {
+	void addMarkers(List<Marker> m) {
 		markers.addAll(m);
 	}
 	
@@ -215,7 +213,7 @@ class PageImpl implements Page, Cloneable {
 	 * Get all markers for this page
 	 * @return returns a list of all markers on a page
 	 */
-	public List<Marker> getMarkers() {
+	private List<Marker> getMarkers() {
 		return markers;
 	}
 	
@@ -223,19 +221,19 @@ class PageImpl implements Page, Cloneable {
 	 * Get markers for this page excluding markers before text content
 	 * @return returns a list of markers on a page
 	 */
-	public List<Marker> getContentMarkers() {
+	private List<Marker> getContentMarkers() {
 		return markers.subList(contentMarkersBegin, markers.size());
 	}
 	
-	public List<String> getAnchors() {
+	List<String> getAnchors() {
 		return anchors;
 	}
 	
-	public void addIdentifier(String id) {
+	void addIdentifier(String id) {
 		identifiers.add(id);
 	}
 	
-	public List<String> getIdentifiers() {
+	List<String> getIdentifiers() {
 		return identifiers;
 	}
 	
@@ -271,17 +269,6 @@ class PageImpl implements Page, Cloneable {
 	
 	float pageAreaSpaceNeeded() {
 		return (!pageArea.isEmpty() ? staticAreaSpaceNeeded() + rowsNeeded(pageArea, master.getRowSpacing()) : 0);
-	}
-	
-	// TODO: can be removed
-	
-	/**
-	 * Space needed if adding the supplied floating rows.
-	 * @param rs
-	 * @return
-	 */
-	float spaceNeeded(Iterable<? extends Row> rs) {
-		return rowsNeeded(rs, master.getRowSpacing()) + (pageArea.isEmpty() ? staticAreaSpaceNeeded() : 0);
 	}
 	
 	int spaceUsedOnPage(int offs) {
@@ -480,27 +467,19 @@ class PageImpl implements Page, Cloneable {
 	 * 
 	 * @return returns the page index in the sequence (zero based)
 	 */
-	public int getPageIndex() {
+	int getPageIndex() {
 		return pageIndex;
 	}
-	
-	/**
-	 * Gets the external page number
-	 * @return the external page number
-	 */
-	public int getPageNumber() {
-		return pageIndex + 1;
-	}
-	
+
 	/**
 	 * Gets the ordinal number for the page in the page sequence list
 	 * @return returns the ordinal number for the page
 	 */
-	public int getPageOrdinal() {
+	private int getPageOrdinal() {
 		return pageIndex-getSequenceParent().getPageNumberOffset();
 	}
 	
-	int getPageId() {
+	private int getPageId() {
 		return getSequenceParent().getGlobalStartIndex()+getPageOrdinal();
 	}
 
@@ -512,19 +491,10 @@ class PageImpl implements Page, Cloneable {
 	 * Gets the flow height for this page, i.e. the number of rows available for text flow
 	 * @return returns the flow height
 	 */
-	public int getFlowHeight() {
+	int getFlowHeight() {
 		return flowHeight;
 	}
 
-	public boolean isVolumeBreak() {
-		return isVolBreak;
-	}
-
-	public void setVolumeBreak(boolean value) {
-		isVolBreak = value;
-	}
-	
-	
 	private List<RowImpl> renderFields(LayoutMaster lm, List<FieldList> fields, BrailleTranslator translator, boolean headerOrFooter,
 	                                   boolean allowTextFlow, ListIterator<RowImpl> bodyRows)
 			throws PaginatorException, PageFullException {
@@ -990,11 +960,11 @@ class PageImpl implements Page, Cloneable {
 		this.isVolBreakAllowed = value;
 	}
 
-	public boolean allowsVolumeBreak() {
+	boolean allowsVolumeBreak() {
 		return isVolBreakAllowed;
 	}
 
-	public int keepPreviousSheets() {
+	int keepPreviousSheets() {
 		return keepPreviousSheets;
 	}
 
