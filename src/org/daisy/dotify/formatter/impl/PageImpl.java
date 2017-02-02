@@ -782,22 +782,6 @@ class PageImpl implements Page, Cloneable {
 	}
 
 	/*
-	 * This method is unused at the moment, but could be activated once additional scopes are added to the API,
-	 * namely SPREAD_WITHIN_SEQUENCE
-	 */
-	@SuppressWarnings("unused") 
-	private boolean isWithinSequenceSpreadScope(int offset) {
-		return 	offset==0 ||
-				(
-					getSequenceParent().getLayoutMaster().duplex() && 
-					(
-						(offset == 1 && getPageOrdinal() % 2 == 1) ||
-						(offset == -1 && getPageOrdinal() % 2 == 0)
-					)
-				);
-	}
-	
-	/*
 	 * This method is unused at the moment, but could be activated if additional scopes are added to the API,
 	 * namely SPREAD_WITHIN_DOCUMENT
 	 *

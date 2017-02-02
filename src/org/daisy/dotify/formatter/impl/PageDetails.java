@@ -23,6 +23,26 @@ class PageDetails {
 		return ordinal;
 	}
 	
+	int getPageId() {
+		return globalStartIndex + ordinal;
+	}
+	
+	/*
+	 * This method is unused at the moment, but could be activated once additional scopes are added to the API,
+	 * namely SPREAD_WITHIN_SEQUENCE
+	 */
+	@SuppressWarnings("unused") 
+	private boolean isWithinSequenceSpreadScope(int offset) {
+		return 	offset==0 ||
+				(
+					duplex() && 
+					(
+						(offset == 1 && getOrdinal() % 2 == 1) ||
+						(offset == -1 && getOrdinal() % 2 == 0)
+					)
+				);
+	}
+	
 	boolean isWithinSpreadScope(int offset, PageDetails other) {
 		if (other==null) { 
 			return ((offset == 1 && getOrdinal() % 2 == 1) ||

@@ -11,7 +11,7 @@ class SearchInfo {
 	}
 
 	void addPageDetails(PageDetails value) {
-		pageDetails.put(value.getGlobalStartIndex() + value.getOrdinal(), value);
+		pageDetails.put(value.getPageId(), value);
 	}
 	
 	
