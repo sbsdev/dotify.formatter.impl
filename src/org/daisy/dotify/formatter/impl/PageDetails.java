@@ -39,6 +39,10 @@ class PageDetails {
 		return globalStartIndex + ordinal;
 	}
 	
+	int getVolumeNumber() {
+		return volumeNumber;
+	}
+	
 	void setVolumeNumber(int volNumber) {
 		this.volumeNumber = volNumber;
 	}
