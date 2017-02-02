@@ -648,7 +648,7 @@ class PageImpl implements Page, Cloneable {
 				f2.getSearchScope()==MarkerSearchScope.SPREAD_CONTENT) {
 				start = getPageInVolumeWithOffset(p, f2.getOffset(), p.shouldAdjustOutOfBounds(f2));
 			} else {
-				start = p.getPageInSequenceWithOffset(f2.getOffset(), p.shouldAdjustOutOfBounds(f2));
+				start = p.getPageInScope(p.getSequenceParent(), f2.getOffset(), p.shouldAdjustOutOfBounds(f2));
 			}
 			ret = findMarker(start, f2);
 		} else if (field instanceof CurrentPageField) {
@@ -720,7 +720,7 @@ class PageImpl implements Page, Cloneable {
 			markerRef.getSearchScope() == MarkerSearchScope.SHEET && page.isWithinSheetScope(dir) //||
 			//markerRef.getSearchScope() == MarkerSearchScope.SPREAD && page.isWithinSequenceSpreadScope(dir)
 			) {
-			next = page.getPageInSequenceWithOffset(dir, false);
+			next = page.getPageInScope(page.getSequenceParent(), dir, false);
 		} //else if (markerRef.getSearchScope() == MarkerSearchScope.SPREAD && page.isWithinDocumentSpreadScope(dir)) {
 		  else if (markerRef.getSearchScope() == MarkerSearchScope.SPREAD ||
 		           markerRef.getSearchScope() == MarkerSearchScope.SPREAD_CONTENT) {
@@ -804,25 +804,7 @@ class PageImpl implements Page, Cloneable {
 				);
 	}
 	
-	/*
-	 * Note that the result of this function is not constant because getSequenceParent().getPageCount() and
-	 * getSequenceParent().getPage() are not constant because PageSequence is mutable.
-	 */
-	private PageImpl getPageInSequenceWithOffset(int offset, boolean adjustOutOfBounds) {
-		if (offset==0) {
-			return this;
-		} else {
-			PageSequence parent = getSequenceParent();
-			int next = getPageIndex() - parent.getPageNumberOffset() + offset;
-			if (adjustOutOfBounds) {
-				next = Math.min(parent.size()-1, Math.max(0, next));
-			}
-			if (next < parent.size() && next >= 0) {
-				return parent.get(next);
-			}
-			return null;
-		}
-	}
+
 	
 	/*
 	 * Note that the result of this function is not constant because getPageInScope() and
@@ -858,14 +840,13 @@ class PageImpl implements Page, Cloneable {
 			return this;
 		} else {
 			if (pageView!=null) {
-				List<PageImpl> scope = pageView.getItems();
 				int next = pageView.toLocalIndex(getPageId())+offset;
-				int size = scope.size();
+				int size = pageView.size();
 				if (adjustOutOfBounds) {
 					next = Math.min(size-1, Math.max(0, next));
 				}
 				if (next < size && next >= 0) {
-					return scope.get(next);
+					return pageView.get(next);
 				}
 			}
 			return null;
