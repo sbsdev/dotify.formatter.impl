@@ -37,6 +37,8 @@ import org.daisy.dotify.writer.impl.Page;
 class PageImpl implements Page, Cloneable {
 	private static final Pattern trailingWs = Pattern.compile("\\s*\\z");
 	private static final Pattern softHyphen = Pattern.compile("\u00ad");
+	private final CrossReferenceHandler crh;
+	private final PageDetails details;
 	private final PageSequence parent;
 	private final LayoutMaster master;
 	private final FormatterContext fcontext;
@@ -63,8 +65,10 @@ class PageImpl implements Page, Cloneable {
 	private int volumeNumber;
 	
 	
-	public PageImpl(PageSequence parent, LayoutMaster master, FormatterContext fcontext, int pageIndex, List<RowImpl> before, List<RowImpl> after,
+	public PageImpl(CrossReferenceHandler crh, PageDetails details,PageSequence parent, LayoutMaster master, FormatterContext fcontext, int pageIndex, List<RowImpl> before, List<RowImpl> after,
 	                UnwriteableAreaInfo unwriteableAreaInfo) {
+		this.crh = crh;
+		this.details = details;
 		this.parent = parent;
 		this.master = master;
 		this.fcontext = fcontext;
@@ -709,7 +713,7 @@ class PageImpl implements Page, Cloneable {
 			skipLeading = true;
 		} else if (markerRef.getSearchScope() == MarkerReferenceField.MarkerSearchScope.SPREAD_CONTENT) {
 			PageImpl prevPageInVolume = page.getPageInVolumeWithOffset(-1, false);
-			if (prevPageInVolume == null || !page.isWithinSpreadScope(-1, prevPageInVolume)) {
+			if (prevPageInVolume == null || !page.details.isWithinSpreadScope(-1, prevPageInVolume.details==null?null:prevPageInVolume.details)) {
 				skipLeading = true;
 			}
 		}
@@ -806,7 +810,7 @@ class PageImpl implements Page, Cloneable {
 			return true;
 		} else {
 			PageImpl n = getPageInDocumentWithOffset(offset, false);
-			return isWithinSpreadScope(offset, n);
+			return details.isWithinSpreadScope(offset, (n==null?null:n.details));
 		}
 	}
 	
@@ -819,21 +823,10 @@ class PageImpl implements Page, Cloneable {
 			return true;
 		} else {
 			PageImpl n = getPageInVolumeWithOffset(offset, false);
-			return isWithinSpreadScope(offset, n);
+			return details.isWithinSpreadScope(offset, (n==null?null:n.details));
 		}
 	}
 	
-	private boolean isWithinSpreadScope(int offset, PageImpl n) {
-		if (n==null) { 
-			return ((offset == 1 && getPageOrdinal() % 2 == 1) ||
-					(offset == -1 && getPageOrdinal() % 2 == 0));
-		} else {
-			return (
-					(offset == 1 && getPageOrdinal() % 2 == 1 && getSequenceParent().getLayoutMaster().duplex()==true) ||
-					(offset == -1 && getPageOrdinal() % 2 == 0 && n.getSequenceParent().getLayoutMaster().duplex()==true && n.getPageOrdinal() % 2 == 1)
-				);
-		}
-	}
 	
 	private boolean isWithinSheetScope(int offset) {
 		return 	offset==0 || 

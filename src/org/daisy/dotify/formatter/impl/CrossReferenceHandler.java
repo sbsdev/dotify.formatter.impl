@@ -10,6 +10,7 @@ class CrossReferenceHandler {
 	private final LookupHandler<String, Integer> variables;
 	private final LookupHandler<SheetIdentity, Boolean> breakable;
 	private final Map<Integer, Overhead> volumeOverhead;
+	private final SearchInfo searchInfo;
 	private static final String VOLUMES_KEY = "volumes";
 	private static final String SHEETS_IN_VOLUME = "sheets-in-volume-";
 	private static final String SHEETS_IN_DOCUMENT = "sheets-in-document";
@@ -24,6 +25,7 @@ class CrossReferenceHandler {
 		this.variables = new LookupHandler<>();
 		this.breakable = new LookupHandler<>();
 		this.volumeOverhead = new HashMap<>();
+		this.searchInfo = new SearchInfo();
 	}
 	
 	/**
@@ -129,6 +131,10 @@ class CrossReferenceHandler {
 	
 	boolean getBreakable(SheetIdentity ident) {
 		return breakable.get(ident, true);
+	}
+	
+	SearchInfo getSearchInfo() {
+		return searchInfo;
 	}
 
 	boolean isDirty() {

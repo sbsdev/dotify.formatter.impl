@@ -93,7 +93,9 @@ class PageSequenceBuilder2 {
 
 	private PageImpl newPage() {
 		PageImpl buffer = state.current;
-		state.current = new PageImpl(target, master, context, state.pageCount+pageNumberOffset, staticAreaContent.getBefore(), staticAreaContent.getAfter(), uai);
+		PageDetails details = new PageDetails(master.duplex(), state.pageCount, target.getGlobalStartIndex());
+		crh.getSearchInfo().addPageDetails(details);
+		state.current = new PageImpl(crh, details, target, master, context, state.pageCount+pageNumberOffset, staticAreaContent.getBefore(), staticAreaContent.getAfter(), uai);
 		state.pageCount ++;
 		if (state.keepNextSheets>0) {
 			currentPage().setAllowsVolumeBreak(false);
