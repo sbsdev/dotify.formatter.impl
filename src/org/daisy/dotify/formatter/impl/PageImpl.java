@@ -646,7 +646,7 @@ class PageImpl implements Page, Cloneable {
 			PageImpl start;
 			if (f2.getSearchScope()==MarkerSearchScope.SPREAD ||
 				f2.getSearchScope()==MarkerSearchScope.SPREAD_CONTENT) {
-				start = p.getPageInVolumeWithOffset(f2.getOffset(), p.shouldAdjustOutOfBounds(f2));
+				start = getPageInVolumeWithOffset(p, f2.getOffset(), p.shouldAdjustOutOfBounds(f2));
 			} else {
 				start = p.getPageInSequenceWithOffset(f2.getOffset(), p.shouldAdjustOutOfBounds(f2));
 			}
@@ -693,7 +693,7 @@ class PageImpl implements Page, Cloneable {
 		if (markerRef.getSearchScope() == MarkerReferenceField.MarkerSearchScope.PAGE_CONTENT) {
 			skipLeading = true;
 		} else if (markerRef.getSearchScope() == MarkerReferenceField.MarkerSearchScope.SPREAD_CONTENT) {
-			PageImpl prevPageInVolume = page.getPageInVolumeWithOffset(-1, false);
+			PageImpl prevPageInVolume = getPageInVolumeWithOffset(page, -1, false);
 			if (prevPageInVolume == null || !page.details.isWithinSpreadScope(-1, prevPageInVolume.details==null?null:prevPageInVolume.details)) {
 				skipLeading = true;
 			}
@@ -725,7 +725,7 @@ class PageImpl implements Page, Cloneable {
 		  else if (markerRef.getSearchScope() == MarkerSearchScope.SPREAD ||
 		           markerRef.getSearchScope() == MarkerSearchScope.SPREAD_CONTENT) {
 			if (page.isWithinVolumeSpreadScope(dir)) {
-				next = page.getPageInVolumeWithOffset(dir, false);
+				next = getPageInVolumeWithOffset(page, dir, false);
 			}
 		}
 		if (next!=null) {
@@ -774,7 +774,7 @@ class PageImpl implements Page, Cloneable {
 		if (offset==0) {
 			return true;
 		} else {
-			PageImpl n = getPageInDocumentWithOffset(offset, false);
+			PageImpl n = getPageInDocumentWithOffset(this, offset, false);
 			return details.isWithinSpreadScope(offset, (n==null?null:n.details));
 		}
 	}
@@ -787,7 +787,7 @@ class PageImpl implements Page, Cloneable {
 		if (offset==0) {
 			return true;
 		} else {
-			PageImpl n = getPageInVolumeWithOffset(offset, false);
+			PageImpl n = getPageInVolumeWithOffset(this, offset, false);
 			return details.isWithinSpreadScope(offset, (n==null?null:n.details));
 		}
 	}
@@ -829,22 +829,22 @@ class PageImpl implements Page, Cloneable {
 	 * getSequenceParent().getParent().getContentsInVolume() are not constant because PageSequence and
 	 * PageStruct are mutable.
 	 */
-	private PageImpl getPageInVolumeWithOffset(int offset, boolean adjustOutOfBounds) {
+	private static PageImpl getPageInVolumeWithOffset(PageImpl base, int offset, boolean adjustOutOfBounds) {
 		if (offset==0) {
-			return this;
+			return base;
 		} else {
-			return getPageInScope(getSequenceParent().getParent().getContentsInVolume(getVolumeNumber()), offset, adjustOutOfBounds);
+			return base.getPageInScope(base.getSequenceParent().getParent().getContentsInVolume(base.getVolumeNumber()), offset, adjustOutOfBounds);
 		}
 	}
 
 	/*
 	 * Note that the result of this function is not constant because getPageInScope() is not constant.
 	 */
-	private PageImpl getPageInDocumentWithOffset(int offset, boolean adjustOutOfBounds) {
+	private static PageImpl getPageInDocumentWithOffset(PageImpl base, int offset, boolean adjustOutOfBounds) {
 		if (offset==0) {
-			return this;
+			return base;
 		} else {
-			return getPageInScope(getSequenceParent().getParent().getPageView(), offset, adjustOutOfBounds);
+			return base.getPageInScope(base.getSequenceParent().getParent().getPageView(), offset, adjustOutOfBounds);
 		}
 	}
 	
