@@ -1,8 +1,10 @@
 package org.daisy.dotify.formatter.impl;
 
 import java.lang.ref.WeakReference;
+import java.util.List;
 
 import org.daisy.dotify.api.writer.SectionProperties;
+import org.daisy.dotify.writer.impl.Page;
 import org.daisy.dotify.writer.impl.Section;
 
 /**
@@ -10,7 +12,7 @@ import org.daisy.dotify.writer.impl.Section;
  * 
  * @author Joel Håkansson
  */
-class PageSequence extends PageView implements Section {
+class PageSequence extends View<PageImpl> implements Section {
 	private final WeakReference<PageStruct> parent;
 	private final LayoutMaster master;
 	private final int pageOffset;
@@ -23,7 +25,7 @@ class PageSequence extends PageView implements Section {
 	}
 	
 	void addPage(PageImpl p) {
-		pages.add(p);
+		items.add(p);
 		toIndex++;
 	}
 	
@@ -51,6 +53,11 @@ class PageSequence extends PageView implements Section {
 	@Override
 	public SectionProperties getSectionProperties() {
 		return master;
+	}
+
+	@Override
+	public List<? extends Page> getPages() {
+		return getItems();
 	}
 
 }

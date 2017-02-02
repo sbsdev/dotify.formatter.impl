@@ -177,10 +177,10 @@ class SheetDataSource implements SplitPointDataSource<Sheet> {
 	private int getCurrentPageOffset() {
 		if (struct.size()>0) {
 			PageSequence prv = (PageSequence)struct.peek();
-			if (prv.getLayoutMaster().duplex() && (prv.getPageCount() % 2)==1) {
-				return prv.getPageNumberOffset() + prv.getPageCount() + 1;
+			if (prv.getLayoutMaster().duplex() && (prv.size() % 2)==1) {
+				return prv.getPageNumberOffset() + prv.size() + 1;
 			} else {
-				return prv.getPageNumberOffset() + prv.getPageCount();
+				return prv.getPageNumberOffset() + prv.size();
 			}
 		} else {
 			return 0;

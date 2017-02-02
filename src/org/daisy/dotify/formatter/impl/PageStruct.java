@@ -14,7 +14,7 @@ import java.util.Stack;
 class PageStruct implements Iterable<PageSequence> {
 	private final Stack<PageSequence> seqs;
 	private final Stack<PageImpl> pages;
-	private final Map<Integer, PageView> volumeViews;
+	private final Map<Integer, View<PageImpl>> volumeViews;
 
 	PageStruct() {
 		seqs = new Stack<>();
@@ -53,17 +53,17 @@ class PageStruct implements Iterable<PageSequence> {
 		return pages;
 	}
 
-	PageView getPageView() {
-		return new PageView(pages, 0, pages.size());
+	View<PageImpl> getPageView() {
+		return new View<PageImpl>(pages, 0, pages.size());
 	}
 
-	PageView getContentsInVolume(int volumeNumber) {
+	View<PageImpl> getContentsInVolume(int volumeNumber) {
 		return volumeViews.get(volumeNumber);
 	}
 
 	void setVolumeScope(int volumeNumber, int fromIndex, int toIndex) {
-		PageView pw = new PageView(pages, fromIndex, toIndex);
-		for (PageImpl p : pw.getPages()) {
+		View<PageImpl> pw = new View<PageImpl>(pages, fromIndex, toIndex);
+		for (PageImpl p : pw.getItems()) {
 			p.setVolumeNumber(volumeNumber);
 		}
 		volumeViews.put(volumeNumber, pw);

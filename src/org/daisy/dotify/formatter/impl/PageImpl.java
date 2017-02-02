@@ -834,10 +834,10 @@ class PageImpl implements Page, Cloneable {
 			PageSequence parent = getSequenceParent();
 			int next = getPageIndex() - parent.getPageNumberOffset() + offset;
 			if (adjustOutOfBounds) {
-				next = Math.min(parent.getPageCount()-1, Math.max(0, next));
+				next = Math.min(parent.size()-1, Math.max(0, next));
 			}
-			if (next < parent.getPageCount() && next >= 0) {
-				return parent.getPage(next);
+			if (next < parent.size() && next >= 0) {
+				return parent.get(next);
 			}
 			return null;
 		}
@@ -872,12 +872,12 @@ class PageImpl implements Page, Cloneable {
 	 * getSequenceParent().getParent().getPageView().getPages() is not constant because PageSequence is
 	 * mutable.
 	 */
-	private PageImpl getPageInScope(PageView pageView, int offset, boolean adjustOutOfBounds) {
+	private PageImpl getPageInScope(View<PageImpl> pageView, int offset, boolean adjustOutOfBounds) {
 		if (offset==0) {
 			return this;
 		} else {
 			if (pageView!=null) {
-				List<PageImpl> scope = pageView.getPages();
+				List<PageImpl> scope = pageView.getItems();
 				int next = pageView.toLocalIndex(getPageId())+offset;
 				int size = scope.size();
 				if (adjustOutOfBounds) {
