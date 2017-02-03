@@ -23,7 +23,6 @@ import org.daisy.dotify.common.split.SplitPointDataSource;
 import org.daisy.dotify.common.split.SplitPointHandler;
 import org.daisy.dotify.common.split.StandardSplitOption;
 import org.daisy.dotify.common.split.Supplements;
-import org.daisy.dotify.formatter.impl.DefaultContext.Space;
 
 class PageSequenceBuilder2 {
 	private final FormatterContext context;
@@ -96,7 +95,8 @@ class PageSequenceBuilder2 {
 
 	private PageImpl newPage() {
 		PageImpl buffer = state.current;
-		PageDetails details = new PageDetails(master.duplex(), state.pageCount, target.getGlobalStartIndex(), sequenceId, blockContext.getContext().getSpace());
+		SequenceId seqId = new SequenceId(sequenceId, blockContext.getContext().getSpace());
+		PageDetails details = new PageDetails(master.duplex(), state.pageCount, target.getGlobalStartIndex(), seqId);
 		crh.getSearchInfo().addPageDetails(details);
 		state.current = new PageImpl(crh, details, target, master, context, state.pageCount+pageNumberOffset, staticAreaContent.getBefore(), staticAreaContent.getAfter(), uai);
 		state.pageCount ++;

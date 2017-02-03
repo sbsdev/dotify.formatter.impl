@@ -12,59 +12,67 @@ import org.daisy.dotify.api.formatter.MarkerReferenceField.MarkerSearchScope;
 import org.daisy.dotify.formatter.impl.DefaultContext.Space;
 
 class SearchInfo {
-	private List<PageDetails> pageDetails;
-	private final Map<Integer, View<PageDetails>> volumeViews;
-	private final Map<Space, Map<Integer, View<PageDetails>>> sequenceViews;
+
+	private static class SearchInfoSpace {
+
+		final List<PageDetails> pageDetails;
+		final Map<Integer, View<PageDetails>> volumeViews;
+		final Map<Integer, View<PageDetails>> sequenceViews;
+		
+		SearchInfoSpace() {
+			this.pageDetails = new ArrayList<>();
+			this.volumeViews = new HashMap<>();
+			this.sequenceViews = new HashMap<>();		
+		}
+	}
+	
+	private final Map<Space, SearchInfoSpace> spaces;
 	
 	SearchInfo() {
-		this.pageDetails = new ArrayList<>();
-		this.volumeViews = new HashMap<>();
-		this.sequenceViews = new HashMap<>();
+		this.spaces = new HashMap<>();
 	}
 
 	void addPageDetails(PageDetails value) {
 		if (value.getPageId()<0) {
 			throw new IllegalArgumentException("Negative page id not allowed.");
 		}
-		//TODO: currently, only add page details for body 
-		if (value.getSpace()==Space.BODY) {
-			while (value.getPageId()>=pageDetails.size()) {
-				pageDetails.add(null);
-			}
-			pageDetails.set(value.getPageId(), value);
+		SearchInfoSpace data = getViewForSpace(value.getSequenceId().getSpace());
+		while (value.getPageId()>=data.pageDetails.size()) {
+			data.pageDetails.add(null);
 		}
+		data.pageDetails.set(value.getPageId(), value);
 	}
 
-	View<PageDetails> getPageView() {
-		return new View<PageDetails>(pageDetails, 0, pageDetails.size());
+	View<PageDetails> getPageView(Space space) {
+		return new View<PageDetails>(getViewForSpace(space).pageDetails, 0, getViewForSpace(space).pageDetails.size());
 	}
 
-	View<PageDetails> getContentsInVolume(int volumeNumber) {
-		return volumeViews.get(volumeNumber);
+	View<PageDetails> getContentsInVolume(int volumeNumber, Space space) {
+		return getViewForSpace(space).volumeViews.get(volumeNumber);
 	}
 	
-	View<PageDetails> getContentsInSequence(Space space, int sequenceNumber) {
-		return getViewForSpace(space).get(sequenceNumber);
+	View<PageDetails> getContentsInSequence(SequenceId seqId) {
+		return getViewForSpace(seqId.getSpace()).sequenceViews.get(seqId.getOrdinal());
 	}
 	
 	void setSequenceScope(Space space, int sequenceNumber, int fromIndex, int toIndex) {
-		View<PageDetails> pw = new View<PageDetails>(pageDetails, fromIndex, toIndex);
-		getViewForSpace(space).put(sequenceNumber, pw);
+		View<PageDetails> pw = new View<PageDetails>(getViewForSpace(space).pageDetails, fromIndex, toIndex);
+		getViewForSpace(space).sequenceViews.put(sequenceNumber, pw);
 	}
 
-	void setVolumeScope(int volumeNumber, int fromIndex, int toIndex) {
-		View<PageDetails> pw = new View<PageDetails>(pageDetails, fromIndex, toIndex);
+	void setVolumeScope(int volumeNumber, int fromIndex, int toIndex, Space space) {
+		View<PageDetails> pw = new View<PageDetails>(getViewForSpace(space).pageDetails, fromIndex, toIndex);
 		for (PageDetails p : pw.getItems()) {
 			p.setVolumeNumber(volumeNumber);
 		}
-		volumeViews.put(volumeNumber, pw);
+		getViewForSpace(space).volumeViews.put(volumeNumber, pw);
 	}
 	
-	Map<Integer, View<PageDetails>> getViewForSpace(Space space) {
-		Map<Integer, View<PageDetails>> ret = sequenceViews.get(space);
+	SearchInfoSpace getViewForSpace(Space space) {
+		SearchInfoSpace ret = spaces.get(space);
 		if (ret==null) {
-			ret = new HashMap<>();
-			sequenceViews.put(space, ret);
+			ret = new SearchInfoSpace();
+			spaces.put(space, ret);
 		}
 		return ret;
 	}
@@ -74,7 +82,7 @@ class SearchInfo {
 			return base;
 		} else {
 			//Keep while moving: getPageInScope(base.getSequenceParent().getParent().getPageView()...
-			return base.getPageInScope(getPageView(), offset, adjustOutOfBounds);
+			return base.getPageInScope(getPageView(base.getSequenceId().getSpace()), offset, adjustOutOfBounds);
 		}
 	}
 	
@@ -83,7 +91,7 @@ class SearchInfo {
 			return base;
 		} else {
 			//Keep while moving: base.getPageInScope(base.getSequenceParent().getParent().getContentsInVolume(base.getVolumeNumber()), offset, adjustOutOfBounds);
-			return base.getPageInScope(getContentsInVolume(base.getVolumeNumber()), offset, adjustOutOfBounds);
+			return base.getPageInScope(getContentsInVolume(base.getVolumeNumber(), base.getSequenceId().getSpace()), offset, adjustOutOfBounds);
 		}
 	}
 	
@@ -175,7 +183,7 @@ class SearchInfo {
 			//markerRef.getSearchScope() == MarkerSearchScope.SPREAD && page.isWithinSequenceSpreadScope(dir)
 			) {
 			//Keep while moving: next = page.getPageInScope(page.getSequenceParent(), dir, false);
-			next = page.getPageInScope(getContentsInSequence(page.getSpace(), page.getSequenceId()), dir, false);
+			next = page.getPageInScope(getContentsInSequence(page.getSequenceId()), dir, false);
 		} //else if (markerRef.getSearchScope() == MarkerSearchScope.SPREAD && page.isWithinDocumentSpreadScope(dir)) {
 		  else if (markerRef.getSearchScope() == MarkerSearchScope.SPREAD ||
 		           markerRef.getSearchScope() == MarkerSearchScope.SPREAD_CONTENT) {
@@ -197,7 +205,7 @@ class SearchInfo {
 			start = getPageInVolumeWithOffset(p, f2.getOffset(), shouldAdjustOutOfBounds(p, f2));
 		} else {
 			//Keep while moving: start = p.getPageInScope(p.getSequenceParent(), f2.getOffset(), shouldAdjustOutOfBounds(p, f2));
-			start = p.getPageInScope(getContentsInSequence(p.getSpace(), p.getSequenceId()), f2.getOffset(), shouldAdjustOutOfBounds(p, f2));
+			start = p.getPageInScope(getContentsInSequence(p.getSequenceId()), f2.getOffset(), shouldAdjustOutOfBounds(p, f2));
 		}
 		return findMarker(start, f2);
 	}

@@ -170,7 +170,7 @@ public class VolumeProvider {
 		int pageCount = Sheet.countPages(contents);
 		// TODO: In a volume-by-volume scenario, how can we make this work
 		struct.setVolumeScope(currentVolumeNumber, pageIndex, pageIndex+pageCount);
-		crh.getSearchInfo().setVolumeScope(currentVolumeNumber, pageIndex, pageIndex+pageCount);
+		crh.getSearchInfo().setVolumeScope(currentVolumeNumber, pageIndex, pageIndex+pageCount, Space.BODY);
 
 		pageIndex += pageCount;
 		SectionBuilder sb = new SectionBuilder();

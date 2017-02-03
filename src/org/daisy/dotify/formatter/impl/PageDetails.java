@@ -4,25 +4,22 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.daisy.dotify.api.formatter.Marker;
-import org.daisy.dotify.formatter.impl.DefaultContext.Space;
 
 class PageDetails {
 	private final boolean duplex;
 	private final int ordinal;
 	private final int globalStartIndex;
-	private final int sequenceId;
-	private final Space space;
+	private final SequenceId sequenceId;
 	private int volumeNumber;
 	int contentMarkersBegin;
 	
 	ArrayList<Marker> markers;
 	
-	PageDetails(boolean duplex, int ordinal, int globalStartIndex, int sequenceId, Space space) {
+	PageDetails(boolean duplex, int ordinal, int globalStartIndex, SequenceId sequenceId) {
 		this.duplex = duplex;
 		this.ordinal = ordinal;
 		this.globalStartIndex = globalStartIndex;
 		this.sequenceId = sequenceId;
-		this.space = space;
 		//FIXME: for this to work as intended, the markers have to have some way of remaining while being updated
 		this.markers = new ArrayList<>();
 		this.contentMarkersBegin = 0;
@@ -45,12 +42,8 @@ class PageDetails {
 		return globalStartIndex + ordinal;
 	}
 	
-	int getSequenceId() {
+	SequenceId getSequenceId() {
 		return sequenceId;
-	}
-	
-	Space getSpace() {
-		return space;
 	}
 	
 	int getVolumeNumber() {
