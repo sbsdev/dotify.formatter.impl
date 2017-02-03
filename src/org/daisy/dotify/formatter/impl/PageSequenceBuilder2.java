@@ -10,7 +10,6 @@ import java.util.Map;
 import org.daisy.dotify.api.formatter.BlockPosition;
 import org.daisy.dotify.api.formatter.FallbackRule;
 import org.daisy.dotify.api.formatter.MarginRegion;
-import org.daisy.dotify.api.formatter.MarkerIndicator;
 import org.daisy.dotify.api.formatter.MarkerIndicatorRegion;
 import org.daisy.dotify.api.formatter.PageAreaProperties;
 import org.daisy.dotify.api.formatter.RenameFallbackRule;
@@ -375,12 +374,10 @@ class PageSequenceBuilder2 {
 	}
 	
 	private String firstMarkerForRow(RowImpl r, MarkerIndicatorRegion mrr) {
-		for (MarkerIndicator mi : mrr.getIndicators()) {
-			if (r.hasMarkerWithName(mi.getName())) {
-				return mi.getIndicator();
-			}
-		}
-		return "";
+		return mrr.getIndicators().stream()
+				.filter(mi -> r.hasMarkerWithName(mi.getName()))
+				.map(mi -> mi.getIndicator())
+				.findFirst().orElse("");
 	}
 	
 	private void addProperties(RowGroup rg) {

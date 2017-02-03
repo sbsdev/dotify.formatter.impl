@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.daisy.dotify.api.formatter.CompoundField;
 import org.daisy.dotify.api.formatter.CurrentPageField;
@@ -150,15 +151,7 @@ class PageImpl implements Page, Cloneable {
 	}
 	
 	static float getHeight(List<FieldList> list, float def) {
-		float ret = 0;
-		for (FieldList f : list) {
-			if (f.getRowSpacing()!=null) {
-				ret += f.getRowSpacing();
-			} else {
-				ret += def;
-			}
-		}
-		return ret;
+		return (float)list.stream().mapToDouble(f -> f.getRowSpacing()!=null?f.getRowSpacing():def).sum();
 	}
 
 	void addToPageArea(List<RowImpl> block) {
@@ -475,12 +468,7 @@ class PageImpl implements Page, Cloneable {
 					throw new PaginatorException("Error while rendering header", e);
 				}
 			}
-			int length = 0;
-			for (String s : distributedRow) {
-				if (s != null) {
-					length += s.length();
-				}
-			}
+			int length = distributedRow.stream().filter(s -> s!=null).mapToInt(s -> s.length()).sum();
 			int k = 0;
 			boolean someFlowed = false;
 			StringBuffer sb = new StringBuffer();
@@ -638,12 +626,7 @@ class PageImpl implements Page, Cloneable {
 		if (f.size() == 1) {
 			return resolveField(f.get(0), p, b);
 		}
-		StringBuffer sb = new StringBuffer();
-		for (Field f2 : f) {
-			String res = resolveField(f2, p, b);
-			sb.append(res);
-		}
-		return sb.toString();
+		return f.stream().map(f2 -> resolveField(f2, p, b)).collect(Collectors.joining());
 	}
 	
 	private static String resolveCurrentPageField(CurrentPageField f, PageImpl p) {
