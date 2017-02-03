@@ -64,8 +64,7 @@ class PageSequenceBuilder2 {
 	}
 
 	PageSequenceBuilder2(PageStruct parent, LayoutMaster master, int pageOffset, CrossReferenceHandler crh, UnwriteableAreaInfo uai,
-	                     BlockSequence seq, FormatterContext context, DefaultContext rcontext, int sequenceId) {
-		//PageSequence target, LayoutMaster master, int pageNumberOffset, 
+	                     BlockSequence seq, FormatterContext context, DefaultContext rcontext, int sequenceId) { 
 		this.target = new PageSequence(parent, master, pageOffset);
 		this.master = target.getLayoutMaster();
 		this.pageNumberOffset = target.getPageNumberOffset();
@@ -98,7 +97,7 @@ class PageSequenceBuilder2 {
 		SequenceId seqId = new SequenceId(sequenceId, blockContext.getContext().getSpace());
 		PageDetails details = new PageDetails(master.duplex(), state.pageCount, target.getGlobalStartIndex(), seqId);
 		crh.getSearchInfo().addPageDetails(details);
-		state.current = new PageImpl(crh, details, target, master, context, state.pageCount+pageNumberOffset, staticAreaContent.getBefore(), staticAreaContent.getAfter(), uai);
+		state.current = new PageImpl(crh, details, master, context, state.pageCount+pageNumberOffset, staticAreaContent.getBefore(), staticAreaContent.getAfter(), uai);
 		state.pageCount ++;
 		if (state.keepNextSheets>0) {
 			currentPage().setAllowsVolumeBreak(false);

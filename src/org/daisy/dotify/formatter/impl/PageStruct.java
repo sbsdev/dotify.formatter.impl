@@ -1,9 +1,7 @@
 package org.daisy.dotify.formatter.impl;
 
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Stack;
 
 /**
@@ -14,12 +12,10 @@ import java.util.Stack;
 class PageStruct implements Iterable<PageSequence> {
 	private final Stack<PageSequence> seqs;
 	private final Stack<PageImpl> pages;
-	private final Map<Integer, View<PageImpl>> volumeViews;
 
 	PageStruct() {
 		seqs = new Stack<>();
 		pages = new Stack<>();
-		volumeViews = new HashMap<>();
 	}
 
 	static String toString(List<Sheet> units) {
@@ -51,25 +47,6 @@ class PageStruct implements Iterable<PageSequence> {
 
 	Stack<PageImpl> getPages() {
 		return pages;
-	}
-
-	@Deprecated
-	View<PageImpl> getPageView() {
-		return new View<PageImpl>(pages, 0, pages.size());
-	}
-
-	@Deprecated
-	View<PageImpl> getContentsInVolume(int volumeNumber) {
-		return volumeViews.get(volumeNumber);
-	}
-
-	@Deprecated
-	void setVolumeScope(int volumeNumber, int fromIndex, int toIndex) {
-		View<PageImpl> pw = new View<PageImpl>(pages, fromIndex, toIndex);
-		for (PageImpl p : pw.getItems()) {
-			p.setVolumeNumber(volumeNumber);
-		}
-		volumeViews.put(volumeNumber, pw);
 	}
 
 	@Override

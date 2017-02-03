@@ -13,8 +13,6 @@ import org.daisy.dotify.api.formatter.FieldList;
 import org.daisy.dotify.api.formatter.FormattingTypes;
 import org.daisy.dotify.api.formatter.Marker;
 import org.daisy.dotify.api.formatter.MarkerReferenceField;
-import org.daisy.dotify.api.formatter.MarkerReferenceField.MarkerSearchDirection;
-import org.daisy.dotify.api.formatter.MarkerReferenceField.MarkerSearchScope;
 import org.daisy.dotify.api.formatter.NoField;
 import org.daisy.dotify.api.formatter.PageAreaProperties;
 import org.daisy.dotify.api.translator.BrailleTranslator;
@@ -39,7 +37,6 @@ class PageImpl implements Page, Cloneable {
 	private static final Pattern softHyphen = Pattern.compile("\u00ad");
 	private final CrossReferenceHandler crh;
 	private final PageDetails details;
-	private final PageSequence parent;
 	private final LayoutMaster master;
 	private final FormatterContext fcontext;
 	private final UnwriteableAreaInfo unwriteableAreaInfo;
@@ -64,11 +61,10 @@ class PageImpl implements Page, Cloneable {
 	private int volumeNumber;
 	
 	
-	public PageImpl(CrossReferenceHandler crh, PageDetails details,PageSequence parent, LayoutMaster master, FormatterContext fcontext, int pageIndex, List<RowImpl> before, List<RowImpl> after,
+	public PageImpl(CrossReferenceHandler crh, PageDetails details, LayoutMaster master, FormatterContext fcontext, int pageIndex, List<RowImpl> before, List<RowImpl> after,
 	                UnwriteableAreaInfo unwriteableAreaInfo) {
 		this.crh = crh;
 		this.details = details;
-		this.parent = parent;
 		this.master = master;
 		this.fcontext = fcontext;
 		this.bodyRows = new ArrayList<>();
@@ -456,22 +452,6 @@ class PageImpl implements Page, Cloneable {
 		return pageIndex;
 	}
 
-	/**
-	 * Gets the ordinal number for the page in the page sequence list
-	 * @return returns the ordinal number for the page
-	 */
-	private int getPageOrdinal() {
-		return pageIndex-getSequenceParent().getPageNumberOffset();
-	}
-	
-	private int getPageId() {
-		return getSequenceParent().getGlobalStartIndex()+getPageOrdinal();
-	}
-
-	private PageSequence getSequenceParent() {
-		return parent;
-	}
-	
 	/**
 	 * Gets the flow height for this page, i.e. the number of rows available for text flow
 	 * @return returns the flow height
