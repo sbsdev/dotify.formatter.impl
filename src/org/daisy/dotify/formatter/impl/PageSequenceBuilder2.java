@@ -23,6 +23,7 @@ import org.daisy.dotify.common.split.SplitPointDataSource;
 import org.daisy.dotify.common.split.SplitPointHandler;
 import org.daisy.dotify.common.split.StandardSplitOption;
 import org.daisy.dotify.common.split.Supplements;
+import org.daisy.dotify.formatter.impl.DefaultContext.Space;
 
 class PageSequenceBuilder2 {
 	private final FormatterContext context;
@@ -37,6 +38,7 @@ class PageSequenceBuilder2 {
 	private final LayoutMaster master;
 	private final int pageNumberOffset;
 	private final ListIterator<RowGroupSequence> dataGroups;
+	private final int sequenceId;
 	
 	private SplitPointHandler<RowGroup> sph = new SplitPointHandler<>();
 	private boolean force;
@@ -63,7 +65,7 @@ class PageSequenceBuilder2 {
 	}
 
 	PageSequenceBuilder2(PageStruct parent, LayoutMaster master, int pageOffset, CrossReferenceHandler crh, UnwriteableAreaInfo uai,
-	                     BlockSequence seq, FormatterContext context, DefaultContext rcontext) {
+	                     BlockSequence seq, FormatterContext context, DefaultContext rcontext, int sequenceId) {
 		//PageSequence target, LayoutMaster master, int pageNumberOffset, 
 		this.target = new PageSequence(parent, master, pageOffset);
 		this.master = target.getLayoutMaster();
@@ -71,6 +73,7 @@ class PageSequenceBuilder2 {
 		this.context = context;
 		this.crh = crh;
 		this.uai = uai;
+		this.sequenceId = sequenceId;
 
 		this.collection = null;
 		this.areaProps = seq.getLayoutMaster().getPageArea();
@@ -93,7 +96,7 @@ class PageSequenceBuilder2 {
 
 	private PageImpl newPage() {
 		PageImpl buffer = state.current;
-		PageDetails details = new PageDetails(master.duplex(), state.pageCount, target.getGlobalStartIndex());
+		PageDetails details = new PageDetails(master.duplex(), state.pageCount, target.getGlobalStartIndex(), sequenceId, blockContext.getContext().getSpace());
 		crh.getSearchInfo().addPageDetails(details);
 		state.current = new PageImpl(crh, details, target, master, context, state.pageCount+pageNumberOffset, staticAreaContent.getBefore(), staticAreaContent.getAfter(), uai);
 		state.pageCount ++;
