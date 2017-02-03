@@ -90,6 +90,10 @@ class CrossReferenceHandler {
 		breakable.commit();
 	}
 	
+	void trimPageDetails() {
+		//FIXME: implement
+	}
+	
 	Overhead getOverhead(int volumeNumber) {
 		if (volumeNumber<1) {
 			throw new IndexOutOfBoundsException("Volume must be greater than or equal to 1");

@@ -5,13 +5,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.daisy.dotify.formatter.impl.DefaultContext.Space;
+
 class SearchInfo {
 	private List<PageDetails> pageDetails;
 	private final Map<Integer, View<PageDetails>> volumeViews;
+	private final Map<Space, Map<Integer, View<PageDetails>>> sequenceViews;
 	
 	SearchInfo() {
 		this.pageDetails = new ArrayList<>();
 		this.volumeViews = new HashMap<>();
+		this.sequenceViews = new HashMap<>();
 	}
 
 	void addPageDetails(PageDetails value) {
@@ -31,6 +35,15 @@ class SearchInfo {
 	View<PageDetails> getContentsInVolume(int volumeNumber) {
 		return volumeViews.get(volumeNumber);
 	}
+	
+	View<PageDetails> getContentsInSequence(Space space, int sequenceNumber) {
+		return getViewForSpace(space).get(sequenceNumber);
+	}
+	
+	void setSequenceScope(Space space, int sequenceNumber, int fromIndex, int toIndex) {
+		View<PageDetails> pw = new View<PageDetails>(pageDetails, fromIndex, toIndex);
+		getViewForSpace(space).put(sequenceNumber, pw);
+	}
 
 	void setVolumeScope(int volumeNumber, int fromIndex, int toIndex) {
 		View<PageDetails> pw = new View<PageDetails>(pageDetails, fromIndex, toIndex);
@@ -40,4 +53,12 @@ class SearchInfo {
 		volumeViews.put(volumeNumber, pw);
 	}
 	
+	Map<Integer, View<PageDetails>> getViewForSpace(Space space) {
+		Map<Integer, View<PageDetails>> ret = sequenceViews.get(space);
+		if (ret==null) {
+			ret = new HashMap<>();
+			sequenceViews.put(space, ret);
+		}
+		return ret;
+	}
 }

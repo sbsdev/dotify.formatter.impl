@@ -14,15 +14,16 @@ class SheetDataSource implements SplitPointDataSource<Sheet> {
 	private final DefaultContext rcontext;
 	private final Iterator<BlockSequence> seqsIterator;
 	private final int sheetsServed;
+	private int seqsServed;
 	
 	private List<Sheet> sheetBuffer;
 	private boolean volBreakAllowed;
 
 	SheetDataSource(PageStruct struct, CrossReferenceHandler crh, FormatterContext context, DefaultContext rcontext, Iterator<BlockSequence> seqsIterator) {
-		this(struct, crh, context, rcontext, seqsIterator, new ArrayList<>(), true, 0);
+		this(struct, crh, context, rcontext, seqsIterator, new ArrayList<>(), true, 0, 0);
 	}
 	
-	SheetDataSource(PageStruct struct, CrossReferenceHandler crh, FormatterContext context, DefaultContext rcontext, Iterator<BlockSequence> seqsIterator, List<Sheet> sheetBuffer, boolean volBreakAllowed, int sheetsServed) {
+	SheetDataSource(PageStruct struct, CrossReferenceHandler crh, FormatterContext context, DefaultContext rcontext, Iterator<BlockSequence> seqsIterator, List<Sheet> sheetBuffer, boolean volBreakAllowed, int sheetsServed, int seqsServed) {
 		this.struct = struct;
 		this.crh = crh;
 		this.context = context;
@@ -31,6 +32,7 @@ class SheetDataSource implements SplitPointDataSource<Sheet> {
 		this.sheetBuffer = sheetBuffer;
 		this.volBreakAllowed = volBreakAllowed;
 		this.sheetsServed = sheetsServed;
+		this.seqsServed = seqsServed;
 	}
 
 	@Override
@@ -63,7 +65,7 @@ class SheetDataSource implements SplitPointDataSource<Sheet> {
 		} else {
 			newBuffer = sheetBuffer.subList(fromIndex, sheetBuffer.size());
 		}
-		return new SheetDataSource(struct, crh, context, rcontext, seqsIterator, newBuffer, volBreakAllowed, sheetsServed+fromIndex);
+		return new SheetDataSource(struct, crh, context, rcontext, seqsIterator, newBuffer, volBreakAllowed, sheetsServed+fromIndex, seqsServed);
 	}
 
 	@Override
@@ -101,10 +103,12 @@ class SheetDataSource implements SplitPointDataSource<Sheet> {
 		while (index<0 || sheetBuffer.size()<=index) {
 			if (!seqsIterator.hasNext()) {
 				crh.commitBreakable();
+				crh.trimPageDetails();
 				// cannot ensure buffer, return false
 				return false;
 			}
 			BlockSequence bs = seqsIterator.next();
+			seqsServed++;
 			int offset = getCurrentPageOffset();
 			UnwriteableAreaInfo uai = new UnwriteableAreaInfo();
 			PageSequence seq = null;
@@ -167,6 +171,7 @@ class SheetDataSource implements SplitPointDataSource<Sheet> {
 				if (uai.isDirty()) {
 					throw new RuntimeException("coding error");
 				}
+				crh.getSearchInfo().setSequenceScope(rcontext.getSpace(), seqsServed, psb.getSequence().getGlobalStartIndex(), psb.getSequence().toIndex);
 				struct.add(psb.getSequence());
 				seq = psb.getSequence();
 			}
