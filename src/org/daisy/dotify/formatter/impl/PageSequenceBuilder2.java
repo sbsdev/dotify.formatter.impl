@@ -65,7 +65,7 @@ class PageSequenceBuilder2 {
 
 	PageSequenceBuilder2(PageStruct parent, LayoutMaster master, int pageOffset, CrossReferenceHandler crh, UnwriteableAreaInfo uai,
 	                     BlockSequence seq, FormatterContext context, DefaultContext rcontext, int sequenceId) { 
-		this.target = new PageSequence(parent, master, pageOffset);
+		this.target = new PageSequence(parent.getPages(), parent.getPages().size(), master, pageOffset);
 		this.master = target.getLayoutMaster();
 		this.pageNumberOffset = target.getPageNumberOffset();
 		this.context = context;
