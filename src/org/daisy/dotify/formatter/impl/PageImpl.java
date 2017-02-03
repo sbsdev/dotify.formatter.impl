@@ -642,15 +642,7 @@ class PageImpl implements Page, Cloneable {
 		if (field instanceof CompoundField) {
 			ret = resolveCompoundField((CompoundField)field, p, b2);
 		} else if (field instanceof MarkerReferenceField) {
-			MarkerReferenceField f2 = (MarkerReferenceField)field;
-			PageImpl start;
-			if (f2.getSearchScope()==MarkerSearchScope.SPREAD ||
-				f2.getSearchScope()==MarkerSearchScope.SPREAD_CONTENT) {
-				start = getPageInVolumeWithOffset(p, f2.getOffset(), p.shouldAdjustOutOfBounds(f2));
-			} else {
-				start = p.getPageInScope(p.getSequenceParent(), f2.getOffset(), p.shouldAdjustOutOfBounds(f2));
-			}
-			ret = findMarker(start, f2);
+			ret = findStartAndMarker(p, (MarkerReferenceField)field);
 		} else if (field instanceof CurrentPageField) {
 			ret = resolveCurrentPageField((CurrentPageField)field, p);
 		} else {
@@ -673,11 +665,28 @@ class PageImpl implements Page, Cloneable {
 		}
 		return sb.toString();
 	}
+	
+	/*
+	 * Note: Moved to SearchInfo
+	 */
+	@Deprecated
+	private static String findStartAndMarker(PageImpl p, MarkerReferenceField f2) {
+		PageImpl start;
+		if (f2.getSearchScope()==MarkerSearchScope.SPREAD ||
+			f2.getSearchScope()==MarkerSearchScope.SPREAD_CONTENT) {
+			start = getPageInVolumeWithOffset(p, f2.getOffset(), shouldAdjustOutOfBounds(p, f2));
+		} else {
+			start = p.getPageInScope(p.getSequenceParent(), f2.getOffset(), shouldAdjustOutOfBounds(p, f2));
+		}
+		return findMarker(start, f2);
+	}
 
 	/*
 	 * Note that the result of this function is not constant because getPageInSequenceWithOffset(),
 	 * getPageInVolumeWithOffset() and isWithinVolumeSpreadScope() are not constant.
+	 * Note: Moved to SearchInfo
 	 */
+	@Deprecated
 	private static String findMarker(PageImpl page, MarkerReferenceField markerRef) {
 		if (page==null) {
 			return "";
@@ -724,7 +733,7 @@ class PageImpl implements Page, Cloneable {
 		} //else if (markerRef.getSearchScope() == MarkerSearchScope.SPREAD && page.isWithinDocumentSpreadScope(dir)) {
 		  else if (markerRef.getSearchScope() == MarkerSearchScope.SPREAD ||
 		           markerRef.getSearchScope() == MarkerSearchScope.SPREAD_CONTENT) {
-			if (page.isWithinVolumeSpreadScope(dir)) {
+			if (isWithinVolumeSpreadScope(page, dir)) {
 				next = getPageInVolumeWithOffset(page, dir, false);
 			}
 		}
@@ -738,8 +747,10 @@ class PageImpl implements Page, Cloneable {
 	/*
 	 * Note that the result of this function is not constant because isWithinVolumeSpreadScope() is not
 	 * constant.
+	 * Note: Moved to SearchInfo
 	 */
-	private boolean shouldAdjustOutOfBounds(MarkerReferenceField markerRef) {
+	@Deprecated
+	private static boolean shouldAdjustOutOfBounds(PageImpl base, MarkerReferenceField markerRef) {
 		if (markerRef.getSearchDirection()==MarkerSearchDirection.FORWARD && markerRef.getOffset()>=0 ||
 			markerRef.getSearchDirection()==MarkerSearchDirection.BACKWARD && markerRef.getOffset()<=0) {
 			return false;
@@ -752,9 +763,9 @@ class PageImpl implements Page, Cloneable {
 			case SPREAD_CONTENT: case SPREAD:
 				//return  isWithinSequenceSpreadScope(markerRef.getOffset());				
 				//return  isWithinDocumentSpreadScope(markerRef.getOffset());
-				return isWithinVolumeSpreadScope(markerRef.getOffset());
+				return isWithinVolumeSpreadScope(base, markerRef.getOffset());
 			case SHEET:
-				return isWithinSheetScope(markerRef.getOffset()) && 
+				return base.isWithinSheetScope(markerRef.getOffset()) && 
 						markerRef.getSearchDirection()==MarkerSearchDirection.BACKWARD;
 			default:
 				throw new RuntimeException("Error in code. Missing implementation for value: " + markerRef.getSearchScope());
@@ -768,31 +779,38 @@ class PageImpl implements Page, Cloneable {
 	 *
 	 * Note that the result of this function is not constant because getPageInDocumentWithOffset() is not
 	 * constant.
+	 * Note: Moved to SearchInfo
 	 */
 	@SuppressWarnings("unused")
-	private boolean isWithinDocumentSpreadScope(int offset) {
+	@Deprecated
+	private static boolean isWithinDocumentSpreadScope(PageImpl base, int offset) {
 		if (offset==0) {
 			return true;
 		} else {
-			PageImpl n = getPageInDocumentWithOffset(this, offset, false);
-			return details.isWithinSpreadScope(offset, (n==null?null:n.details));
+			PageImpl n = getPageInDocumentWithOffset(base, offset, false);
+			return base.details.isWithinSpreadScope(offset, (n==null?null:n.details));
 		}
 	}
 	
 	/*
 	 * Note that the result of this function is not constant because getPageInVolumeWithOffset() is not
 	 * constant.
+	 * Note: Moved to SearchInfo
 	 */
-	private boolean isWithinVolumeSpreadScope(int offset) {
+	@Deprecated
+	private static boolean isWithinVolumeSpreadScope(PageImpl base, int offset) {
 		if (offset==0) {
 			return true;
 		} else {
-			PageImpl n = getPageInVolumeWithOffset(this, offset, false);
-			return details.isWithinSpreadScope(offset, (n==null?null:n.details));
+			PageImpl n = getPageInVolumeWithOffset(base, offset, false);
+			return base.details.isWithinSpreadScope(offset, (n==null?null:n.details));
 		}
 	}
 	
-	
+	/*
+	 * Note: Moved to PageDetails
+	 */
+	@Deprecated
 	private boolean isWithinSheetScope(int offset) {
 		return 	offset==0 || 
 				(
@@ -810,7 +828,9 @@ class PageImpl implements Page, Cloneable {
 	 * Note that the result of this function is not constant because getPageInScope() and
 	 * getSequenceParent().getParent().getContentsInVolume() are not constant because PageSequence and
 	 * PageStruct are mutable.
+	 * NOTE: Moved to SearchInfo
 	 */
+	@Deprecated
 	private static PageImpl getPageInVolumeWithOffset(PageImpl base, int offset, boolean adjustOutOfBounds) {
 		if (offset==0) {
 			return base;
@@ -821,7 +841,9 @@ class PageImpl implements Page, Cloneable {
 
 	/*
 	 * Note that the result of this function is not constant because getPageInScope() is not constant.
+	 * NOTE: Moved to SearchInfo 
 	 */
+	@Deprecated
 	private static PageImpl getPageInDocumentWithOffset(PageImpl base, int offset, boolean adjustOutOfBounds) {
 		if (offset==0) {
 			return base;
@@ -834,7 +856,9 @@ class PageImpl implements Page, Cloneable {
 	 * Note that the result of this function is not constant because
 	 * getSequenceParent().getParent().getPageView().getPages() is not constant because PageSequence is
 	 * mutable.
+	 * NOTE: Moved to PageDetails
 	 */
+	@Deprecated
 	private PageImpl getPageInScope(View<PageImpl> pageView, int offset, boolean adjustOutOfBounds) {
 		if (offset==0) {
 			return this;
