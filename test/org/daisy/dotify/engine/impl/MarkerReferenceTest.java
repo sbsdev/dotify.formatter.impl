@@ -58,4 +58,9 @@ public class MarkerReferenceTest extends AbstractFormatterEngineTest {
 		testPEF("resource-files/marker-ref-sequence-input.obfl", "resource-files/marker-ref-sequence-expected.pef", false);
 	}
 
+	@Test
+	public void testSequenceVolMarker() throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
+		testPEF("resource-files/marker-ref-sequence-vol-input.obfl", "resource-files/marker-ref-sequence-vol-expected.pef", false);
+	}
+
 }
