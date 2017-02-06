@@ -52,5 +52,10 @@ public class MarkerReferenceTest extends AbstractFormatterEngineTest {
 	public void testMarkerAfterLeader() throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
 		testPEF("resource-files/marker-ref-after-leader-input.obfl", "resource-files/marker-ref-after-leader-expected.pef", false);
 	}
+	
+	@Test
+	public void testDocumentMarker() throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
+		testPEF("resource-files/marker-ref-sequence-input.obfl", "resource-files/marker-ref-sequence-expected.pef", false);
+	}
 
 }
