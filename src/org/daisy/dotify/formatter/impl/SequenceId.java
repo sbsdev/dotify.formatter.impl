@@ -1,12 +1,10 @@
 package org.daisy.dotify.formatter.impl;
 
-import org.daisy.dotify.formatter.impl.DefaultContext.Space;
-
 class SequenceId {
 	private final int ordinal;
-	private final Space space;
+	private final DocumentSpace space;
 	
-	SequenceId(int ordinal, Space space) {
+	SequenceId(int ordinal, DocumentSpace space) {
 		this.ordinal = ordinal;
 		this.space = space;
 	}
@@ -15,7 +13,7 @@ class SequenceId {
 		return ordinal;
 	}
 	
-	Space getSpace() {
+	DocumentSpace getSpace() {
 		return space;
 	}
 

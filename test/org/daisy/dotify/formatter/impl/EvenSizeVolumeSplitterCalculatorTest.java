@@ -3,7 +3,6 @@ package org.daisy.dotify.formatter.impl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import org.daisy.dotify.formatter.impl.EvenSizeVolumeSplitterCalculator;
 import org.junit.Test;
 
 @SuppressWarnings("javadoc")

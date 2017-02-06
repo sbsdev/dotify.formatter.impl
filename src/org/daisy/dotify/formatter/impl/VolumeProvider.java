@@ -14,7 +14,6 @@ import org.daisy.dotify.common.split.SplitPointCost;
 import org.daisy.dotify.common.split.SplitPointDataSource;
 import org.daisy.dotify.common.split.SplitPointHandler;
 import org.daisy.dotify.common.split.StandardSplitOption;
-import org.daisy.dotify.formatter.impl.DefaultContext.Space;
 
 /**
  * Provides contents in volumes.
@@ -168,7 +167,7 @@ public class VolumeProvider {
 		groups.currentGroup().setUnits(sp.getTail());
 		List<Sheet> contents = sp.getHead();
 		int pageCount = Sheet.countPages(contents);
-		crh.getSearchInfo().setVolumeScope(currentVolumeNumber, pageIndex, pageIndex+pageCount, Space.BODY);
+		crh.getSearchInfo().setVolumeScope(currentVolumeNumber, pageIndex, pageIndex+pageCount);
 
 		pageIndex += pageCount;
 		SectionBuilder sb = new SectionBuilder();

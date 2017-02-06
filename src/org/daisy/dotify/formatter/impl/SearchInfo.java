@@ -1,6 +1,5 @@
 package org.daisy.dotify.formatter.impl;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,24 +8,10 @@ import org.daisy.dotify.api.formatter.Marker;
 import org.daisy.dotify.api.formatter.MarkerReferenceField;
 import org.daisy.dotify.api.formatter.MarkerReferenceField.MarkerSearchDirection;
 import org.daisy.dotify.api.formatter.MarkerReferenceField.MarkerSearchScope;
-import org.daisy.dotify.formatter.impl.DefaultContext.Space;
 
 class SearchInfo {
 
-	private static class SearchInfoSpace {
-
-		final List<PageDetails> pageDetails;
-		final Map<Integer, View<PageDetails>> volumeViews;
-		final Map<Integer, View<PageDetails>> sequenceViews;
-		
-		SearchInfoSpace() {
-			this.pageDetails = new ArrayList<>();
-			this.volumeViews = new HashMap<>();
-			this.sequenceViews = new HashMap<>();		
-		}
-	}
-	
-	private final Map<Space, SearchInfoSpace> spaces;
+	private final Map<DocumentSpace, DocumentSpaceData> spaces;
 	
 	SearchInfo() {
 		this.spaces = new HashMap<>();
@@ -36,18 +21,18 @@ class SearchInfo {
 		if (value.getPageId()<0) {
 			throw new IllegalArgumentException("Negative page id not allowed.");
 		}
-		SearchInfoSpace data = getViewForSpace(value.getSequenceId().getSpace());
+		DocumentSpaceData data = getViewForSpace(value.getSequenceId().getSpace());
 		while (value.getPageId()>=data.pageDetails.size()) {
 			data.pageDetails.add(null);
 		}
 		data.pageDetails.set(value.getPageId(), value);
 	}
 
-	View<PageDetails> getPageView(Space space) {
+	View<PageDetails> getPageView(DocumentSpace space) {
 		return new View<PageDetails>(getViewForSpace(space).pageDetails, 0, getViewForSpace(space).pageDetails.size());
 	}
 
-	View<PageDetails> getContentsInVolume(int volumeNumber, Space space) {
+	View<PageDetails> getContentsInVolume(int volumeNumber, DocumentSpace space) {
 		return getViewForSpace(space).volumeViews.get(volumeNumber);
 	}
 	
@@ -55,12 +40,16 @@ class SearchInfo {
 		return getViewForSpace(seqId.getSpace()).sequenceViews.get(seqId.getOrdinal());
 	}
 	
-	void setSequenceScope(Space space, int sequenceNumber, int fromIndex, int toIndex) {
+	void setSequenceScope(DocumentSpace space, int sequenceNumber, int fromIndex, int toIndex) {
 		View<PageDetails> pw = new View<PageDetails>(getViewForSpace(space).pageDetails, fromIndex, toIndex);
 		getViewForSpace(space).sequenceViews.put(sequenceNumber, pw);
 	}
+	
+	void setVolumeScope(int volumeNumber, int fromIndex, int toIndex) {
+		setVolumeScope(volumeNumber, fromIndex, toIndex, DocumentSpace.BODY);
+	}
 
-	void setVolumeScope(int volumeNumber, int fromIndex, int toIndex, Space space) {
+	void setVolumeScope(int volumeNumber, int fromIndex, int toIndex, DocumentSpace space) {
 		View<PageDetails> pw = new View<PageDetails>(getViewForSpace(space).pageDetails, fromIndex, toIndex);
 		for (PageDetails p : pw.getItems()) {
 			p.setVolumeNumber(volumeNumber);
@@ -68,10 +57,10 @@ class SearchInfo {
 		getViewForSpace(space).volumeViews.put(volumeNumber, pw);
 	}
 	
-	SearchInfoSpace getViewForSpace(Space space) {
-		SearchInfoSpace ret = spaces.get(space);
+	DocumentSpaceData getViewForSpace(DocumentSpace space) {
+		DocumentSpaceData ret = spaces.get(space);
 		if (ret==null) {
-			ret = new SearchInfoSpace();
+			ret = new DocumentSpaceData();
 			spaces.put(space, ret);
 		}
 		return ret;

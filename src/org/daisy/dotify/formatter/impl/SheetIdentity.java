@@ -1,7 +1,5 @@
 package org.daisy.dotify.formatter.impl;
 
-import org.daisy.dotify.formatter.impl.DefaultContext.Space;
-
 class SheetIdentity {
 	private final Space space;
 	private final int volumeIndex;

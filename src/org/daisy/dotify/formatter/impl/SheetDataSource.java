@@ -171,7 +171,7 @@ class SheetDataSource implements SplitPointDataSource<Sheet> {
 				if (uai.isDirty()) {
 					throw new RuntimeException("coding error");
 				}
-				crh.getSearchInfo().setSequenceScope(rcontext.getSpace(), seqsServed, psb.getSequence().getGlobalStartIndex(), psb.getSequence().toIndex);
+				crh.getSearchInfo().setSequenceScope(new DocumentSpace(rcontext.getSpace(), rcontext.getCurrentVolume()), seqsServed, psb.getSequence().getGlobalStartIndex(), psb.getSequence().toIndex);
 				struct.add(psb.getSequence());
 				seq = psb.getSequence();
 			}

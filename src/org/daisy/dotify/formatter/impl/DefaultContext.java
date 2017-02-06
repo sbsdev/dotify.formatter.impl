@@ -3,11 +3,7 @@ package org.daisy.dotify.formatter.impl;
 import org.daisy.dotify.api.formatter.Context;
 
 class DefaultContext implements Context {
-	enum Space {
-		PRE_CONTENT,
-		BODY,
-		POST_CONTENT
-	}
+
 	private final Integer currentVolume, currentPage, metaVolume, metaPage;
 	private final Space space;
 	private final CrossReferenceHandler crh;

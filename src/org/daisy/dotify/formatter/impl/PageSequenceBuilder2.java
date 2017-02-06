@@ -93,7 +93,7 @@ class PageSequenceBuilder2 {
 
 	private PageImpl newPage() {
 		PageImpl buffer = state.current;
-		SequenceId seqId = new SequenceId(sequenceId, blockContext.getContext().getSpace());
+		SequenceId seqId = new SequenceId(sequenceId, new DocumentSpace(blockContext.getContext().getSpace(), blockContext.getContext().getCurrentVolume()));
 		PageDetails details = new PageDetails(master.duplex(), state.pageCount, target.getGlobalStartIndex(), seqId);
 		crh.getSearchInfo().addPageDetails(details);
 		state.current = new PageImpl(crh, details, master, context, state.pageCount+pageNumberOffset, staticAreaContent.getBefore(), staticAreaContent.getAfter(), uai);
