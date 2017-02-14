@@ -74,11 +74,13 @@ public class CrossReferenceHandler {
 		variables.put(SHEETS_IN_DOCUMENT, value);
 	}
 	
-	void setPagesInVolume(int volume, int value) {
+	private void setPagesInVolume(int volume, int value) {
+		//TODO: use this method
 		variables.put(PAGES_IN_VOLUME+volume, value);
 	}
 	
-	void setPagesInDocument(int value) {
+	private void setPagesInDocument(int value) {
+		//TODO: use this method
 		variables.put(PAGES_IN_DOCUMENT, value);
 	}
 	

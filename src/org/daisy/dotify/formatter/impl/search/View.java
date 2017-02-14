@@ -11,7 +11,7 @@ public class View<T> {
 		this(items, fromIndex, fromIndex);
 	}
 	
-	View(List<T> items, int fromIndex, int toIndex) {
+	protected View(List<T> items, int fromIndex, int toIndex) {
 		this.items = items;
 		this.fromIndex = fromIndex;
 		this.setToIndex(toIndex);
@@ -36,7 +36,7 @@ public class View<T> {
 		return items.subList(fromIndex, getToIndex());
 	}
 
-	boolean isSequenceEmpty() {
+	private boolean isSequenceEmpty() {
 		return getToIndex()-fromIndex == 0;
 	}
 	

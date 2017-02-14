@@ -26,15 +26,11 @@ public class PageDetails {
 		this.volumeNumber = 0;
 	}
 
-	boolean duplex() {
+	private boolean duplex() {
 		return duplex;
 	}
 	
-	int getGlobalStartIndex() {
-		return globalStartIndex;
-	}
-	
-	int getOrdinal() {
+	private int getOrdinal() {
 		return ordinal;
 	}
 	
