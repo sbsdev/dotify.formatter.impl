@@ -168,7 +168,8 @@ class PageImpl implements Page, Cloneable {
 		bodyRows.add(r);
 		int markerCountBefore = details.getMarkers().size();
 		details.getMarkers().addAll(r.getMarkers());
-		if (Math.ceil(spaceUsed) >= flowHeight - textFlowIntoHeaderHeight - textFlowIntoFooterHeight) {
+        if (Math.ceil(spaceUsed) < textFlowIntoHeaderHeight
+            || Math.ceil(spaceUsed) >= flowHeight - textFlowIntoHeaderHeight - textFlowIntoFooterHeight) {
 			try {
 				if (textFlowIntoHeaderHeight + textFlowIntoFooterHeight == 0) {
 					throw new PaginatorException("Too many rows for page");
@@ -185,6 +186,8 @@ class PageImpl implements Page, Cloneable {
 			} catch (PaginatorException e) {
 				throw new RuntimeException("Pagination failed.", e);
 			}
+        } else {
+            pageRows = null;
 		}
 		anchors.addAll(r.getAnchors());
 	}

@@ -160,7 +160,6 @@ class SheetDataSource implements SplitPointDataSource<Sheet> {
 						if (!uai.isDirty()) {
 							throw new RuntimeException("coding error");
 						} else {
-							uai.commit();
 							uai.rewind();
 							continue restart;
 						}
