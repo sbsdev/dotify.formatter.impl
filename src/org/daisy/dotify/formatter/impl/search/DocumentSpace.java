@@ -1,4 +1,4 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.search;
 
 /**
  * <p>Provides coordinates for a coherent document space. Each volume consists of 
@@ -12,7 +12,7 @@ package org.daisy.dotify.formatter.impl;
  *  
  * @author Joel Håkansson
  */
-final class DocumentSpace {
+public final class DocumentSpace {
 	static final DocumentSpace BODY = new DocumentSpace(Space.BODY, null);
 	private final int volumeNumber;
 	private final Space space;
@@ -22,7 +22,7 @@ final class DocumentSpace {
 	 * @param space
 	 * @param volumeNumber
 	 */
-	DocumentSpace(Space space, Integer volumeNumber) {
+	public DocumentSpace(Space space, Integer volumeNumber) {
 		this.space = space;
 		this.volumeNumber = (volumeNumber==null||space==Space.BODY?0:volumeNumber);
 	}

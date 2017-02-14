@@ -2,6 +2,8 @@ package org.daisy.dotify.formatter.impl;
 
 import java.util.List;
 
+import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
+
 /**
  * Provides an interface for blocks in a dynamic sequence whose inclusion 
  * depend on the occurrence of dynamic contents.

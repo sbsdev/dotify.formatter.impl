@@ -1,9 +1,9 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.search;
 
 import java.util.HashMap;
 import java.util.Map;
 
-class CrossReferenceHandler {
+public class CrossReferenceHandler {
 	private final LookupHandler<String, Integer> pageRefs;
 	private final LookupHandler<String, Integer> volumeRefs;
 	private final LookupHandler<Integer, Iterable<AnchorData>> anchorRefs;
@@ -18,7 +18,7 @@ class CrossReferenceHandler {
 	private static final String PAGES_IN_DOCUMENT = "pages-in-document";
 	private boolean overheadDirty = false;
 	
-	CrossReferenceHandler() {
+	public CrossReferenceHandler() {
 		this.pageRefs = new LookupHandler<>();
 		this.volumeRefs = new LookupHandler<>();
 		this.anchorRefs = new LookupHandler<>();
@@ -37,7 +37,7 @@ class CrossReferenceHandler {
 		return volumeRefs.get(refid);
 	}
 	
-	void setVolumeNumber(String refid, int volume) {
+	public void setVolumeNumber(String refid, int volume) {
 		volumeRefs.put(refid, volume);
 	}
 	
@@ -50,7 +50,7 @@ class CrossReferenceHandler {
 		return pageRefs.get(refid);
 	}
 	
-	void setPageNumber(String refid, int page) {
+	public void setPageNumber(String refid, int page) {
 		pageRefs.put(refid, page);
 	}
 	
@@ -58,19 +58,19 @@ class CrossReferenceHandler {
 		return anchorRefs.get(volume);
 	}
 	
-	void setAnchorData(int volume, Iterable<AnchorData> data) {
+	public void setAnchorData(int volume, Iterable<AnchorData> data) {
 		anchorRefs.put(volume, data);
 	}
 	
-	void setVolumeCount(int volumes) {
+	public void setVolumeCount(int volumes) {
 		variables.put(VOLUMES_KEY, volumes);
 	}
 	
-	void setSheetsInVolume(int volume, int value) {
+	public void setSheetsInVolume(int volume, int value) {
 		variables.put(SHEETS_IN_VOLUME+volume, value);
 	}
 	
-	void setSheetsInDocument(int value) {
+	public void setSheetsInDocument(int value) {
 		variables.put(SHEETS_IN_DOCUMENT, value);
 	}
 	
@@ -82,19 +82,19 @@ class CrossReferenceHandler {
 		variables.put(PAGES_IN_DOCUMENT, value);
 	}
 	
-	void keepBreakable(SheetIdentity ident, boolean value) {
+	public void keepBreakable(SheetIdentity ident, boolean value) {
 		breakable.keep(ident, value);
 	}
 	
-	void commitBreakable() {
+	public void commitBreakable() {
 		breakable.commit();
 	}
 	
-	void trimPageDetails() {
+	public void trimPageDetails() {
 		//FIXME: implement
 	}
 	
-	Overhead getOverhead(int volumeNumber) {
+	public Overhead getOverhead(int volumeNumber) {
 		if (volumeNumber<1) {
 			throw new IndexOutOfBoundsException("Volume must be greater than or equal to 1");
 		}
@@ -105,7 +105,7 @@ class CrossReferenceHandler {
 		return volumeOverhead.get(volumeNumber);
 	}
 	
-	void setOverhead(int volumeNumber, Overhead overhead) {
+	public void setOverhead(int volumeNumber, Overhead overhead) {
 		volumeOverhead.put(volumeNumber, overhead);
 	}
 
@@ -113,39 +113,39 @@ class CrossReferenceHandler {
 	 * Gets the number of volumes.
 	 * @return returns the number of volumes
 	 */
-	int getVolumeCount() {
+	public int getVolumeCount() {
 		return variables.get(VOLUMES_KEY, 1);
 	}
 	
-	int getSheetsInVolume(int volume) {
+	public int getSheetsInVolume(int volume) {
 		return variables.get(SHEETS_IN_VOLUME+volume, 0);
 	}
 
-	int getSheetsInDocument() {
+	public int getSheetsInDocument() {
 		return variables.get(SHEETS_IN_DOCUMENT, 0);
 	}
 	
-	int getPagesInVolume(int volume) {
+	public int getPagesInVolume(int volume) {
 		return variables.get(PAGES_IN_VOLUME+volume, 0);
 	}
 
-	int getPagesInDocument() {
+	public int getPagesInDocument() {
 		return variables.get(PAGES_IN_DOCUMENT, 0);
 	}
 	
-	boolean getBreakable(SheetIdentity ident) {
+	public boolean getBreakable(SheetIdentity ident) {
 		return breakable.get(ident, true);
 	}
 	
-	SearchInfo getSearchInfo() {
+	public SearchInfo getSearchInfo() {
 		return searchInfo;
 	}
 
-	boolean isDirty() {
+	public boolean isDirty() {
 		return pageRefs.isDirty() || volumeRefs.isDirty() || anchorRefs.isDirty() || variables.isDirty() || breakable.isDirty() || overheadDirty;
 	}
 	
-	void setDirty(boolean value) {
+	public void setDirty(boolean value) {
 		pageRefs.setDirty(value);
 		volumeRefs.setDirty(value);
 		anchorRefs.setDirty(value);

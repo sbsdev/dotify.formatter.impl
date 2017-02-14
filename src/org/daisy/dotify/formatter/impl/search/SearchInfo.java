@@ -1,4 +1,4 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.search;
 
 import java.util.HashMap;
 import java.util.List;
@@ -9,7 +9,7 @@ import org.daisy.dotify.api.formatter.MarkerReferenceField;
 import org.daisy.dotify.api.formatter.MarkerReferenceField.MarkerSearchDirection;
 import org.daisy.dotify.api.formatter.MarkerReferenceField.MarkerSearchScope;
 
-class SearchInfo {
+public class SearchInfo {
 
 	private final Map<DocumentSpace, DocumentSpaceData> spaces;
 	
@@ -17,7 +17,7 @@ class SearchInfo {
 		this.spaces = new HashMap<>();
 	}
 
-	void addPageDetails(PageDetails value) {
+	public void addPageDetails(PageDetails value) {
 		if (value.getPageId()<0) {
 			throw new IllegalArgumentException("Negative page id not allowed.");
 		}
@@ -40,12 +40,12 @@ class SearchInfo {
 		return getViewForSpace(seqId.getSpace()).sequenceViews.get(seqId.getOrdinal());
 	}
 	
-	void setSequenceScope(DocumentSpace space, int sequenceNumber, int fromIndex, int toIndex) {
+	public void setSequenceScope(DocumentSpace space, int sequenceNumber, int fromIndex, int toIndex) {
 		View<PageDetails> pw = new View<PageDetails>(getViewForSpace(space).pageDetails, fromIndex, toIndex);
 		getViewForSpace(space).sequenceViews.put(sequenceNumber, pw);
 	}
 	
-	void setVolumeScope(int volumeNumber, int fromIndex, int toIndex) {
+	public void setVolumeScope(int volumeNumber, int fromIndex, int toIndex) {
 		setVolumeScope(volumeNumber, fromIndex, toIndex, DocumentSpace.BODY);
 	}
 
@@ -187,7 +187,7 @@ class SearchInfo {
 		}
 	}
 	
-	String findStartAndMarker(PageDetails p, MarkerReferenceField f2) {
+	public String findStartAndMarker(PageDetails p, MarkerReferenceField f2) {
 		PageDetails start;
 		if (f2.getSearchScope()==MarkerSearchScope.SPREAD ||
 			f2.getSearchScope()==MarkerSearchScope.SPREAD_CONTENT) {

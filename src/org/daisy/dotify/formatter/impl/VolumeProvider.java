@@ -14,6 +14,9 @@ import org.daisy.dotify.common.split.SplitPointCost;
 import org.daisy.dotify.common.split.SplitPointDataSource;
 import org.daisy.dotify.common.split.SplitPointHandler;
 import org.daisy.dotify.common.split.StandardSplitOption;
+import org.daisy.dotify.formatter.impl.search.AnchorData;
+import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
+import org.daisy.dotify.formatter.impl.search.Space;
 
 /**
  * Provides contents in volumes.

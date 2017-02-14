@@ -1,6 +1,8 @@
 package org.daisy.dotify.formatter.impl;
 
 import org.daisy.dotify.api.formatter.Context;
+import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
+import org.daisy.dotify.formatter.impl.search.Space;
 
 class DefaultContext implements Context {
 

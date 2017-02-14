@@ -1,11 +1,11 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.search;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import org.daisy.dotify.api.formatter.Marker;
 
-class PageDetails {
+public class PageDetails {
 	private final boolean duplex;
 	private final int ordinal;
 	private final int globalStartIndex;
@@ -13,9 +13,9 @@ class PageDetails {
 	private int volumeNumber;
 	int contentMarkersBegin;
 	
-	ArrayList<Marker> markers;
+	private final ArrayList<Marker> markers;
 	
-	PageDetails(boolean duplex, int ordinal, int globalStartIndex, SequenceId sequenceId) {
+	public PageDetails(boolean duplex, int ordinal, int globalStartIndex, SequenceId sequenceId) {
 		this.duplex = duplex;
 		this.ordinal = ordinal;
 		this.globalStartIndex = globalStartIndex;
@@ -54,6 +54,13 @@ class PageDetails {
 		this.volumeNumber = volNumber;
 	}
 	
+	/**
+	 * Sets content markers to begin at the current index in the markers list
+	 */
+	public void startsContentMarkers() {
+		contentMarkersBegin = getMarkers().size();
+	}
+	
 	/*
 	 * This method is unused at the moment, but could be activated once additional scopes are added to the API,
 	 * namely SPREAD_WITHIN_SEQUENCE
@@ -86,7 +93,7 @@ class PageDetails {
 	 * Get all markers for this page
 	 * @return returns a list of all markers on a page
 	 */
-	List<Marker> getMarkers() {
+	public List<Marker> getMarkers() {
 		return markers;
 	}
 	
@@ -95,7 +102,7 @@ class PageDetails {
 	 * @return returns a list of markers on a page
 	 */
 	List<Marker> getContentMarkers() {
-		return markers.subList(contentMarkersBegin, markers.size());
+		return getMarkers().subList(contentMarkersBegin, getMarkers().size());
 	}
 
 	PageDetails getPageInScope(View<PageDetails> pageView, int offset, boolean adjustOutOfBounds) {

@@ -24,6 +24,8 @@ import org.daisy.dotify.api.translator.TranslationException;
 import org.daisy.dotify.api.writer.Row;
 import org.daisy.dotify.common.text.StringTools;
 import org.daisy.dotify.formatter.impl.UnwriteableAreaInfo.UnwriteableArea;
+import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
+import org.daisy.dotify.formatter.impl.search.PageDetails;
 import org.daisy.dotify.writer.impl.Page;
 
 
@@ -160,12 +162,12 @@ class PageImpl implements Page, Cloneable {
 	
 	void newRow(RowImpl r) throws PageFullException {
 		if (rowsOnPage()==0) {
-			details.contentMarkersBegin = details.markers.size();
+			details.startsContentMarkers();
 		}
 		float spaceUsed = spaceNeeded();
 		bodyRows.add(r);
-		int markerCountBefore = details.markers.size();
-		details.markers.addAll(r.getMarkers());
+		int markerCountBefore = details.getMarkers().size();
+		details.getMarkers().addAll(r.getMarkers());
 		if (Math.ceil(spaceUsed) >= flowHeight - textFlowIntoHeaderHeight - textFlowIntoFooterHeight) {
 			try {
 				if (textFlowIntoHeaderHeight + textFlowIntoFooterHeight == 0) {
@@ -178,7 +180,7 @@ class PageImpl implements Page, Cloneable {
 				pageRows = buildPageRows(border);
 			} catch (PageFullException e) {
 				bodyRows.remove(bodyRows.size() - 1);
-				details.markers.subList(markerCountBefore, details.markers.size()).clear();
+				details.getMarkers().subList(markerCountBefore, details.getMarkers().size()).clear();
 				throw e;
 			} catch (PaginatorException e) {
 				throw new RuntimeException("Pagination failed.", e);
@@ -196,7 +198,7 @@ class PageImpl implements Page, Cloneable {
 	}
 	
 	void addMarkers(List<Marker> m) {
-		details.markers.addAll(m);
+		details.getMarkers().addAll(m);
 	}
 	
 	List<String> getAnchors() {
@@ -714,7 +716,6 @@ class PageImpl implements Page, Cloneable {
 		}
 		clone.bodyRows = (ArrayList<RowImpl>)bodyRows.clone();
 		clone.pageArea = (ArrayList<RowImpl>)pageArea.clone();
-		clone.details.markers = (ArrayList<Marker>)details.markers.clone();
 		clone.anchors = (ArrayList<String>)anchors.clone();
 		clone.identifiers = (ArrayList<String>)identifiers.clone();
 		if (pageRows != null) {

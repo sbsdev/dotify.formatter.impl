@@ -6,6 +6,9 @@ import java.util.List;
 
 import org.daisy.dotify.common.split.SplitPointDataSource;
 import org.daisy.dotify.common.split.Supplements;
+import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
+import org.daisy.dotify.formatter.impl.search.DocumentSpace;
+import org.daisy.dotify.formatter.impl.search.SheetIdentity;
 
 class SheetDataSource implements SplitPointDataSource<Sheet> {
 	private final PageStruct struct;
@@ -171,7 +174,7 @@ class SheetDataSource implements SplitPointDataSource<Sheet> {
 				if (uai.isDirty()) {
 					throw new RuntimeException("coding error");
 				}
-				crh.getSearchInfo().setSequenceScope(new DocumentSpace(rcontext.getSpace(), rcontext.getCurrentVolume()), seqsServed, psb.getSequence().getGlobalStartIndex(), psb.getSequence().toIndex);
+				crh.getSearchInfo().setSequenceScope(new DocumentSpace(rcontext.getSpace(), rcontext.getCurrentVolume()), seqsServed, psb.getSequence().getGlobalStartIndex(), psb.getSequence().getToIndex());
 				struct.add(psb.getSequence());
 				seq = psb.getSequence();
 			}

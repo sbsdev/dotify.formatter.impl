@@ -1,21 +1,21 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.search;
 
 import java.util.List;
 
-class AnchorData {
+public class AnchorData {
 	private final int pageIndex;
 	private final List<String> refs;
 	
-	AnchorData(int pageIndex, List<String> refs) {
+	public AnchorData(int pageIndex, List<String> refs) {
 		this.pageIndex = pageIndex;
 		this.refs = refs;
 	}
 
-	int getPageIndex() {
+	public int getPageIndex() {
 		return pageIndex;
 	}
 	
-	List<String> getAnchors() {
+	public List<String> getAnchors() {
 		return refs;
 	}
 

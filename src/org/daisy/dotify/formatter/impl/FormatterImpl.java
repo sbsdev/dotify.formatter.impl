@@ -21,6 +21,7 @@ import org.daisy.dotify.api.translator.BrailleTranslatorFactoryMakerService;
 import org.daisy.dotify.api.translator.MarkerProcessorFactoryMakerService;
 import org.daisy.dotify.api.translator.TextBorderFactoryMakerService;
 import org.daisy.dotify.api.writer.PagedMediaWriter;
+import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.writer.impl.Volume;
 import org.daisy.dotify.writer.impl.WriterHandler;
 

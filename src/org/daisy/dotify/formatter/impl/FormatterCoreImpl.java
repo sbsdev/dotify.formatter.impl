@@ -34,6 +34,7 @@ import org.daisy.dotify.api.translator.TextBorderFactory;
 import org.daisy.dotify.api.translator.TextBorderFactoryMakerService;
 import org.daisy.dotify.api.translator.TextBorderStyle;
 import org.daisy.dotify.formatter.impl.Margin.Type;
+import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 
 class FormatterCoreImpl extends Stack<Block> implements FormatterCore, BlockGroup {
 	/**

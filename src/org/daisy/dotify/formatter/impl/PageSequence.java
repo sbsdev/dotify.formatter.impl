@@ -3,6 +3,7 @@ package org.daisy.dotify.formatter.impl;
 import java.util.List;
 
 import org.daisy.dotify.api.writer.SectionProperties;
+import org.daisy.dotify.formatter.impl.search.View;
 import org.daisy.dotify.writer.impl.Page;
 import org.daisy.dotify.writer.impl.Section;
 
@@ -23,7 +24,7 @@ class PageSequence extends View<PageImpl> implements Section {
 	
 	void addPage(PageImpl p) {
 		items.add(p);
-		toIndex++;
+		setToIndex(getToIndex() + 1);
 	}
 
 	/**

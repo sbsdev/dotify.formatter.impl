@@ -1,6 +1,6 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.search;
 
-final class Overhead {
+public final class Overhead {
 	private final int preContentSize;
 	private final int postContentSize;
 	
@@ -14,22 +14,22 @@ final class Overhead {
 		this.postContentSize = postContentSize;
 	}
 	
-	Overhead withPreContentSize(int s) {
+	public Overhead withPreContentSize(int s) {
 		return new Overhead(s, getPostContentSize());
 	}
 	
-	Overhead withPostContentSize(int s) {
+	public Overhead withPostContentSize(int s) {
 		return new Overhead(getPreContentSize(), s);
 	}
 
-	int getPreContentSize() {
+	public int getPreContentSize() {
 		return preContentSize;
 	}
-	int getPostContentSize() {
+	public int getPostContentSize() {
 		return postContentSize;
 	}
 	
-	int total() {
+	public int total() {
 		return preContentSize + postContentSize;
 	}
 	

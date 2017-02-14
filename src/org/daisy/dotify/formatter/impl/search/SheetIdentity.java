@@ -1,6 +1,6 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.search;
 
-class SheetIdentity {
+public class SheetIdentity {
 	private final Space space;
 	private final int volumeIndex;
 	private final int sheetIndex;

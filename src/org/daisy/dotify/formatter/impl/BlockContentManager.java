@@ -21,6 +21,7 @@ import org.daisy.dotify.api.translator.TranslationException;
 import org.daisy.dotify.api.translator.UnsupportedMetricException;
 import org.daisy.dotify.common.text.StringTools;
 import org.daisy.dotify.formatter.impl.UnwriteableAreaInfo.UnwriteableArea;
+import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 
 /**
  * BlockHandler is responsible for breaking blocks of text into rows. BlockProperties

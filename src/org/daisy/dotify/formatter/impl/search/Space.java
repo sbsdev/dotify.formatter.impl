@@ -1,10 +1,10 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.search;
 /**
  * Defines the separate spaces in a volume.
  * 
  * @author Joel Håkansson
  */
-enum Space {
+public enum Space {
 	/**
 	 * Defines a space preceding the main text flow 
 	 */

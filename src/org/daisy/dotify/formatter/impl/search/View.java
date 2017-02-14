@@ -1,20 +1,20 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.search;
 
 import java.util.List;
 
-class View<T> {
+public class View<T> {
 	private final int fromIndex;
 	protected final List<T> items;
-	protected int toIndex;
+	private int toIndex;
 
-	View(List<T> items, int fromIndex) {
+	protected View(List<T> items, int fromIndex) {
 		this(items, fromIndex, fromIndex);
 	}
 	
 	View(List<T> items, int fromIndex, int toIndex) {
 		this.items = items;
 		this.fromIndex = fromIndex;
-		this.toIndex = toIndex;
+		this.setToIndex(toIndex);
 	}
 	
 	/**
@@ -22,7 +22,7 @@ class View<T> {
 	 * @return returns the number of items in this sequence
 	 */
 	public int size() {
-		return toIndex-fromIndex;
+		return getToIndex()-fromIndex;
 	}
 
 	public T get(int index) {
@@ -33,15 +33,15 @@ class View<T> {
 	}
 
 	public List<T> getItems() {
-		return items.subList(fromIndex, toIndex);
+		return items.subList(fromIndex, getToIndex());
 	}
 
 	boolean isSequenceEmpty() {
-		return toIndex-fromIndex == 0;
+		return getToIndex()-fromIndex == 0;
 	}
 	
-	T peek() {
-		return items.get(toIndex-1);
+	protected T peek() {
+		return items.get(getToIndex()-1);
 	}
 	
 	int toLocalIndex(int globalIndex) {
@@ -52,8 +52,16 @@ class View<T> {
 	 * Gets the index for the first item in this sequence, counting all preceding items in the document, zero-based. 
 	 * @return returns the first index
 	 */
-	int getGlobalStartIndex() {
+	public int getGlobalStartIndex() {
 		return fromIndex;
+	}
+
+	public int getToIndex() {
+		return toIndex;
+	}
+
+	public void setToIndex(int toIndex) {
+		this.toIndex = toIndex;
 	}
 
 }

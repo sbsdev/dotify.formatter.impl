@@ -16,6 +16,7 @@ import org.daisy.dotify.api.translator.TranslatorConfigurationException;
 import org.daisy.dotify.consumer.translator.BrailleTranslatorFactoryMaker;
 import org.daisy.dotify.consumer.translator.MarkerProcessorFactoryMaker;
 import org.daisy.dotify.consumer.translator.TextBorderFactoryMaker;
+import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.junit.Test;
 
 @SuppressWarnings("javadoc")

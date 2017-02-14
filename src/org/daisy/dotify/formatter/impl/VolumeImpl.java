@@ -3,6 +3,7 @@ package org.daisy.dotify.formatter.impl;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.daisy.dotify.formatter.impl.search.Overhead;
 import org.daisy.dotify.writer.impl.Section;
 import org.daisy.dotify.writer.impl.Volume;
 

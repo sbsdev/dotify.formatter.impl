@@ -1,4 +1,4 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.search;
 
 import static org.junit.Assert.assertEquals;
 
@@ -7,6 +7,12 @@ import java.util.Collections;
 import java.util.Map;
 
 import org.daisy.dotify.api.formatter.Marker;
+import org.daisy.dotify.formatter.impl.search.DocumentSpace;
+import org.daisy.dotify.formatter.impl.search.PageDetails;
+import org.daisy.dotify.formatter.impl.search.SearchInfo;
+import org.daisy.dotify.formatter.impl.search.SequenceId;
+import org.daisy.dotify.formatter.impl.search.Space;
+import org.daisy.dotify.formatter.impl.search.View;
 import org.junit.Test;
 
 @SuppressWarnings("javadoc")
@@ -42,7 +48,7 @@ public class SearchInfoTest {
 			PageDetails pd = new PageDetails(true, i+offset, globalStartIndex, new SequenceId(sequenceId, space));
 			ArrayList<Marker> m = marker.get(i+offset);
 			if (m!=null) {
-				pd.markers = m;
+				pd.getMarkers().addAll(m);
 			}
 			si.addPageDetails(pd);
 		}
