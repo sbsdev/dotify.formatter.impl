@@ -1,8 +1,8 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.segment;
 
 
 
-class NewLineSegment implements Segment {
+public class NewLineSegment implements Segment {
 	
 	public NewLineSegment() {
 	}

@@ -1,4 +1,4 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.segment;
 
 import org.daisy.dotify.api.formatter.DynamicContent;
 import org.daisy.dotify.api.formatter.TextProperties;
@@ -12,7 +12,7 @@ import org.daisy.dotify.api.translator.TextAttribute;
  * @author Joel Håkansson
  *
  */
-class Evaluate implements Segment {
+public class Evaluate implements Segment {
 	private final DynamicContent expression;
 	private final TextProperties props;
 	private final String[] textStyle;
@@ -24,24 +24,24 @@ class Evaluate implements Segment {
 	/**
 	 * @param textStyle Array of styles to apply (from outer to inner).
 	 */
-	Evaluate(DynamicContent expression, TextProperties props, String[] textStyle) {
+	public Evaluate(DynamicContent expression, TextProperties props, String[] textStyle) {
 		this.expression = expression;
 		this.props = props;
 		this.textStyle = textStyle;
 	}
 	
-	DynamicContent getExpression() {
+	public DynamicContent getExpression() {
 		return expression;
 	}
 
-	TextProperties getTextProperties() {
+	public TextProperties getTextProperties() {
 		return props;
 	}
 
 	/**
 	 * @param width The width of the evaluated expression.
 	 */
-	TextAttribute getTextAttribute(int width) {
+	public TextAttribute getTextAttribute(int width) {
 		if (textStyle == null || textStyle.length == 0) {
 			return null;
 		} else {

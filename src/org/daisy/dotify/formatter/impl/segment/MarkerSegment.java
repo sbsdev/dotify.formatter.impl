@@ -1,10 +1,10 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.segment;
 
 import org.daisy.dotify.api.formatter.Marker;
 
-class MarkerSegment extends Marker implements Segment {
+public class MarkerSegment extends Marker implements Segment {
 	
-	MarkerSegment(Marker m) {
+	public MarkerSegment(Marker m) {
 		super(m.getName(), m.getValue());
 	}
 

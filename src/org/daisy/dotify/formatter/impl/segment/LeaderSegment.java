@@ -1,14 +1,14 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.segment;
 
 import org.daisy.dotify.api.formatter.Leader;
 
-class LeaderSegment extends Leader implements Segment{
+public class LeaderSegment extends Leader implements Segment{
 	
 	protected LeaderSegment(Builder builder) {
 		super(builder);
 	}
 	
-	LeaderSegment(Leader leader) {
+	public LeaderSegment(Leader leader) {
 		super(leader);
 	}
 

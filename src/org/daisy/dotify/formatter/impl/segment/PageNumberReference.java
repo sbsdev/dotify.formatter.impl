@@ -1,4 +1,4 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.segment;
 
 import org.daisy.dotify.api.formatter.NumeralStyle;
 

@@ -1,9 +1,9 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.segment;
 
 import org.daisy.dotify.api.formatter.TextProperties;
 import org.daisy.dotify.api.translator.TextAttribute;
 
-class TextSegment implements Segment {
+public class TextSegment implements Segment {
 	private final String chars;
 	private final TextProperties tp;
 	private final TextAttribute ta;

@@ -6,6 +6,7 @@ Import-Package:  \
 Private-Package: org.daisy.dotify.engine.impl,\
 	org.daisy.dotify.formatter.impl,\
 	org.daisy.dotify.formatter.impl.search,\
+	org.daisy.dotify.formatter.impl.segment,\
 	org.daisy.dotify.obfl.impl,\
 	org.daisy.dotify.writer.impl
 Service-Component: *

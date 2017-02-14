@@ -1,7 +1,7 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.segment;
 
 
-class AnchorSegment implements Segment {
+public class AnchorSegment implements Segment {
 	private final String referenceID;
 	
 	public AnchorSegment(String referenceID) {
