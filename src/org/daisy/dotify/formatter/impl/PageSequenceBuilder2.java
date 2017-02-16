@@ -41,7 +41,6 @@ class PageSequenceBuilder2 extends View<PageImpl> implements Section {
 	private ContentCollectionImpl collection;
 	private final BlockContext blockContext;
 	private final LayoutMaster master;
-	private final int pageOffset;
 	private final int pageNumberOffset;
 	private final ListIterator<RowGroupSequence> dataGroups;
 	private final int sequenceId;
@@ -74,7 +73,6 @@ class PageSequenceBuilder2 extends View<PageImpl> implements Section {
 	                     BlockSequence seq, FormatterContext context, DefaultContext rcontext, int sequenceId) { 
 		super(parent.getPages(), parent.getPages().size());
 		this.master = master;
-		this.pageOffset = pageOffset;
 		this.pageNumberOffset = pageOffset;
 		this.context = context;
 		this.crh = crh;
@@ -94,10 +92,6 @@ class PageSequenceBuilder2 extends View<PageImpl> implements Section {
 		this.blockContext = new BlockContext(seq.getLayoutMaster().getFlowWidth(), crh, rcontext, context);
 		this.staticAreaContent = new PageAreaContent(seq.getLayoutMaster().getPageAreaBuilder(), blockContext, uai);
 		this.dataGroups = new RowGroupBuilder(master, seq, blockContext, uai).getResult();
-	}
-	
-	PageSequenceBuilder2 getSequence() {
-		return this;
 	}
 
 	private PageImpl newPage() {
@@ -498,7 +492,7 @@ class PageSequenceBuilder2 extends View<PageImpl> implements Section {
 		return 0;
 	}
 	
-	void addPage(PageImpl p) {
+	private void addPage(PageImpl p) {
 		items.add(p);
 		setToIndex(getToIndex() + 1);
 	}
@@ -511,13 +505,8 @@ class PageSequenceBuilder2 extends View<PageImpl> implements Section {
 		return master;
 	}
 
-	
-	int currentPageNumber() {
-		return peek().getPageIndex()+1;
-	}
-	
 	public int getPageNumberOffset() {
-		return pageOffset;
+		return pageNumberOffset;
 	}
 
 	@Override

@@ -131,7 +131,7 @@ class SheetDataSource implements SplitPointDataSource<Sheet> {
 								Sheet r = s.build();
 								sheetBuffer.add(r);
 							}
-							s = new Sheet.Builder(psb.getSequence());
+							s = new Sheet.Builder(psb);
 							si = new SheetIdentity(rcontext.getSpace(), rcontext.getCurrentVolume()==null?0:rcontext.getCurrentVolume(), sheetsServed + sheetBuffer.size());
 							sheetIndex++;
 						}
