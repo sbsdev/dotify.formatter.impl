@@ -16,7 +16,6 @@ import org.daisy.dotify.api.formatter.RenameFallbackRule;
 import org.daisy.dotify.api.translator.Translatable;
 import org.daisy.dotify.api.translator.TranslationException;
 import org.daisy.dotify.api.writer.SectionProperties;
-import org.daisy.dotify.common.collection.SplitList;
 import org.daisy.dotify.common.split.SplitPoint;
 import org.daisy.dotify.common.split.SplitPointDataList;
 import org.daisy.dotify.common.split.SplitPointDataSource;
@@ -189,14 +188,15 @@ class PageSequenceBuilder2 extends View<PageImpl> implements Section {
 			uai.mark();
 			//pick up next group
 			RowGroupSequence rgs = dataGroups.next();
-			List<RowGroup> data = rgs.getGroup();
+			CollectionData cd = new CollectionData(blockContext);
+			SplitPointDataSource<RowGroup> data = new SplitPointDataList<>(rgs.getGroup(), cd);
 			if (rgs.getBlockPosition()!=null) {
 				if (state.pageCount==0) {
 					// we know newPage returns null
 					newPage();
 				}
 				float size = 0;
-				for (RowGroup g : data) {
+				for (RowGroup g : data.getRemaining()) {
 					size += g.getUnitSize();
 				}
 				int pos = calculateVerticalSpace(rgs.getBlockPosition(), (int)Math.ceil(size));
@@ -219,12 +219,14 @@ class PageSequenceBuilder2 extends View<PageImpl> implements Section {
 			}
 			force = false;
 			while (!data.isEmpty()) {
-				SplitList<RowGroup> sl = SplitPointHandler.trimLeading(data);
-				for (RowGroup rg : sl.getFirstPart()) {
+				cd.reset();
+				//Discards leading skippable row groups, but retains their properties
+				SplitPoint<RowGroup> sl = SplitPointHandler.trimLeading(data);
+				for (RowGroup rg : sl.getDiscarded()) {
 					addProperties(rg);
 				}
-				data = sl.getSecondPart();
-				SplitPointDataList<RowGroup> spd = new SplitPointDataList<>(data, new CollectionData(blockContext));
+				data = sl.getTail();
+				SplitPointDataSource<RowGroup> spd = data;
 				int flowHeight = currentPage().getFlowHeight();
 				SplitPoint<RowGroup> res;
 				List<RowGroup> head;
@@ -241,7 +243,7 @@ class PageSequenceBuilder2 extends View<PageImpl> implements Section {
 						}
 					}
 					force = res.getHead().size()==0;
-					data = res.getTail().getRemaining();
+					data = res.getTail();
 					head = res.getHead();
 					for (RowGroup rg : head) {
 						addProperties(rg);
@@ -316,7 +318,7 @@ class PageSequenceBuilder2 extends View<PageImpl> implements Section {
 					reassignCollection();
 					throw new RestartPaginationException();
 				}
-				if (data.size()>0) {
+				if (!data.isEmpty()) {
 					pages.add(newPage());
 				}
 			}
@@ -436,6 +438,11 @@ class PageSequenceBuilder2 extends View<PageImpl> implements Section {
 			this.c = c;
 			this.first = true;
 			this.map = new HashMap<>();
+		}
+		
+		void reset() {
+			first = true;
+			map.clear();
 		}
 
 		@Override
