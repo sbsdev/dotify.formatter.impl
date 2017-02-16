@@ -112,7 +112,7 @@ class SheetDataSource implements SplitPointDataSource<Sheet> {
 			}
 			BlockSequence bs = seqsIterator.next();
 			seqsServed++;
-			int offset = getCurrentPageOffset();
+			int offset = struct.getCurrentPageOffset();
 			UnwriteableAreaInfo uai = new UnwriteableAreaInfo();
 			PageSequence seq = null;
 			restart: while (seq==null) {
@@ -181,18 +181,6 @@ class SheetDataSource implements SplitPointDataSource<Sheet> {
 		return true;
 	}
 	
-	private int getCurrentPageOffset() {
-		if (struct.size()>0) {
-			PageSequence prv = (PageSequence)struct.peek();
-			if (prv.getLayoutMaster().duplex() && (prv.size() % 2)==1) {
-				return prv.getPageNumberOffset() + prv.size() + 1;
-			} else {
-				return prv.getPageNumberOffset() + prv.size();
-			}
-		} else {
-			return 0;
-		}
-	}
 	
 	private void setPreviousSheet(int start, int p, DefaultContext rcontext) {
 		int i = 0;

@@ -130,5 +130,17 @@ class Sheet implements SplitPointUnit {
 	static int countPages(List<Sheet> sheets) {
 		return sheets.stream().mapToInt(s -> s.getPages().size()).sum();
 	}
+	
+	static String toDebugBreakableString(List<Sheet> units) {
+		StringBuilder debug = new StringBuilder();
+		for (Sheet s : units) {
+			debug.append("s");
+			if (s.isBreakable()) {
+				debug.append("-");
+			}
+		}
+		return debug.toString();
+	}
+
 
 }

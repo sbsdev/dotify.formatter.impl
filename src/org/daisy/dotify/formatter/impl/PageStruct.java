@@ -1,7 +1,5 @@
 package org.daisy.dotify.formatter.impl;
 
-import java.util.Iterator;
-import java.util.List;
 import java.util.Stack;
 
 /**
@@ -9,49 +7,33 @@ import java.util.Stack;
  * 
  * @author Joel Håkansson
  */
-class PageStruct implements Iterable<PageSequence> {
-	private final Stack<PageSequence> seqs;
+class PageStruct {
 	private final Stack<PageImpl> pages;
+	private PageSequence currentSeq;
 
 	PageStruct() {
-		seqs = new Stack<>();
 		pages = new Stack<>();
+		currentSeq = null;
 	}
 
-	static String toString(List<Sheet> units) {
-		StringBuilder debug = new StringBuilder();
-		for (Sheet s : units) {
-			debug.append("s");
-			if (s.isBreakable()) {
-				debug.append("-");
+	void add(PageSequence seq) {
+		currentSeq = seq;
+	}
+
+	int getCurrentPageOffset() {
+		if (currentSeq!=null) {
+			if (currentSeq.getLayoutMaster().duplex() && (currentSeq.size() % 2)==1) {
+				return currentSeq.getPageNumberOffset() + currentSeq.size() + 1;
+			} else {
+				return currentSeq.getPageNumberOffset() + currentSeq.size();
 			}
+		} else {
+			return 0;
 		}
-		return debug.toString();
-	}
-
-	boolean add(PageSequence seq) {
-		return seqs.add(seq);
-	}
-
-	boolean empty() {
-		return seqs.empty();
-	}
-
-	PageSequence peek() {
-		return seqs.peek();
-	}
-
-	int size() {
-		return seqs.size();
 	}
 
 	Stack<PageImpl> getPages() {
 		return pages;
-	}
-
-	@Override
-	public Iterator<PageSequence> iterator() {
-		return seqs.iterator();
 	}
 
 }
