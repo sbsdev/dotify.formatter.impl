@@ -7,18 +7,18 @@ import java.util.List;
 import org.daisy.dotify.common.split.SplitPointUnit;
 class Sheet implements SplitPointUnit {
 	private static final List<String> SUPPLEMENTS = Collections.unmodifiableList(new ArrayList<String>());
-	private final PageSequence master;
+	private final PageSequenceBuilder2 master;
 	private final List<PageImpl> pages;
 	private final boolean breakable, skippable, collapsible;
 	private final Integer avoidVolumeBreakAfterPriority;
 	
 	static class Builder {
-		private final PageSequence master;
+		private final PageSequenceBuilder2 master;
 		private final List<PageImpl> pages;
 		private boolean breakable = false;
 		private Integer avoidVolumeBreakAfterPriority = null;
 
-		Builder(PageSequence master) {
+		Builder(PageSequenceBuilder2 master) {
 			this.master = master;
 			this.pages = new ArrayList<>();
 		}
@@ -59,7 +59,7 @@ class Sheet implements SplitPointUnit {
 		this.collapsible = pages.isEmpty();
 	}
 	
-	PageSequence getPageSequence() {
+	PageSequenceBuilder2 getPageSequence() {
 		return master;
 	}
 	

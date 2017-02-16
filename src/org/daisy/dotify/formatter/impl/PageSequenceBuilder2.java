@@ -15,6 +15,7 @@ import org.daisy.dotify.api.formatter.PageAreaProperties;
 import org.daisy.dotify.api.formatter.RenameFallbackRule;
 import org.daisy.dotify.api.translator.Translatable;
 import org.daisy.dotify.api.translator.TranslationException;
+import org.daisy.dotify.api.writer.SectionProperties;
 import org.daisy.dotify.common.collection.SplitList;
 import org.daisy.dotify.common.split.SplitPoint;
 import org.daisy.dotify.common.split.SplitPointDataList;
@@ -26,8 +27,11 @@ import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.search.DocumentSpace;
 import org.daisy.dotify.formatter.impl.search.PageDetails;
 import org.daisy.dotify.formatter.impl.search.SequenceId;
+import org.daisy.dotify.formatter.impl.search.View;
+import org.daisy.dotify.writer.impl.Page;
+import org.daisy.dotify.writer.impl.Section;
 
-class PageSequenceBuilder2 {
+class PageSequenceBuilder2 extends View<PageImpl> implements Section {
 	private final FormatterContext context;
 	private final CrossReferenceHandler crh;
 	private final UnwriteableAreaInfo uai;
@@ -36,8 +40,8 @@ class PageSequenceBuilder2 {
 
 	private ContentCollectionImpl collection;
 	private final BlockContext blockContext;
-	private final PageSequence target;
 	private final LayoutMaster master;
+	private final int pageOffset;
 	private final int pageNumberOffset;
 	private final ListIterator<RowGroupSequence> dataGroups;
 	private final int sequenceId;
@@ -68,9 +72,10 @@ class PageSequenceBuilder2 {
 
 	PageSequenceBuilder2(PageStruct parent, LayoutMaster master, int pageOffset, CrossReferenceHandler crh, UnwriteableAreaInfo uai,
 	                     BlockSequence seq, FormatterContext context, DefaultContext rcontext, int sequenceId) { 
-		this.target = new PageSequence(parent.getPages(), parent.getPages().size(), master, pageOffset);
-		this.master = target.getLayoutMaster();
-		this.pageNumberOffset = target.getPageNumberOffset();
+		super(parent.getPages(), parent.getPages().size());
+		this.master = master;
+		this.pageOffset = pageOffset;
+		this.pageNumberOffset = pageOffset;
 		this.context = context;
 		this.crh = crh;
 		this.uai = uai;
@@ -91,14 +96,14 @@ class PageSequenceBuilder2 {
 		this.dataGroups = new RowGroupBuilder(master, seq, blockContext, uai).getResult();
 	}
 	
-	PageSequence getSequence() {
-		return target;
+	PageSequenceBuilder2 getSequence() {
+		return this;
 	}
 
 	private PageImpl newPage() {
 		PageImpl buffer = state.current;
 		SequenceId seqId = new SequenceId(sequenceId, new DocumentSpace(blockContext.getContext().getSpace(), blockContext.getContext().getCurrentVolume()));
-		PageDetails details = new PageDetails(master.duplex(), state.pageCount, target.getGlobalStartIndex(), seqId);
+		PageDetails details = new PageDetails(master.duplex(), state.pageCount, getGlobalStartIndex(), seqId);
 		crh.getSearchInfo().addPageDetails(details);
 		state.current = new PageImpl(crh, details, master, context, state.pageCount+pageNumberOffset, staticAreaContent.getBefore(), staticAreaContent.getAfter(), uai);
 		state.pageCount ++;
@@ -167,7 +172,7 @@ class PageSequenceBuilder2 {
 				crh.setVolumeNumber(id, blockContext.getContext().getCurrentVolume());
 			}
 		}
-		getSequence().addPage(ret);
+		addPage(ret);
 		return ret;
 	}
 
@@ -492,5 +497,38 @@ class PageSequenceBuilder2 {
 		}
 		return 0;
 	}
+	
+	void addPage(PageImpl p) {
+		items.add(p);
+		setToIndex(getToIndex() + 1);
+	}
+
+	/**
+	 * Gets the layout master for this sequence
+	 * @return returns the layout master for this sequence
+	 */
+	LayoutMaster getLayoutMaster() {
+		return master;
+	}
+
+	
+	int currentPageNumber() {
+		return peek().getPageIndex()+1;
+	}
+	
+	public int getPageNumberOffset() {
+		return pageOffset;
+	}
+
+	@Override
+	public SectionProperties getSectionProperties() {
+		return master;
+	}
+
+	@Override
+	public List<? extends Page> getPages() {
+		return getItems();
+	}
+
 
 }

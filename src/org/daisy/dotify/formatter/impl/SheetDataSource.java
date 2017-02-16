@@ -114,7 +114,7 @@ class SheetDataSource implements SplitPointDataSource<Sheet> {
 			seqsServed++;
 			int offset = struct.getCurrentPageOffset();
 			UnwriteableAreaInfo uai = new UnwriteableAreaInfo();
-			PageSequence seq = null;
+			PageSequenceBuilder2 seq = null;
 			restart: while (seq==null) {
 				PageSequenceBuilder2 psb = new PageSequenceBuilder2(struct, bs.getLayoutMaster(), bs.getInitialPageNumber()!=null?bs.getInitialPageNumber() - 1:offset, crh, uai, bs, context, rcontext, seqsServed);
 				LayoutMaster lm = bs.getLayoutMaster();
@@ -173,9 +173,9 @@ class SheetDataSource implements SplitPointDataSource<Sheet> {
 				if (uai.isDirty()) {
 					throw new RuntimeException("coding error");
 				}
-				crh.getSearchInfo().setSequenceScope(new DocumentSpace(rcontext.getSpace(), rcontext.getCurrentVolume()), seqsServed, psb.getSequence().getGlobalStartIndex(), psb.getSequence().getToIndex());
-				struct.add(psb.getSequence());
-				seq = psb.getSequence();
+				crh.getSearchInfo().setSequenceScope(new DocumentSpace(rcontext.getSpace(), rcontext.getCurrentVolume()), seqsServed, psb.getGlobalStartIndex(), psb.getToIndex());
+				struct.add(psb);
+				seq = psb;
 			}
 		}
 		return true;

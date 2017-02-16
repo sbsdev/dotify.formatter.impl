@@ -9,14 +9,14 @@ import java.util.Stack;
  */
 class PageStruct {
 	private final Stack<PageImpl> pages;
-	private PageSequence currentSeq;
+	private PageSequenceBuilder2 currentSeq;
 
 	PageStruct() {
 		pages = new Stack<>();
 		currentSeq = null;
 	}
 
-	void add(PageSequence seq) {
+	void add(PageSequenceBuilder2 seq) {
 		currentSeq = seq;
 	}
 

@@ -7,7 +7,7 @@ import org.daisy.dotify.writer.impl.Section;
 
 class SectionBuilder {
     private Stack<Section> ret = new Stack<Section>();
-    private PageSequence currentSeq = null;
+    private PageSequenceBuilder2 currentSeq = null;
     private int sheets = 0;
 
     void addSheet(Sheet s) {
