@@ -15,7 +15,6 @@ import org.daisy.dotify.api.translator.Translatable;
 import org.daisy.dotify.api.translator.TranslationException;
 import org.daisy.dotify.api.writer.SectionProperties;
 import org.daisy.dotify.common.split.SplitPoint;
-import org.daisy.dotify.common.split.SplitPointDataList;
 import org.daisy.dotify.common.split.SplitPointDataSource;
 import org.daisy.dotify.common.split.SplitPointHandler;
 import org.daisy.dotify.common.split.StandardSplitOption;
@@ -151,7 +150,7 @@ class PageSequenceBuilder2 extends View<PageImpl> implements Section {
 				//pick up next group
 				RowGroupSequence rgs = dataGroups.next();
 				cd = new CollectionData(blockContext);
-				data = new SplitPointDataList<>(rgs.getGroup(), cd);
+				data = new RowGroupDataSource(rgs.getGroup(), cd);
 				if (rgs.getBlockPosition()!=null) {
 					if (pageCount==0) {
 						// we know newPage returns null
