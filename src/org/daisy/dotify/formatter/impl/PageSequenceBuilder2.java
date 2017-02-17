@@ -148,7 +148,7 @@ class PageSequenceBuilder2 extends View<PageImpl> implements Section {
 			if ((data==null || data.isEmpty()) && dataGroups.hasNext()) {
 				//pick up next group
 				RowGroupSequence rgs = dataGroups.next();
-				data = new RowGroupDataSource(rgs.getGroup(), new CollectionData(blockContext));
+				data = rgs.toSource(new CollectionData(blockContext));
 				if (rgs.getBlockPosition()!=null) {
 					if (pageCount==0) {
 						// we know newPage returns null

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.daisy.dotify.api.formatter.BlockPosition;
+import org.daisy.dotify.common.split.Supplements;
 
 class RowGroupSequence {
 	private final List<RowGroup> group;
@@ -29,8 +30,13 @@ class RowGroupSequence {
 		this.emptyRow = new RowImpl(template.emptyRow);
 	}
 
+	@Deprecated
 	public List<RowGroup> getGroup() {
 		return group;
+	}
+	
+	public RowGroupDataSource toSource(Supplements<RowGroup> supplements) {
+		return new RowGroupDataSource(group, supplements);
 	}
 	
 	RowGroup currentGroup() {
