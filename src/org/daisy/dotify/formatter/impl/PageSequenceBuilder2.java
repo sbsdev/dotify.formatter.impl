@@ -182,11 +182,10 @@ class PageSequenceBuilder2 extends View<PageImpl> implements Section {
 					addProperties(rg);
 				}
 				data = sl.getTail();
-				SplitPointDataSource<RowGroup> spd = data;
 				int flowHeight = currentPage().getFlowHeight();
-				SplitPoint<RowGroup> res = sph.split(flowHeight, spd, force?StandardSplitOption.ALLOW_FORCE:null);
+				SplitPoint<RowGroup> res = sph.split(flowHeight, data, force?StandardSplitOption.ALLOW_FORCE:null);
 				if (res.getHead().size()==0 && force) {
-					if (firstUnitHasSupplements(spd) && hasPageAreaCollection()) {
+					if (firstUnitHasSupplements(data) && hasPageAreaCollection()) {
 						reassignCollection();
 						throw new RestartPaginationException();
 					} else {
