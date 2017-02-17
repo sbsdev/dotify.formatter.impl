@@ -43,7 +43,6 @@ class PageSequenceBuilder2 extends View<PageImpl> implements Section {
 	private SplitPointHandler<RowGroup> sph = new SplitPointHandler<>();
 	private boolean force;
 	private SplitPointDataSource<RowGroup> data;
-	private CollectionData cd;
 
 	PageImpl current;
 	int keepNextSheets;
@@ -149,8 +148,7 @@ class PageSequenceBuilder2 extends View<PageImpl> implements Section {
 			if ((data==null || data.isEmpty()) && dataGroups.hasNext()) {
 				//pick up next group
 				RowGroupSequence rgs = dataGroups.next();
-				cd = new CollectionData(blockContext);
-				data = new RowGroupDataSource(rgs.getGroup(), cd);
+				data = new RowGroupDataSource(rgs.getGroup(), new CollectionData(blockContext));
 				if (rgs.getBlockPosition()!=null) {
 					if (pageCount==0) {
 						// we know newPage returns null
@@ -174,7 +172,6 @@ class PageSequenceBuilder2 extends View<PageImpl> implements Section {
 				force = false;
 			}
 			if (!data.isEmpty()) {
-				cd.reset();
 				//Discards leading skippable row groups, but retains their properties
 				SplitPoint<RowGroup> sl = SplitPointHandler.trimLeading(data);
 				for (RowGroup rg : sl.getDiscarded()) {
@@ -324,24 +321,22 @@ class PageSequenceBuilder2 extends View<PageImpl> implements Section {
 	}
 	
 	private class CollectionData implements Supplements<RowGroup> {
-		private boolean first;
+		private PageImpl page;
 		private final BlockContext c;
 		private final Map<String, RowGroup> map;
 		
 		private CollectionData(BlockContext c) {
 			this.c = c;
-			this.first = true;
+			this.page = null;
 			this.map = new HashMap<>();
-		}
-		
-		void reset() {
-			first = true;
-			map.clear();
 		}
 
 		@Override
 		public RowGroup get(String id) {
 			if (collection!=null) {
+				if (page!=currentPage()) {
+					map.clear();
+				}
 				RowGroup ret = map.get(id);
 				if (ret==null) {
 					RowGroup.Builder b = new RowGroup.Builder(master.getRowSpacing());
@@ -355,9 +350,9 @@ class PageSequenceBuilder2 extends View<PageImpl> implements Section {
 						b.addAll(bcm.getPostContentRows());
 						b.addAll(bcm.getSkippablePostContentRows());
 					}
-					if (first) {
-						b.overhead(currentPage().staticAreaSpaceNeeded());
-						first = false;
+					if (page==null || page!=currentPage()) {
+						page = currentPage();
+						b.overhead(page.staticAreaSpaceNeeded());
 					}
 					ret = b.build();
 					map.put(id, ret);
