@@ -1,6 +1,5 @@
 package org.daisy.dotify.formatter.impl;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -44,6 +43,8 @@ class PageSequenceBuilder2 extends View<PageImpl> implements Section {
 	
 	private SplitPointHandler<RowGroup> sph = new SplitPointHandler<>();
 	private boolean force;
+	private SplitPointDataSource<RowGroup> data;
+	private CollectionData cd;
 
 	PageImpl current;
 	int keepNextSheets;
@@ -127,10 +128,8 @@ class PageSequenceBuilder2 extends View<PageImpl> implements Section {
 	}
 	
 	boolean hasNext() {
-		return (nextPages != null && nextPages.hasNext()) || dataGroups.hasNext() || current!=null;
+		return dataGroups.hasNext() || (data!=null && !data.isEmpty()) || current!=null;
 	}
-	
-	private Iterator<PageImpl> nextPages;
 	
 	PageImpl nextPage() throws PaginatorException, RestartPaginationException // pagination must be restarted in PageStructBuilder.paginateInner
 	{
@@ -147,38 +146,35 @@ class PageSequenceBuilder2 extends View<PageImpl> implements Section {
 
 	PageImpl nextPageInner() throws PaginatorException, RestartPaginationException // pagination must be restarted in PageStructBuilder.paginateInner
 	{
-		if (nextPages != null && nextPages.hasNext()) {
-			return nextPages.next();
-		}
-		List<PageImpl> pages = new ArrayList<PageImpl>();
-        // uai.mark();
-	  while (dataGroups.hasNext()) {
-			//pick up next group
-			RowGroupSequence rgs = dataGroups.next();
-			CollectionData cd = new CollectionData(blockContext);
-			SplitPointDataSource<RowGroup> data = new SplitPointDataList<>(rgs.getGroup(), cd);
-			if (rgs.getBlockPosition()!=null) {
-				if (pageCount==0) {
-					// we know newPage returns null
-					newPage();
+		while (dataGroups.hasNext() || (data!=null && !data.isEmpty())) {
+			if ((data==null || data.isEmpty()) && dataGroups.hasNext()) {
+				//pick up next group
+				RowGroupSequence rgs = dataGroups.next();
+				cd = new CollectionData(blockContext);
+				data = new SplitPointDataList<>(rgs.getGroup(), cd);
+				if (rgs.getBlockPosition()!=null) {
+					if (pageCount==0) {
+						// we know newPage returns null
+						newPage();
+					}
+					float size = 0;
+					for (RowGroup g : data.getRemaining()) {
+						size += g.getUnitSize();
+					}
+					int pos = calculateVerticalSpace(rgs.getBlockPosition(), (int)Math.ceil(size));
+					for (int i = 0; i < pos; i++) {
+						RowImpl ri = rgs.getEmptyRow();
+						newRow(new RowImpl(ri.getChars(), ri.getLeftMargin(), ri.getRightMargin()));
+					}
+				} else {
+					PageImpl p = newPage();
+					if (p!=null) {
+						return p;
+					}
 				}
-				float size = 0;
-				for (RowGroup g : data.getRemaining()) {
-					size += g.getUnitSize();
-				}
-				int pos = calculateVerticalSpace(rgs.getBlockPosition(), (int)Math.ceil(size));
-				for (int i = 0; i < pos; i++) {
-					RowImpl ri = rgs.getEmptyRow();
-					newRow(new RowImpl(ri.getChars(), ri.getLeftMargin(), ri.getRightMargin()));
-				}
-			} else {
-				PageImpl p = newPage();
-				if (p!=null) {
-					pages.add(p);
-				}
+				force = false;
 			}
-			force = false;
-			while (!data.isEmpty()) {
+			if (!data.isEmpty()) {
 				cd.reset();
 				//Discards leading skippable row groups, but retains their properties
 				SplitPoint<RowGroup> sl = SplitPointHandler.trimLeading(data);
@@ -188,38 +184,33 @@ class PageSequenceBuilder2 extends View<PageImpl> implements Section {
 				data = sl.getTail();
 				SplitPointDataSource<RowGroup> spd = data;
 				int flowHeight = currentPage().getFlowHeight();
-				SplitPoint<RowGroup> res;
-				List<RowGroup> head;
-				while (true) {
-					res = sph.split(flowHeight, spd, force?StandardSplitOption.ALLOW_FORCE:null);
-					if (res.getHead().size()==0 && force) {
-						if (firstUnitHasSupplements(spd) && hasPageAreaCollection()) {
-							reassignCollection();
-							throw new RestartPaginationException();
-						} else {
-							throw new RuntimeException("A layout unit was too big for the page.");
-						}
+				SplitPoint<RowGroup> res = sph.split(flowHeight, spd, force?StandardSplitOption.ALLOW_FORCE:null);
+				if (res.getHead().size()==0 && force) {
+					if (firstUnitHasSupplements(spd) && hasPageAreaCollection()) {
+						reassignCollection();
+						throw new RestartPaginationException();
+					} else {
+						throw new RuntimeException("A layout unit was too big for the page.");
 					}
-					force = res.getHead().size()==0;
-					data = res.getTail();
-					head = res.getHead();
-					for (RowGroup rg : head) {
-						addProperties(rg);
-						for (RowImpl r : rg.getRows()) { 
-							if (r.shouldAdjustForMargin()) {
-								// clone the row as not to append the margins twice
-								r = RowImpl.withRow(r);
-								for (MarginRegion mr : currentPage().getPageTemplate().getLeftMarginRegion()) {
-									r.setLeftMargin(getMarginRegionValue(mr, r, false).append(r.getLeftMargin()));
-								}
-								for (MarginRegion mr : currentPage().getPageTemplate().getRightMarginRegion()) {
-									r.setRightMargin(r.getRightMargin().append(getMarginRegionValue(mr, r, true)));
-								}
+				}
+				force = res.getHead().size()==0;
+				data = res.getTail();
+				List<RowGroup> head = res.getHead();
+				for (RowGroup rg : head) {
+					addProperties(rg);
+					for (RowImpl r : rg.getRows()) { 
+						if (r.shouldAdjustForMargin()) {
+							// clone the row as not to append the margins twice
+							r = RowImpl.withRow(r);
+							for (MarginRegion mr : currentPage().getPageTemplate().getLeftMarginRegion()) {
+								r.setLeftMargin(getMarginRegionValue(mr, r, false).append(r.getLeftMargin()));
 							}
-							currentPage().newRow(r);
+							for (MarginRegion mr : currentPage().getPageTemplate().getRightMarginRegion()) {
+								r.setRightMargin(r.getRightMargin().append(getMarginRegionValue(mr, r, true)));
+							}
 						}
+						currentPage().newRow(r);
 					}
-					break;
 				}
 				Integer lastPriority = getLastPriority(head);
 				if (!res.getDiscarded().isEmpty()) {
@@ -238,12 +229,8 @@ class PageSequenceBuilder2 extends View<PageImpl> implements Section {
 					throw new RestartPaginationException();
 				}
 				if (!data.isEmpty()) {
-					pages.add(newPage());
+					return newPage();
 				}
-			}
-			if (!pages.isEmpty()) {
-				nextPages = pages.iterator();
-				return nextPages.next();
 			}
 		}
 		//flush current page
