@@ -67,7 +67,7 @@ class PageSequenceBuilder2 extends View<PageImpl> implements Section {
 		
 		this.blockContext = new BlockContext(seq.getLayoutMaster().getFlowWidth(), crh, rcontext, context);
 		this.staticAreaContent = new PageAreaContent(seq.getLayoutMaster().getPageAreaBuilder(), blockContext);
-		this.dataGroups = new RowGroupBuilder(master, seq, blockContext).getResult().iterator();
+		this.dataGroups = RowGroupBuilder.getResult(master, seq, blockContext);
 	}
 
 	private PageImpl newPage() {
