@@ -141,19 +141,19 @@ abstract class Block implements Cloneable {
 		return blockId;
 	}
 	
-	public AbstractBlockContentManager getBlockContentManager(BlockContext context, UnwriteableAreaInfo uai) {
+	public AbstractBlockContentManager getBlockContentManager(BlockContext context) {
 		if (!context.equals(this.context)) {
 			//invalidate, if existing
 			rdm = null;
 		}
 		this.context = context;
 		if (rdm==null || rdm.isVolatile()) {
-			rdm = newBlockContentManager(context, uai);
+			rdm = newBlockContentManager(context);
 		}
 		return rdm;
 	}
 	
-	protected abstract AbstractBlockContentManager newBlockContentManager(BlockContext context, UnwriteableAreaInfo uai);
+	protected abstract AbstractBlockContentManager newBlockContentManager(BlockContext context);
 
 	public void setMetaVolume(Integer metaVolume) {
 		this.metaVolume = metaVolume;

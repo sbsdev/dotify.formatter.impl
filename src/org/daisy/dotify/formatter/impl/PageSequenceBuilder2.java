@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 
 import org.daisy.dotify.api.formatter.BlockPosition;
@@ -33,7 +32,6 @@ import org.daisy.dotify.writer.impl.Section;
 class PageSequenceBuilder2 extends View<PageImpl> implements Section {
 	private final FormatterContext context;
 	private final CrossReferenceHandler crh;
-	private final UnwriteableAreaInfo uai;
 	private final PageAreaContent staticAreaContent;
 	private final PageAreaProperties areaProps;
 
@@ -41,41 +39,23 @@ class PageSequenceBuilder2 extends View<PageImpl> implements Section {
 	private final BlockContext blockContext;
 	private final LayoutMaster master;
 	private final int pageNumberOffset;
-	private final ListIterator<RowGroupSequence> dataGroups;
+	private final Iterator<RowGroupSequence> dataGroups;
 	private final int sequenceId;
 	
 	private SplitPointHandler<RowGroup> sph = new SplitPointHandler<>();
 	private boolean force;
-	
-	private State state;
-	
-	private static class State implements Cloneable {
-		PageImpl current;
-		int keepNextSheets;
-		int pageCount = 0;
-		public Object clone() {
-			State clone; {
-				try {
-					clone = (State)super.clone();
-				} catch (CloneNotSupportedException e) {
-					throw new InternalError("coding error");
-				}
-			}
-			if (this.current != null) {
-				clone.current = (PageImpl)this.current.clone();
-			}
-			return clone;
-		}
-	}
 
-	PageSequenceBuilder2(PageStruct parent, LayoutMaster master, int pageOffset, CrossReferenceHandler crh, UnwriteableAreaInfo uai,
+	PageImpl current;
+	int keepNextSheets;
+	int pageCount = 0;
+
+	PageSequenceBuilder2(PageStruct parent, LayoutMaster master, int pageOffset, CrossReferenceHandler crh,
 	                     BlockSequence seq, FormatterContext context, DefaultContext rcontext, int sequenceId) { 
 		super(parent.getPages(), parent.getPages().size());
 		this.master = master;
 		this.pageNumberOffset = pageOffset;
 		this.context = context;
 		this.crh = crh;
-		this.uai = uai;
 		this.sequenceId = sequenceId;
 
 		this.collection = null;
@@ -83,29 +63,27 @@ class PageSequenceBuilder2 extends View<PageImpl> implements Section {
 		if (this.areaProps!=null) {
 			this.collection = context.getCollections().get(areaProps.getCollectionId());
 		}
-		this.state = new State() {{
-			current = null;
-			keepNextSheets = 0;
-		}};
+		current = null;
+		keepNextSheets = 0;
 		
 		this.blockContext = new BlockContext(seq.getLayoutMaster().getFlowWidth(), crh, rcontext, context);
-		this.staticAreaContent = new PageAreaContent(seq.getLayoutMaster().getPageAreaBuilder(), blockContext, uai);
-		this.dataGroups = new RowGroupBuilder(master, seq, blockContext, uai).getResult();
+		this.staticAreaContent = new PageAreaContent(seq.getLayoutMaster().getPageAreaBuilder(), blockContext);
+		this.dataGroups = new RowGroupBuilder(master, seq, blockContext).getResult().iterator();
 	}
 
 	private PageImpl newPage() {
-		PageImpl buffer = state.current;
+		PageImpl buffer = current;
 		SequenceId seqId = new SequenceId(sequenceId, new DocumentSpace(blockContext.getContext().getSpace(), blockContext.getContext().getCurrentVolume()));
-		PageDetails details = new PageDetails(master.duplex(), state.pageCount, getGlobalStartIndex(), seqId);
+		PageDetails details = new PageDetails(master.duplex(), pageCount, getGlobalStartIndex(), seqId);
 		crh.getSearchInfo().addPageDetails(details);
-		state.current = new PageImpl(crh, details, master, context, state.pageCount+pageNumberOffset, staticAreaContent.getBefore(), staticAreaContent.getAfter(), uai);
-		state.pageCount ++;
-		if (state.keepNextSheets>0) {
+		current = new PageImpl(crh, details, master, context, pageCount+pageNumberOffset, staticAreaContent.getBefore(), staticAreaContent.getAfter());
+		pageCount ++;
+		if (keepNextSheets>0) {
 			currentPage().setAllowsVolumeBreak(false);
 		}
-		if (!master.duplex() || state.pageCount%2==0) {
-			if (state.keepNextSheets>0) {
-				state.keepNextSheets--;
+		if (!master.duplex() || pageCount%2==0) {
+			if (keepNextSheets>0) {
+				keepNextSheets--;
 			}
 		}
 		return buffer;
@@ -116,14 +94,14 @@ class PageSequenceBuilder2 extends View<PageImpl> implements Section {
 	}
 
 	private void setKeepWithNextSheets(int value) {
-		state.keepNextSheets = Math.max(value, state.keepNextSheets);
-		if (state.keepNextSheets>0) {
+		keepNextSheets = Math.max(value, keepNextSheets);
+		if (keepNextSheets>0) {
 			currentPage().setAllowsVolumeBreak(false);
 		}
 	}
 	
 	private PageImpl currentPage() {
-		return state.current;
+		return current;
 	}
 
 	/**
@@ -135,7 +113,7 @@ class PageSequenceBuilder2 extends View<PageImpl> implements Section {
 		return currentPage().spaceUsedOnPage(offs);
 	}
 
-	private void newRow(RowImpl row) throws PageFullException {
+	private void newRow(RowImpl row) {
 		if (spaceUsedOnPage(1) > currentPage().getFlowHeight()) {
 			throw new RuntimeException("Error in code.");
 			//newPage();
@@ -149,14 +127,12 @@ class PageSequenceBuilder2 extends View<PageImpl> implements Section {
 	}
 	
 	boolean hasNext() {
-		return (nextPages != null && nextPages.hasNext()) || dataGroups.hasNext() || state.current!=null;
+		return (nextPages != null && nextPages.hasNext()) || dataGroups.hasNext() || current!=null;
 	}
 	
 	private Iterator<PageImpl> nextPages;
 	
-	PageImpl nextPage() throws PaginatorException,
-    RestartPaginationException, // pagination must be restarted in PageStructBuilder.paginateInner
-    RestartPaginationOfSequenceException // pagination must be restarted in PageStructBuilder.newSequence
+	PageImpl nextPage() throws PaginatorException, RestartPaginationException // pagination must be restarted in PageStructBuilder.paginateInner
 	{
 		PageImpl ret = nextPageInner();
 		//This is for pre/post volume contents, where the volume number is known
@@ -169,29 +145,20 @@ class PageSequenceBuilder2 extends View<PageImpl> implements Section {
 		return ret;
 	}
 
-	PageImpl nextPageInner() throws PaginatorException,
-		                       RestartPaginationException, // pagination must be restarted in PageStructBuilder.paginateInner
-		                       RestartPaginationOfSequenceException // pagination must be restarted in PageStructBuilder.newSequence
+	PageImpl nextPageInner() throws PaginatorException, RestartPaginationException // pagination must be restarted in PageStructBuilder.paginateInner
 	{
 		if (nextPages != null && nextPages.hasNext()) {
 			return nextPages.next();
 		}
 		List<PageImpl> pages = new ArrayList<PageImpl>();
         // uai.mark();
-	  restartRowGroupSequence: while (dataGroups.hasNext()) {
-			State stateBeforeDataGroup = (State)state.clone();
-			int pageCountBeforeDataGroup = pages.size();
-            // FIXME: mark() is used here to empty the map field of uai because setUnwriteableArea is only called when a
-            // text line is too long to be flowed into a header/footer, so isDirty would give false positives which
-            // could result in an endless loop. However with this solution isDirty gives false negatives which could
-            // result in some lines being too short.
-			uai.mark();
+	  while (dataGroups.hasNext()) {
 			//pick up next group
 			RowGroupSequence rgs = dataGroups.next();
 			CollectionData cd = new CollectionData(blockContext);
 			SplitPointDataSource<RowGroup> data = new SplitPointDataList<>(rgs.getGroup(), cd);
 			if (rgs.getBlockPosition()!=null) {
-				if (state.pageCount==0) {
+				if (pageCount==0) {
 					// we know newPage returns null
 					newPage();
 				}
@@ -202,14 +169,7 @@ class PageSequenceBuilder2 extends View<PageImpl> implements Section {
 				int pos = calculateVerticalSpace(rgs.getBlockPosition(), (int)Math.ceil(size));
 				for (int i = 0; i < pos; i++) {
 					RowImpl ri = rgs.getEmptyRow();
-					try {
-						RowImpl r = new RowImpl(ri.getChars(), ri.getLeftMargin(), ri.getRightMargin());
-						r.block = ri.block;
-						r.positionInBlock = ri.positionInBlock;
-						newRow(r);
-					} catch (PageFullException e) {
-						throw new RuntimeException("A layout unit was too big for the page.", e);
-					}
+					newRow(new RowImpl(ri.getChars(), ri.getLeftMargin(), ri.getRightMargin()));
 				}
 			} else {
 				PageImpl p = newPage();
@@ -230,9 +190,7 @@ class PageSequenceBuilder2 extends View<PageImpl> implements Section {
 				int flowHeight = currentPage().getFlowHeight();
 				SplitPoint<RowGroup> res;
 				List<RowGroup> head;
-				State stateBeforeSplit = (State)state.clone();
-				uai.markUncommitted();
-			  restartSplit: while (true) {
+				while (true) {
 					res = sph.split(flowHeight, spd, force?StandardSplitOption.ALLOW_FORCE:null);
 					if (res.getHead().size()==0 && force) {
 						if (firstUnitHasSupplements(spd) && hasPageAreaCollection()) {
@@ -258,46 +216,7 @@ class PageSequenceBuilder2 extends View<PageImpl> implements Section {
 									r.setRightMargin(r.getRightMargin().append(getMarginRegionValue(mr, r, true)));
 								}
 							}
-							try {
-								currentPage().newRow(r);
-							} catch (PageFullException e) {
-								if (e.isHeaderRowTooShort()) {
-									// Text that didn't fit in the header could come from a RowGroupSequence that also
-									// has rows in an already return page. Because we can't easily predict this
-									// situation we simply propagate the exception to PageStructBuilder.newSequence and
-									// start all over.
-                                    uai.commit();
-									throw new RestartPaginationOfSequenceException();
-								}
-								int effectiveFlowHeight = e.getEffectiveFlowHeight();
-								if (effectiveFlowHeight > flowHeight) {
-									throw new RuntimeException("coding error");
-								} else if (effectiveFlowHeight == flowHeight) {
-									if (!uai.isDirty()) {
-										throw new RuntimeException("coding error");
-									}
-                                    uai.commit();
-									try {
-										dataGroups.previous();
-									} catch (IllegalStateException ee) {
-                                        // This will happen when recomputing the previous RowGroupSequence results in a
-                                        // different scenario being selected than before, and one or more
-                                        // RowGroupSequences already consumed contain rows that belong to the old
-                                        // scenario.
-										throw new RestartPaginationOfSequenceException();
-									}
-                                    state = (State)stateBeforeDataGroup.clone();
-                                    // Note: in case of an endless loop this will eventually cause a
-                                    // StackOverFlowError on the next call to pages.add()
-                                    pages = pages.subList(0, pageCountBeforeDataGroup);
-                                    continue restartRowGroupSequence;
-								} else {
-									flowHeight = effectiveFlowHeight;
-									state = (State)stateBeforeSplit.clone();
-									uai.resetUncommitted();
-									continue restartSplit;
-								}
-							}
+							currentPage().newRow(r);
 						}
 					}
 					break;
@@ -322,24 +241,14 @@ class PageSequenceBuilder2 extends View<PageImpl> implements Section {
 					pages.add(newPage());
 				}
 			}
-			if (uai.isDirty()) {
-                uai.commit();
-				state = (State)stateBeforeDataGroup.clone();
-				dataGroups.previous();
-				pages = pages.subList(0, pageCountBeforeDataGroup);
-				continue restartRowGroupSequence;
-            } else {
-                uai.reset();
-                // uai.mark();
-            }
 			if (!pages.isEmpty()) {
 				nextPages = pages.iterator();
 				return nextPages.next();
 			}
 		}
 		//flush current page
-		PageImpl ret = state.current;
-		state.current = null;
+		PageImpl ret = current;
+		current = null;
 		return ret;
 	}
 	
@@ -452,7 +361,7 @@ class PageSequenceBuilder2 extends View<PageImpl> implements Section {
 				if (ret==null) {
 					RowGroup.Builder b = new RowGroup.Builder(master.getRowSpacing());
 					for (Block g : collection.getBlocks(id)) {
-						AbstractBlockContentManager bcm = g.getBlockContentManager(c, uai);
+						AbstractBlockContentManager bcm = g.getBlockContentManager(c);
 						b.addAll(bcm.getCollapsiblePreContentRows());
 						b.addAll(bcm.getInnerPreContentRows());
 						for (RowImpl r : bcm) {

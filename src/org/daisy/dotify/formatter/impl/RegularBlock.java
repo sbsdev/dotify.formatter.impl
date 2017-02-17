@@ -30,8 +30,8 @@ class RegularBlock extends Block {
 	}
 
 	@Override
-	protected AbstractBlockContentManager newBlockContentManager(BlockContext context, UnwriteableAreaInfo uai) {
-		return new BlockContentManager(this, context.getFlowWidth(), segments, rdp, context.getRefs(), uai,
+	protected AbstractBlockContentManager newBlockContentManager(BlockContext context) {
+		return new BlockContentManager(context.getFlowWidth(), segments, rdp, context.getRefs(),
 				DefaultContext.from(context.getContext()).metaVolume(metaVolume).metaPage(metaPage).build(),
 				context.getFcontext());
 	}

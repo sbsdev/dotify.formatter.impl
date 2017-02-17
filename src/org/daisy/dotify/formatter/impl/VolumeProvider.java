@@ -238,6 +238,7 @@ public class VolumeProvider {
 			currentGroup.add(bs);
 		}
 		PageStruct struct = new PageStruct();
+        crh.resetUniqueChecks();
 		return new Iterable<SplitPointDataSource<Sheet>>(){
 			@Override
 			public Iterator<SplitPointDataSource<Sheet>> iterator() {

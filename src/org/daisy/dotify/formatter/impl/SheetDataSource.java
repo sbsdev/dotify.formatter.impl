@@ -113,65 +113,51 @@ class SheetDataSource implements SplitPointDataSource<Sheet> {
 			BlockSequence bs = seqsIterator.next();
 			seqsServed++;
 			int offset = struct.getCurrentPageOffset();
-			UnwriteableAreaInfo uai = new UnwriteableAreaInfo();
 			PageSequenceBuilder2 seq = null;
-			restart: while (seq==null) {
-				PageSequenceBuilder2 psb = new PageSequenceBuilder2(struct, bs.getLayoutMaster(), bs.getInitialPageNumber()!=null?bs.getInitialPageNumber() - 1:offset, crh, uai, bs, context, rcontext, seqsServed);
+			while (seq==null) {
+				PageSequenceBuilder2 psb = new PageSequenceBuilder2(struct, bs.getLayoutMaster(), bs.getInitialPageNumber()!=null?bs.getInitialPageNumber() - 1:offset, crh, bs, context, rcontext, seqsServed);
 				LayoutMaster lm = bs.getLayoutMaster();
 				Sheet.Builder s = null;
 				SheetIdentity si = null;
 				int sheetIndex = 0;
 				int pageIndex = 0;
 				while (psb.hasNext()) {
-					try {
-						PageImpl p = psb.nextPage();
-						if (!lm.duplex() || pageIndex % 2 == 0) {
-							volBreakAllowed = true;
-							if (s!=null) {
-								Sheet r = s.build();
-								sheetBuffer.add(r);
-							}
-							s = new Sheet.Builder(psb);
-							si = new SheetIdentity(rcontext.getSpace(), rcontext.getCurrentVolume()==null?0:rcontext.getCurrentVolume(), sheetsServed + sheetBuffer.size());
-							sheetIndex++;
+					PageImpl p = psb.nextPage();
+					if (!lm.duplex() || pageIndex % 2 == 0) {
+						volBreakAllowed = true;
+						if (s!=null) {
+							Sheet r = s.build();
+							sheetBuffer.add(r);
 						}
-						s.avoidVolumeBreakAfterPriority(p.getAvoidVolumeBreakAfter());
-						if (!psb.hasNext()) {
-							s.avoidVolumeBreakAfterPriority(null);
-							//Don't get or store this value in crh as it is transient and not a property of the sheet context
-							s.breakable(true);
-						} else {
-							boolean br = crh.getBreakable(si);
-							//TODO: the following is a low effort way of giving existing uses of non-breakable units a high priority, but it probably shouldn't be done this way
-							if (!br) {
-								s.avoidVolumeBreakAfterPriority(1);
-							}
-							s.breakable(br);
-						}
-
-						setPreviousSheet(si.getSheetIndex()-1, Math.min(p.keepPreviousSheets(), sheetIndex-1), rcontext);
-						volBreakAllowed &= p.allowsVolumeBreak();
-						if (!lm.duplex() || pageIndex % 2 == 1) {
-							crh.keepBreakable(si, volBreakAllowed);
-						}
-						s.add(p);
-
-					} catch (RestartPaginationOfSequenceException e) {
-						if (!uai.isDirty()) {
-							throw new RuntimeException("coding error");
-						} else {
-							uai.rewind();
-							continue restart;
-						}
+						s = new Sheet.Builder(psb);
+						si = new SheetIdentity(rcontext.getSpace(), rcontext.getCurrentVolume()==null?0:rcontext.getCurrentVolume(), sheetsServed + sheetBuffer.size());
+						sheetIndex++;
 					}
+					s.avoidVolumeBreakAfterPriority(p.getAvoidVolumeBreakAfter());
+					if (!psb.hasNext()) {
+						s.avoidVolumeBreakAfterPriority(null);
+						//Don't get or store this value in crh as it is transient and not a property of the sheet context
+						s.breakable(true);
+					} else {
+						boolean br = crh.getBreakable(si);
+						//TODO: the following is a low effort way of giving existing uses of non-breakable units a high priority, but it probably shouldn't be done this way
+						if (!br) {
+							s.avoidVolumeBreakAfterPriority(1);
+						}
+						s.breakable(br);
+					}
+
+					setPreviousSheet(si.getSheetIndex()-1, Math.min(p.keepPreviousSheets(), sheetIndex-1), rcontext);
+					volBreakAllowed &= p.allowsVolumeBreak();
+					if (!lm.duplex() || pageIndex % 2 == 1) {
+						crh.keepBreakable(si, volBreakAllowed);
+					}
+					s.add(p);
 					pageIndex++;
 				}
 				if (s!=null) {
 					//Last page in the sequence doesn't need volume keep priority
 					sheetBuffer.add(s.build());
-				}
-				if (uai.isDirty()) {
-					throw new RuntimeException("coding error");
 				}
 				crh.getSearchInfo().setSequenceScope(new DocumentSpace(rcontext.getSpace(), rcontext.getCurrentVolume()), seqsServed, psb.getGlobalStartIndex(), psb.getToIndex());
 				struct.add(psb);

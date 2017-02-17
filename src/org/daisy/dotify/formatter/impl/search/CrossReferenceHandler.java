@@ -1,7 +1,9 @@
 package org.daisy.dotify.formatter.impl.search;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class CrossReferenceHandler {
 	private final LookupHandler<String, Integer> pageRefs;
@@ -16,6 +18,7 @@ public class CrossReferenceHandler {
 	private static final String SHEETS_IN_DOCUMENT = "sheets-in-document";
 	private static final String PAGES_IN_VOLUME = "pages-in-volume-";
 	private static final String PAGES_IN_DOCUMENT = "pages-in-document";
+    private Set<String> pageIds;
 	private boolean overheadDirty = false;
 	
 	public CrossReferenceHandler() {
@@ -26,6 +29,7 @@ public class CrossReferenceHandler {
 		this.breakable = new LookupHandler<>();
 		this.volumeOverhead = new HashMap<>();
 		this.searchInfo = new SearchInfo();
+        this.pageIds = new HashSet<>();
 	}
 	
 	/**
@@ -51,6 +55,9 @@ public class CrossReferenceHandler {
 	}
 	
 	public void setPageNumber(String refid, int page) {
+        if (!pageIds.add(refid)) {
+            throw new IllegalArgumentException("Identifier not unique: " + refid);
+        }
 		pageRefs.put(refid, page);
 	}
 	
@@ -155,5 +162,9 @@ public class CrossReferenceHandler {
 		breakable.setDirty(value);
 		overheadDirty = value;
 	}
+
+    public void resetUniqueChecks() {
+        pageIds = new HashSet<>();
+    }
 
 }

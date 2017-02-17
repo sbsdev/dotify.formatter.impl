@@ -25,11 +25,6 @@ class RowImpl implements Row {
 	private boolean allowsBreakAfter = true;
 	private int leaderSpace;
 	
-	// TODO: getter and setter
-	Block block;
-	/** (0-based) index of row in block */
-	Integer positionInBlock;
-	
 	/**
 	 * Create a new Row
 	 * @param chars the characters on this row
@@ -62,8 +57,6 @@ class RowImpl implements Row {
 		this.rowSpacing = template.rowSpacing;
 		this.adjustedForMargin = template.adjustedForMargin;
 		this.leaderSpace = template.leaderSpace;
-		this.block = template.block;
-		this.positionInBlock = template.positionInBlock;
 	}
 
 	@Deprecated
@@ -77,8 +70,6 @@ class RowImpl implements Row {
 		ret.rowSpacing = r.rowSpacing;
 		ret.adjustedForMargin = r.adjustedForMargin;
 		ret.leaderSpace = r.leaderSpace;
-		ret.block = r.block;
-		ret.positionInBlock = r.positionInBlock;
 		return ret;
 	}
 
@@ -259,8 +250,6 @@ class RowImpl implements Row {
 		result = prime * result + ((markers == null) ? 0 : markers.hashCode());
 		result = prime * result + ((rightMargin == null) ? 0 : rightMargin.hashCode());
 		result = prime * result + ((rowSpacing == null) ? 0 : rowSpacing.hashCode());
-		result = prime * result + ((block == null) ? 0 : block.hashCode());
-		result = prime * result + ((positionInBlock == null) ? 0 : positionInBlock.hashCode());
 		return result;
 	}
 	@Override
@@ -327,12 +316,6 @@ class RowImpl implements Row {
 				return false;
 			}
 		} else if (!rowSpacing.equals(other.rowSpacing)) {
-			return false;
-		}
-		if (block != other.block) {
-			return false;
-		}
-		if (positionInBlock != other.positionInBlock) {
 			return false;
 		}
 		return true;

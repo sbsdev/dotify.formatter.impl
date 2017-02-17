@@ -5,15 +5,28 @@ import java.util.List;
 
 import org.daisy.dotify.api.formatter.BlockPosition;
 
-class RowGroupSequence implements Cloneable {
-	private List<RowGroup> group;
+class RowGroupSequence {
+	private final List<RowGroup> group;
 	private final BlockPosition pos;
-	private RowImpl emptyRow;
+	private final RowImpl emptyRow;
 
 	public RowGroupSequence(BlockPosition pos, RowImpl emptyRow) {
 		this.group = new ArrayList<RowGroup>();
 		this.pos = pos;
 		this.emptyRow = emptyRow;
+	}
+	
+	/**
+	 * Creates a deep copy of the supplied instance
+	 * @param template the instance to copy
+	 */
+	RowGroupSequence(RowGroupSequence template) {
+		this.group = new ArrayList<>();
+		for (RowGroup rg : template.group) {
+			group.add(new RowGroup(rg));
+		}
+		this.pos = template.pos;
+		this.emptyRow = new RowImpl(template.emptyRow);
 	}
 
 	public List<RowGroup> getGroup() {
@@ -44,23 +57,4 @@ class RowGroupSequence implements Cloneable {
 		return ret;
 	}
 
-	/**
-	 * Creates a deep copy
-	 */
-	public Object clone() {
-		RowGroupSequence clone; {
-			try {
-				clone = (RowGroupSequence)super.clone();
-			} catch (CloneNotSupportedException e) {
-				throw new InternalError();
-			}
-		}
-		clone.group = new ArrayList<>(); {
-			for (RowGroup rg : this.group) {
-				clone.group.add(new RowGroup(rg));
-			}
-		}
-		clone.emptyRow = new RowImpl(this.emptyRow);
-		return clone;
-	}
 }

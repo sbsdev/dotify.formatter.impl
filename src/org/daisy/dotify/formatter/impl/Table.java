@@ -68,7 +68,7 @@ class Table extends Block {
 	}
 
 	@Override
-	protected AbstractBlockContentManager newBlockContentManager(BlockContext context, UnwriteableAreaInfo uai) {
+	protected AbstractBlockContentManager newBlockContentManager(BlockContext context) {
 		int columnCount = countColumns();
 		int rowCount = countRows();
 		int[] colSpace = calcSpacings(new ColumnSpaceCalculator(rowCount, columnCount));
@@ -87,16 +87,16 @@ class Table extends Block {
 		Arrays.fill(currentColumnWidth, columnWidth);
 		DefaultContext dc = DefaultContext.from(context.getContext()).metaVolume(metaVolume).metaPage(metaPage).build();
 		resultCache = new HashMap<>();
-		Result r = minimizeCost(currentColumnWidth, colSpace, tableProps.getPreferredEmtpySpace(), context, uai, dc, leftMargin, rightMargin);
+		Result r = minimizeCost(currentColumnWidth, colSpace, tableProps.getPreferredEmtpySpace(), context, dc, leftMargin, rightMargin);
 		return new TableBlockContentManager(context.getFlowWidth(), r.minWidth, r.forceCount, r.rows, rdp, context.getFcontext(), r.isVolatile);
 	}
 	
-	private Result minimizeCost(int[] columnWidth, int[] colSpacing, int spacePreferred, BlockContext context, UnwriteableAreaInfo uai, DefaultContext dc, MarginProperties leftMargin, MarginProperties rightMargin) {
+	private Result minimizeCost(int[] columnWidth, int[] colSpacing, int spacePreferred, BlockContext context, DefaultContext dc, MarginProperties leftMargin, MarginProperties rightMargin) {
 		int columnCount = columnWidth.length;
 		int[] currentColumnWidth = Arrays.copyOf(columnWidth, columnWidth.length);
 		Result[] results = new Result[columnCount];
 		//base result
-		Result currentResult = renderTableWithCache(tableProps.getPreferredEmtpySpace(), currentColumnWidth, colSpacing, context, uai, dc, leftMargin, rightMargin);
+		Result currentResult = renderTableWithCache(tableProps.getPreferredEmtpySpace(), currentColumnWidth, colSpacing, context, dc, leftMargin, rightMargin);
 		int x = 0;
 		while (true) {
 			// render all possibilities
@@ -105,7 +105,7 @@ class Table extends Block {
 					// change value
 					currentColumnWidth[i] = currentColumnWidth[i] - 1;
 					try {
-						results[i] = renderTableWithCache(spacePreferred, currentColumnWidth, colSpacing, context, uai, dc, leftMargin, rightMargin);
+						results[i] = renderTableWithCache(spacePreferred, currentColumnWidth, colSpacing, context, dc, leftMargin, rightMargin);
 					} catch (Exception e) {
 						// if rendering fails, invalidate this solution but continue
 						results[i] = null;
@@ -174,7 +174,7 @@ class Table extends Block {
 		return ret;
 	}
 	
-	private Result renderTableWithCache(int spacePreferred, int[] columnWidth, int[] colSpacing, BlockContext context, UnwriteableAreaInfo uai, DefaultContext dc, MarginProperties leftMargin, MarginProperties rightMargin) {
+	private Result renderTableWithCache(int spacePreferred, int[] columnWidth, int[] colSpacing, BlockContext context, DefaultContext dc, MarginProperties leftMargin, MarginProperties rightMargin) {
 		String key = toKey(columnWidth);
 		Result r = null;
 		if (resultCache.containsKey(key)) {
@@ -184,7 +184,7 @@ class Table extends Block {
 		} else {
 			logger.finest("Calculating new result for key: " + key);
 			try {
-				r = renderTable(columnWidth, colSpacing, context, uai, dc, leftMargin, rightMargin, spacePreferred); 
+				r = renderTable(columnWidth, colSpacing, context, dc, leftMargin, rightMargin, spacePreferred); 
 				logger.finest("Cost for solution: " + r.cost.getCost());
 			} finally {
 				// Also put failing results in the resultCache to prevent them from being attempted again (this is why finally is used)
@@ -202,9 +202,9 @@ class Table extends Block {
 		return ret.toString();
 	}
 	
-	private Result renderTable(int[] columnWidth, int[] colSpacing, BlockContext context, UnwriteableAreaInfo uai, DefaultContext dc, MarginProperties leftMargin, MarginProperties rightMargin, int spacePreferred) {
+	private Result renderTable(int[] columnWidth, int[] colSpacing, BlockContext context, DefaultContext dc, MarginProperties leftMargin, MarginProperties rightMargin, int spacePreferred) {
 		List<RowImpl> result = new ArrayList<RowImpl>();
-		Result ret = updateRendering(columnWidth, colSpacing, new TableCostImpl(spacePreferred), context, uai, dc);
+		Result ret = updateRendering(columnWidth, colSpacing, new TableCostImpl(spacePreferred), context, dc);
 		for (int r=0; r<td.getGridHeight(); r++) {
 			// render into rows
 			boolean tableRowHasData = false;
@@ -250,7 +250,7 @@ class Table extends Block {
 		return ret;
 	}
 	
-	private Result updateRendering(int[] columnWidth, int[] colSpacing, TableCost costFunc, BlockContext context, UnwriteableAreaInfo uai, DefaultContext dc) {
+	private Result updateRendering(int[] columnWidth, int[] colSpacing, TableCost costFunc, BlockContext context, DefaultContext dc) {
 		Result ret = new Result();
 		ret.cost = costFunc;
 		int minWidth = context.getFlowWidth();
@@ -266,7 +266,7 @@ class Table extends Block {
 					}
 					flowWidth += columnWidth[ci+j];
 				}
-				CellData cd = cell.render(context.getFcontext(), dc, context.getRefs(), uai, flowWidth);
+				CellData cd = cell.render(context.getFcontext(), dc, context.getRefs(), flowWidth);
 				isVolatile |= cd.isVolatile();
 				minWidth = Math.min(cd.getMinWidth(), minWidth);
 				forceCount += cd.getForceCount();

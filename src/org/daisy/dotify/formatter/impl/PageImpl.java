@@ -2,7 +2,6 @@ package org.daisy.dotify.formatter.impl;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -22,7 +21,6 @@ import org.daisy.dotify.api.translator.Translatable;
 import org.daisy.dotify.api.translator.TranslationException;
 import org.daisy.dotify.api.writer.Row;
 import org.daisy.dotify.common.text.StringTools;
-import org.daisy.dotify.formatter.impl.UnwriteableAreaInfo.UnwriteableArea;
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.search.PageDetails;
 import org.daisy.dotify.writer.impl.Page;
@@ -34,26 +32,20 @@ import org.daisy.dotify.writer.impl.Page;
  * 
  * @author Joel Håkansson
  */
-class PageImpl implements Page, Cloneable {
+class PageImpl implements Page {
 	private static final Pattern trailingWs = Pattern.compile("\\s*\\z");
 	private static final Pattern softHyphen = Pattern.compile("\u00ad");
 	private final CrossReferenceHandler crh;
 	private final PageDetails details;
 	private final LayoutMaster master;
 	private final FormatterContext fcontext;
-	private final UnwriteableAreaInfo unwriteableAreaInfo;
 	private final List<RowImpl> before;
 	private final List<RowImpl> after;
-	private ArrayList<RowImpl> bodyRows;
-	private ArrayList<RowImpl> pageArea;
-	private ArrayList<RowImpl> pageRows;
-	private ArrayList<String> anchors;
-	private ArrayList<String> identifiers;
+    private final ArrayList<RowImpl> rows;
+    private final ArrayList<RowImpl> pageArea;
+    private final ArrayList<String> anchors;
+    private final ArrayList<String> identifiers;
 	private final int pageIndex;
-	private final int textFlowIntoHeaderHeight;
-	private final int textFlowIntoFooterHeight;
-	private final int headerHeight;
-	private final int footerHeight;
 	private final int flowHeight;
 	private final PageTemplate template;
 
@@ -63,39 +55,29 @@ class PageImpl implements Page, Cloneable {
 	private int volumeNumber;
 	
 	
-	public PageImpl(CrossReferenceHandler crh, PageDetails details, LayoutMaster master, FormatterContext fcontext, int pageIndex, List<RowImpl> before, List<RowImpl> after,
-	                UnwriteableAreaInfo unwriteableAreaInfo) {
+	public PageImpl(CrossReferenceHandler crh, PageDetails details, LayoutMaster master, FormatterContext fcontext, int pageIndex, List<RowImpl> before, List<RowImpl> after) {
 		this.crh = crh;
 		this.details = details;
 		this.master = master;
 		this.fcontext = fcontext;
-		this.bodyRows = new ArrayList<>();
+		this.rows = new ArrayList<>();
 		this.before = before;
-		this.after = after; 
-		this.unwriteableAreaInfo = unwriteableAreaInfo;
+		this.after = after;
 
 		this.pageArea = new ArrayList<>();
 		this.anchors = new ArrayList<>();
 		this.identifiers = new ArrayList<>();
 		this.pageIndex = pageIndex;
 		this.template = master.getTemplate(pageIndex+1);
+        this.flowHeight = master.getPageHeight() - 
+                (int)Math.ceil(getHeight(template.getHeader(), master.getRowSpacing())) -
+                (int)Math.ceil(getHeight(template.getFooter(), master.getRowSpacing())) -
+                (master.getBorder() != null ? (int)Math.ceil(distributeRowSpacing(null, false).spacing*2) : 0);
 		this.isVolBreakAllowed = true;
 		this.keepPreviousSheets = 0;
 		this.volumeBreakAfterPriority = null;
 		this.volumeNumber = 0;
-		
-		// validate/analyze header and footer
-		this.textFlowIntoHeaderHeight = template.validateAndAnalyzeHeader();
-		this.textFlowIntoFooterHeight = template.validateAndAnalyzeFooter();
-		
-		this.headerHeight = (int)Math.ceil(getHeight(template.getHeader(), master.getRowSpacing()));
-		this.footerHeight = (int)Math.ceil(getHeight(template.getFooter(), master.getRowSpacing()));
-		
-		// Maximum flow height, effective height could be lower
-		this.flowHeight = master.getPageHeight()
-				- this.headerHeight + this.textFlowIntoHeaderHeight
-				- this.footerHeight + this.textFlowIntoFooterHeight
-				- (master.getBorder() != null ? (int)Math.ceil(distributeRowSpacing(null, false).spacing*2) : 0);
+
 	}
 	
 	static float getHeight(List<FieldList> list, float def) {
@@ -106,35 +88,12 @@ class PageImpl implements Page, Cloneable {
 		pageArea.addAll(block);
 	}
 	
-	void newRow(RowImpl r) throws PageFullException {
+	void newRow(RowImpl r) {
 		if (rowsOnPage()==0) {
 			details.startsContentMarkers();
 		}
-		float spaceUsed = spaceNeeded();
-		bodyRows.add(r);
-		int markerCountBefore = details.getMarkers().size();
+		rows.add(r);
 		details.getMarkers().addAll(r.getMarkers());
-        if (Math.ceil(spaceUsed) < textFlowIntoHeaderHeight
-            || Math.ceil(spaceUsed) >= flowHeight - textFlowIntoHeaderHeight - textFlowIntoFooterHeight) {
-			try {
-				if (textFlowIntoHeaderHeight + textFlowIntoFooterHeight == 0) {
-					throw new PaginatorException("Too many rows for page");
-				}
-				TextBorderStyle border = master.getBorder();
-				if (border == null) {
-					border = TextBorderStyle.NONE;
-				}
-				pageRows = buildPageRows(border);
-			} catch (PageFullException e) {
-				bodyRows.remove(bodyRows.size() - 1);
-				details.getMarkers().subList(markerCountBefore, details.getMarkers().size()).clear();
-				throw e;
-			} catch (PaginatorException e) {
-				throw new RuntimeException("Pagination failed.", e);
-			}
-        } else {
-            pageRows = null;
-		}
 		anchors.addAll(r.getAnchors());
 	}
 	
@@ -143,7 +102,7 @@ class PageImpl implements Page, Cloneable {
 	 * @return returns the number of rows on this page
 	 */
 	private int rowsOnPage() {
-		return bodyRows.size();
+		return rows.size();
 	}
 	
 	void addMarkers(List<Marker> m) {
@@ -185,7 +144,7 @@ class PageImpl implements Page, Cloneable {
 	
 	float spaceNeeded() {
 		return 	pageAreaSpaceNeeded() +
-				rowsNeeded(bodyRows, master.getRowSpacing());
+				rowsNeeded(rows, master.getRowSpacing());
 	}
 	
 	float staticAreaSpaceNeeded() {
@@ -200,30 +159,24 @@ class PageImpl implements Page, Cloneable {
 		return (int)Math.ceil(spaceNeeded()) + offs;
 	}
 	
-	private ArrayList<RowImpl> buildPageRows(TextBorderStyle border) throws PaginatorException, PageFullException {
+	private List<RowImpl> buildPageRows(TextBorderStyle border) throws PaginatorException {
 		ArrayList<RowImpl> ret = new ArrayList<>();
 		{
 			LayoutMaster lm = master;
 			int pagenum = getPageIndex() + 1;
 			PageTemplate t = lm.getTemplate(pagenum);
 			BrailleTranslator filter = fcontext.getDefaultTranslator();
-			boolean hasTopArea = lm.getPageArea()!=null && lm.getPageArea().getAlignment()==PageAreaProperties.Alignment.TOP && !pageArea.isEmpty();
-			ListIterator<RowImpl> rows = bodyRows.listIterator();
-			ret.addAll(renderFields(lm, t.getHeader(), filter, true, !hasTopArea, rows));
-			if (hasTopArea) {
+            ret.addAll(renderFields(lm, t.getHeader(), filter));
+            if (lm.getPageArea()!=null && lm.getPageArea().getAlignment()==PageAreaProperties.Alignment.TOP && !pageArea.isEmpty()) {
 				ret.addAll(before);
 				ret.addAll(pageArea);
 				ret.addAll(after);
 			}
-			float bottomAreaSize = (lm.getPageArea()!=null && lm.getPageArea().getAlignment()==PageAreaProperties.Alignment.BOTTOM ? pageAreaSpaceNeeded() : 0);
-			while (Math.ceil(rowsNeeded(ret, lm.getRowSpacing()) + bottomAreaSize)
-			        < headerHeight - textFlowIntoHeaderHeight + flowHeight - textFlowIntoFooterHeight
-			       && rows.hasNext()) {
-				ret.add(rows.next());
-			}
-			if (!t.getFooter().isEmpty() || border != TextBorderStyle.NONE || bottomAreaSize > 0) {
-				while (Math.ceil(rowsNeeded(ret, lm.getRowSpacing()) + bottomAreaSize)
-				        < headerHeight - textFlowIntoHeaderHeight + flowHeight - textFlowIntoFooterHeight) {
+            ret.addAll(rows);
+            float headerHeight = getHeight(t.getHeader(), lm.getRowSpacing());
+            if (!t.getFooter().isEmpty() || border != TextBorderStyle.NONE || (lm.getPageArea()!=null && lm.getPageArea().getAlignment()==PageAreaProperties.Alignment.BOTTOM && !pageArea.isEmpty())) {
+                float areaSize = (lm.getPageArea()!=null && lm.getPageArea().getAlignment()==PageAreaProperties.Alignment.BOTTOM ? pageAreaSpaceNeeded() : 0);
+                while (Math.ceil(rowsNeeded(ret, lm.getRowSpacing()) + areaSize) < getFlowHeight() + headerHeight) {
 					ret.add(new RowImpl());
 				}
 				if (lm.getPageArea()!=null && lm.getPageArea().getAlignment()==PageAreaProperties.Alignment.BOTTOM && !pageArea.isEmpty()) {
@@ -231,26 +184,7 @@ class PageImpl implements Page, Cloneable {
 					ret.addAll(pageArea);
 					ret.addAll(after);
 				}
-				ret.addAll(renderFields(lm, t.getFooter(), filter, false, bottomAreaSize == 0, rows));
-			}
-			if (rows.hasNext()) {
-				int remaining = 0;
-				int remainingNotSpaceOnly = 0;
-				while (rows.hasNext()) {
-					RowImpl r = rows.next();
-					remaining++;
-					String chars = trailingWs.matcher(r.getChars()).replaceAll("");
-					if (bottomAreaSize > 0 || chars.length() > 0 || !r.getLeftMargin().isSpaceOnly() || !r.getRightMargin().isSpaceOnly()) {
-						remainingNotSpaceOnly = remaining;
-					}
-				}
-				if (remainingNotSpaceOnly > 0) {
-					if (Math.ceil(spaceNeeded()) <= flowHeight) {
-						throw new PageFullException(flowHeight - remainingNotSpaceOnly, false);
-					} else {
-						throw new PaginatorException("Too many rows for page");
-					}
-				}
+                ret.addAll(renderFields(lm, t.getFooter(), filter));
 			}
 		}
 		return ret;
@@ -268,16 +202,10 @@ class PageImpl implements Page, Cloneable {
 			if (border == null) {
 				border = TextBorderStyle.NONE;
 			}
-			if (pageRows == null) {
-				try {
-					pageRows = buildPageRows(border);
-				} catch (PageFullException e) {
-					throw new RuntimeException("Coding error");
-				}
-			}
-			
+            List<RowImpl> ret = buildPageRows(border);
+
 			LayoutMaster lm = master;
-			ArrayList<Row> ret = new ArrayList<>();
+            ArrayList<Row> ret2 = new ArrayList<>();
 			{
 				final int pagenum = getPageIndex() + 1;
 				TextBorder tb = null;
@@ -295,11 +223,11 @@ class PageImpl implements Page, Cloneable {
 					RowImpl r = new RowImpl(tb.getTopBorder());
 					DistributedRowSpacing rs = distributeRowSpacing(lm.getRowSpacing(), true);
 					r.setRowSpacing(rs.spacing);
-					ret.add(r);
+					ret2.add(r);
 				}
 				String res;
 
-				for (RowImpl row : pageRows) {
+				for (RowImpl row : ret) {
 					res = "";
 					if (row.getChars().length() > 0) {
 						// remove trailing whitespace
@@ -329,18 +257,18 @@ class PageImpl implements Page, Cloneable {
 						throw new PaginatorException("Row is too long (" + rowWidth + "/" + master.getPageWidth() + ") '" + res + "'");
 					}
 					RowImpl r2 = new RowImpl(r);
-					ret.add(r2);
+					ret2.add(r2);
 					Float rs2 = row.getRowSpacing();
 					if (!TextBorderStyle.NONE.equals(border)) {
 						DistributedRowSpacing rs = distributeRowSpacing(rs2, true);
 						r2.setRowSpacing(rs.spacing);
 						//don't add space to the last line
-						if (row!=pageRows.get(pageRows.size()-1)) {
+                        if (row!=ret.get(ret.size()-1)) {
 							RowImpl s = null;
 							for (int i = 0; i < rs.lines-1; i++) {
 								s = new RowImpl(tb.addBorderToRow(row.getLeftMargin().getContent(), row.getRightMargin().getContent()));
 								s.setRowSpacing(rs.spacing);
-								ret.add(s);
+								ret2.add(s);
 							}
 						}
 					} else {
@@ -349,11 +277,11 @@ class PageImpl implements Page, Cloneable {
 					
 				}
 				if (!TextBorderStyle.NONE.equals(border)) {
-					ret.add(new RowImpl(tb.getBottomBorder()));
+                    ret2.add(new RowImpl(tb.getBottomBorder()));
 				}
 			}
-			if (ret.size()>0) {
-				RowImpl last = ((RowImpl)ret.get(ret.size()-1));
+            if (ret2.size()>0) {
+                RowImpl last = ((RowImpl)ret2.get(ret2.size()-1));
 				if (lm.getRowSpacing()!=1) {
 					//set row spacing on the last row to 1.0
 					last.setRowSpacing(1f);
@@ -362,7 +290,7 @@ class PageImpl implements Page, Cloneable {
 					last.setRowSpacing(null);
 				}
 			}
-			return ret;
+			return ret2;
 		} catch (PaginatorException e) {
 			throw new RuntimeException("Pagination failed.", e);
 		}
@@ -404,103 +332,25 @@ class PageImpl implements Page, Cloneable {
 		return flowHeight;
 	}
 
-	private List<RowImpl> renderFields(LayoutMaster lm, List<FieldList> fields, BrailleTranslator translator, boolean headerOrFooter,
-	                                   boolean allowTextFlow, ListIterator<RowImpl> bodyRows)
-			throws PaginatorException, PageFullException {
-		List<RowImpl> ret = new ArrayList<>();
-		int width = lm.getFlowWidth();
-		char space = fcontext.getSpaceCharacter();
-		int i = 0;
+    private List<RowImpl> renderFields(LayoutMaster lm, List<FieldList> fields, BrailleTranslator translator) throws PaginatorException {
+        ArrayList<RowImpl> ret = new ArrayList<>();
 		for (FieldList row : fields) {
-			List<String> distributedRow; {
-				try {
-					distributedRow = distribute(row, width, space+"", translator);
-				} catch (PaginatorToolsException e) {
-					throw new PaginatorException("Error while rendering header", e);
-				}
+            try {
+                RowImpl r = new RowImpl(distribute(row, lm.getFlowWidth(), fcontext.getSpaceCharacter()+"", translator));
+                r.setRowSpacing(row.getRowSpacing());
+                ret.add(r);
+            } catch (PaginatorToolsException e) {
+                throw new PaginatorException("Error while rendering header", e);
 			}
-			int length = distributedRow.stream().filter(s -> s!=null).mapToInt(s -> s.length()).sum();
-			int k = 0;
-			boolean someFlowed = false;
-			StringBuffer sb = new StringBuffer();
-			for (String s : distributedRow) {
-				if (s != null) {
-					sb.append(s);
-				} else if (k != 0) {
-					throw new RuntimeException("Coding error");
-				} else if (allowTextFlow && bodyRows.hasNext()) {
-					if (headerOrFooter && (headerHeight - i - 1) >= textFlowIntoHeaderHeight
-					    || !headerOrFooter && i >= textFlowIntoFooterHeight ) {
-						throw new RuntimeException("Coding error");
-					}
-					RowImpl bodyRow = bodyRows.next();
-					float rowSpacing; {
-						if (bodyRow.getRowSpacing() != null) {
-							rowSpacing = bodyRow.getRowSpacing();
-						} else {
-							rowSpacing = lm.getRowSpacing();
-						}
-					}
-					if (rowSpacing != 1.0f) {
-						throw new RuntimeException("Text can only flow in empty <field/> when row-spacing of text is '1'.");
-					}
-					String chars;
-					try {
-						chars = padLeft(width - length,
-						                bodyRow.getChars(),
-						                bodyRow.getLeftMargin(),
-						                bodyRow.getRightMargin(),
-						                bodyRow.getAlignment(),
-						                space);
-					} catch (NegativeArraySizeException e) { // thrown by StringTools.fill if length < 0
-						chars = null;
-					}
-					if (chars == null || chars.length() + length > width) {
-						if (bodyRow.block != null) {
-							unwriteableAreaInfo.setUnwriteableArea(bodyRow.block,
-							                                       bodyRow.positionInBlock,
-							                                       new UnwriteableArea(UnwriteableArea.Side.RIGHT, length));
-							throw new PageFullException(flowHeight, headerOrFooter);
-						}
-						sb.append(StringTools.fill(space, width - length));
-						bodyRows.previous();
-						if (!headerOrFooter || someFlowed) {
-							allowTextFlow = false;
-						}
-					} else {
-						sb.append(chars);
-						someFlowed = true;
-						if (chars.length() + length <= width) {
-							sb.append(StringTools.fill(space, width - length - chars.length()));
-						}
-					}
-				} else {
-					sb.append(StringTools.fill(space, width - length));
-				}
-				k++;
-			}
-			RowImpl r = new RowImpl(sb.toString());
-			r.setRowSpacing(row.getRowSpacing());
-			ret.add(r);
-			i++;
 		}
 		return ret;
 	}
 	
-	private List<String> distribute(FieldList chunks, int width, String padding, BrailleTranslator translator) throws PaginatorToolsException {
+    private String distribute(FieldList chunks, int width, String padding, BrailleTranslator translator) throws PaginatorToolsException {
 		ArrayList<String> chunkF = new ArrayList<>();
-		ArrayList<Boolean> flowPositions = new ArrayList<>();
 		for (Field f : chunks.getFields()) {
 			DefaultTextAttribute.Builder b = new DefaultTextAttribute.Builder(null);
-			String resolved = resolveField(f, this, b);
-			if (resolved == null) {
-				chunkF.add("");
-				flowPositions.add(true);
-				continue;
-			} else {
-				flowPositions.add(false);
-			}
-			resolved = softHyphen.matcher(resolved).replaceAll("");
+            String resolved = softHyphen.matcher(resolveField(f, this, b)).replaceAll("");
 			Translatable.Builder tr = Translatable.text(fcontext.getConfiguration().isMarkingCapitalLetters()?resolved:resolved.toLowerCase()).
 										hyphenate(false);
 			if (resolved.length()>0) {
@@ -512,40 +362,11 @@ class PageImpl implements Page, Cloneable {
 				throw new PaginatorToolsException(e);
 			}
 		}
-		List<String> chunksWithPadding = PaginatorTools.distributeRetain(
-			chunkF, width, padding,
-			fcontext.getConfiguration().isAllowingTextOverflowTrimming()?
-			PaginatorTools.DistributeMode.EQUAL_SPACING_TRUNCATE:
-			PaginatorTools.DistributeMode.EQUAL_SPACING
-		);
-		List<String> rv = new ArrayList<>(); {
-			// copy chunks
-			int i = 0;
-			for (String s : chunksWithPadding) {
-				if (i % 2 == 0) {
-					if (flowPositions.get(i/2)) {
-						rv.add(null);
-					} else {
-						rv.add(s);
-					}
-				}
-				i++;
-			}
-			// add padding
-			i = 0;
-			for (String s : chunksWithPadding) {
-				if (i % 2 == 1) {
-					if (rv.get((i-1)/2) == null || rv.get((i+1)/2) == null) {
-						// drop
-					} else {
-						// append to following chunk
-						rv.set((i+1)/2, s + rv.get((i+1)/2));
-					}
-				}
-				i++;
-			}
-		}
-		return rv;
+        return PaginatorTools.distribute(chunkF, width, padding,
+                fcontext.getConfiguration().isAllowingTextOverflowTrimming()?
+                PaginatorTools.DistributeMode.EQUAL_SPACING_TRUNCATE:
+                PaginatorTools.DistributeMode.EQUAL_SPACING
+            );
 	}
 	
 	/*
@@ -554,7 +375,7 @@ class PageImpl implements Page, Cloneable {
 	 */
 	private String resolveField(Field field, PageImpl p, DefaultTextAttribute.Builder b) {
 		if (field instanceof NoField) {
-			return null;
+			throw new UnsupportedOperationException("Not implemented");
 		}
 		String ret;
 		DefaultTextAttribute.Builder b2 = new DefaultTextAttribute.Builder(field.getTextStyle());
@@ -574,9 +395,6 @@ class PageImpl implements Page, Cloneable {
 	}
 
 	private String resolveCompoundField(CompoundField f, PageImpl p, DefaultTextAttribute.Builder b) {
-		if (f.size() == 1) {
-			return resolveField(f.get(0), p, b);
-		}
 		return f.stream().map(f2 -> resolveField(f2, p, b)).collect(Collectors.joining());
 	}
 	
@@ -654,22 +472,4 @@ class PageImpl implements Page, Cloneable {
 		this.volumeBreakAfterPriority = value;
 	}
 
-	@SuppressWarnings("unchecked")
-	public Object clone() {
-		PageImpl clone; {
-			try {
-				clone = (PageImpl)super.clone();
-			} catch (CloneNotSupportedException e) {
-				throw new InternalError("coding error");
-			}
-		}
-		clone.bodyRows = (ArrayList<RowImpl>)bodyRows.clone();
-		clone.pageArea = (ArrayList<RowImpl>)pageArea.clone();
-		clone.anchors = (ArrayList<String>)anchors.clone();
-		clone.identifiers = (ArrayList<String>)identifiers.clone();
-		if (pageRows != null) {
-			clone.pageRows = (ArrayList<RowImpl>)pageRows.clone();
-		}
-		return clone;
-	}
 }

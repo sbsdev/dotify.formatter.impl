@@ -681,7 +681,7 @@ class FormatterCoreImpl extends Stack<Block> implements FormatterCore, BlockGrou
 		}
 		
 		@Override
-		protected AbstractBlockContentManager newBlockContentManager(BlockContext context, UnwriteableAreaInfo uai) {
+		protected AbstractBlockContentManager newBlockContentManager(BlockContext context) {
 			Stack<Segment> processedSegments = processAttributes(segments);
 			segments.clear();
 			for (Segment s : processedSegments)
@@ -691,7 +691,7 @@ class FormatterCoreImpl extends Stack<Block> implements FormatterCore, BlockGrou
 				} else {
 					addSegment(s);
 				}
-			return super.newBlockContentManager(context, uai);
+			return super.newBlockContentManager(context);
 		}
 		
 		/*

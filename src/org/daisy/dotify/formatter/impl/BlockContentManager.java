@@ -1,12 +1,9 @@
 package org.daisy.dotify.formatter.impl;
 
 import static java.lang.Math.min;
-
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Stack;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -20,7 +17,6 @@ import org.daisy.dotify.api.translator.Translatable;
 import org.daisy.dotify.api.translator.TranslationException;
 import org.daisy.dotify.api.translator.UnsupportedMetricException;
 import org.daisy.dotify.common.text.StringTools;
-import org.daisy.dotify.formatter.impl.UnwriteableAreaInfo.UnwriteableArea;
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.segment.AnchorSegment;
 import org.daisy.dotify.formatter.impl.segment.Evaluate;
@@ -42,21 +38,16 @@ class BlockContentManager extends AbstractBlockContentManager {
 
 	private final Stack<RowImpl> rows;
 	private final CrossReferenceHandler refs;
-	private final UnwriteableAreaInfo uai;
 	private final int available;
 	private final Context context;
-	private final Block thisBlock;
 
 	private Leader currentLeader;
 	private ListItem item;
 	private int forceCount;
-	private Map<Integer,UnwriteableArea> unwriteableAreas;
 	
-	BlockContentManager(Block thisBlock, int flowWidth, Stack<Segment> segments, RowDataProperties rdp, CrossReferenceHandler refs,
-	                    UnwriteableAreaInfo uai, Context context, FormatterContext fcontext) {
+	BlockContentManager(int flowWidth, Stack<Segment> segments, RowDataProperties rdp, CrossReferenceHandler refs, Context context, FormatterContext fcontext) {
 		super(flowWidth, rdp, fcontext);
 		this.refs = refs;
-		this.uai = uai;
 		this.currentLeader = null;
 		this.available = flowWidth - rightMargin.getContent().length();
 
@@ -64,33 +55,8 @@ class BlockContentManager extends AbstractBlockContentManager {
 		
 		this.rows = new Stack<>();
 		this.context = context;
-		this.thisBlock = thisBlock;
 
 		calculateRows(segments);
-	}
-	
-	@Override
-	public boolean isVolatile() {
-		if (super.isVolatile()) {
-			return true;
-		}
-		// the following may not qualify as "volatile" but what matters is the
-		// result, namely that the BlockContentManager is recreated
-		// this is incorrect, see https://github.com/brailleapps/dotify.formatter.impl/issues/20
-		if (uai != null) {
-			for (int i = 0; i < getRowCount(); i++) {
-				UnwriteableArea newArea = uai.getUnwriteableArea(thisBlock, i);
-				UnwriteableArea oldArea = unwriteableAreas == null ? null : unwriteableAreas.get(i);
-				if (newArea == null) {
-					if (oldArea != null) {
-						return true;
-					}
-				} else if (!newArea.equals(oldArea)) {
-					return true;
-				}
-			}
-		}
-		return false;
 	}
 	
 	public int getBlockHeight() {
@@ -121,7 +87,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 					//flush
 					layoutLeader();
 					MarginProperties ret = new MarginProperties(leftMargin.getContent()+StringTools.fill(fcontext.getSpaceCharacter(), rdp.getTextIndent()), leftMargin.isSpaceOnly());
-					addRow(new RowInfo("", createAndConfigureEmptyNewRow(ret)));
+					rows.add(createAndConfigureEmptyNewRow(ret));
 					break;
 				}
 				case Text:
@@ -220,11 +186,10 @@ class BlockContentManager extends AbstractBlockContentManager {
 				if (minLeft < leftMargin.getContent().length() || minRight < rightMargin.getContent().length()) {
 					throw new RuntimeException("coding error");
 				}
-				addRow(new RowInfo("",
-						new RowImpl(StringTools.fill(fcontext.getSpaceCharacter(), minLeft - leftMargin.getContent().length())
-				                    + StringTools.fill(rdp.getUnderlineStyle(), flowWidth - minLeft - minRight),
-				                    leftMargin,
-				                    rightMargin)));
+					rows.add(new RowImpl(StringTools.fill(fcontext.getSpaceCharacter(), minLeft - leftMargin.getContent().length())
+					                     + StringTools.fill(rdp.getUnderlineStyle(), flowWidth - minLeft - minRight),
+					                     leftMargin,
+					                     rightMargin));
 			}
 		}
 	}
@@ -340,7 +305,8 @@ class BlockContentManager extends AbstractBlockContentManager {
 				newRow(btr, "", rdp.getFirstLineIndent(), rdp.getBlockIndent(), mode);
 			}
 		} else {
-			newRow(popRow(), btr, rdp.getBlockIndent(), mode);
+			RowImpl r  = rows.pop();
+			newRow(new RowInfo("", r), btr, rdp.getBlockIndent(), mode);
 		}
 		while (btr.hasNext()) { //LayoutTools.length(chars.toString())>0
 			newRow(btr, "", rdp.getTextIndent(), rdp.getBlockIndent(), mode);
@@ -375,7 +341,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 			int align = getLeaderAlign(currentLeader, btr.countRemaining());
 			
 			if (m.preTabPos>leaderPos || offset - align < 0) { // if tab position has been passed or if text does not fit within row, try on a new row
-				addRow(m);
+				rows.add(m.row);
 				m = new RowInfo(StringTools.fill(fcontext.getSpaceCharacter(), rdp.getTextIndent()+blockIndent), createAndConfigureEmptyNewRow(m.row.getLeftMargin()));
 				//update offset
 				offset = leaderPos-m.preTabPos;
@@ -385,32 +351,6 @@ class BlockContentManager extends AbstractBlockContentManager {
 		breakNextRow(m, btr, tabSpace);
 	}
 
-	private int rowIndex = 0;
-	
-	private void addRow(RowInfo row) {
-		if (row.index != rowIndex) {
-			throw new RuntimeException("Coding error");
-		}
-		row.row.block = thisBlock;
-		row.row.positionInBlock = row.index;
-		rows.add(row.row);
-		if (row.unwriteableArea != null) {
-			if (unwriteableAreas == null) {
-				unwriteableAreas = new HashMap<>();
-			}
-			unwriteableAreas.put(row.index, row.unwriteableArea);
-		}
-		rowIndex++;
-	}
-	
-	private RowInfo popRow() {
-		rowIndex--;
-		if (unwriteableAreas != null) {
-			unwriteableAreas.remove(rowIndex);
-		}
-		return new RowInfo("", rows.pop(), rowIndex);
-	}
-	
 	private String buildLeader(int len, String mode) {
 		try {
 			if (len > 0) {
@@ -439,11 +379,11 @@ class BlockContentManager extends AbstractBlockContentManager {
 		String next = softHyphenPattern.matcher(btr.nextTranslatedRow(m.maxLenText - contentLen, force)).replaceAll("");
 		if ("".equals(next) && "".equals(tabSpace)) {
 			m.row.setChars(m.preContent + trailingWsBraillePattern.matcher(m.preTabText).replaceAll(""));
-			addRow(m);
+			rows.add(m.row);
 		} else {
 			m.row.setChars(m.preContent + m.preTabText + tabSpace + next);
 			m.row.setLeaderSpace(m.row.getLeaderSpace()+tabSpace.length());
-			addRow(m);
+			rows.add(m.row);
 		}
 		if (btr instanceof AggregatedBrailleTranslatorResult) {
 			AggregatedBrailleTranslatorResult abtr = ((AggregatedBrailleTranslatorResult)btr);
@@ -464,8 +404,6 @@ class BlockContentManager extends AbstractBlockContentManager {
 		return 0;
 	}
 	
-	private int rowInfoIndex = 0;
-	
 	private class RowInfo {
 		final String preTabText;
 		final int preTabTextLen;
@@ -473,31 +411,14 @@ class BlockContentManager extends AbstractBlockContentManager {
 		final int preTabPos;
 		final int maxLenText;
 		final RowImpl row;
-		final int index;
-		final UnwriteableArea unwriteableArea;
 		private RowInfo(String preContent, RowImpl r) {
-			this(preContent, r, rowInfoIndex++);
-		}
-		private RowInfo(String preContent, RowImpl r, int index) {
 			this.preTabText = r.getChars();
 			this.row = r;
-			this.index = index;
 			this.preContent = preContent;
 			int preContentPos = r.getLeftMargin().getContent().length()+StringTools.length(preContent);
 			this.preTabTextLen = StringTools.length(preTabText);
 			this.preTabPos = preContentPos+preTabTextLen;
-			this.unwriteableArea = uai == null ? null : uai.getUnwriteableArea(thisBlock, this.index);
-			int unwriteable; {
-				if (unwriteableArea != null) {
-					if (unwriteableArea.side == UnwriteableArea.Side.LEFT) {
-						throw new RuntimeException();
-					}
-					unwriteable = unwriteableArea.width;
-				} else {
-					unwriteable = 0;
-				}
-			}
-			this.maxLenText = available-unwriteable-(preContentPos);
+			this.maxLenText = available-(preContentPos);
 			if (this.maxLenText<1) {
 				throw new RuntimeException("Cannot continue layout: No space left for characters.");
 			}
