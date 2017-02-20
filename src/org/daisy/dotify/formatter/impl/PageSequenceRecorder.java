@@ -58,6 +58,7 @@ class PageSequenceRecorder {
 			newRowGroupSequence(g.getVerticalPosition(), new RowImpl("", ret.getLeftMarginParent(), ret.getRightMarginParent()));
 			setKeepWithNext(-1);
 		}
+		addBlock(g);
 		return ret;
 	}
 
@@ -167,6 +168,10 @@ class PageSequenceRecorder {
 		data.addRowGroup(rg); 
 	}
 	
+	void addBlock(Block b) {
+		data.addBlock(b);
+	}
+	
 	List<RowGroupSequence> processResult() {
 		finishBlockProcessing();
 		return data.dataGroups;
@@ -228,6 +233,10 @@ class PageSequenceRecorder {
 		
 		private void addRowGroup(RowGroup rg) {
 			dataGroups.peek().getGroup().add(rg);
+		}
+		
+		private void addBlock(Block b) {
+			dataGroups.peek().getBlocks().add(b);
 		}
 
 	}

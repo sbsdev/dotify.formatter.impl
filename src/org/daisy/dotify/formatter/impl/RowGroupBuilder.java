@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.daisy.dotify.api.formatter.FormattingTypes.BreakBefore;
 import org.daisy.dotify.api.formatter.FormattingTypes.Keep;
 import org.daisy.dotify.api.formatter.MarginRegion;
 
@@ -31,10 +30,18 @@ class RowGroupBuilder {
 		rgb.keepWithPreviousSheets(g.getKeepWithPreviousSheets());
 	}
 
-	static Iterator<RowGroupSequence> getResult(LayoutMaster master, BlockSequence seq, BlockContext blockContext) {
-		final PageSequenceRecorder rec = new PageSequenceRecorder();
+	static Iterator<RowGroupSequence> getResult(LayoutMaster master, BlockSequence in, BlockContext blockContext) {
 		//TODO: This assumes that all page templates have margin regions that are of the same width  
-		final BlockContext bc = new BlockContext(seq.getLayoutMaster().getFlowWidth() - getTotalMarginRegionWidth(master), blockContext.getRefs(), blockContext.getContext(), blockContext.getFcontext());
+		final BlockContext bc = new BlockContext(in.getLayoutMaster().getFlowWidth() - getTotalMarginRegionWidth(master), blockContext.getRefs(), blockContext.getContext(), blockContext.getFcontext());
+		List<Block> data = new ArrayList<>();
+		for (RowGroupSequence s : getResultInner(master, in, bc)) {
+			data.addAll(s.getBlocks());
+		}
+		return getResultInner(master, data, bc).iterator();
+	}
+	
+	private static Iterable<RowGroupSequence> getResultInner(LayoutMaster master, Iterable<Block> seq, BlockContext bc) {
+		final PageSequenceRecorder rec = new PageSequenceRecorder();
 		for (Block g : seq)  {
 			try {
 				AbstractBlockContentManager bcm = rec.processBlock(g, bc);
@@ -116,7 +123,7 @@ class RowGroupBuilder {
 				rec.invalidateScenario(e);
 			}
 		}
-		return rec.processResult().iterator();
+		return rec.processResult();
 	}
 
 }
