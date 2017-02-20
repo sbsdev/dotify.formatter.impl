@@ -45,20 +45,20 @@ class PageSequenceRecorderData {
 			return size;
 		}
 		
-		boolean isDataEmpty() {
+		private boolean isDataEmpty() {
 			return (dataGroups.isEmpty()||dataGroups.peek().getGroup().isEmpty());
 		}
 		
-		void newRowGroupSequence(BlockPosition pos, RowImpl emptyRow) {
+		private void newRowGroupSequence(BlockPosition pos, RowImpl emptyRow) {
 			RowGroupSequence rgs = new RowGroupSequence(pos, emptyRow);
 			dataGroups.add(rgs);
 		}
 		
-		void addRowGroup(RowGroup rg) {
+		private void addRowGroup(RowGroup rg) {
 			dataGroups.peek().getGroup().add(rg);
 		}
 		
-		void addBlock(Block b) {
+		private void addBlock(Block b) {
 			dataGroups.peek().getBlocks().add(b);
 		}
 
