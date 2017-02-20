@@ -1,17 +1,18 @@
 package org.daisy.dotify.formatter.impl;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Stack;
 
-import org.daisy.dotify.api.formatter.BlockPosition;
-import org.daisy.dotify.api.formatter.FormattingTypes.BreakBefore;
-import org.daisy.dotify.api.formatter.FormattingTypes.Keep;
 import org.daisy.dotify.api.formatter.RenderingScenario;
 
-class PageSequenceRecorder {
+/**
+ * Processes scenarios and selects the best one. The decision is based on the cost
+ * function supplied with the scenario.
+ * 
+ * @author Joel Håkansson
+ */
+class ScenarioProcessor {
 	private static final String baseline = "base";
 	private static final String scenario = "best";
 	
@@ -25,7 +26,7 @@ class PageSequenceRecorder {
 	private double forceCount = 0;
 	private Map<String, PageSequenceRecorderData> states;
 
-	PageSequenceRecorder() {
+	ScenarioProcessor() {
 		data = new PageSequenceRecorderData();
 		states = new HashMap<>();
 	}
@@ -50,7 +51,7 @@ class PageSequenceRecorder {
 	}
 	
 	static Iterable<RowGroupSequence> process(LayoutMaster master, Iterable<Block> seq, BlockContext bc) {
-		final PageSequenceRecorder rec = new PageSequenceRecorder();
+		final ScenarioProcessor rec = new ScenarioProcessor();
 		for (Block g : seq)  {
 			try {
 				rec.processBlock(master, g, bc);
