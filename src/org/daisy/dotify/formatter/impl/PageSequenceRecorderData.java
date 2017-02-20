@@ -29,11 +29,11 @@ class PageSequenceRecorderData {
 			keepWithNext = template.keepWithNext;
 		}
 
-		int getKeepWithNext() {
+		private int getKeepWithNext() {
 			return keepWithNext;
 		}
 
-		void setKeepWithNext(int keepWithNext) {
+		private void setKeepWithNext(int keepWithNext) {
 			this.keepWithNext = keepWithNext;
 		}
 

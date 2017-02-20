@@ -49,6 +49,18 @@ class PageSequenceRecorder {
 		return states.containsKey(id);
 	}
 	
+	static Iterable<RowGroupSequence> process(LayoutMaster master, Iterable<Block> seq, BlockContext bc) {
+		final PageSequenceRecorder rec = new PageSequenceRecorder();
+		for (Block g : seq)  {
+			try {
+				rec.processBlock(master, g, bc);
+			} catch (Exception e) {
+				rec.invalidateScenario(e);
+			}
+		}
+		return rec.processResult();
+	}
+	
 	/**
 	 * Process a new block for a scenario
 	 * @param g

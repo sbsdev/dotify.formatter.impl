@@ -21,7 +21,7 @@ class RowGroupBuilder {
 		//TODO: This assumes that all page templates have margin regions that are of the same width  
 		final BlockContext bc = new BlockContext(in.getLayoutMaster().getFlowWidth() - getTotalMarginRegionWidth(master), blockContext.getRefs(), blockContext.getContext(), blockContext.getFcontext());
 		PageSequenceRecorderData data = new PageSequenceRecorderData();
-		for (RowGroupSequence s : getResultInner(master, in, bc)) {
+		for (RowGroupSequence s : PageSequenceRecorder.process(master, in, bc)) {
 			for (Block g : s.getBlocks()) {
 				data.processBlock(master, g, g.getBlockContentManager(bc));
 			}
@@ -29,17 +29,7 @@ class RowGroupBuilder {
 		return data.dataGroups.iterator();
 	}
 	
-	private static Iterable<RowGroupSequence> getResultInner(LayoutMaster master, Iterable<Block> seq, BlockContext bc) {
-		final PageSequenceRecorder rec = new PageSequenceRecorder();
-		for (Block g : seq)  {
-			try {
-				rec.processBlock(master, g, bc);
-			} catch (Exception e) {
-				rec.invalidateScenario(e);
-			}
-		}
-		return rec.processResult();
-	}
+
 	
 
 }
