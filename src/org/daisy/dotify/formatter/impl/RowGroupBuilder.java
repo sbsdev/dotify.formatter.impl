@@ -1,12 +1,8 @@
 package org.daisy.dotify.formatter.impl;
 
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 
-import org.daisy.dotify.api.formatter.FormattingTypes.Keep;
 import org.daisy.dotify.api.formatter.MarginRegion;
-import org.daisy.dotify.formatter.impl.PageSequenceRecorder.PageSequenceRecorderData;
 
 class RowGroupBuilder {
 	
