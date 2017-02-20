@@ -145,45 +145,9 @@ class PageSequenceRecorder {
 		}
 	}
 	
-	void newRowGroupSequence(BlockPosition pos, RowImpl emptyRow) {
-		data.newRowGroupSequence(pos, emptyRow);
-	}
-	
-	boolean isDataGroupsEmpty() {
-		return data.dataGroups.isEmpty();
-	}
-	
-	boolean isDataEmpty() {
-		return data.isDataEmpty();
-	}
-	
-	RowGroupSequence currentSequence() {
-		return data.dataGroups.peek();
-	}
-	
-	void addRowGroup(RowGroup rg) {
-		data.addRowGroup(rg); 
-	}
-	
-	void addBlock(Block b) {
-		data.addBlock(b);
-	}
-	
-	PageSequenceRecorderData getData() {
-		return data;
-	}
-	
 	List<RowGroupSequence> processResult() {
 		finishBlockProcessing();
 		return data.dataGroups;
-	}
-	
-	int getKeepWithNext() {
-		return data.getKeepWithNext();
-	}
-	
-	void setKeepWithNext(int keepWithNext) {
-		data.setKeepWithNext(keepWithNext);
 	}
 
 	private static Map<String, Double> setParams(double height, double minBlockWidth, double forceCount) {
