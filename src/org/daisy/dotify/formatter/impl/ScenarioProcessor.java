@@ -68,6 +68,7 @@ class ScenarioProcessor {
 	 * @param rec
 	 */
 	void processBlock(LayoutMaster master, Block g, BlockContext context) {
+		// FIXME: These calls have to be on separate lines, because variable data might mutate
 		AbstractBlockContentManager ret = processBlockInner(g, context);
 		data.processBlock(master, g, ret);
 	}
