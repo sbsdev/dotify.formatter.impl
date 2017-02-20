@@ -39,10 +39,6 @@ class RowGroupBuilder {
 			try {
 				AbstractBlockContentManager bcm = rec.processBlock(g, bc);
 
-				if (rec.isDataGroupsEmpty() || (g.getBreakBeforeType()==BreakBefore.PAGE && !rec.isDataEmpty()) || g.getVerticalPosition()!=null) {
-					rec.newRowGroupSequence(g.getVerticalPosition(), new RowImpl("", bcm.getLeftMarginParent(), bcm.getRightMarginParent()));
-					rec.setKeepWithNext(-1);
-				}
 				List<RowGroup> store = new ArrayList<>();
 				List<RowImpl> rl1 = bcm.getCollapsiblePreContentRows();
 				if (!rl1.isEmpty()) {

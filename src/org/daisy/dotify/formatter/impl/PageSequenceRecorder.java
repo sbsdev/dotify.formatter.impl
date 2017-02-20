@@ -7,6 +7,7 @@ import java.util.Stack;
 
 import org.daisy.dotify.api.formatter.BlockPosition;
 import org.daisy.dotify.api.formatter.RenderingScenario;
+import org.daisy.dotify.api.formatter.FormattingTypes.BreakBefore;
 
 class PageSequenceRecorder {
 	private static final String baseline = "base";
@@ -52,6 +53,15 @@ class PageSequenceRecorder {
 	 * @param rec
 	 */
 	AbstractBlockContentManager processBlock(Block g, BlockContext context) {
+		AbstractBlockContentManager ret = processBlockInner(g, context);
+		if (isDataGroupsEmpty() || (g.getBreakBeforeType()==BreakBefore.PAGE && !isDataEmpty()) || g.getVerticalPosition()!=null) {
+			newRowGroupSequence(g.getVerticalPosition(), new RowImpl("", ret.getLeftMarginParent(), ret.getRightMarginParent()));
+			setKeepWithNext(-1);
+		}
+		return ret;
+	}
+
+	private AbstractBlockContentManager processBlockInner(Block g, BlockContext context) {
 		AbstractBlockContentManager ret = g.getBlockContentManager(context);
 		if (g.getRenderingScenario()!=null) {
 			if (invalid!=null && g.getRenderingScenario()==invalid) {
@@ -182,7 +192,7 @@ class PageSequenceRecorder {
 		private Stack<RowGroupSequence> dataGroups = new Stack<>();
 		private int keepWithNext = 0;
 
-		PageSequenceRecorderData() {
+		private PageSequenceRecorderData() {
 			dataGroups = new Stack<>();
 			keepWithNext = 0;
 		}
@@ -191,7 +201,7 @@ class PageSequenceRecorder {
 		 * Creates a deep copy of the supplied instance
 		 * @param template the instance to copy
 		 */
-		PageSequenceRecorderData(PageSequenceRecorderData template) {
+		private PageSequenceRecorderData(PageSequenceRecorderData template) {
 			dataGroups = new Stack<>();
 			for (RowGroupSequence rgs : template.dataGroups) {
 				dataGroups.add(new RowGroupSequence(rgs));
@@ -199,7 +209,7 @@ class PageSequenceRecorder {
 			keepWithNext = template.keepWithNext;
 		}
 
-		float calcSize() {
+		private float calcSize() {
 			float size = 0;
 			for (RowGroupSequence rgs : dataGroups) {
 				size += rgs.calcSequenceSize();
@@ -207,16 +217,16 @@ class PageSequenceRecorder {
 			return size;
 		}
 		
-		boolean isDataEmpty() {
+		private boolean isDataEmpty() {
 			return (dataGroups.isEmpty()||dataGroups.peek().getGroup().isEmpty());
 		}
 		
-		void newRowGroupSequence(BlockPosition pos, RowImpl emptyRow) {
+		private void newRowGroupSequence(BlockPosition pos, RowImpl emptyRow) {
 			RowGroupSequence rgs = new RowGroupSequence(pos, emptyRow);
 			dataGroups.add(rgs);
 		}
 		
-		void addRowGroup(RowGroup rg) {
+		private void addRowGroup(RowGroup rg) {
 			dataGroups.peek().getGroup().add(rg);
 		}
 
