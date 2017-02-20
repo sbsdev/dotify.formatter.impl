@@ -16,7 +16,7 @@ class ScenarioProcessor {
 	private static final String baseline = "base";
 	private static final String scenario = "best";
 	
-	private PageSequenceRecorderData data;
+	private ScenarioData data;
 
 	private RenderingScenario current = null;
 	private RenderingScenario invalid = null;
@@ -24,21 +24,21 @@ class ScenarioProcessor {
 	private float height = 0;
 	private float minWidth = 0;
 	private double forceCount = 0;
-	private Map<String, PageSequenceRecorderData> states;
+	private Map<String, ScenarioData> states;
 
 	ScenarioProcessor() {
-		data = new PageSequenceRecorderData();
+		data = new ScenarioData();
 		states = new HashMap<>();
 	}
 	
 	private void saveState(String id) {
-		states.put(id, new PageSequenceRecorderData(data));
+		states.put(id, new ScenarioData(data));
 	}
 	
 	private void restoreState(String id) {
-		PageSequenceRecorderData state = states.get(id);
+		ScenarioData state = states.get(id);
 		if (state!=null) {
-			data = new PageSequenceRecorderData(state);
+			data = new ScenarioData(state);
 		}
 	}
 	

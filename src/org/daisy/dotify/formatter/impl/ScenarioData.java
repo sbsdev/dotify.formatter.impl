@@ -8,11 +8,16 @@ import org.daisy.dotify.api.formatter.BlockPosition;
 import org.daisy.dotify.api.formatter.FormattingTypes.BreakBefore;
 import org.daisy.dotify.api.formatter.FormattingTypes.Keep;
 
-class PageSequenceRecorderData {
+/**
+ * Provides data about a single rendering scenario.
+ * 
+ * @author Joel Håkansson
+ */
+class ScenarioData {
 		Stack<RowGroupSequence> dataGroups = new Stack<>();
 		private int keepWithNext = 0;
 
-		PageSequenceRecorderData() {
+		ScenarioData() {
 			dataGroups = new Stack<>();
 			keepWithNext = 0;
 		}
@@ -21,7 +26,7 @@ class PageSequenceRecorderData {
 		 * Creates a deep copy of the supplied instance
 		 * @param template the instance to copy
 		 */
-		PageSequenceRecorderData(PageSequenceRecorderData template) {
+		ScenarioData(ScenarioData template) {
 			dataGroups = new Stack<>();
 			for (RowGroupSequence rgs : template.dataGroups) {
 				dataGroups.add(new RowGroupSequence(rgs));
