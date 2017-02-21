@@ -67,7 +67,31 @@ class PageSequenceBuilder2 extends View<PageImpl> implements Section {
 		
 		this.blockContext = new BlockContext(seq.getLayoutMaster().getFlowWidth(), crh, rcontext, context);
 		this.staticAreaContent = new PageAreaContent(seq.getLayoutMaster().getPageAreaBuilder(), blockContext);
-		this.dataGroups = RowGroupBuilder.getResult(master, seq, blockContext);
+		this.dataGroups = prepareResult(master, seq, blockContext);
+	}
+	
+	
+	private static int getTotalMarginRegionWidth(LayoutMaster master) {
+		int mw = 0;
+		for (MarginRegion mr : master.getTemplate(1).getLeftMarginRegion()) {
+			mw += mr.getWidth();
+		}
+		for (MarginRegion mr : master.getTemplate(1).getRightMarginRegion()) {
+			mw += mr.getWidth();
+		}
+		return mw;
+	}
+
+	static Iterator<RowGroupSequence> prepareResult(LayoutMaster master, BlockSequence in, BlockContext blockContext) {
+		//TODO: This assumes that all page templates have margin regions that are of the same width  
+		final BlockContext bc = new BlockContext(in.getLayoutMaster().getFlowWidth() - getTotalMarginRegionWidth(master), blockContext.getRefs(), blockContext.getContext(), blockContext.getFcontext());
+		ScenarioData data = new ScenarioData();
+		for (RowGroupSequence s : ScenarioProcessor.process(master, in, bc)) {
+			for (Block g : s.getBlocks()) {
+				data.processBlock(master, g, g.getBlockContentManager(bc));
+			}
+		}
+		return data.dataGroups.iterator();
 	}
 
 	private PageImpl newPage() {
