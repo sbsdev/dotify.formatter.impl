@@ -18,6 +18,12 @@ class SheetDataSource implements SplitPointDataSource<Sheet> {
 	private final Iterator<BlockSequence> seqsIterator;
 	private final int sheetsServed;
 	private int seqsServed;
+	private PageSequenceBuilder2 psb;
+	private LayoutMaster lm;
+	private Sheet.Builder s;
+	private SheetIdentity si;
+	private int sheetIndex;
+	private int pageIndex;
 	
 	private List<Sheet> sheetBuffer;
 	private boolean volBreakAllowed;
@@ -110,15 +116,18 @@ class SheetDataSource implements SplitPointDataSource<Sheet> {
 				// cannot ensure buffer, return false
 				return false;
 			}
-			BlockSequence bs = seqsIterator.next();
-			seqsServed++;
-			int offset = struct.getCurrentPageOffset();
-			PageSequenceBuilder2 psb = new PageSequenceBuilder2(struct, bs.getLayoutMaster(), bs.getInitialPageNumber()!=null?bs.getInitialPageNumber() - 1:offset, crh, bs, context, rcontext, seqsServed);
-			LayoutMaster lm = bs.getLayoutMaster();
-			Sheet.Builder s = null;
-			SheetIdentity si = null;
-			int sheetIndex = 0;
-			int pageIndex = 0;
+			if (psb==null || !psb.hasNext()) {
+				// init new sequence
+				BlockSequence bs = seqsIterator.next();
+				seqsServed++;
+				int offset = struct.getCurrentPageOffset();
+				psb = new PageSequenceBuilder2(struct, bs.getLayoutMaster(), bs.getInitialPageNumber()!=null?bs.getInitialPageNumber() - 1:offset, crh, bs, context, rcontext, seqsServed);
+				lm = bs.getLayoutMaster();
+				s = null;
+				si = null;
+				sheetIndex = 0;
+				pageIndex = 0;
+			}
 			while (psb.hasNext()) {
 				PageImpl p = psb.nextPage();
 				if (!lm.duplex() || pageIndex % 2 == 0) {
@@ -153,12 +162,14 @@ class SheetDataSource implements SplitPointDataSource<Sheet> {
 				s.add(p);
 				pageIndex++;
 			}
-			if (s!=null) {
-				//Last page in the sequence doesn't need volume keep priority
-				sheetBuffer.add(s.build());
+			if (!psb.hasNext()) {
+				if (s!=null) {
+					//Last page in the sequence doesn't need volume keep priority
+					sheetBuffer.add(s.build());
+				}
+				crh.getSearchInfo().setSequenceScope(new DocumentSpace(rcontext.getSpace(), rcontext.getCurrentVolume()), seqsServed, psb.getGlobalStartIndex(), psb.getToIndex());
+				struct.add(psb);
 			}
-			crh.getSearchInfo().setSequenceScope(new DocumentSpace(rcontext.getSpace(), rcontext.getCurrentVolume()), seqsServed, psb.getGlobalStartIndex(), psb.getToIndex());
-			struct.add(psb);
 		}
 		return true;
 	}
