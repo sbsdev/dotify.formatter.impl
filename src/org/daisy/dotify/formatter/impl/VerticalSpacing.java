@@ -1,0 +1,26 @@
+package org.daisy.dotify.formatter.impl;
+
+import java.util.Objects;
+
+import org.daisy.dotify.api.formatter.BlockPosition;
+
+class VerticalSpacing {
+	private final BlockPosition pos;
+	private final RowImpl emptyRow;
+	
+	VerticalSpacing(BlockPosition pos, RowImpl emptyRow) {
+		Objects.requireNonNull(pos);
+		Objects.requireNonNull(emptyRow);
+		this.pos = pos;
+		this.emptyRow = emptyRow;
+	}
+
+	public BlockPosition getBlockPosition() {
+		return pos;
+	}
+
+	public RowImpl getEmptyRow() {
+		return emptyRow;
+	}
+
+}

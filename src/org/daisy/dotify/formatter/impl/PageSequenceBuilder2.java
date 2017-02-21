@@ -173,7 +173,8 @@ class PageSequenceBuilder2 extends View<PageImpl> implements Section {
 				//pick up next group
 				RowGroupSequence rgs = dataGroups.next();
 				data = rgs.toSource(new CollectionData(blockContext));
-				if (rgs.getBlockPosition()!=null) {
+				if (rgs.getVerticalSpacing()!=null) {
+					VerticalSpacing vSpacing = rgs.getVerticalSpacing();
 					if (pageCount==0) {
 						// we know newPage returns null
 						newPage();
@@ -182,9 +183,9 @@ class PageSequenceBuilder2 extends View<PageImpl> implements Section {
 					for (RowGroup g : data.getRemaining()) {
 						size += g.getUnitSize();
 					}
-					int pos = calculateVerticalSpace(rgs.getBlockPosition(), (int)Math.ceil(size));
+					int pos = calculateVerticalSpace(vSpacing.getBlockPosition(), (int)Math.ceil(size));
 					for (int i = 0; i < pos; i++) {
-						RowImpl ri = rgs.getEmptyRow();
+						RowImpl ri = vSpacing.getEmptyRow();
 						newRow(new RowImpl(ri.getChars(), ri.getLeftMargin(), ri.getRightMargin()));
 					}
 				} else {

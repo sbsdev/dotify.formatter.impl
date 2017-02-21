@@ -3,20 +3,17 @@ package org.daisy.dotify.formatter.impl;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.daisy.dotify.api.formatter.BlockPosition;
 import org.daisy.dotify.common.split.Supplements;
 
 class RowGroupSequence {
 	private final List<Block> blocks;
 	private final List<RowGroup> group;
-	private final BlockPosition pos;
-	private final RowImpl emptyRow;
+	private final VerticalSpacing vSpacing;
 
-	public RowGroupSequence(BlockPosition pos, RowImpl emptyRow) {
+	public RowGroupSequence(VerticalSpacing vSpacing) {
 		this.blocks = new ArrayList<>();
 		this.group = new ArrayList<RowGroup>();
-		this.pos = pos;
-		this.emptyRow = emptyRow;
+		this.vSpacing = vSpacing;
 	}
 	
 	/**
@@ -29,8 +26,7 @@ class RowGroupSequence {
 		for (RowGroup rg : template.group) {
 			group.add(new RowGroup(rg));
 		}
-		this.pos = template.pos;
-		this.emptyRow = new RowImpl(template.emptyRow);
+		this.vSpacing = template.vSpacing;
 	}
 
 	@Deprecated
@@ -53,21 +49,9 @@ class RowGroupSequence {
 			return group.get(group.size()-1);
 		}
 	}
-
-	public BlockPosition getBlockPosition() {
-		return pos;
-	}
-
-	public RowImpl getEmptyRow() {
-		return emptyRow;
-	}
 	
-	float calcSequenceSize() {
-		float ret = 0;
-		for (RowGroup rg : getGroup()) {
-			ret += rg.getUnitSize();
-		}
-		return ret;
-	}
+    VerticalSpacing getVerticalSpacing() {
+        return vSpacing;
+    }
 
 }

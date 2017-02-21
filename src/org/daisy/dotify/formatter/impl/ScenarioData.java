@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 
-import org.daisy.dotify.api.formatter.BlockPosition;
 import org.daisy.dotify.api.formatter.FormattingTypes.BreakBefore;
 import org.daisy.dotify.api.formatter.FormattingTypes.Keep;
 
@@ -45,7 +44,9 @@ class ScenarioData {
 		float calcSize() {
 			float size = 0;
 			for (RowGroupSequence rgs : dataGroups) {
-				size += rgs.calcSequenceSize();
+				for (RowGroup rg : rgs.getGroup()) {
+					size += rg.getUnitSize();
+				}
 			}
 			return size;
 		}
@@ -54,8 +55,8 @@ class ScenarioData {
 			return (dataGroups.isEmpty()||dataGroups.peek().getGroup().isEmpty());
 		}
 		
-		private void newRowGroupSequence(BlockPosition pos, RowImpl emptyRow) {
-			RowGroupSequence rgs = new RowGroupSequence(pos, emptyRow);
+        private void newRowGroupSequence(VerticalSpacing vs) {
+            RowGroupSequence rgs = new RowGroupSequence(vs);
 			dataGroups.add(rgs);
 		}
 		
@@ -79,7 +80,11 @@ class ScenarioData {
 		
 		void processBlock(LayoutMaster master, Block g, AbstractBlockContentManager bcm) {
 			if (dataGroups.isEmpty() || (g.getBreakBeforeType()==BreakBefore.PAGE && !isDataEmpty()) || g.getVerticalPosition()!=null) {
-				newRowGroupSequence(g.getVerticalPosition(), new RowImpl("", bcm.getLeftMarginParent(), bcm.getRightMarginParent()));
+                newRowGroupSequence(
+                        g.getVerticalPosition()!=null?
+                                new VerticalSpacing(g.getVerticalPosition(), new RowImpl("", bcm.getLeftMarginParent(), bcm.getRightMarginParent()))
+                                        :null
+                );
 				setKeepWithNext(-1);
 			}
 			addBlock(g);
