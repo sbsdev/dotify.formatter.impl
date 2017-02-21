@@ -1,5 +1,6 @@
 package org.daisy.dotify.formatter.impl;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.daisy.dotify.common.split.SplitPointDataList;
@@ -9,13 +10,23 @@ import org.daisy.dotify.common.split.Supplements;
 class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 	//for now, use a list internally
 	private final SplitPointDataSource<RowGroup> source;
+	private final VerticalSpacing vs;
 	
-	RowGroupDataSource(List<RowGroup> group, Supplements<RowGroup> supplements) {
-		this.source = new SplitPointDataList<>(group, supplements);
+	RowGroupDataSource(LayoutMaster master, BlockContext bc, RowGroupSequence rgs, Supplements<RowGroup> supplements) {
+		ScenarioData data = new ScenarioData();
+		for (Block g : rgs.getBlocks()) {
+			data.processBlock(master, g, g.getBlockContentManager(bc));
+		}
+		if (data.dataGroups.size()!=1) {
+			throw new RuntimeException("Coding error.");
+		}
+		this.source = new SplitPointDataList<RowGroup>(data.dataGroups.peek().getGroup(), supplements);
+		this.vs = rgs.getVerticalSpacing();
 	}
 	
-	RowGroupDataSource(SplitPointDataSource<RowGroup> source) {
+	RowGroupDataSource(SplitPointDataSource<RowGroup> source, VerticalSpacing vs) {
 		this.source = source;
+		this.vs = vs;
 	}
 
 	@Override
@@ -35,7 +46,7 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 
 	@Override
 	public SplitPointDataSource<RowGroup> tail(int fromIndex) {
-		return new RowGroupDataSource(source.tail(fromIndex));
+		return new RowGroupDataSource(source.tail(fromIndex), vs);
 	}
 
 	@Override
@@ -56,6 +67,10 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 	@Override
 	public Supplements<RowGroup> getSupplements() {
 		return source.getSupplements();
+	}
+	
+	VerticalSpacing getVerticalSpacing() {
+		return vs;
 	}
 
 }

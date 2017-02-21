@@ -3,8 +3,6 @@ package org.daisy.dotify.formatter.impl;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.daisy.dotify.common.split.Supplements;
-
 class RowGroupSequence {
 	private final List<Block> blocks;
 	private final List<RowGroup> group;
@@ -37,11 +35,7 @@ class RowGroupSequence {
 	List<Block> getBlocks() {
 		return blocks;
 	}
-	
-	public RowGroupDataSource toSource(Supplements<RowGroup> supplements) {
-		return new RowGroupDataSource(group, supplements);
-	}
-	
+
 	RowGroup currentGroup() {
 		if (group.isEmpty()) {
 			return null;

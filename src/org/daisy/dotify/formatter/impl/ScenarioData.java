@@ -79,7 +79,7 @@ class ScenarioData {
 		}
 		
 		void processBlock(LayoutMaster master, Block g, AbstractBlockContentManager bcm) {
-			if (dataGroups.isEmpty() || (g.getBreakBeforeType()==BreakBefore.PAGE && !isDataEmpty()) || g.getVerticalPosition()!=null) {
+			if (dataGroups.isEmpty() || ((g.getBreakBeforeType()==BreakBefore.PAGE  || g.getVerticalPosition()!=null) && !isDataEmpty())) {
                 newRowGroupSequence(
                         g.getVerticalPosition()!=null?
                                 new VerticalSpacing(g.getVerticalPosition(), new RowImpl("", bcm.getLeftMarginParent(), bcm.getRightMarginParent()))

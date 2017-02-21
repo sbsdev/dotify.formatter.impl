@@ -37,7 +37,7 @@ class PageSequenceBuilder2 extends View<PageImpl> implements Section {
 	private final BlockContext blockContext;
 	private final LayoutMaster master;
 	private final int pageNumberOffset;
-	private final Iterator<RowGroupSequence> dataGroups;
+	private final Iterator<RowGroupDataSource> dataGroups;
 	private final int sequenceId;
 	
 	private SplitPointHandler<RowGroup> sph = new SplitPointHandler<>();
@@ -67,7 +67,7 @@ class PageSequenceBuilder2 extends View<PageImpl> implements Section {
 		
 		this.blockContext = new BlockContext(seq.getLayoutMaster().getFlowWidth(), crh, rcontext, context);
 		this.staticAreaContent = new PageAreaContent(seq.getLayoutMaster().getPageAreaBuilder(), blockContext);
-		this.dataGroups = prepareResult(master, seq, blockContext);
+		this.dataGroups = prepareResult(master, seq, blockContext, new CollectionData(blockContext));
 	}
 	
 	
@@ -82,16 +82,21 @@ class PageSequenceBuilder2 extends View<PageImpl> implements Section {
 		return mw;
 	}
 
-	static Iterator<RowGroupSequence> prepareResult(LayoutMaster master, BlockSequence in, BlockContext blockContext) {
+	static Iterator<RowGroupDataSource> prepareResult(LayoutMaster master, BlockSequence in, BlockContext blockContext, CollectionData cd) {
 		//TODO: This assumes that all page templates have margin regions that are of the same width  
 		final BlockContext bc = new BlockContext(in.getLayoutMaster().getFlowWidth() - getTotalMarginRegionWidth(master), blockContext.getRefs(), blockContext.getContext(), blockContext.getFcontext());
-		ScenarioData data = new ScenarioData();
-		for (RowGroupSequence s : ScenarioProcessor.process(master, in, bc)) {
-			for (Block g : s.getBlocks()) {
-				data.processBlock(master, g, g.getBlockContentManager(bc));
+		final Iterator<RowGroupSequence> source = ScenarioProcessor.process(master, in, bc).iterator();
+		Iterator<RowGroupDataSource> ret = new Iterator<RowGroupDataSource>() {
+			@Override
+			public boolean hasNext() {
+				return source.hasNext();
 			}
-		}
-		return data.dataGroups.iterator();
+
+			@Override
+			public RowGroupDataSource next() {
+				return new RowGroupDataSource(master, bc, source.next(), cd);
+			}};
+		return ret;
 	}
 
 	private PageImpl newPage() {
@@ -171,10 +176,9 @@ class PageSequenceBuilder2 extends View<PageImpl> implements Section {
 		while (dataGroups.hasNext() || (data!=null && !data.isEmpty())) {
 			if ((data==null || data.isEmpty()) && dataGroups.hasNext()) {
 				//pick up next group
-				RowGroupSequence rgs = dataGroups.next();
-				data = rgs.toSource(new CollectionData(blockContext));
-				if (rgs.getVerticalSpacing()!=null) {
-					VerticalSpacing vSpacing = rgs.getVerticalSpacing();
+				data = dataGroups.next();
+				if (((RowGroupDataSource)data).getVerticalSpacing()!=null) {
+					VerticalSpacing vSpacing = ((RowGroupDataSource)data).getVerticalSpacing();
 					if (pageCount==0) {
 						// we know newPage returns null
 						newPage();
