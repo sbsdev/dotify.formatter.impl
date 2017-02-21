@@ -1,6 +1,5 @@
 package org.daisy.dotify.formatter.impl;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.daisy.dotify.common.split.SplitPointDataList;
@@ -17,10 +16,8 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 		for (Block g : rgs.getBlocks()) {
 			data.processBlock(master, g, g.getBlockContentManager(bc));
 		}
-		if (data.dataGroups.size()!=1) {
-			throw new RuntimeException("Coding error.");
-		}
-		this.source = new SplitPointDataList<RowGroup>(data.dataGroups.peek().getGroup(), supplements);
+
+		this.source = new SplitPointDataList<RowGroup>(data.getSingleGroup(), supplements);
 		this.vs = rgs.getVerticalSpacing();
 	}
 	

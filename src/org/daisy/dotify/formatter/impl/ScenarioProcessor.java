@@ -161,7 +161,7 @@ class ScenarioProcessor {
 	
 	List<RowGroupSequence> processResult() {
 		finishBlockProcessing();
-		return data.dataGroups;
+		return data.getDataGroups();
 	}
 
 	private static Map<String, Double> setParams(double height, double minBlockWidth, double forceCount) {

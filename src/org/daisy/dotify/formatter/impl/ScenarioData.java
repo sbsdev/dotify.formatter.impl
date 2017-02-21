@@ -1,6 +1,7 @@
 package org.daisy.dotify.formatter.impl;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Stack;
 
@@ -13,7 +14,7 @@ import org.daisy.dotify.api.formatter.FormattingTypes.Keep;
  * @author Joel Håkansson
  */
 class ScenarioData {
-		Stack<RowGroupSequence> dataGroups = new Stack<>();
+		private Stack<RowGroupSequence> dataGroups = new Stack<>();
 		private int keepWithNext = 0;
 
 		ScenarioData() {
@@ -76,6 +77,19 @@ class ScenarioData {
 			rgb.anchors(bcm.getGroupAnchors());
 			rgb.keepWithNextSheets(g.getKeepWithNextSheets());
 			rgb.keepWithPreviousSheets(g.getKeepWithPreviousSheets());
+		}
+		
+		List<RowGroupSequence> getDataGroups() {
+			return dataGroups;
+		}
+		
+		List<RowGroup> getSingleGroup() {
+			if (dataGroups.size()==0) {
+				return Collections.emptyList();
+			} else  if (dataGroups.size()>1) {
+				throw new RuntimeException("Coding error.");
+			}
+			return dataGroups.peek().getGroup();
 		}
 		
 		void processBlock(LayoutMaster master, Block g, AbstractBlockContentManager bcm) {
