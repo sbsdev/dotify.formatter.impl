@@ -14,7 +14,7 @@ class SectionBuilder {
         sheets++;
         if (ret.isEmpty() || currentSeq!=s.getPageSequence()) {
             currentSeq = s.getPageSequence();
-            ret.add(new SectionImpl(currentSeq.getSectionProperties()));
+            ret.add(new SectionImpl(currentSeq.getLayoutMaster()));
         }
         SectionImpl sect = ((SectionImpl)ret.peek()); 
         for (PageImpl p : s.getPages()) {

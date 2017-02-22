@@ -24,10 +24,8 @@ import org.daisy.dotify.formatter.impl.search.DocumentSpace;
 import org.daisy.dotify.formatter.impl.search.PageDetails;
 import org.daisy.dotify.formatter.impl.search.SequenceId;
 import org.daisy.dotify.formatter.impl.search.View;
-import org.daisy.dotify.writer.impl.Page;
-import org.daisy.dotify.writer.impl.Section;
 
-class PageSequenceBuilder2 extends View<PageImpl> implements Section {
+class PageSequenceBuilder2 extends View<PageImpl> {
 	private final FormatterContext context;
 	private final CrossReferenceHandler crh;
 	private final PageAreaContent staticAreaContent;
@@ -433,16 +431,5 @@ class PageSequenceBuilder2 extends View<PageImpl> implements Section {
 	public int getPageNumberOffset() {
 		return pageNumberOffset;
 	}
-
-	@Override
-	public SectionProperties getSectionProperties() {
-		return master;
-	}
-
-	@Override
-	public List<? extends Page> getPages() {
-		return getItems();
-	}
-
 
 }
