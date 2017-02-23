@@ -1,5 +1,6 @@
 package org.daisy.dotify.formatter.impl;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.daisy.dotify.common.split.SplitPointDataSource;
@@ -16,62 +17,63 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 	private int blockIndex;
 	
 	private class RowGroupData extends BlockProcessor {
-		private RowGroupSequence rgs; 
+		private List<RowGroup> data;
 		
 		RowGroupData() {
-			this.rgs = null;
+			this.data = null;
 		}
+
 		RowGroupData(RowGroupData template) {
-			this.rgs = template.rgs;
+			this.data = new ArrayList<>(template.data);
 		}
 
 		@Override
 		void newRowGroupSequence(VerticalSpacing vs) {
-			if (rgs!=null) {
+			if (data!=null) {
 				throw new IllegalStateException();
 			} else {
-				rgs = new RowGroupSequence(vs);
+				data = new ArrayList<>();
 			}
 		}
 
 		@Override
 		boolean hasSequence() {
-			return rgs!=null;
+			return data!=null;
 		}
 
 		@Override
 		boolean hasResult() {
-			return hasSequence() && !rgs.getGroup().isEmpty();
+			return hasSequence() && !data.isEmpty();
 		}
 
 		@Override
 		void addRowGroup(RowGroup rg) {
-			rgs.getGroup().add(rg);
+			data.add(rg);
 		}
 
 		@Override
 		RowGroup peekResult() {
-			return rgs.currentGroup();
+			return data.isEmpty()?null:data.get(data.size()-1);
 		}
 		
 		List<RowGroup> getList() {
-			return rgs.getGroup();
+			return data;
 		}
 		
 		int size() {
-			return rgs==null || rgs.getGroup()==null?0:rgs.getGroup().size();
+			return data==null?0:data.size();
 		}
 		
 	}
 	
-	RowGroupDataSource(LayoutMaster master, BlockContext bc, RowGroupSequence rgs, Supplements<RowGroup> supplements) {
+	RowGroupDataSource(LayoutMaster master, BlockContext bc, List<Block> blocks, VerticalSpacing vs, Supplements<RowGroup> supplements) {
 		this.master = master;
 		this.bc = bc;
 		this.data = new RowGroupData();
-		this.blocks = rgs.getBlocks();
+		this.blocks = blocks;
 		this.offset = 0;
 		this.supplements = supplements;
-		this.vs = rgs.getVerticalSpacing();
+		this.vs = vs;
 		this.blockIndex = 0;
 	}
 	

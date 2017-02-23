@@ -1,6 +1,5 @@
 package org.daisy.dotify.formatter.impl;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Stack;
 
@@ -63,26 +62,13 @@ class ScenarioData extends BlockProcessor {
 	RowGroup peekResult() {
 		return dataGroups.peek().currentGroup();
 	}
-	
-	private void addBlock(Block b) {
-		dataGroups.peek().getBlocks().add(b);
-	}
 
 	List<RowGroupSequence> getDataGroups() {
 		return dataGroups;
 	}
 	
-	List<RowGroup> getSingleGroup() {
-		if (dataGroups.size()==0) {
-			return Collections.emptyList();
-		} else  if (dataGroups.size()>1) {
-			throw new RuntimeException("Coding error.");
-		}
-		return dataGroups.peek().getGroup();
-	}
-	
 	void processBlock(LayoutMaster master, Block g, AbstractBlockContentManager bcm) {
 		super.processBlock(master, g, bcm);
-		addBlock(g);
+		dataGroups.peek().getBlocks().add(g);
 	}
 }

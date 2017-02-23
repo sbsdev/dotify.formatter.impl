@@ -96,7 +96,8 @@ class PageSequenceBuilder2 {
 
 			@Override
 			public RowGroupDataSource next() {
-				return new RowGroupDataSource(master, bc, source.next(), cd);
+				RowGroupSequence rgs = source.next();
+				return new RowGroupDataSource(master, bc, rgs.getBlocks(), rgs.getVerticalSpacing(), cd);
 			}};
 		return ret;
 	}
