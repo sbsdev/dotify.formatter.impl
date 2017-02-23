@@ -1,7 +1,7 @@
 package org.daisy.dotify.formatter.impl;
 
 /**
- * Provides a page oriented structure
+ * Provides state needed for a text flow.
  * 
  * @author Joel Håkansson
  */
@@ -22,11 +22,11 @@ class PageStruct {
 		return currentSeq!=null?currentSeq.getCurrentPageOffset():0;
 	}
 
-	int size() {
+	int getPageCount() {
 		return pageCount;
 	}
 	
-	void addPage(PageImpl p) {
+	void increasePageCount() {
 		pageCount++;
 	}
 
