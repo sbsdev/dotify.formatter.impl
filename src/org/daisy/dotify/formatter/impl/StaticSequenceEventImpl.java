@@ -2,6 +2,7 @@ package org.daisy.dotify.formatter.impl;
 
 import org.daisy.dotify.api.formatter.SequenceProperties;
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
+import org.daisy.dotify.formatter.impl.search.DefaultContext;
 
 class StaticSequenceEventImpl extends FormatterCoreImpl implements VolumeSequence {
 	private static final long serialVersionUID = 4646831324973203983L;

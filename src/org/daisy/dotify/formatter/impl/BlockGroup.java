@@ -3,6 +3,7 @@ package org.daisy.dotify.formatter.impl;
 import java.util.List;
 
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
+import org.daisy.dotify.formatter.impl.search.DefaultContext;
 
 /**
  * Provides an interface for blocks in a dynamic sequence whose inclusion 

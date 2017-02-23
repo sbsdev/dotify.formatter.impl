@@ -17,6 +17,7 @@ import org.daisy.dotify.api.translator.BorderSpecification;
 import org.daisy.dotify.api.translator.BorderSpecification.Style;
 import org.daisy.dotify.api.translator.TextBorderFactoryMakerService;
 import org.daisy.dotify.common.text.StringTools;
+import org.daisy.dotify.formatter.impl.search.DefaultContext;
 import org.daisy.dotify.formatter.impl.segment.Segment;
 import org.daisy.dotify.formatter.impl.segment.TextSegment;
 

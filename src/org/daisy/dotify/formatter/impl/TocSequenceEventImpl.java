@@ -12,6 +12,7 @@ import org.daisy.dotify.api.formatter.FormatterCore;
 import org.daisy.dotify.api.formatter.SequenceProperties;
 import org.daisy.dotify.api.formatter.TocProperties;
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
+import org.daisy.dotify.formatter.impl.search.DefaultContext;
 
 class TocSequenceEventImpl implements VolumeSequence {
 	private final SequenceProperties props;

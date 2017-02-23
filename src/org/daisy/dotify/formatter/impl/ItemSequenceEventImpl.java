@@ -8,6 +8,7 @@ import org.daisy.dotify.api.formatter.ItemSequenceProperties;
 import org.daisy.dotify.api.formatter.ReferenceListBuilder;
 import org.daisy.dotify.formatter.impl.search.AnchorData;
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
+import org.daisy.dotify.formatter.impl.search.DefaultContext;
 
 class ItemSequenceEventImpl implements ReferenceListBuilder, BlockGroup {
 	private final String collectionID;

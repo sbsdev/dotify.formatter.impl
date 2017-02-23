@@ -1,16 +1,14 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.search;
 
 import org.daisy.dotify.api.formatter.Context;
-import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
-import org.daisy.dotify.formatter.impl.search.Space;
 
-class DefaultContext implements Context {
+public class DefaultContext implements Context {
 
 	private final Integer currentVolume, currentPage, metaVolume, metaPage;
 	private final Space space;
 	private final CrossReferenceHandler crh;
 	
-	static class Builder {
+	public static class Builder {
 		private Integer	currentVolume=null, 
 						currentPage=null,
 						metaVolume=null,
@@ -19,7 +17,7 @@ class DefaultContext implements Context {
 		private CrossReferenceHandler crh = null;
 						
 		
-		Builder() {
+		public Builder() {
 		}
 		
 		private Builder(DefaultContext base) {
@@ -30,36 +28,36 @@ class DefaultContext implements Context {
 			this.crh = base.crh;
 		}
 		
-		Builder currentVolume(Integer value) {
+		public Builder currentVolume(Integer value) {
 			this.currentVolume = value;
 			return this;
 		}
 		
-		Builder currentPage(Integer value) {
+		public Builder currentPage(Integer value) {
 			this.currentPage = value;
 			return this;
 		}
 		
-		Builder referenceHandler(CrossReferenceHandler value) {
+		public Builder referenceHandler(CrossReferenceHandler value) {
 			this.crh = value;
 			return this;
 		}
 		
-		Builder metaVolume(Integer value) {
+		public Builder metaVolume(Integer value) {
 			this.metaVolume = value;
 			return this;
 		}
 		
-		Builder metaPage(Integer value) {
+		public Builder metaPage(Integer value) {
 			this.metaPage = value;
 			return this;
 		}
-		Builder space(Space value) {
+		public Builder space(Space value) {
 			this.space = value;
 			return this;
 		}
 
-		DefaultContext build() {
+		public DefaultContext build() {
 			return new DefaultContext(this);
 		}
 	}

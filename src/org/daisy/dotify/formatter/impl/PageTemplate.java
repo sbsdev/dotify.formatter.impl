@@ -12,6 +12,7 @@ import org.daisy.dotify.api.formatter.MarginRegion;
 import org.daisy.dotify.api.formatter.NoField;
 import org.daisy.dotify.api.formatter.PageTemplateBuilder;
 import org.daisy.dotify.api.obfl.Expression;
+import org.daisy.dotify.formatter.impl.search.DefaultContext;
 
 
 /**
