@@ -168,7 +168,7 @@ class PageSequenceBuilder2 {
 				crh.setVolumeNumber(id, blockContext.getContext().getCurrentVolume());
 			}
 		}
-		addPage(ret);
+		toIndex++;
 		return ret;
 	}
 
@@ -417,10 +417,6 @@ class PageSequenceBuilder2 {
 		}
 		return 0;
 	}
-	
-	private void addPage(PageImpl p) {
-		toIndex = getToIndex() + 1;
-	}
 
 	/**
 	 * Gets the layout master for this sequence
@@ -430,19 +426,15 @@ class PageSequenceBuilder2 {
 		return master;
 	}
 
-	public int getPageNumberOffset() {
-		return pageNumberOffset;
-	}
-	
 	int getCurrentPageOffset() {
 		if (getLayoutMaster().duplex() && (size() % 2)==1) {
-			return getPageNumberOffset() + size() + 1;
+			return pageNumberOffset + size() + 1;
 		} else {
-			return getPageNumberOffset() + size();
+			return pageNumberOffset + size();
 		}
 	}
 	
-	public int size() {
+	private int size() {
 		return getToIndex()-fromIndex;
 	}
 
