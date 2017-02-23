@@ -121,7 +121,7 @@ class SheetDataSource implements SplitPointDataSource<Sheet> {
 				BlockSequence bs = seqsIterator.next();
 				seqsServed++;
 				int offset = struct.getCurrentPageOffset();
-				psb = new PageSequenceBuilder2(struct, bs.getLayoutMaster(), bs.getInitialPageNumber()!=null?bs.getInitialPageNumber() - 1:offset, crh, bs, context, rcontext, seqsServed);
+				psb = new PageSequenceBuilder2(struct.size(), bs.getLayoutMaster(), bs.getInitialPageNumber()!=null?bs.getInitialPageNumber() - 1:offset, crh, bs, context, rcontext, seqsServed);
 				lm = bs.getLayoutMaster();
 				s = null;
 				si = null;
@@ -130,6 +130,7 @@ class SheetDataSource implements SplitPointDataSource<Sheet> {
 			}
 			while (psb.hasNext()) {
 				PageImpl p = psb.nextPage();
+				struct.addPage(p);
 				if (!lm.duplex() || pageIndex % 2 == 0) {
 					volBreakAllowed = true;
 					if (s!=null) {

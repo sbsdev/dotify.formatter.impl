@@ -48,12 +48,9 @@ class PageSequenceBuilder2 {
 	private final int fromIndex;
 	private int toIndex;
 	
-	private final PageStruct parent;
-	
-	PageSequenceBuilder2(PageStruct parent, LayoutMaster master, int pageOffset, CrossReferenceHandler crh,
+	PageSequenceBuilder2(int fromIndex, LayoutMaster master, int pageOffset, CrossReferenceHandler crh,
 	                     BlockSequence seq, FormatterContext context, DefaultContext rcontext, int sequenceId) {
-		this.parent = parent;
-		this.fromIndex = parent.size();
+		this.fromIndex = fromIndex;
 		this.toIndex = fromIndex;
 		this.master = master;
 		this.pageNumberOffset = pageOffset;
@@ -422,7 +419,6 @@ class PageSequenceBuilder2 {
 	}
 	
 	private void addPage(PageImpl p) {
-		parent.addPage(p);
 		toIndex = getToIndex() + 1;
 	}
 
