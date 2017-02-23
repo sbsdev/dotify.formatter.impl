@@ -25,7 +25,7 @@ import org.daisy.dotify.formatter.impl.search.PageDetails;
 import org.daisy.dotify.formatter.impl.search.SequenceId;
 import org.daisy.dotify.formatter.impl.search.View;
 
-class PageSequenceBuilder2 extends View<PageImpl> {
+class PageSequenceBuilder2 {
 	private final FormatterContext context;
 	private final CrossReferenceHandler crh;
 	private final PageAreaContent staticAreaContent;
@@ -46,9 +46,16 @@ class PageSequenceBuilder2 extends View<PageImpl> {
 	int keepNextSheets;
 	int pageCount = 0;
 
+	//From view, temporary
+	private final int fromIndex;
+	protected final List<PageImpl> items;
+	private int toIndex;
+	
 	PageSequenceBuilder2(PageStruct parent, LayoutMaster master, int pageOffset, CrossReferenceHandler crh,
 	                     BlockSequence seq, FormatterContext context, DefaultContext rcontext, int sequenceId) { 
-		super(parent.getPages(), parent.getPages().size());
+		this.items = parent.getPages();
+		this.fromIndex = parent.getPages().size();
+		this.setToIndex(fromIndex);
 		this.master = master;
 		this.pageNumberOffset = pageOffset;
 		this.context = context;
@@ -438,6 +445,40 @@ class PageSequenceBuilder2 extends View<PageImpl> {
 		} else {
 			return getPageNumberOffset() + size();
 		}
+	}
+	
+	public int size() {
+		return getToIndex()-fromIndex;
+	}
+
+	public PageImpl get(int index) {
+		if (index<0 || index>=size()) {
+			throw new ArrayIndexOutOfBoundsException(index);
+		}
+		return items.get(index+fromIndex);
+	}
+
+	public List<PageImpl> getItems() {
+		return items.subList(fromIndex, getToIndex());
+	}
+	int toLocalIndex(int globalIndex) {
+		return globalIndex-fromIndex;
+	}
+	
+	/**
+	 * Gets the index for the first item in this sequence, counting all preceding items in the document, zero-based. 
+	 * @return returns the first index
+	 */
+	public int getGlobalStartIndex() {
+		return fromIndex;
+	}
+
+	public int getToIndex() {
+		return toIndex;
+	}
+
+	public void setToIndex(int toIndex) {
+		this.toIndex = toIndex;
 	}
 
 }
