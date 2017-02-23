@@ -168,7 +168,7 @@ class SheetDataSource implements SplitPointDataSource<Sheet> {
 					sheetBuffer.add(s.build());
 				}
 				crh.getSearchInfo().setSequenceScope(new DocumentSpace(rcontext.getSpace(), rcontext.getCurrentVolume()), seqsServed, psb.getGlobalStartIndex(), psb.getToIndex());
-				struct.add(psb);
+				struct.setCurrentSequence(psb);
 			}
 		}
 		return true;

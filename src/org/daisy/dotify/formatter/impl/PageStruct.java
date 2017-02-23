@@ -16,20 +16,12 @@ class PageStruct {
 		currentSeq = null;
 	}
 
-	void add(PageSequenceBuilder2 seq) {
+	void setCurrentSequence(PageSequenceBuilder2 seq) {
 		currentSeq = seq;
 	}
 
 	int getCurrentPageOffset() {
-		if (currentSeq!=null) {
-			if (currentSeq.getLayoutMaster().duplex() && (currentSeq.size() % 2)==1) {
-				return currentSeq.getPageNumberOffset() + currentSeq.size() + 1;
-			} else {
-				return currentSeq.getPageNumberOffset() + currentSeq.size();
-			}
-		} else {
-			return 0;
-		}
+		return currentSeq!=null?currentSeq.getCurrentPageOffset():0;
 	}
 
 	Stack<PageImpl> getPages() {

@@ -431,5 +431,13 @@ class PageSequenceBuilder2 extends View<PageImpl> {
 	public int getPageNumberOffset() {
 		return pageNumberOffset;
 	}
+	
+	int getCurrentPageOffset() {
+		if (getLayoutMaster().duplex() && (size() % 2)==1) {
+			return getPageNumberOffset() + size() + 1;
+		} else {
+			return getPageNumberOffset() + size();
+		}
+	}
 
 }
