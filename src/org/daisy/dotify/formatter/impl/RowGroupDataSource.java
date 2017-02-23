@@ -6,24 +6,29 @@ import org.daisy.dotify.common.split.SplitPointDataSource;
 import org.daisy.dotify.common.split.Supplements;
 
 class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
+	private final LayoutMaster master;
+	private final BlockContext bc;
 	private final ScenarioData data;
 	private final Supplements<RowGroup> supplements;
 	private final int offset;
 	private final VerticalSpacing vs;
+	private final List<Block> blocks;
 	private int blockIndex;
 	
 	RowGroupDataSource(LayoutMaster master, BlockContext bc, RowGroupSequence rgs, Supplements<RowGroup> supplements) {
+		this.master = master;
+		this.bc = bc;
 		this.data = new ScenarioData();
-		for (Block g : rgs.getBlocks()) {
-			data.processBlock(master, g, g.getBlockContentManager(bc));
-		}
+		this.blocks = rgs.getBlocks();
 		this.offset = 0;
 		this.supplements = supplements;
 		this.vs = rgs.getVerticalSpacing();
 		this.blockIndex = 0;
 	}
 	
-	private RowGroupDataSource(ScenarioData data, Supplements<RowGroup> supplements, int offset, VerticalSpacing vs, int blockIndex) {
+	private RowGroupDataSource(LayoutMaster master, BlockContext bc, ScenarioData data, List<Block> blocks, Supplements<RowGroup> supplements, int offset, VerticalSpacing vs, int blockIndex) {
+		this.master = master;
+		this.bc = bc;
 		this.data = data;
 		this.offset = offset;
 		if (supplements==null) {
@@ -37,6 +42,7 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 			this.supplements = supplements;
 		}
 		this.vs = vs;
+		this.blocks = blocks;
 		this.blockIndex = blockIndex;
 	}
 
@@ -52,30 +58,45 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 
 	@Override
 	public boolean isEmpty() {
-		return this.data.getSingleGroup().size()<=offset;
+		return this.data.getSingleGroup().size()<=offset && blockIndex>=blocks.size();
 	}
 
 	@Override
 	public RowGroup get(int n) {
+		if (!ensureBuffer(n)) {
+			throw new IndexOutOfBoundsException("" + n);
+		}
 		return this.data.getSingleGroup().get(offset+n);
 	}
 	
 	public List<RowGroup> head(int n) {
+		if (!ensureBuffer(n-1)) {
+			//throw new IndexOutOfBoundsException();
+		}
 		return this.data.getSingleGroup().subList(offset, offset+n);
 	}
 	
 	public List<RowGroup> getRemaining() {
+		ensureBuffer(-1);
 		return this.data.getSingleGroup().subList(offset, data.getSingleGroup().size());
 	}
 
 	@Override
 	public SplitPointDataSource<RowGroup> tail(int n) {
-		return new RowGroupDataSource(new ScenarioData(data), supplements, offset+n, vs, 0);
+		if (!ensureBuffer(n)) {
+			throw new IndexOutOfBoundsException("" + n);
+		}
+		return new RowGroupDataSource(master, bc, new ScenarioData(data), blocks, supplements, offset+n, vs, blockIndex);
 	}
 
 	@Override
 	public int getSize(int limit) {
-		return Math.min(this.data.getSingleGroup().size()-offset, limit);
+		if (!ensureBuffer(limit-1))  {
+			//we have buffered all elements
+			return this.data.getSingleGroup().size()-offset;
+		} else {
+			return limit;
+		}
 	}
 
 	VerticalSpacing getVerticalSpacing() {
@@ -89,12 +110,17 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 	 * @return returns true if the index element was available, false otherwise
 	 */
 	private boolean ensureBuffer(int index) {
-		/*
-		while (index<0 || sheetBuffer.size()<=index) {
-			if (!seqsIterator.hasNext()) {
+		while (index<0 || this.data.getSingleGroup().size()-offset<=index) {
+			if (blockIndex>=blocks.size()) {
 				return false;
 			}
-		}*/
+			while (blockIndex<blocks.size()) {
+				//get next block
+				Block b = blocks.get(blockIndex);
+				blockIndex++;			
+				data.processBlock(master, b, b.getBlockContentManager(bc));
+			}
+		}
 		return true;
 	}
 
