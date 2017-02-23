@@ -13,7 +13,6 @@ import org.daisy.dotify.api.formatter.PageAreaProperties;
 import org.daisy.dotify.api.formatter.RenameFallbackRule;
 import org.daisy.dotify.api.translator.Translatable;
 import org.daisy.dotify.api.translator.TranslationException;
-import org.daisy.dotify.api.writer.SectionProperties;
 import org.daisy.dotify.common.split.SplitPoint;
 import org.daisy.dotify.common.split.SplitPointDataSource;
 import org.daisy.dotify.common.split.SplitPointHandler;
@@ -23,7 +22,6 @@ import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.search.DocumentSpace;
 import org.daisy.dotify.formatter.impl.search.PageDetails;
 import org.daisy.dotify.formatter.impl.search.SequenceId;
-import org.daisy.dotify.formatter.impl.search.View;
 
 class PageSequenceBuilder2 {
 	private final FormatterContext context;
@@ -48,14 +46,15 @@ class PageSequenceBuilder2 {
 
 	//From view, temporary
 	private final int fromIndex;
-	protected final List<PageImpl> items;
 	private int toIndex;
 	
+	private final PageStruct parent;
+	
 	PageSequenceBuilder2(PageStruct parent, LayoutMaster master, int pageOffset, CrossReferenceHandler crh,
-	                     BlockSequence seq, FormatterContext context, DefaultContext rcontext, int sequenceId) { 
-		this.items = parent.getPages();
-		this.fromIndex = parent.getPages().size();
-		this.setToIndex(fromIndex);
+	                     BlockSequence seq, FormatterContext context, DefaultContext rcontext, int sequenceId) {
+		this.parent = parent;
+		this.fromIndex = parent.size();
+		this.toIndex = fromIndex;
 		this.master = master;
 		this.pageNumberOffset = pageOffset;
 		this.context = context;
@@ -423,8 +422,8 @@ class PageSequenceBuilder2 {
 	}
 	
 	private void addPage(PageImpl p) {
-		items.add(p);
-		setToIndex(getToIndex() + 1);
+		parent.addPage(p);
+		toIndex = getToIndex() + 1;
 	}
 
 	/**
@@ -451,20 +450,6 @@ class PageSequenceBuilder2 {
 		return getToIndex()-fromIndex;
 	}
 
-	public PageImpl get(int index) {
-		if (index<0 || index>=size()) {
-			throw new ArrayIndexOutOfBoundsException(index);
-		}
-		return items.get(index+fromIndex);
-	}
-
-	public List<PageImpl> getItems() {
-		return items.subList(fromIndex, getToIndex());
-	}
-	int toLocalIndex(int globalIndex) {
-		return globalIndex-fromIndex;
-	}
-	
 	/**
 	 * Gets the index for the first item in this sequence, counting all preceding items in the document, zero-based. 
 	 * @return returns the first index
@@ -473,12 +458,8 @@ class PageSequenceBuilder2 {
 		return fromIndex;
 	}
 
-	public int getToIndex() {
+	int getToIndex() {
 		return toIndex;
-	}
-
-	public void setToIndex(int toIndex) {
-		this.toIndex = toIndex;
 	}
 
 }

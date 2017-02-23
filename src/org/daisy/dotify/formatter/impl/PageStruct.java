@@ -1,19 +1,17 @@
 package org.daisy.dotify.formatter.impl;
 
-import java.util.Stack;
-
 /**
  * Provides a page oriented structure
  * 
  * @author Joel Håkansson
  */
 class PageStruct {
-	private final Stack<PageImpl> pages;
 	private PageSequenceBuilder2 currentSeq;
+	private int pageCount;
 
 	PageStruct() {
-		pages = new Stack<>();
 		currentSeq = null;
+		pageCount = 0;
 	}
 
 	void setCurrentSequence(PageSequenceBuilder2 seq) {
@@ -24,8 +22,12 @@ class PageStruct {
 		return currentSeq!=null?currentSeq.getCurrentPageOffset():0;
 	}
 
-	Stack<PageImpl> getPages() {
-		return pages;
+	int size() {
+		return pageCount;
+	}
+	
+	void addPage(PageImpl p) {
+		pageCount++;
 	}
 
 }
