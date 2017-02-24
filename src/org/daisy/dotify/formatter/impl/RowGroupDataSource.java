@@ -12,7 +12,6 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 	private final BlockContext bc;
 	private final RowGroupData data;
 	private final Supplements<RowGroup> supplements;
-	private final int offset;
 	private final VerticalSpacing vs;
 	private final List<Block> blocks;
 	private int blockIndex;
@@ -72,17 +71,15 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 		this.bc = bc;
 		this.data = new RowGroupData();
 		this.blocks = blocks;
-		this.offset = 0;
 		this.supplements = supplements;
 		this.vs = vs;
 		this.blockIndex = 0;
 	}
 	
-	private RowGroupDataSource(LayoutMaster master, BlockContext bc, RowGroupData data, List<Block> blocks, Supplements<RowGroup> supplements, int offset, VerticalSpacing vs, int blockIndex) {
+	private RowGroupDataSource(LayoutMaster master, BlockContext bc, RowGroupData data, List<Block> blocks, Supplements<RowGroup> supplements, VerticalSpacing vs, int blockIndex) {
 		this.master = master;
 		this.bc = bc;
 		this.data = data;
-		this.offset = 0;
 		if (supplements==null) {
 			this.supplements = new Supplements<RowGroup>() {
 				@Override
@@ -110,7 +107,7 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 
 	@Override
 	public boolean isEmpty() {
-		return this.data.size()<=offset && blockIndex>=blocks.size();
+		return this.data.size()==0 && blockIndex>=blocks.size();
 	}
 
 	@Override
@@ -118,7 +115,7 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 		if (!ensureBuffer(n)) {
 			throw new IndexOutOfBoundsException("" + n);
 		}
-		return this.data.getList().get(offset+n);
+		return this.data.getList().get(n);
 	}
 	
 	public List<RowGroup> head(int n) {
@@ -127,12 +124,12 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 		} else if (!ensureBuffer(n-1)) {
 			//throw new IndexOutOfBoundsException();
 		}
-		return this.data.getList().subList(offset, offset+n);
+		return this.data.getList().subList(0, n);
 	}
 	
 	public List<RowGroup> getRemaining() {
 		ensureBuffer(-1);
-		return this.data.getList().subList(offset, data.size());
+		return this.data.getList().subList(0, data.size());
 	}
 
 	@Override
@@ -140,14 +137,14 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 		if (!ensureBuffer(n)) {
 			throw new IndexOutOfBoundsException("" + n);
 		}
-		return new RowGroupDataSource(master, bc, new RowGroupData(data, offset+n), blocks, supplements, offset+n, vs, blockIndex);
+		return new RowGroupDataSource(master, bc, new RowGroupData(data, n), blocks, supplements, vs, blockIndex);
 	}
 
 	@Override
 	public int getSize(int limit) {
 		if (!ensureBuffer(limit-1))  {
 			//we have buffered all elements
-			return this.data.size()-offset;
+			return this.data.size();
 		} else {
 			return limit;
 		}
@@ -164,7 +161,7 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 	 * @return returns true if the index element was available, false otherwise
 	 */
 	private boolean ensureBuffer(int index) {
-		while (index<0 || this.data.size()-offset<=index) {
+		while (index<0 || this.data.size()<=index) {
 			if (blockIndex>=blocks.size()) {
 				return false;
 			}
