@@ -1,6 +1,7 @@
 package org.daisy.dotify.formatter.impl;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.daisy.dotify.common.split.SplitPointDataSource;
@@ -23,8 +24,8 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 			this.data = null;
 		}
 
-		RowGroupData(RowGroupData template) {
-			this.data = new ArrayList<>(template.data);
+		RowGroupData(RowGroupData template, int offset) {
+			this.data = new ArrayList<>(template.data.subList(offset, template.data.size()));
 		}
 
 		@Override
@@ -81,7 +82,7 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 		this.master = master;
 		this.bc = bc;
 		this.data = data;
-		this.offset = offset;
+		this.offset = 0;
 		if (supplements==null) {
 			this.supplements = new Supplements<RowGroup>() {
 				@Override
@@ -104,7 +105,7 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 
 	@Override
 	public boolean hasElementAt(int index) {
-		return this.data.size()>index+offset;
+		return ensureBuffer(index);
 	}
 
 	@Override
@@ -121,7 +122,9 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 	}
 	
 	public List<RowGroup> head(int n) {
-		if (!ensureBuffer(n-1)) {
+		if (n==0) {
+			return Collections.emptyList();
+		} else if (!ensureBuffer(n-1)) {
 			//throw new IndexOutOfBoundsException();
 		}
 		return this.data.getList().subList(offset, offset+n);
@@ -137,7 +140,7 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 		if (!ensureBuffer(n)) {
 			throw new IndexOutOfBoundsException("" + n);
 		}
-		return new RowGroupDataSource(master, bc, new RowGroupData(data), blocks, supplements, offset+n, vs, blockIndex);
+		return new RowGroupDataSource(master, bc, new RowGroupData(data, offset+n), blocks, supplements, offset+n, vs, blockIndex);
 	}
 
 	@Override
@@ -165,12 +168,10 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 			if (blockIndex>=blocks.size()) {
 				return false;
 			}
-			while (blockIndex<blocks.size()) {
-				//get next block
-				Block b = blocks.get(blockIndex);
-				blockIndex++;			
-				data.processBlock(master, b, b.getBlockContentManager(bc));
-			}
+			//get next block
+			Block b = blocks.get(blockIndex);
+			blockIndex++;			
+			data.processBlock(master, b, b.getBlockContentManager(bc));
 		}
 		return true;
 	}
