@@ -270,6 +270,8 @@ public class VolumeProvider {
 	 */
 	boolean done() {
 		groups.updateAll();
+		crh.commitBreakable();
+		crh.trimPageDetails();
 		crh.setVolumeCount(groups.getVolumeCount());
 		crh.setSheetsInDocument(groups.countTotalSheets());
 		//crh.setPagesInDocument(value);
