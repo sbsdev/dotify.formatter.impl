@@ -2,7 +2,6 @@ package org.daisy.dotify.formatter.impl;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 import org.daisy.dotify.common.split.SplitPointDataSource;
@@ -17,8 +16,9 @@ class SheetDataSource implements SplitPointDataSource<Sheet> {
 	private final CrossReferenceHandler crh;
 	private final FormatterContext context;
 	private final DefaultContext rcontext;
-	private final Iterator<BlockSequence> seqsIterator;
+	private final List<BlockSequence> seqsIterator;
 	private final int sheetsServed;
+	private int seqsIndex;
 	private int seqsServed;
 	private PageSequenceBuilder2 psb;
 	private LayoutMaster lm;
@@ -30,11 +30,12 @@ class SheetDataSource implements SplitPointDataSource<Sheet> {
 	private List<Sheet> sheetBuffer;
 	private boolean volBreakAllowed;
 
-	SheetDataSource(PageStruct struct, CrossReferenceHandler crh, FormatterContext context, DefaultContext rcontext, Iterator<BlockSequence> seqsIterator) {
-		this(struct, crh, context, rcontext, seqsIterator, new ArrayList<>(), true, 0, 0, null, null, null, null, 0, 0);
+	SheetDataSource(PageStruct struct, CrossReferenceHandler crh, FormatterContext context, DefaultContext rcontext, List<BlockSequence> seqsIterator) {
+		this(struct, crh, context, rcontext, seqsIterator, new ArrayList<>(), true, 0, 0, 0, null, null, null, null, 0, 0);
 	}
 	
-	SheetDataSource(PageStruct struct, CrossReferenceHandler crh, FormatterContext context, DefaultContext rcontext, Iterator<BlockSequence> seqsIterator, List<Sheet> sheetBuffer, boolean volBreakAllowed, int sheetsServed, int seqsServed,
+	SheetDataSource(PageStruct struct, CrossReferenceHandler crh, FormatterContext context, DefaultContext rcontext, List<BlockSequence> seqsIterator, List<Sheet> sheetBuffer, boolean volBreakAllowed, int sheetsServed, int seqsServed,
+			int seqsIndex,
 			PageSequenceBuilder2 psb,
 			LayoutMaster lm,
 			Sheet.Builder s,
@@ -48,6 +49,7 @@ class SheetDataSource implements SplitPointDataSource<Sheet> {
 		this.seqsIterator = seqsIterator;
 		this.sheetsServed = sheetsServed;
 		this.seqsServed = seqsServed;
+		this.seqsIndex = seqsIndex;
 		this.psb = psb;
 		this.lm = lm;
 		this.s = s;
@@ -88,9 +90,9 @@ class SheetDataSource implements SplitPointDataSource<Sheet> {
 		if (!ensureBuffer(fromIndex)) {
 			newBuffer = new ArrayList<>();
 		} else {
-			newBuffer = sheetBuffer.subList(fromIndex, sheetBuffer.size());
+			newBuffer = new ArrayList<>(sheetBuffer.subList(fromIndex, sheetBuffer.size()));
 		}
-		return new SheetDataSource(struct, crh, context, rcontext, seqsIterator, newBuffer, volBreakAllowed, sheetsServed+fromIndex, seqsServed, 
+		return new SheetDataSource(struct, crh, context, rcontext, seqsIterator, newBuffer, volBreakAllowed, sheetsServed+fromIndex, seqsServed, seqsIndex, 
 				psb, lm, s, si, sheetIndex, pageIndex);
 	}
 
@@ -111,7 +113,7 @@ class SheetDataSource implements SplitPointDataSource<Sheet> {
 
 	@Override
 	public boolean isEmpty() {
-		return !seqsIterator.hasNext() && sheetBuffer.isEmpty();
+		return seqsIndex>=seqsIterator.size() && sheetBuffer.isEmpty();
 	}
 
 	@Override
@@ -128,12 +130,13 @@ class SheetDataSource implements SplitPointDataSource<Sheet> {
 	private boolean ensureBuffer(int index) {
 		while (index<0 || sheetBuffer.size()<=index) {
 			if (psb==null || !psb.hasNext()) {
-				if (!seqsIterator.hasNext()) {
+				if (seqsIndex>=seqsIterator.size()) {
 					// cannot ensure buffer, return false
 					return false;
 				}
 				// init new sequence
-				BlockSequence bs = seqsIterator.next();
+				BlockSequence bs = seqsIterator.get(seqsIndex);
+				seqsIndex++;
 				seqsServed++;
 				int offset = struct.getCurrentPageOffset();
 				psb = new PageSequenceBuilder2(struct.getPageCount(), bs.getLayoutMaster(), bs.getInitialPageNumber()!=null?bs.getInitialPageNumber() - 1:offset, crh, bs, context, rcontext, seqsServed);
