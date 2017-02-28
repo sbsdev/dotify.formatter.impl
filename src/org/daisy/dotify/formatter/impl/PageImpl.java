@@ -1,6 +1,7 @@
 package org.daisy.dotify.formatter.impl;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -52,6 +53,8 @@ class PageImpl implements Page {
 	private final int pageMargin;
 	private final TextBorderStyle borderStyle;
 	private final TextBorder border;
+	private final PageTemplate pageTemplate;
+	private final BorderManager finalRows;
 
 	private boolean isVolBreakAllowed;
 	private int keepPreviousSheets;
@@ -82,6 +85,8 @@ class PageImpl implements Page {
 		this.pageMargin = ((pagenum % 2 == 0) ? master.getOuterMargin() : master.getInnerMargin());
 		this.borderStyle = master.getBorder()!=null?master.getBorder():TextBorderStyle.NONE;
 		this.border = buildBorder();
+		this.pageTemplate = master.getTemplate(pagenum);
+		this.finalRows = new BorderManager();
 	}
 	
 	private static float getHeight(List<FieldList> list, float def) {
@@ -166,17 +171,16 @@ class PageImpl implements Page {
 	private List<RowImpl> buildPageRows() throws PaginatorException {
 		ArrayList<RowImpl> ret = new ArrayList<>();
 		{
-			PageTemplate t = master.getTemplate(pagenum);
 			BrailleTranslator filter = fcontext.getDefaultTranslator();
-            ret.addAll(renderFields(t.getHeader(), filter));
+            ret.addAll(renderFields(pageTemplate.getHeader(), filter));
             if (master.getPageArea()!=null && master.getPageArea().getAlignment()==PageAreaProperties.Alignment.TOP && !pageArea.isEmpty()) {
 				ret.addAll(before);
 				ret.addAll(pageArea);
 				ret.addAll(after);
 			}
             ret.addAll(rows);
-            float headerHeight = getHeight(t.getHeader(), master.getRowSpacing());
-            if (!t.getFooter().isEmpty() || borderStyle != TextBorderStyle.NONE || (master.getPageArea()!=null && master.getPageArea().getAlignment()==PageAreaProperties.Alignment.BOTTOM && !pageArea.isEmpty())) {
+            float headerHeight = getHeight(pageTemplate.getHeader(), master.getRowSpacing());
+            if (!pageTemplate.getFooter().isEmpty() || borderStyle != TextBorderStyle.NONE || (master.getPageArea()!=null && master.getPageArea().getAlignment()==PageAreaProperties.Alignment.BOTTOM && !pageArea.isEmpty())) {
                 float areaSize = (master.getPageArea()!=null && master.getPageArea().getAlignment()==PageAreaProperties.Alignment.BOTTOM ? pageAreaSpaceNeeded() : 0);
                 while (Math.ceil(rowsNeeded(ret, master.getRowSpacing()) + areaSize) < getFlowHeight() + headerHeight) {
 					ret.add(new RowImpl());
@@ -186,7 +190,7 @@ class PageImpl implements Page {
 					ret.addAll(pageArea);
 					ret.addAll(after);
 				}
-                ret.addAll(renderFields(t.getFooter(), filter));
+                ret.addAll(renderFields(pageTemplate.getFooter(), filter));
 			}
 		}
 		return ret;
@@ -209,11 +213,12 @@ class PageImpl implements Page {
 	@Override
 	public List<Row> getRows() {
 		try {
-            BorderManager ret2 = new BorderManager();
-			for (RowImpl row : buildPageRows()) {
-				ret2.addRow(row);
+			if (!finalRows.closed) {
+				for (RowImpl row : buildPageRows()) {
+					finalRows.addRow(row);
+				}
 			}
-			return ret2.getRows();
+			return finalRows.getRows();
 		} catch (PaginatorException e) {
 			throw new RuntimeException("Pagination failed.", e);
 		}
@@ -238,6 +243,12 @@ class PageImpl implements Page {
 			DistributedRowSpacing rs = distributeRowSpacing(master.getRowSpacing(), true);
 			r.setRowSpacing(rs.spacing);
 			ret2.add(r);
+		}
+		
+		private void addAll(Collection<? extends RowImpl> rows) {
+			for (RowImpl r : rows) {
+				addRow(r);
+			}
 		}
 
 		private void addRow(RowImpl row) {
