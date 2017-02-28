@@ -27,7 +27,7 @@ public class SearchInfo {
 	}
 	
 	public void keepPageDetails(PageDetails value) {
-		if (value.getPageId()<0) {
+		if (value.getPageId().getPageIndex()<0) {
 			throw new IllegalArgumentException("Negative page id not allowed.");
 		}
 		uncommitted.put(toKey(value), value);
@@ -37,10 +37,10 @@ public class SearchInfo {
 		for (Entry<String, PageDetails> entry : uncommitted.entrySet()) {
 			PageDetails value = entry.getValue();
 			DocumentSpaceData data = getViewForSpace(value.getSequenceId().getSpace());
-			while (value.getPageId()>=data.pageDetails.size()) {
+			while (value.getPageId().getPageIndex()>=data.pageDetails.size()) {
 				data.pageDetails.add(null);
 			}
-			PageDetails old = data.pageDetails.set(value.getPageId(), value);
+			PageDetails old = data.pageDetails.set(value.getPageId().getPageIndex(), value);
 			// Only check the previous value if dirty isn't already true
 			if (!dirty && !value.equals(old)) {
 				dirty = true;
@@ -208,17 +208,17 @@ public class SearchInfo {
 		}
 	}
 	
-	private PageDetails mapPageDetails(PageDetails p) {
+	private PageDetails getPageDetails(PageId p) {
 		DocumentSpaceData data = getViewForSpace(p.getSequenceId().getSpace());
-		if (p.getPageId()<data.pageDetails.size()) {
-			return data.pageDetails.get(p.getPageId());
+		if (p.getPageIndex()<data.pageDetails.size()) {
+			return data.pageDetails.get(p.getPageIndex());
 		} else {
 			return null;
 		}
 	}
 	
-	public String findStartAndMarker(PageDetails in, MarkerReferenceField f2) {
-		PageDetails p = mapPageDetails(in);
+	public String findStartAndMarker(PageId id, MarkerReferenceField f2) {
+		PageDetails p = getPageDetails(id);
 		if (p!=null) { 
 			PageDetails start;
 			if (f2.getSearchScope()==MarkerSearchScope.SPREAD ||

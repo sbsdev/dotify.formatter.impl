@@ -7,19 +7,15 @@ import org.daisy.dotify.api.formatter.Marker;
 
 public class PageDetails {
 	private final boolean duplex;
-	private final int ordinal;
-	private final int globalStartIndex;
-	private final SequenceId sequenceId;
+	private final PageId pageId;
 	private int volumeNumber;
 	private int contentMarkersBegin;
 	
 	private final ArrayList<Marker> markers;
 	
-	public PageDetails(boolean duplex, int ordinal, int globalStartIndex, SequenceId sequenceId) {
+	public PageDetails(boolean duplex, PageId pageId) {
 		this.duplex = duplex;
-		this.ordinal = ordinal;
-		this.globalStartIndex = globalStartIndex;
-		this.sequenceId = sequenceId;
+		this.pageId = pageId;
 		this.markers = new ArrayList<>();
 		this.contentMarkersBegin = 0;
 		this.volumeNumber = 0;
@@ -29,16 +25,12 @@ public class PageDetails {
 		return duplex;
 	}
 	
-	private int getOrdinal() {
-		return ordinal;
-	}
-	
-	int getPageId() {
-		return globalStartIndex + ordinal;
-	}
-	
 	SequenceId getSequenceId() {
-		return sequenceId;
+		return pageId.getSequenceId();
+	}
+	
+	public PageId getPageId() {
+		return pageId;
 	}
 	
 	int getVolumeNumber() {
@@ -66,20 +58,20 @@ public class PageDetails {
 				(
 					duplex() && 
 					(
-						(offset == 1 && getOrdinal() % 2 == 1) ||
-						(offset == -1 && getOrdinal() % 2 == 0)
+						(offset == 1 && pageId.getOrdinal() % 2 == 1) ||
+						(offset == -1 && pageId.getOrdinal() % 2 == 0)
 					)
 				);
 	}
 	
 	boolean isWithinSpreadScope(int offset, PageDetails other) {
 		if (other==null) { 
-			return ((offset == 1 && getOrdinal() % 2 == 1) ||
-					(offset == -1 && getOrdinal() % 2 == 0));
+			return ((offset == 1 && pageId.getOrdinal() % 2 == 1) ||
+					(offset == -1 && pageId.getOrdinal() % 2 == 0));
 		} else {
 			return (
-					(offset == 1 && getOrdinal() % 2 == 1 && duplex()==true) ||
-					(offset == -1 && getOrdinal() % 2 == 0 && other.duplex()==true && other.getOrdinal() % 2 == 1)
+					(offset == 1 && pageId.getOrdinal() % 2 == 1 && duplex()==true) ||
+					(offset == -1 && pageId.getOrdinal() % 2 == 0 && other.duplex()==true && other.pageId.getOrdinal() % 2 == 1)
 				);
 		}
 	}
@@ -105,7 +97,7 @@ public class PageDetails {
 			return this;
 		} else {
 			if (pageView!=null) {
-				int next = pageView.toLocalIndex(getPageId())+offset;
+				int next = pageView.toLocalIndex(pageId.getPageIndex())+offset;
 				int size = pageView.size();
 				if (adjustOutOfBounds) {
 					next = Math.min(size-1, Math.max(0, next));
@@ -123,8 +115,8 @@ public class PageDetails {
 				(
 					duplex() &&
 					(
-						(offset == 1 && getOrdinal() % 2 == 0) ||
-						(offset == -1 && getOrdinal() % 2 == 1)
+						(offset == 1 && pageId.getOrdinal() % 2 == 0) ||
+						(offset == -1 && pageId.getOrdinal() % 2 == 1)
 					)
 				);
 	}
@@ -135,10 +127,8 @@ public class PageDetails {
 		int result = 1;
 		result = prime * result + contentMarkersBegin;
 		result = prime * result + (duplex ? 1231 : 1237);
-		result = prime * result + globalStartIndex;
 		result = prime * result + ((markers == null) ? 0 : markers.hashCode());
-		result = prime * result + ordinal;
-		result = prime * result + ((sequenceId == null) ? 0 : sequenceId.hashCode());
+		result = prime * result + ((pageId == null) ? 0 : pageId.hashCode());
 		return result;
 	}
 
@@ -155,28 +145,23 @@ public class PageDetails {
 			return false;
 		if (duplex != other.duplex)
 			return false;
-		if (globalStartIndex != other.globalStartIndex)
-			return false;
 		if (markers == null) {
 			if (other.markers != null)
 				return false;
 		} else if (!markers.equals(other.markers))
 			return false;
-		if (ordinal != other.ordinal)
-			return false;
-		if (sequenceId == null) {
-			if (other.sequenceId != null)
+		if (pageId == null) {
+			if (other.pageId != null)
 				return false;
-		} else if (!sequenceId.equals(other.sequenceId))
+		} else if (!pageId.equals(other.pageId))
 			return false;
 		return true;
 	}
 
 	@Override
 	public String toString() {
-		return "PageDetails [duplex=" + duplex + ", ordinal=" + ordinal + ", globalStartIndex=" + globalStartIndex
-				+ ", sequenceId=" + sequenceId + ", volumeNumber=" + volumeNumber + ", contentMarkersBegin="
-				+ contentMarkersBegin + ", markers=" + markers + "]";
+		return "PageDetails [duplex=" + duplex + ", pageId=" + pageId + ", volumeNumber=" + volumeNumber
+				+ ", contentMarkersBegin=" + contentMarkersBegin + ", markers=" + markers + "]";
 	}
 	
 }

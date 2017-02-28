@@ -22,6 +22,7 @@ import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.search.DefaultContext;
 import org.daisy.dotify.formatter.impl.search.DocumentSpace;
 import org.daisy.dotify.formatter.impl.search.PageDetails;
+import org.daisy.dotify.formatter.impl.search.PageId;
 import org.daisy.dotify.formatter.impl.search.SequenceId;
 
 class PageSequenceBuilder2 {
@@ -105,7 +106,7 @@ class PageSequenceBuilder2 {
 	private PageImpl newPage() {
 		PageImpl buffer = current;
 		SequenceId seqId = new SequenceId(sequenceId, new DocumentSpace(blockContext.getContext().getSpace(), blockContext.getContext().getCurrentVolume()));
-		PageDetails details = new PageDetails(master.duplex(), pageCount, getGlobalStartIndex(), seqId);
+		PageDetails details = new PageDetails(master.duplex(), new PageId(pageCount, getGlobalStartIndex(), seqId));
 		current = new PageImpl(crh, details, master, context, pageCount+pageNumberOffset, staticAreaContent.getBefore(), staticAreaContent.getAfter());
 		pageCount ++;
 		if (keepNextSheets>0) {

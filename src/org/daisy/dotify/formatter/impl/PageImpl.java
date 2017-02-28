@@ -24,6 +24,7 @@ import org.daisy.dotify.api.writer.Row;
 import org.daisy.dotify.common.text.StringTools;
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.search.PageDetails;
+import org.daisy.dotify.formatter.impl.search.PageId;
 import org.daisy.dotify.writer.impl.Page;
 
 
@@ -411,7 +412,7 @@ class PageImpl implements Page {
 		if (field instanceof CompoundField) {
 			ret = resolveCompoundField((CompoundField)field, p, b2);
 		} else if (field instanceof MarkerReferenceField) {
-			ret = crh.getSearchInfo().findStartAndMarker(p.getDetails(), (MarkerReferenceField)field);
+			ret = crh.getSearchInfo().findStartAndMarker(p.getDetails().getPageId(), (MarkerReferenceField)field);
 		} else if (field instanceof CurrentPageField) {
 			ret = resolveCurrentPageField((CurrentPageField)field, p);
 		} else {
