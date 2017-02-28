@@ -168,34 +168,6 @@ class PageImpl implements Page {
 		return (int)Math.ceil(spaceNeeded()) + offs;
 	}
 	
-	private List<RowImpl> buildPageRows() throws PaginatorException {
-		ArrayList<RowImpl> ret = new ArrayList<>();
-		{
-			BrailleTranslator filter = fcontext.getDefaultTranslator();
-            ret.addAll(renderFields(pageTemplate.getHeader(), filter));
-            if (master.getPageArea()!=null && master.getPageArea().getAlignment()==PageAreaProperties.Alignment.TOP && !pageArea.isEmpty()) {
-				ret.addAll(before);
-				ret.addAll(pageArea);
-				ret.addAll(after);
-			}
-            ret.addAll(rows);
-            float headerHeight = getHeight(pageTemplate.getHeader(), master.getRowSpacing());
-            if (!pageTemplate.getFooter().isEmpty() || borderStyle != TextBorderStyle.NONE || (master.getPageArea()!=null && master.getPageArea().getAlignment()==PageAreaProperties.Alignment.BOTTOM && !pageArea.isEmpty())) {
-                float areaSize = (master.getPageArea()!=null && master.getPageArea().getAlignment()==PageAreaProperties.Alignment.BOTTOM ? pageAreaSpaceNeeded() : 0);
-                while (Math.ceil(rowsNeeded(ret, master.getRowSpacing()) + areaSize) < getFlowHeight() + headerHeight) {
-					ret.add(new RowImpl());
-				}
-				if (master.getPageArea()!=null && master.getPageArea().getAlignment()==PageAreaProperties.Alignment.BOTTOM && !pageArea.isEmpty()) {
-					ret.addAll(before);
-					ret.addAll(pageArea);
-					ret.addAll(after);
-				}
-                ret.addAll(renderFields(pageTemplate.getFooter(), filter));
-			}
-		}
-		return ret;
-	}
-	
 	private TextBorder buildBorder() {
 		int fsize = borderStyle.getLeftBorder().length() + borderStyle.getRightBorder().length();
 		int w = master.getFlowWidth() + fsize + pageMargin;
@@ -214,8 +186,26 @@ class PageImpl implements Page {
 	public List<Row> getRows() {
 		try {
 			if (!finalRows.closed) {
-				for (RowImpl row : buildPageRows()) {
-					finalRows.addRow(row);
+				BrailleTranslator filter = fcontext.getDefaultTranslator();
+		        finalRows.addAll(renderFields(pageTemplate.getHeader(), filter));
+		        if (master.getPageArea()!=null && master.getPageArea().getAlignment()==PageAreaProperties.Alignment.TOP && !pageArea.isEmpty()) {
+					finalRows.addAll(before);
+					finalRows.addAll(pageArea);
+					finalRows.addAll(after);
+				}
+		        finalRows.addAll(rows);
+		        float headerHeight = getHeight(pageTemplate.getHeader(), master.getRowSpacing());
+		        if (!pageTemplate.getFooter().isEmpty() || borderStyle != TextBorderStyle.NONE || (master.getPageArea()!=null && master.getPageArea().getAlignment()==PageAreaProperties.Alignment.BOTTOM && !pageArea.isEmpty())) {
+		            float areaSize = (master.getPageArea()!=null && master.getPageArea().getAlignment()==PageAreaProperties.Alignment.BOTTOM ? pageAreaSpaceNeeded() : 0);
+		            while (Math.ceil(rowsNeeded(finalRows.offsetList(), master.getRowSpacing()) + areaSize) < getFlowHeight() + headerHeight) {
+						finalRows.addRow(new RowImpl());
+					}
+					if (master.getPageArea()!=null && master.getPageArea().getAlignment()==PageAreaProperties.Alignment.BOTTOM && !pageArea.isEmpty()) {
+						finalRows.addAll(before);
+						finalRows.addAll(pageArea);
+						finalRows.addAll(after);
+					}
+		            finalRows.addAll(renderFields(pageTemplate.getFooter(), filter));
 				}
 			}
 			return finalRows.getRows();
@@ -229,6 +219,9 @@ class PageImpl implements Page {
 		private DistributedRowSpacing rs = null;
 		private RowImpl r2 = null;
 		private boolean closed;
+		//This variable is used to compensate for the fact that the top border was calculated outside of the main logic before
+        //and can be removed once the logic has been updated.
+		private final int offset;
         
         private BorderManager() {
         	this.ret2 = new ArrayList<>();
@@ -236,6 +229,13 @@ class PageImpl implements Page {
         	if (!TextBorderStyle.NONE.equals(borderStyle)) {
         		addTopBorder();
         	}
+        	this.offset = ret2.size();
+        }
+        
+        //This method is used to compensate for the fact that the top border was calculated outside of the main logic before
+        //and can be removed once the logic has been updated.
+        private List<Row> offsetList() {
+        	return ret2.subList(offset, ret2.size());
         }
 
 		private void addTopBorder() {
