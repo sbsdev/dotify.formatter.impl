@@ -19,7 +19,6 @@ class SheetDataSource implements SplitPointDataSource<Sheet> {
 	private final List<BlockSequence> seqsIterator;
 	private final int sheetsServed;
 	private int seqsIndex;
-	private int seqsServed;
 	private PageSequenceBuilder2 psb;
 	private LayoutMaster lm;
 	private Sheet.Builder s;
@@ -31,11 +30,10 @@ class SheetDataSource implements SplitPointDataSource<Sheet> {
 	private boolean volBreakAllowed;
 
 	SheetDataSource(PageStruct struct, CrossReferenceHandler crh, FormatterContext context, DefaultContext rcontext, List<BlockSequence> seqsIterator) {
-		this(struct, crh, context, rcontext, seqsIterator, new ArrayList<>(), true, 0, 0, 0, null, null, null, null, 0, 0);
+		this(struct, crh, context, rcontext, seqsIterator, new ArrayList<>(), true, 0, 0, null, null, null, null, 0, 0);
 	}
 	
-	SheetDataSource(PageStruct struct, CrossReferenceHandler crh, FormatterContext context, DefaultContext rcontext, List<BlockSequence> seqsIterator, List<Sheet> sheetBuffer, boolean volBreakAllowed, int sheetsServed, int seqsServed,
-			int seqsIndex,
+	SheetDataSource(PageStruct struct, CrossReferenceHandler crh, FormatterContext context, DefaultContext rcontext, List<BlockSequence> seqsIterator, List<Sheet> sheetBuffer, boolean volBreakAllowed, int sheetsServed, int seqsIndex,
 			PageSequenceBuilder2 psb,
 			LayoutMaster lm,
 			Sheet.Builder s,
@@ -48,7 +46,6 @@ class SheetDataSource implements SplitPointDataSource<Sheet> {
 		this.rcontext = rcontext;
 		this.seqsIterator = seqsIterator;
 		this.sheetsServed = sheetsServed;
-		this.seqsServed = seqsServed;
 		this.seqsIndex = seqsIndex;
 		this.psb = psb;
 		this.lm = lm;
@@ -92,7 +89,7 @@ class SheetDataSource implements SplitPointDataSource<Sheet> {
 		} else {
 			newBuffer = new ArrayList<>(sheetBuffer.subList(fromIndex, sheetBuffer.size()));
 		}
-		return new SheetDataSource(struct, crh, context, rcontext, seqsIterator, newBuffer, volBreakAllowed, sheetsServed+fromIndex, seqsServed, seqsIndex, 
+		return new SheetDataSource(struct, crh, context, rcontext, seqsIterator, newBuffer, volBreakAllowed, sheetsServed+fromIndex, seqsIndex, 
 				psb, lm, s, si, sheetIndex, pageIndex);
 	}
 
@@ -137,9 +134,8 @@ class SheetDataSource implements SplitPointDataSource<Sheet> {
 				// init new sequence
 				BlockSequence bs = seqsIterator.get(seqsIndex);
 				seqsIndex++;
-				seqsServed++;
 				int offset = struct.getCurrentPageOffset();
-				psb = new PageSequenceBuilder2(struct.getPageCount(), bs.getLayoutMaster(), bs.getInitialPageNumber()!=null?bs.getInitialPageNumber() - 1:offset, crh, bs, context, rcontext, seqsServed);
+				psb = new PageSequenceBuilder2(struct.getPageCount(), bs.getLayoutMaster(), bs.getInitialPageNumber()!=null?bs.getInitialPageNumber() - 1:offset, crh, bs, context, rcontext, seqsIndex);
 				lm = bs.getLayoutMaster();
 				s = null;
 				si = null;
@@ -187,7 +183,7 @@ class SheetDataSource implements SplitPointDataSource<Sheet> {
 					//Last page in the sequence doesn't need volume keep priority
 					sheetBuffer.add(s.build());
 				}
-				crh.getSearchInfo().setSequenceScope(new DocumentSpace(rcontext.getSpace(), rcontext.getCurrentVolume()), seqsServed, psb.getGlobalStartIndex(), psb.getToIndex());
+				crh.getSearchInfo().setSequenceScope(new DocumentSpace(rcontext.getSpace(), rcontext.getCurrentVolume()), seqsIndex, psb.getGlobalStartIndex(), psb.getToIndex());
 				struct.setCurrentSequence(psb);
 			}
 		}
