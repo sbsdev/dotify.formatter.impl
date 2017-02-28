@@ -218,26 +218,29 @@ class PageImpl implements Page {
 					ret2.add(r);
 				}
 	            List<RowImpl> ret = buildPageRows();
+	            DistributedRowSpacing rs = null;
+	            RowImpl r2 = null;
 				for (RowImpl row : ret) {
-					RowImpl r2 = addBorders(row);
+					//does the previous row require additional processing?
+                    if (rs!=null) {
+						RowImpl s = null;
+						for (int i = 0; i < rs.lines-1; i++) {
+							s = new RowImpl(border.addBorderToRow(r2.getLeftMargin().getContent(), r2.getRightMargin().getContent()));
+							s.setRowSpacing(rs.spacing);
+							ret2.add(s);
+						}
+					}
+
+					r2 = addBorders(row);
 					ret2.add(r2);
 					Float rs2 = row.getRowSpacing();
 					if (!TextBorderStyle.NONE.equals(borderStyle)) {
-						DistributedRowSpacing rs = distributeRowSpacing(rs2, true);
+						//distribute row spacing
+						rs = distributeRowSpacing(rs2, true);
 						r2.setRowSpacing(rs.spacing);
-						//don't add space to the last line
-                        if (row!=ret.get(ret.size()-1)) {
-							RowImpl s = null;
-							for (int i = 0; i < rs.lines-1; i++) {
-								s = new RowImpl(border.addBorderToRow(row.getLeftMargin().getContent(), row.getRightMargin().getContent()));
-								s.setRowSpacing(rs.spacing);
-								ret2.add(s);
-							}
-						}
 					} else {
 						r2.setRowSpacing(rs2);
 					}
-					
 				}
 				if (!TextBorderStyle.NONE.equals(borderStyle)) {
                     ret2.add(new RowImpl(border.getBottomBorder()));
