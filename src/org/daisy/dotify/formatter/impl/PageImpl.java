@@ -98,20 +98,12 @@ class PageImpl implements Page {
 	}
 	
 	void newRow(RowImpl r) {
-		if (rowsOnPage()==0) {
+		if (rows.isEmpty()) {
 			details.startsContentMarkers();
 		}
 		rows.add(r);
 		details.getMarkers().addAll(r.getMarkers());
 		anchors.addAll(r.getAnchors());
-	}
-	
-	/**
-	 * Gets the number of rows on this page
-	 * @return returns the number of rows on this page
-	 */
-	private int rowsOnPage() {
-		return rows.size();
 	}
 	
 	void addMarkers(List<Marker> m) {
