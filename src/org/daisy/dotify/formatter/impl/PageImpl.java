@@ -52,8 +52,6 @@ class PageImpl implements Page {
 	private boolean isVolBreakAllowed;
 	private int keepPreviousSheets;
 	private Integer volumeBreakAfterPriority;
-	private int volumeNumber;
-	
 	
 	public PageImpl(CrossReferenceHandler crh, PageDetails details, LayoutMaster master, FormatterContext fcontext, int pageIndex, List<RowImpl> before, List<RowImpl> after) {
 		this.crh = crh;
@@ -76,11 +74,9 @@ class PageImpl implements Page {
 		this.isVolBreakAllowed = true;
 		this.keepPreviousSheets = 0;
 		this.volumeBreakAfterPriority = null;
-		this.volumeNumber = 0;
-
 	}
 	
-	static float getHeight(List<FieldList> list, float def) {
+	private static float getHeight(List<FieldList> list, float def) {
 		return (float)list.stream().mapToDouble(f -> f.getRowSpacing()!=null?f.getRowSpacing():def).sum();
 	}
 
@@ -127,7 +123,7 @@ class PageImpl implements Page {
 	 * @param defSpacing a value >= 1.0
 	 * @return returns the space, in rows
 	 */
-	static float rowsNeeded(Iterable<? extends Row> rows, float defSpacing) {
+	private static float rowsNeeded(Iterable<? extends Row> rows, float defSpacing) {
 		float ret = 0;
 		if (defSpacing < 1) {
 			defSpacing = 1;
@@ -142,7 +138,7 @@ class PageImpl implements Page {
 		return ret;
 	}
 	
-	float spaceNeeded() {
+	private float spaceNeeded() {
 		return 	pageAreaSpaceNeeded() +
 				rowsNeeded(rows, master.getRowSpacing());
 	}
@@ -301,7 +297,7 @@ class PageImpl implements Page {
 		return padLeft(w, chars, row.getLeftMargin(), row.getRightMargin(), row.getAlignment(), space);
 	}
 	
-	static String padLeft(int w, String text, MarginProperties leftMargin, MarginProperties rightMargin, FormattingTypes.Alignment align, char space) {
+	private static String padLeft(int w, String text, MarginProperties leftMargin, MarginProperties rightMargin, FormattingTypes.Alignment align, char space) {
 		if ("".equals(text) && leftMargin.isSpaceOnly() && rightMargin.isSpaceOnly()) {
 			return "";
 		} else {
@@ -454,14 +450,6 @@ class PageImpl implements Page {
 
 	PageTemplate getPageTemplate() {
 		return template;
-	}
-
-	int getVolumeNumber() {
-		return volumeNumber;
-	}
-
-	void setVolumeNumber(int volumeNumber) {
-		this.volumeNumber = volumeNumber;
 	}
 	
 	Integer getAvoidVolumeBreakAfter() {
