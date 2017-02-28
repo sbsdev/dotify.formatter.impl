@@ -209,44 +209,72 @@ class PageImpl implements Page {
 	@Override
 	public List<Row> getRows() {
 		try {
-            ArrayList<Row> ret2 = new ArrayList<>();
-			{
-				if (!TextBorderStyle.NONE.equals(borderStyle)) {
-					RowImpl r = new RowImpl(border.getTopBorder());
-					DistributedRowSpacing rs = distributeRowSpacing(master.getRowSpacing(), true);
-					r.setRowSpacing(rs.spacing);
-					ret2.add(r);
-				}
-	            List<RowImpl> ret = buildPageRows();
-	            DistributedRowSpacing rs = null;
-	            RowImpl r2 = null;
-				for (RowImpl row : ret) {
-					//does the previous row require additional processing?
-                    if (rs!=null) {
-						RowImpl s = null;
-						for (int i = 0; i < rs.lines-1; i++) {
-							s = new RowImpl(border.addBorderToRow(r2.getLeftMargin().getContent(), r2.getRightMargin().getContent()));
-							s.setRowSpacing(rs.spacing);
-							ret2.add(s);
-						}
-					}
+            BorderManager ret2 = new BorderManager();
+			for (RowImpl row : buildPageRows()) {
+				ret2.addRow(row);
+			}
+			return ret2.getRows();
+		} catch (PaginatorException e) {
+			throw new RuntimeException("Pagination failed.", e);
+		}
+	}
+	
+	private class BorderManager {
+		private List<Row> ret2;
+		private DistributedRowSpacing rs = null;
+		private RowImpl r2 = null;
+		private boolean closed;
+        
+        private BorderManager() {
+        	this.ret2 = new ArrayList<>();
+        	this.closed = false;
+        	if (!TextBorderStyle.NONE.equals(borderStyle)) {
+        		addTopBorder();
+        	}
+        }
 
-					r2 = addBorders(row);
-					ret2.add(r2);
-					Float rs2 = row.getRowSpacing();
-					if (!TextBorderStyle.NONE.equals(borderStyle)) {
-						//distribute row spacing
-						rs = distributeRowSpacing(rs2, true);
-						r2.setRowSpacing(rs.spacing);
-					} else {
-						r2.setRowSpacing(rs2);
-					}
-				}
-				if (!TextBorderStyle.NONE.equals(borderStyle)) {
-                    ret2.add(new RowImpl(border.getBottomBorder()));
+		private void addTopBorder() {
+			RowImpl r = new RowImpl(border.getTopBorder());
+			DistributedRowSpacing rs = distributeRowSpacing(master.getRowSpacing(), true);
+			r.setRowSpacing(rs.spacing);
+			ret2.add(r);
+		}
+
+		private void addRow(RowImpl row) {
+			if (closed) {
+				throw new IllegalStateException("Cannot add rows when closed.");
+			}
+			//does the previously added row require additional processing?
+            if (rs!=null) {
+				RowImpl s = null;
+				for (int i = 0; i < rs.lines-1; i++) {
+					s = new RowImpl(border.addBorderToRow(r2.getLeftMargin().getContent(), r2.getRightMargin().getContent()));
+					s.setRowSpacing(rs.spacing);
+					ret2.add(s);
 				}
 			}
-            if (ret2.size()>0) {
+
+			r2 = addBorders(row);
+			ret2.add(r2);
+			Float rs2 = row.getRowSpacing();
+			if (!TextBorderStyle.NONE.equals(borderStyle)) {
+				//distribute row spacing
+				rs = distributeRowSpacing(rs2, true);
+				r2.setRowSpacing(rs.spacing);
+			} else {
+				r2.setRowSpacing(rs2);
+			}			
+		}
+
+		private void close() {
+			if (closed) {
+				return;
+			}
+			closed = true;
+			if (!TextBorderStyle.NONE.equals(borderStyle)) {
+                ret2.add(new RowImpl(border.getBottomBorder()));
+			}
+			if (ret2.size()>0) {
                 RowImpl last = ((RowImpl)ret2.get(ret2.size()-1));
 				if (master.getRowSpacing()!=1) {
 					//set row spacing on the last row to 1.0
@@ -256,10 +284,15 @@ class PageImpl implements Page {
 					last.setRowSpacing(null);
 				}
 			}
-			return ret2;
-		} catch (PaginatorException e) {
-			throw new RuntimeException("Pagination failed.", e);
 		}
+
+		List<Row> getRows() {
+			if (!closed) {
+				close();
+			}
+			return ret2;
+		}
+
 	}
 	
 	private RowImpl addBorders(RowImpl row) {
