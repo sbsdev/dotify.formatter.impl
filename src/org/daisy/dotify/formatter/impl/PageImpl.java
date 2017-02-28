@@ -46,8 +46,12 @@ class PageImpl implements Page {
     private final ArrayList<String> anchors;
     private final ArrayList<String> identifiers;
 	private final int pageIndex;
+	private final int pagenum;
 	private final int flowHeight;
 	private final PageTemplate template;
+	private final int pageMargin;
+	private final TextBorderStyle borderStyle;
+	private final TextBorder border;
 
 	private boolean isVolBreakAllowed;
 	private int keepPreviousSheets;
@@ -66,6 +70,7 @@ class PageImpl implements Page {
 		this.anchors = new ArrayList<>();
 		this.identifiers = new ArrayList<>();
 		this.pageIndex = pageIndex;
+		this.pagenum = pageIndex + 1;
 		this.template = master.getTemplate(pageIndex+1);
         this.flowHeight = master.getPageHeight() - 
                 (int)Math.ceil(getHeight(template.getHeader(), master.getRowSpacing())) -
@@ -74,6 +79,9 @@ class PageImpl implements Page {
 		this.isVolBreakAllowed = true;
 		this.keepPreviousSheets = 0;
 		this.volumeBreakAfterPriority = null;
+		this.pageMargin = ((pagenum % 2 == 0) ? master.getOuterMargin() : master.getInnerMargin());
+		this.borderStyle = master.getBorder()!=null?master.getBorder():TextBorderStyle.NONE;
+		this.border = buildBorder();
 	}
 	
 	private static float getHeight(List<FieldList> list, float def) {
@@ -155,35 +163,43 @@ class PageImpl implements Page {
 		return (int)Math.ceil(spaceNeeded()) + offs;
 	}
 	
-	private List<RowImpl> buildPageRows(TextBorderStyle border) throws PaginatorException {
+	private List<RowImpl> buildPageRows() throws PaginatorException {
 		ArrayList<RowImpl> ret = new ArrayList<>();
 		{
-			LayoutMaster lm = master;
-			int pagenum = getPageIndex() + 1;
-			PageTemplate t = lm.getTemplate(pagenum);
+			PageTemplate t = master.getTemplate(pagenum);
 			BrailleTranslator filter = fcontext.getDefaultTranslator();
-            ret.addAll(renderFields(lm, t.getHeader(), filter));
-            if (lm.getPageArea()!=null && lm.getPageArea().getAlignment()==PageAreaProperties.Alignment.TOP && !pageArea.isEmpty()) {
+            ret.addAll(renderFields(t.getHeader(), filter));
+            if (master.getPageArea()!=null && master.getPageArea().getAlignment()==PageAreaProperties.Alignment.TOP && !pageArea.isEmpty()) {
 				ret.addAll(before);
 				ret.addAll(pageArea);
 				ret.addAll(after);
 			}
             ret.addAll(rows);
-            float headerHeight = getHeight(t.getHeader(), lm.getRowSpacing());
-            if (!t.getFooter().isEmpty() || border != TextBorderStyle.NONE || (lm.getPageArea()!=null && lm.getPageArea().getAlignment()==PageAreaProperties.Alignment.BOTTOM && !pageArea.isEmpty())) {
-                float areaSize = (lm.getPageArea()!=null && lm.getPageArea().getAlignment()==PageAreaProperties.Alignment.BOTTOM ? pageAreaSpaceNeeded() : 0);
-                while (Math.ceil(rowsNeeded(ret, lm.getRowSpacing()) + areaSize) < getFlowHeight() + headerHeight) {
+            float headerHeight = getHeight(t.getHeader(), master.getRowSpacing());
+            if (!t.getFooter().isEmpty() || borderStyle != TextBorderStyle.NONE || (master.getPageArea()!=null && master.getPageArea().getAlignment()==PageAreaProperties.Alignment.BOTTOM && !pageArea.isEmpty())) {
+                float areaSize = (master.getPageArea()!=null && master.getPageArea().getAlignment()==PageAreaProperties.Alignment.BOTTOM ? pageAreaSpaceNeeded() : 0);
+                while (Math.ceil(rowsNeeded(ret, master.getRowSpacing()) + areaSize) < getFlowHeight() + headerHeight) {
 					ret.add(new RowImpl());
 				}
-				if (lm.getPageArea()!=null && lm.getPageArea().getAlignment()==PageAreaProperties.Alignment.BOTTOM && !pageArea.isEmpty()) {
+				if (master.getPageArea()!=null && master.getPageArea().getAlignment()==PageAreaProperties.Alignment.BOTTOM && !pageArea.isEmpty()) {
 					ret.addAll(before);
 					ret.addAll(pageArea);
 					ret.addAll(after);
 				}
-                ret.addAll(renderFields(lm, t.getFooter(), filter));
+                ret.addAll(renderFields(t.getFooter(), filter));
 			}
 		}
 		return ret;
+	}
+	
+	private TextBorder buildBorder() {
+		int fsize = borderStyle.getLeftBorder().length() + borderStyle.getRightBorder().length();
+		int w = master.getFlowWidth() + fsize + pageMargin;
+		return new TextBorder.Builder(w, fcontext.getSpaceCharacter()+"")
+				.style(borderStyle)
+				.outerLeftMargin(pageMargin)
+				.padToSize(!TextBorderStyle.NONE.equals(borderStyle))
+				.build();
 	}
 
 	/*
@@ -192,77 +208,28 @@ class PageImpl implements Page {
 	 */
 	@Override
 	public List<Row> getRows() {
-
 		try {
-			TextBorderStyle border = master.getBorder();
-			if (border == null) {
-				border = TextBorderStyle.NONE;
-			}
-            List<RowImpl> ret = buildPageRows(border);
-
-			LayoutMaster lm = master;
             ArrayList<Row> ret2 = new ArrayList<>();
 			{
-				final int pagenum = getPageIndex() + 1;
-				TextBorder tb = null;
-
-				int fsize = border.getLeftBorder().length() + border.getRightBorder().length();
-				final int pageMargin = ((pagenum % 2 == 0) ? lm.getOuterMargin() : lm.getInnerMargin());
-				int w = master.getFlowWidth() + fsize + pageMargin;
-
-				tb = new TextBorder.Builder(w, fcontext.getSpaceCharacter()+"")
-						.style(border)
-						.outerLeftMargin(pageMargin)
-						.padToSize(!TextBorderStyle.NONE.equals(border))
-						.build();
-				if (!TextBorderStyle.NONE.equals(border)) {
-					RowImpl r = new RowImpl(tb.getTopBorder());
-					DistributedRowSpacing rs = distributeRowSpacing(lm.getRowSpacing(), true);
+				if (!TextBorderStyle.NONE.equals(borderStyle)) {
+					RowImpl r = new RowImpl(border.getTopBorder());
+					DistributedRowSpacing rs = distributeRowSpacing(master.getRowSpacing(), true);
 					r.setRowSpacing(rs.spacing);
 					ret2.add(r);
 				}
-				String res;
-
+	            List<RowImpl> ret = buildPageRows();
 				for (RowImpl row : ret) {
-					res = "";
-					if (row.getChars().length() > 0) {
-						// remove trailing whitespace
-						String chars = trailingWs.matcher(row.getChars()).replaceAll("");
-						//if (!TextBorderStyle.NONE.equals(frame)) {
-							res = tb.addBorderToRow(
-									padLeft(master.getFlowWidth(), chars, row.getLeftMargin(), row.getRightMargin(), row.getAlignment(), fcontext.getSpaceCharacter()), 
-									"");
-						//} else {
-						//	res = StringTools.fill(getMarginCharacter(), pageMargin + row.getLeftMargin()) + chars;
-						//}
-					} else {
-						if (!TextBorderStyle.NONE.equals(border)) {
-							res = tb.addBorderToRow(row.getLeftMargin().getContent(), row.getRightMargin().getContent());
-						} else {
-							if (!row.getLeftMargin().isSpaceOnly() || !row.getRightMargin().isSpaceOnly()) {
-								res = TextBorder.addBorderToRow(
-									lm.getFlowWidth(), row.getLeftMargin().getContent(), "", row.getRightMargin().getContent(), fcontext.getSpaceCharacter()+"");
-							} else {
-								res = "";
-							}
-						}
-					}
-					int rowWidth = StringTools.length(res) + pageMargin;
-					String r = res;
-					if (rowWidth > master.getPageWidth()) {
-						throw new PaginatorException("Row is too long (" + rowWidth + "/" + master.getPageWidth() + ") '" + res + "'");
-					}
-					RowImpl r2 = new RowImpl(r);
+					RowImpl r2 = addBorders(row);
 					ret2.add(r2);
 					Float rs2 = row.getRowSpacing();
-					if (!TextBorderStyle.NONE.equals(border)) {
+					if (!TextBorderStyle.NONE.equals(borderStyle)) {
 						DistributedRowSpacing rs = distributeRowSpacing(rs2, true);
 						r2.setRowSpacing(rs.spacing);
 						//don't add space to the last line
                         if (row!=ret.get(ret.size()-1)) {
 							RowImpl s = null;
 							for (int i = 0; i < rs.lines-1; i++) {
-								s = new RowImpl(tb.addBorderToRow(row.getLeftMargin().getContent(), row.getRightMargin().getContent()));
+								s = new RowImpl(border.addBorderToRow(row.getLeftMargin().getContent(), row.getRightMargin().getContent()));
 								s.setRowSpacing(rs.spacing);
 								ret2.add(s);
 							}
@@ -272,13 +239,13 @@ class PageImpl implements Page {
 					}
 					
 				}
-				if (!TextBorderStyle.NONE.equals(border)) {
-                    ret2.add(new RowImpl(tb.getBottomBorder()));
+				if (!TextBorderStyle.NONE.equals(borderStyle)) {
+                    ret2.add(new RowImpl(border.getBottomBorder()));
 				}
 			}
             if (ret2.size()>0) {
                 RowImpl last = ((RowImpl)ret2.get(ret2.size()-1));
-				if (lm.getRowSpacing()!=1) {
+				if (master.getRowSpacing()!=1) {
 					//set row spacing on the last row to 1.0
 					last.setRowSpacing(1f);
 				} else if (last.getRowSpacing()!=null) {
@@ -290,6 +257,33 @@ class PageImpl implements Page {
 		} catch (PaginatorException e) {
 			throw new RuntimeException("Pagination failed.", e);
 		}
+	}
+	
+	private RowImpl addBorders(RowImpl row) {
+		String res = "";
+		if (row.getChars().length() > 0) {
+			// remove trailing whitespace
+			String chars = trailingWs.matcher(row.getChars()).replaceAll("");
+			res = border.addBorderToRow(
+					padLeft(master.getFlowWidth(), chars, row.getLeftMargin(), row.getRightMargin(), row.getAlignment(), fcontext.getSpaceCharacter()), 
+					"");
+		} else {
+			if (!TextBorderStyle.NONE.equals(borderStyle)) {
+				res = border.addBorderToRow(row.getLeftMargin().getContent(), row.getRightMargin().getContent());
+			} else {
+				if (!row.getLeftMargin().isSpaceOnly() || !row.getRightMargin().isSpaceOnly()) {
+					res = TextBorder.addBorderToRow(
+						master.getFlowWidth(), row.getLeftMargin().getContent(), "", row.getRightMargin().getContent(), fcontext.getSpaceCharacter()+"");
+				} else {
+					res = "";
+				}
+			}
+		}
+		int rowWidth = StringTools.length(res) + pageMargin;
+		if (rowWidth > master.getPageWidth()) {
+			throw new PaginatorException("Row is too long (" + rowWidth + "/" + master.getPageWidth() + ") '" + res + "'");
+		}
+		return new RowImpl(res);
 	}
 	
 	static String padLeft(int w, RowImpl row, char space) {
@@ -328,11 +322,11 @@ class PageImpl implements Page {
 		return flowHeight;
 	}
 
-    private List<RowImpl> renderFields(LayoutMaster lm, List<FieldList> fields, BrailleTranslator translator) throws PaginatorException {
+    private List<RowImpl> renderFields(List<FieldList> fields, BrailleTranslator translator) throws PaginatorException {
         ArrayList<RowImpl> ret = new ArrayList<>();
 		for (FieldList row : fields) {
             try {
-                RowImpl r = new RowImpl(distribute(row, lm.getFlowWidth(), fcontext.getSpaceCharacter()+"", translator));
+                RowImpl r = new RowImpl(distribute(row, master.getFlowWidth(), fcontext.getSpaceCharacter()+"", translator));
                 r.setRowSpacing(row.getRowSpacing());
                 ret.add(r);
             } catch (PaginatorToolsException e) {
