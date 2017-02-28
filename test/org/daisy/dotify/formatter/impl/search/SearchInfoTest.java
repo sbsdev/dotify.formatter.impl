@@ -50,8 +50,9 @@ public class SearchInfoTest {
 			if (m!=null) {
 				pd.getMarkers().addAll(m);
 			}
-			si.addPageDetails(pd);
+			si.keepPageDetails(pd);
 		}
+		si.commitPageDetails();
 	}
 
 }

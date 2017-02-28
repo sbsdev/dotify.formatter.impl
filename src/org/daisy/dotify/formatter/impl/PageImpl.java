@@ -99,15 +99,15 @@ class PageImpl implements Page {
 	
 	void newRow(RowImpl r) {
 		if (rows.isEmpty()) {
-			details.startsContentMarkers();
+			getDetails().startsContentMarkers();
 		}
 		rows.add(r);
-		details.getMarkers().addAll(r.getMarkers());
+		getDetails().getMarkers().addAll(r.getMarkers());
 		anchors.addAll(r.getAnchors());
 	}
 	
 	void addMarkers(List<Marker> m) {
-		details.getMarkers().addAll(m);
+		getDetails().getMarkers().addAll(m);
 	}
 	
 	List<String> getAnchors() {
@@ -411,7 +411,7 @@ class PageImpl implements Page {
 		if (field instanceof CompoundField) {
 			ret = resolveCompoundField((CompoundField)field, p, b2);
 		} else if (field instanceof MarkerReferenceField) {
-			ret = crh.getSearchInfo().findStartAndMarker(p.details, (MarkerReferenceField)field);
+			ret = crh.getSearchInfo().findStartAndMarker(p.getDetails(), (MarkerReferenceField)field);
 		} else if (field instanceof CurrentPageField) {
 			ret = resolveCurrentPageField((CurrentPageField)field, p);
 		} else {
@@ -491,6 +491,10 @@ class PageImpl implements Page {
 	
 	void setAvoidVolumeBreakAfter(Integer value) {
 		this.volumeBreakAfterPriority = value;
+	}
+
+	public PageDetails getDetails() {
+		return details;
 	}
 
 }

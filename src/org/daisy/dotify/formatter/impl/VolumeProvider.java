@@ -168,6 +168,7 @@ public class VolumeProvider {
 		groups.currentGroup().setUnits(sp.getTail());
 		List<Sheet> contents = sp.getHead();
 		int pageCount = Sheet.countPages(contents);
+		crh.getSearchInfo().commitPageDetails();
 		crh.getSearchInfo().setVolumeScope(currentVolumeNumber, pageIndex, pageIndex+pageCount);
 
 		pageIndex += pageCount;

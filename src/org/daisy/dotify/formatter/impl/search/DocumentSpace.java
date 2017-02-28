@@ -50,5 +50,10 @@ public final class DocumentSpace {
 			return false;
 		return true;
 	}
+
+	@Override
+	public String toString() {
+		return "DocumentSpace [volumeNumber=" + volumeNumber + ", space=" + space + "]";
+	}
 	
 }

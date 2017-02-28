@@ -106,7 +106,6 @@ class PageSequenceBuilder2 {
 		PageImpl buffer = current;
 		SequenceId seqId = new SequenceId(sequenceId, new DocumentSpace(blockContext.getContext().getSpace(), blockContext.getContext().getCurrentVolume()));
 		PageDetails details = new PageDetails(master.duplex(), pageCount, getGlobalStartIndex(), seqId);
-		crh.getSearchInfo().addPageDetails(details);
 		current = new PageImpl(crh, details, master, context, pageCount+pageNumberOffset, staticAreaContent.getBefore(), staticAreaContent.getAfter());
 		pageCount ++;
 		if (keepNextSheets>0) {
@@ -164,6 +163,7 @@ class PageSequenceBuilder2 {
 	PageImpl nextPage() throws PaginatorException, RestartPaginationException // pagination must be restarted in PageStructBuilder.paginateInner
 	{
 		PageImpl ret = nextPageInner();
+		crh.getSearchInfo().keepPageDetails(ret.getDetails());
 		//This is for pre/post volume contents, where the volume number is known
 		if (blockContext.getContext().getCurrentVolume()!=null) {
 			for (String id : ret.getIdentifiers()) {
@@ -174,7 +174,7 @@ class PageSequenceBuilder2 {
 		return ret;
 	}
 
-	PageImpl nextPageInner() throws PaginatorException, RestartPaginationException // pagination must be restarted in PageStructBuilder.paginateInner
+	private PageImpl nextPageInner() throws PaginatorException, RestartPaginationException // pagination must be restarted in PageStructBuilder.paginateInner
 	{
 		while (dataGroups.hasNext() || (data!=null && !data.isEmpty())) {
 			if ((data==null || data.isEmpty()) && dataGroups.hasNext()) {

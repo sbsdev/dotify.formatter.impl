@@ -11,7 +11,7 @@ public class PageDetails {
 	private final int globalStartIndex;
 	private final SequenceId sequenceId;
 	private int volumeNumber;
-	int contentMarkersBegin;
+	private int contentMarkersBegin;
 	
 	private final ArrayList<Marker> markers;
 	
@@ -20,7 +20,6 @@ public class PageDetails {
 		this.ordinal = ordinal;
 		this.globalStartIndex = globalStartIndex;
 		this.sequenceId = sequenceId;
-		//FIXME: for this to work as intended, the markers have to have some way of remaining while being updated
 		this.markers = new ArrayList<>();
 		this.contentMarkersBegin = 0;
 		this.volumeNumber = 0;
@@ -128,6 +127,56 @@ public class PageDetails {
 						(offset == -1 && getOrdinal() % 2 == 1)
 					)
 				);
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + contentMarkersBegin;
+		result = prime * result + (duplex ? 1231 : 1237);
+		result = prime * result + globalStartIndex;
+		result = prime * result + ((markers == null) ? 0 : markers.hashCode());
+		result = prime * result + ordinal;
+		result = prime * result + ((sequenceId == null) ? 0 : sequenceId.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		PageDetails other = (PageDetails) obj;
+		if (contentMarkersBegin != other.contentMarkersBegin)
+			return false;
+		if (duplex != other.duplex)
+			return false;
+		if (globalStartIndex != other.globalStartIndex)
+			return false;
+		if (markers == null) {
+			if (other.markers != null)
+				return false;
+		} else if (!markers.equals(other.markers))
+			return false;
+		if (ordinal != other.ordinal)
+			return false;
+		if (sequenceId == null) {
+			if (other.sequenceId != null)
+				return false;
+		} else if (!sequenceId.equals(other.sequenceId))
+			return false;
+		return true;
+	}
+
+	@Override
+	public String toString() {
+		return "PageDetails [duplex=" + duplex + ", ordinal=" + ordinal + ", globalStartIndex=" + globalStartIndex
+				+ ", sequenceId=" + sequenceId + ", volumeNumber=" + volumeNumber + ", contentMarkersBegin="
+				+ contentMarkersBegin + ", markers=" + markers + "]";
 	}
 	
 }

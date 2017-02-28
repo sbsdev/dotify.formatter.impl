@@ -151,7 +151,7 @@ public class CrossReferenceHandler {
 	}
 
 	public boolean isDirty() {
-		return pageRefs.isDirty() || volumeRefs.isDirty() || anchorRefs.isDirty() || variables.isDirty() || breakable.isDirty() || overheadDirty;
+		return pageRefs.isDirty() || volumeRefs.isDirty() || anchorRefs.isDirty() || variables.isDirty() || breakable.isDirty() || overheadDirty || searchInfo.isDirty();
 	}
 	
 	public void setDirty(boolean value) {
@@ -160,6 +160,7 @@ public class CrossReferenceHandler {
 		anchorRefs.setDirty(value);
 		variables.setDirty(value);
 		breakable.setDirty(value);
+		searchInfo.setDirty(value);
 		overheadDirty = value;
 	}
 
