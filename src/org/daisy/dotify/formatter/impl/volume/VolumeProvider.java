@@ -21,17 +21,17 @@ import org.daisy.dotify.formatter.impl.PageImpl;
 import org.daisy.dotify.formatter.impl.PageStruct;
 import org.daisy.dotify.formatter.impl.PaginatorException;
 import org.daisy.dotify.formatter.impl.RestartPaginationException;
-import org.daisy.dotify.formatter.impl.SectionBuilder;
-import org.daisy.dotify.formatter.impl.Sheet;
-import org.daisy.dotify.formatter.impl.SheetDataSource;
-import org.daisy.dotify.formatter.impl.SheetGroup;
-import org.daisy.dotify.formatter.impl.SheetGroupManager;
-import org.daisy.dotify.formatter.impl.SplitterLimit;
-import org.daisy.dotify.formatter.impl.VolumeImpl;
 import org.daisy.dotify.formatter.impl.search.AnchorData;
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.search.DefaultContext;
 import org.daisy.dotify.formatter.impl.search.Space;
+import org.daisy.dotify.formatter.impl.sheet.SectionBuilder;
+import org.daisy.dotify.formatter.impl.sheet.Sheet;
+import org.daisy.dotify.formatter.impl.sheet.SheetDataSource;
+import org.daisy.dotify.formatter.impl.sheet.SheetGroup;
+import org.daisy.dotify.formatter.impl.sheet.SheetGroupManager;
+import org.daisy.dotify.formatter.impl.sheet.SplitterLimit;
+import org.daisy.dotify.formatter.impl.sheet.VolumeImpl;
 
 /**
  * Provides contents in volumes.

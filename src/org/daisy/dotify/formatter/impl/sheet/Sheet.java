@@ -1,10 +1,12 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.sheet;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import org.daisy.dotify.common.split.SplitPointUnit;
+import org.daisy.dotify.formatter.impl.PageImpl;
+import org.daisy.dotify.formatter.impl.PageSequenceBuilder2;
 public class Sheet implements SplitPointUnit {
 	private static final List<String> SUPPLEMENTS = Collections.unmodifiableList(new ArrayList<String>());
 	private final PageSequenceBuilder2 master;
@@ -59,7 +61,7 @@ public class Sheet implements SplitPointUnit {
 		this.collapsible = pages.isEmpty();
 	}
 	
-	PageSequenceBuilder2 getPageSequence() {
+	public PageSequenceBuilder2 getPageSequence() {
 		return master;
 	}
 	

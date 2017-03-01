@@ -516,11 +516,11 @@ public class PageImpl implements Page {
 		this.isVolBreakAllowed = value;
 	}
 
-	boolean allowsVolumeBreak() {
+	public boolean allowsVolumeBreak() {
 		return isVolBreakAllowed;
 	}
 
-	int keepPreviousSheets() {
+	public int keepPreviousSheets() {
 		return keepPreviousSheets;
 	}
 
@@ -528,7 +528,7 @@ public class PageImpl implements Page {
 		return template;
 	}
 	
-	Integer getAvoidVolumeBreakAfter() {
+	public Integer getAvoidVolumeBreakAfter() {
 		return volumeBreakAfterPriority;
 	}
 	

@@ -14,19 +14,19 @@ public class PageStruct {
 		pageCount = 0;
 	}
 
-	void setCurrentSequence(PageSequenceBuilder2 seq) {
+	public void setCurrentSequence(PageSequenceBuilder2 seq) {
 		currentSeq = seq;
 	}
 
-	int getCurrentPageOffset() {
+	public int getCurrentPageOffset() {
 		return currentSeq!=null?currentSeq.getCurrentPageOffset():0;
 	}
 
-	int getPageCount() {
+	public int getPageCount() {
 		return pageCount;
 	}
 	
-	void increasePageCount() {
+	public void increasePageCount() {
 		pageCount++;
 	}
 

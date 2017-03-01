@@ -1,4 +1,4 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.sheet;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -6,6 +6,13 @@ import java.util.List;
 
 import org.daisy.dotify.common.split.SplitPointDataSource;
 import org.daisy.dotify.common.split.Supplements;
+import org.daisy.dotify.formatter.impl.BlockSequence;
+import org.daisy.dotify.formatter.impl.FormatterContext;
+import org.daisy.dotify.formatter.impl.LayoutMaster;
+import org.daisy.dotify.formatter.impl.PageImpl;
+import org.daisy.dotify.formatter.impl.PageSequenceBuilder2;
+import org.daisy.dotify.formatter.impl.PageStruct;
+import org.daisy.dotify.formatter.impl.RestartPaginationException;
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.search.DefaultContext;
 import org.daisy.dotify.formatter.impl.search.DocumentSpace;

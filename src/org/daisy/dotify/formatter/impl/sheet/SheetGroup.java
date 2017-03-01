@@ -1,4 +1,4 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.sheet;
 
 import org.daisy.dotify.common.split.SplitPointDataSource;
 

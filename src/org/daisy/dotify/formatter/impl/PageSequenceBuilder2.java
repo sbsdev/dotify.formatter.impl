@@ -25,7 +25,7 @@ import org.daisy.dotify.formatter.impl.search.PageDetails;
 import org.daisy.dotify.formatter.impl.search.PageId;
 import org.daisy.dotify.formatter.impl.search.SequenceId;
 
-class PageSequenceBuilder2 {
+public class PageSequenceBuilder2 {
 	private final FormatterContext context;
 	private final CrossReferenceHandler crh;
 	private final PageAreaContent staticAreaContent;
@@ -50,7 +50,7 @@ class PageSequenceBuilder2 {
 	private final int fromIndex;
 	private int toIndex;
 	
-	PageSequenceBuilder2(int fromIndex, LayoutMaster master, int pageOffset, CrossReferenceHandler crh,
+	public PageSequenceBuilder2(int fromIndex, LayoutMaster master, int pageOffset, CrossReferenceHandler crh,
 	                     BlockSequence seq, FormatterContext context, DefaultContext rcontext, int sequenceId) {
 		this.fromIndex = fromIndex;
 		this.toIndex = fromIndex;
@@ -157,11 +157,11 @@ class PageSequenceBuilder2 {
 		currentPage().addIdentifier(id);
 	}
 	
-	boolean hasNext() {
+	public boolean hasNext() {
 		return dataGroups.hasNext() || (data!=null && !data.isEmpty()) || current!=null;
 	}
 	
-	PageImpl nextPage() throws PaginatorException, RestartPaginationException // pagination must be restarted in PageStructBuilder.paginateInner
+	public PageImpl nextPage() throws PaginatorException, RestartPaginationException // pagination must be restarted in PageStructBuilder.paginateInner
 	{
 		PageImpl ret = nextPageInner();
 		crh.keepPageDetails(ret.getDetails());
@@ -425,7 +425,7 @@ class PageSequenceBuilder2 {
 	 * Gets the layout master for this sequence
 	 * @return returns the layout master for this sequence
 	 */
-	LayoutMaster getLayoutMaster() {
+	public LayoutMaster getLayoutMaster() {
 		return master;
 	}
 
@@ -449,7 +449,7 @@ class PageSequenceBuilder2 {
 		return fromIndex;
 	}
 
-	int getToIndex() {
+	public int getToIndex() {
 		return toIndex;
 	}
 

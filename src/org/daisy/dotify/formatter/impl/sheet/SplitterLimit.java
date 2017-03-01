@@ -1,4 +1,4 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.sheet;
 
 /**
  * Provides the splitter limit for a given volume.
