@@ -24,7 +24,6 @@ import org.daisy.dotify.api.writer.Row;
 import org.daisy.dotify.common.text.StringTools;
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.search.PageDetails;
-import org.daisy.dotify.formatter.impl.search.PageId;
 import org.daisy.dotify.writer.impl.Page;
 
 
@@ -129,19 +128,39 @@ class PageImpl implements Page {
 	 * @param defSpacing a value >= 1.0
 	 * @return returns the space, in rows
 	 */
-	private static float rowsNeeded(Iterable<? extends Row> rows, float defSpacing) {
-		float ret = 0;
-		if (defSpacing < 1) {
-			defSpacing = 1;
+	private static float rowsNeeded(Collection<? extends Row> rows, float defSpacing) {
+		HeightCalculator c = new HeightCalculator(defSpacing);
+		c.addRows(rows);
+		return c.getCurrentHeight();
+	}
+	
+	private static class HeightCalculator {
+		private final float defSpacing;
+		private float ret;
+		private HeightCalculator(float defSpacing) {
+			this.defSpacing = defSpacing < 1 ? 1 : defSpacing;
+			this.ret = 0;
 		}
-		for (Row r : rows) {
+		
+		float getRowSpacing(Row r) {
 			if (r.getRowSpacing()!=null && r.getRowSpacing()>=1) {
-				ret += r.getRowSpacing();
+				return r.getRowSpacing();
 			} else {
-				ret += defSpacing;
+				return defSpacing;
 			}
 		}
-		return ret;
+		
+		void addRow(Row r) {
+			ret += getRowSpacing(r);
+		}
+		
+		void addRows(Collection<? extends Row> rows) {
+			ret += rows.stream().mapToDouble(this::getRowSpacing).sum();
+		}
+
+		float getCurrentHeight() {
+			return ret;
+		}
 	}
 	
 	private float spaceNeeded() {
