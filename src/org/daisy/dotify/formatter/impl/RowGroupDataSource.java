@@ -8,6 +8,12 @@ import org.daisy.dotify.common.split.SplitPointDataSource;
 import org.daisy.dotify.common.split.Supplements;
 
 class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
+	private static final Supplements<RowGroup> EMPTY_SUPPLEMENTS = new Supplements<RowGroup>() {
+		@Override
+		public RowGroup get(String id) {
+			return null;
+		}
+	};
 	private final LayoutMaster master;
 	private final BlockContext bc;
 	private final RowGroupData data;
@@ -81,12 +87,7 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 		this.bc = bc;
 		this.data = data;
 		if (supplements==null) {
-			this.supplements = new Supplements<RowGroup>() {
-				@Override
-				public RowGroup get(String id) {
-					return null;
-				}
-			};
+			this.supplements = EMPTY_SUPPLEMENTS;
 		} else {
 			this.supplements = supplements;
 		}
