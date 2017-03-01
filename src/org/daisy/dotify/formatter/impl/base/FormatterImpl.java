@@ -37,7 +37,7 @@ import org.daisy.dotify.writer.impl.WriterHandler;
  * Breaks flow into rows, page related block properties are left to next step
  * @author Joel Håkansson
  */
-public class FormatterImpl implements Formatter {
+class FormatterImpl implements Formatter {
 
 	private final HashMap<String, TableOfContentsImpl> tocs;
 	private final Stack<VolumeTemplate> volumeTemplates;
@@ -58,7 +58,7 @@ public class FormatterImpl implements Formatter {
 	 * @param locale a locale
 	 * @param mode a braille mode
 	 */
-	public FormatterImpl(BrailleTranslatorFactoryMakerService translatorFactory, TextBorderFactoryMakerService tbf, MarkerProcessorFactoryMakerService mpf, String locale, String mode) {
+	FormatterImpl(BrailleTranslatorFactoryMakerService translatorFactory, TextBorderFactoryMakerService tbf, MarkerProcessorFactoryMakerService mpf, String locale, String mode) {
 		this.context = new LazyFormatterContext(translatorFactory, tbf, mpf, FormatterConfiguration.with(locale, mode).build());
 		this.blocks = new Stack<>();
 		this.unopened = true;
