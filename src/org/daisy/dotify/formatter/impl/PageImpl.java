@@ -88,7 +88,7 @@ class PageImpl implements Page {
 		this.borderStyle = master.getBorder()!=null?master.getBorder():TextBorderStyle.NONE;
 		this.border = buildBorder();
 		this.pageTemplate = master.getTemplate(pagenum);
-		this.finalRows = new BorderManager();
+		this.finalRows = new BorderManager(master.getRowSpacing());
 		this.hasRows = false;
 		this.filter = fcontext.getDefaultTranslator();
 	}
@@ -106,11 +106,10 @@ class PageImpl implements Page {
 	        finalRows.addAll(renderFields(pageTemplate.getHeader(), filter));
 	        //add the top page area
 			addTopPageArea();
-		}
-		hasRows = true;
-		if (rows.isEmpty()) {
+			finalRows.markHeight();
 			getDetails().startsContentMarkers();
 		}
+		hasRows = true;
 		rows.add(r);
 		getDetails().getMarkers().addAll(r.getMarkers());
 		anchors.addAll(r.getAnchors());
@@ -244,6 +243,7 @@ class PageImpl implements Page {
 	}
 	
 	private class BorderManager {
+		private HeightCalculator hc;
 		private List<Row> ret2;
 		private DistributedRowSpacing rs = null;
 		private RowImpl r2 = null;
@@ -251,14 +251,17 @@ class PageImpl implements Page {
 		//This variable is used to compensate for the fact that the top border was calculated outside of the main logic before
         //and can be removed once the logic has been updated.
 		private final int offset;
+		private float markedHeight;
         
-        private BorderManager() {
+        private BorderManager(float defRowSpacing) {
+        	this.hc = new HeightCalculator(defRowSpacing);
         	this.ret2 = new ArrayList<>();
         	this.closed = false;
         	if (!TextBorderStyle.NONE.equals(borderStyle)) {
         		addTopBorder();
         	}
         	this.offset = ret2.size();
+        	this.markedHeight = 0;
         }
         
         //This method is used to compensate for the fact that the top border was calculated outside of the main logic before
@@ -271,7 +274,7 @@ class PageImpl implements Page {
 			RowImpl r = new RowImpl(border.getTopBorder());
 			DistributedRowSpacing rs = distributeRowSpacing(master.getRowSpacing(), true);
 			r.setRowSpacing(rs.spacing);
-			ret2.add(r);
+			add(r);
 		}
 		
 		private void addAll(Collection<? extends RowImpl> rows) {
@@ -290,12 +293,12 @@ class PageImpl implements Page {
 				for (int i = 0; i < rs.lines-1; i++) {
 					s = new RowImpl(border.addBorderToRow(r2.getLeftMargin().getContent(), r2.getRightMargin().getContent()));
 					s.setRowSpacing(rs.spacing);
-					ret2.add(s);
+					add(s);
 				}
 			}
 
 			r2 = addBorders(row);
-			ret2.add(r2);
+			add(r2);
 			Float rs2 = row.getRowSpacing();
 			if (!TextBorderStyle.NONE.equals(borderStyle)) {
 				//distribute row spacing
@@ -312,7 +315,7 @@ class PageImpl implements Page {
 			}
 			closed = true;
 			if (!TextBorderStyle.NONE.equals(borderStyle)) {
-                ret2.add(new RowImpl(border.getBottomBorder()));
+                add(new RowImpl(border.getBottomBorder()));
 			}
 			if (ret2.size()>0) {
                 RowImpl last = ((RowImpl)ret2.get(ret2.size()-1));
@@ -324,6 +327,23 @@ class PageImpl implements Page {
 					last.setRowSpacing(null);
 				}
 			}
+		}
+		
+		private void markHeight() {
+			markedHeight = getCurrentHeight();
+		}
+		
+		private float getMarkedHeight() {
+			return markedHeight;
+		}
+		
+		private float getCurrentHeight() {
+			return hc.getCurrentHeight();
+		}
+		
+		private void add(Row r) {
+			ret2.add(r);
+			hc.addRow(r);
 		}
 
 		List<Row> getRows() {
