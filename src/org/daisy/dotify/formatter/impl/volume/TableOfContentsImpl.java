@@ -1,17 +1,19 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.volume;
 
 import java.util.LinkedHashMap;
 import java.util.Set;
 
 import org.daisy.dotify.api.formatter.BlockProperties;
 import org.daisy.dotify.api.formatter.TableOfContents;
+import org.daisy.dotify.formatter.impl.FormatterCoreContext;
+import org.daisy.dotify.formatter.impl.FormatterCoreImpl;
 
 
 /**
  * Provides table of contents entries to be used when building a Table of Contents
  * @author Joel Håkansson
  */
-class TableOfContentsImpl extends FormatterCoreImpl implements TableOfContents  {
+public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfContents  {
 	/**
 	 * 
 	 */

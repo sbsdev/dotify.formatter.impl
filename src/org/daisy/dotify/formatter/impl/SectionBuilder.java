@@ -5,12 +5,12 @@ import java.util.Stack;
 
 import org.daisy.dotify.writer.impl.Section;
 
-class SectionBuilder {
+public class SectionBuilder {
     private Stack<Section> ret = new Stack<Section>();
     private PageSequenceBuilder2 currentSeq = null;
     private int sheets = 0;
 
-    void addSheet(Sheet s) {
+    public void addSheet(Sheet s) {
         sheets++;
         if (ret.isEmpty() || currentSeq!=s.getPageSequence()) {
             currentSeq = s.getPageSequence();

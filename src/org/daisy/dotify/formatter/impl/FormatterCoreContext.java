@@ -4,7 +4,7 @@ import org.daisy.dotify.api.formatter.FormatterConfiguration;
 import org.daisy.dotify.api.translator.MarkerProcessorFactoryMakerService;
 import org.daisy.dotify.api.translator.TextBorderFactoryMakerService;
 
-class FormatterCoreContext {
+public class FormatterCoreContext {
 	private final TextBorderFactoryMakerService tbf;
 	private final FormatterConfiguration config;
 	private final MarkerProcessorFactoryMakerService mpf;

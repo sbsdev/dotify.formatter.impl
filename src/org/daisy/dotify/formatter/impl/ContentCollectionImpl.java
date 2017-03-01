@@ -16,7 +16,7 @@ import org.daisy.dotify.api.formatter.ContentCollection;
  * 
  * @author Joel Håkansson
  */
-class ContentCollectionImpl extends FormatterCoreImpl implements ContentCollection  {
+public class ContentCollectionImpl extends FormatterCoreImpl implements ContentCollection  {
 	/**
 	 * 
 	 */

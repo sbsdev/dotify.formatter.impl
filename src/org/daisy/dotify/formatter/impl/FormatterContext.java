@@ -19,7 +19,7 @@ import org.daisy.dotify.api.translator.TranslatorConfigurationException;
  * @author Joel Håkansson
  *
  */
-class FormatterContext extends FormatterCoreContext {
+public class FormatterContext extends FormatterCoreContext {
 	private final BrailleTranslator translator;
 	private final BrailleTranslatorFactoryMakerService translatorFactory;
 	private final Map<String, BrailleTranslator> cache;
@@ -80,11 +80,11 @@ class FormatterContext extends FormatterCoreContext {
 		return collection;
 	}
 	
-	Map<String, LayoutMaster> getMasters() {
+	public Map<String, LayoutMaster> getMasters() {
 		return masters;
 	}
 	
-	Map<String, ContentCollectionImpl> getCollections() {
+	public Map<String, ContentCollectionImpl> getCollections() {
 		return collections;
 	}
 	

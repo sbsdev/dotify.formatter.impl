@@ -1,6 +1,8 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.volume;
 
 import org.daisy.dotify.api.formatter.SequenceProperties;
+import org.daisy.dotify.formatter.impl.BlockSequence;
+import org.daisy.dotify.formatter.impl.FormatterContext;
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.search.DefaultContext;
 
@@ -10,7 +12,7 @@ import org.daisy.dotify.formatter.impl.search.DefaultContext;
  * 
  * @author Joel Håkansson
  */
-interface VolumeSequence {
+public interface VolumeSequence {
 	/**
 	 * Gets the volume sequence properties.
 	 * @return returns the volume sequence properties

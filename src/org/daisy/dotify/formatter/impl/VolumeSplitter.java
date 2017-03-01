@@ -6,7 +6,7 @@ package org.daisy.dotify.formatter.impl;
  * @author Joel Håkansson
  *
  */
-interface VolumeSplitter {
+public interface VolumeSplitter {
 
 	/**
 	 * Sets the number of sheets to distribute.

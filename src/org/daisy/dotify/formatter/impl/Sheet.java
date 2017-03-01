@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.daisy.dotify.common.split.SplitPointUnit;
-class Sheet implements SplitPointUnit {
+public class Sheet implements SplitPointUnit {
 	private static final List<String> SUPPLEMENTS = Collections.unmodifiableList(new ArrayList<String>());
 	private final PageSequenceBuilder2 master;
 	private final List<PageImpl> pages;
@@ -63,7 +63,7 @@ class Sheet implements SplitPointUnit {
 		return master;
 	}
 	
-	List<PageImpl> getPages() {
+	public List<PageImpl> getPages() {
 		return pages;
 	}
 
@@ -92,7 +92,7 @@ class Sheet implements SplitPointUnit {
 		return 1;
 	}
 	
-	Integer getAvoidVolumeBreakAfterPriority() {
+	public Integer getAvoidVolumeBreakAfterPriority() {
 		return avoidVolumeBreakAfterPriority;
 	}
 
@@ -127,7 +127,7 @@ class Sheet implements SplitPointUnit {
 	 * @param sheets the list of sheets to count
 	 * @return returns the number of pages
 	 */
-	static int countPages(List<Sheet> sheets) {
+	public static int countPages(List<Sheet> sheets) {
 		return sheets.stream().mapToInt(s -> s.getPages().size()).sum();
 	}
 	

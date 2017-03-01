@@ -7,7 +7,7 @@ package org.daisy.dotify.formatter.impl;
  * 
  * @author Joel Håkansson
  */
-class RestartPaginationException extends RuntimeException {
+public class RestartPaginationException extends RuntimeException {
 
 	/**
 	 * 

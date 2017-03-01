@@ -8,7 +8,7 @@ import org.daisy.dotify.api.formatter.SequenceProperties;
  * 
  * @author Joel Håkansson
  */
-class BlockSequence extends FormatterCoreImpl implements FormatterSequence {
+public class BlockSequence extends FormatterCoreImpl implements FormatterSequence {
 	private static final long serialVersionUID = -6105005856680272131L;
 	private final LayoutMaster master;
 	private final SequenceProperties props;

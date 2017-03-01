@@ -45,7 +45,7 @@ import org.daisy.dotify.formatter.impl.segment.PageNumberReferenceSegment;
 import org.daisy.dotify.formatter.impl.segment.Segment;
 import org.daisy.dotify.formatter.impl.segment.TextSegment;
 
-class FormatterCoreImpl extends Stack<Block> implements FormatterCore, BlockGroup {
+public class FormatterCoreImpl extends Stack<Block> implements FormatterCore, BlockGroup {
 	/**
 	 * 
 	 */

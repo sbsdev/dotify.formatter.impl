@@ -15,7 +15,7 @@ import org.daisy.dotify.api.writer.SectionProperties;
  * Specifies the layout of a paged media.
  * @author Joel Håkansson
  */
-class LayoutMaster implements LayoutMasterBuilder, SectionProperties {
+public class LayoutMaster implements LayoutMasterBuilder, SectionProperties {
 	private final LayoutMasterProperties props; 
 	private final ArrayList<PageTemplate> templates;
 	private final PageTemplate defaultPageTemplate;

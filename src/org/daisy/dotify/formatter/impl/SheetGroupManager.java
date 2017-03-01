@@ -9,7 +9,7 @@ import java.util.List;
  * 
  * @author Joel Håkansson
  */
-class SheetGroupManager {
+public class SheetGroupManager {
 	private final SplitterLimit splitterLimit;
 	private final List<SheetGroup> groups;
 	private int indexInGroup = 0;
@@ -19,7 +19,7 @@ class SheetGroupManager {
 	 * Creates a new sheet group manager
 	 * @param splitterLimit the splitter limit
 	 */
-	SheetGroupManager(SplitterLimit splitterLimit) {
+	public SheetGroupManager(SplitterLimit splitterLimit) {
 		this.groups = new ArrayList<>();
 		this.splitterLimit = splitterLimit;
 	}
@@ -29,7 +29,7 @@ class SheetGroupManager {
 	 * Creates a new sheet group, adds it to the manager and returns it.
 	 * @return returns the new sheet group
 	 */
-	SheetGroup add() {
+	public SheetGroup add() {
 		SheetGroup ret = new SheetGroup();
 		ret.setSplitter(new EvenSizeVolumeSplitter(new SplitterLimit() {
 			private final int groupIndex = groups.size();
@@ -52,7 +52,7 @@ class SheetGroupManager {
 	 * @param index the index, zero based
 	 * @return returns the sheet group
 	 */
-	SheetGroup atIndex(int index) {
+	public SheetGroup atIndex(int index) {
 		return groups.get(index);
 	}
 	
@@ -68,7 +68,7 @@ class SheetGroupManager {
 	 * Gets the currently active group.
 	 * @return returns the current group
 	 */
-	SheetGroup currentGroup() {
+	public SheetGroup currentGroup() {
 		return groups.get(index);
 	}
 
@@ -78,7 +78,7 @@ class SheetGroupManager {
 	 * the group following that is activated. 
 	 * 
 	 */
-	void nextVolume() {
+	public void nextVolume() {
 		if (indexInGroup+1>=currentGroup().getSplitter().getVolumeCount()) {
 			nextGroup();
 			indexInGroup = 0;
@@ -98,7 +98,7 @@ class SheetGroupManager {
 	 * Returns true if the current volume is the last according to the current group's splitter.
 	 * @return returns true if the current volume is the last, false otherwise
 	 */
-	boolean lastInGroup() {
+	public boolean lastInGroup() {
 		return indexInGroup==currentGroup().getSplitter().getVolumeCount();
 	}
 
@@ -106,14 +106,14 @@ class SheetGroupManager {
 	 * Gets the number of sheets in the current volume, according the the group's splitter.
 	 * @return
 	 */
-	int sheetsInCurrentVolume() {
+	public int sheetsInCurrentVolume() {
 		return currentGroup().getSplitter().sheetsInVolume(1+indexInGroup);
 	}
 	
 	/**
 	 * Resets the state of this manager.
 	 */
-	void resetAll() {
+	public void resetAll() {
 		for (SheetGroup g : groups) {
 			g.reset();
 		}
@@ -125,7 +125,7 @@ class SheetGroupManager {
 	 * Returns true if there is content left or left behind.
 	 * @return returns true if the manager has content, false otherwise
 	 */
-	boolean hasNext() {
+	public boolean hasNext() {
 		return groups.stream().anyMatch(g -> g.hasNext());
 	}
 	
@@ -133,7 +133,7 @@ class SheetGroupManager {
 	 * Updates the sheet count in every group.
 	 * <b>Note: only use after all volumes have been calculated.</b>
 	 */
-	void updateAll() {
+	public void updateAll() {
 		for (SheetGroup g : groups) {
 			g.getSplitter().updateSheetCount(g.countTotalSheets());
 		}
@@ -143,7 +143,7 @@ class SheetGroupManager {
 	 * Adjusts the volume count in every group (if needed).
 	 * <b>Note: only use after all volumes have been calculated.</b>
 	 */
-	void adjustVolumeCount() {
+	public void adjustVolumeCount() {
 		for (SheetGroup g : groups) {
 			if (g.hasNext()) {
 				g.getSplitter().adjustVolumeCount(g.countTotalSheets());
@@ -156,7 +156,7 @@ class SheetGroupManager {
 	 * <b>Note: only use after all volumes have been calculated.</b>
 	 * @return returns the sheet count
 	 */
-	int countTotalSheets() {
+	public int countTotalSheets() {
 		return groups.stream().mapToInt(g -> g.countTotalSheets()).sum();
 	}
 	
@@ -165,7 +165,7 @@ class SheetGroupManager {
 	 * <b>Note: only use after all volumes have been calculated.</b>
 	 * @return returns the number of remaining sheets
 	 */
-	int countRemainingSheets() {
+	public int countRemainingSheets() {
 		return groups.stream().mapToInt(g -> g.getUnits().getRemaining().size()).sum();
 	}
 	
@@ -174,7 +174,7 @@ class SheetGroupManager {
 	 * <b>Note: only use after all volumes have been calculated.</b>
 	 * @return returns the number of remaining pages
 	 */
-	int countRemainingPages() {
+	public int countRemainingPages() {
 		return groups.stream().map(g -> g.getUnits().getRemaining()).mapToInt(Sheet::countPages).sum();
 	}
 	
@@ -182,7 +182,7 @@ class SheetGroupManager {
 	 * Gets the total number of volumes.
 	 * @return returns the total number of volumes
 	 */
-	int getVolumeCount() {
+	public int getVolumeCount() {
 		return groups.stream().mapToInt(g -> g.getSplitter().getVolumeCount()).sum();
 	}
 

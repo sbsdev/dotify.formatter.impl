@@ -11,14 +11,14 @@ import org.daisy.dotify.writer.impl.Volume;
  * Provides a container for a physical volume of braille
  * @author Joel Håkansson
  */
-class VolumeImpl implements Volume {
+public class VolumeImpl implements Volume {
 	private List<Section> body;
 	private List<Section> preVolData;
 	private List<Section> postVolData;
 	private Overhead overhead;
 	private int bodyVolSize;
 	
-	VolumeImpl(Overhead overhead) {
+	public VolumeImpl(Overhead overhead) {
 		this.overhead = overhead;
 		this.bodyVolSize = 0;
 	}

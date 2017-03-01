@@ -8,7 +8,7 @@ import org.daisy.dotify.common.split.SplitPointDataSource;
  * @author Joel Håkansson
  *
  */
-class SheetGroup {
+public class SheetGroup {
 	private SplitPointDataSource<Sheet> units;
 	private VolumeSplitter splitter;
 	private int overheadCount;
@@ -33,7 +33,7 @@ class SheetGroup {
 	 * Gets the number of sheets outside of the regular text body.
 	 * @return returns the number of sheets
 	 */
-	int getOverheadCount() {
+	public int getOverheadCount() {
 		return overheadCount;
 	}
 	
@@ -41,7 +41,7 @@ class SheetGroup {
 	 * Sets the number of sheets outside of the regular text body.
 	 * @param value the number of sheets
 	 */
-	void setOverheadCount(int value) {
+	public void setOverheadCount(int value) {
 		this.overheadCount = value;
 	}
 	
@@ -49,7 +49,7 @@ class SheetGroup {
 	 * Gets the number of processed sheets belonging to the regular text body.
 	 * @return returns the number of sheets
 	 */
-	int getSheetCount() {
+	public int getSheetCount() {
 		return sheetCount;
 	}
 	
@@ -57,7 +57,7 @@ class SheetGroup {
 	 * Sets the number of processed sheets belonging to the regular text body.
 	 * @param value the number of sheets
 	 */
-	void setSheetCount(int value) {
+	public void setSheetCount(int value) {
 		this.sheetCount = value;
 	}
 
@@ -65,7 +65,7 @@ class SheetGroup {
 	 * Gets the remaining sheets in this group
 	 * @return the remaining sheets
 	 */
-	SplitPointDataSource<Sheet> getUnits() {
+	public SplitPointDataSource<Sheet> getUnits() {
 		return units;
 	}
 
@@ -73,7 +73,7 @@ class SheetGroup {
 	 * Sets the remaining sheets in this group
 	 * @param units a list of remaining sheets
 	 */
-	void setUnits(SplitPointDataSource<Sheet> units) {
+	public void setUnits(SplitPointDataSource<Sheet> units) {
 		this.units = units;
 	}
 	
@@ -89,7 +89,7 @@ class SheetGroup {
 	 * Gets the volume splitter used for this sheet group
 	 * @return returns the splitter
 	 */
-	VolumeSplitter getSplitter() {
+	public VolumeSplitter getSplitter() {
 		return splitter;
 	}
 	

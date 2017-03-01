@@ -1,4 +1,4 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.volume;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -14,6 +14,20 @@ import org.daisy.dotify.common.split.SplitPointCost;
 import org.daisy.dotify.common.split.SplitPointDataSource;
 import org.daisy.dotify.common.split.SplitPointHandler;
 import org.daisy.dotify.common.split.StandardSplitOption;
+import org.daisy.dotify.formatter.impl.BlockSequence;
+import org.daisy.dotify.formatter.impl.FormatterContext;
+import org.daisy.dotify.formatter.impl.LazyFormatterContext;
+import org.daisy.dotify.formatter.impl.PageImpl;
+import org.daisy.dotify.formatter.impl.PageStruct;
+import org.daisy.dotify.formatter.impl.PaginatorException;
+import org.daisy.dotify.formatter.impl.RestartPaginationException;
+import org.daisy.dotify.formatter.impl.SectionBuilder;
+import org.daisy.dotify.formatter.impl.Sheet;
+import org.daisy.dotify.formatter.impl.SheetDataSource;
+import org.daisy.dotify.formatter.impl.SheetGroup;
+import org.daisy.dotify.formatter.impl.SheetGroupManager;
+import org.daisy.dotify.formatter.impl.SplitterLimit;
+import org.daisy.dotify.formatter.impl.VolumeImpl;
 import org.daisy.dotify.formatter.impl.search.AnchorData;
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.search.DefaultContext;
@@ -76,7 +90,7 @@ public class VolumeProvider {
 	 * Resets the volume provider to its initial state (with some information preserved). 
 	 * @throws RestartPaginationException
 	 */
-	void prepare() {
+	public void prepare() {
 		if (!init) {
 			groups = new SheetGroupManager(splitterLimit);
 			// make a preliminary calculation based on a contents only
@@ -108,7 +122,7 @@ public class VolumeProvider {
 	 * @return returns the next volume
 	 * @throws RestartPaginationException if pagination should be restarted
 	 */
-	VolumeImpl nextVolume() {
+	public VolumeImpl nextVolume() {
 		currentVolumeNumber++;
 		VolumeImpl volume = new VolumeImpl(crh.getOverhead(currentVolumeNumber));
 		ArrayList<AnchorData> ad = new ArrayList<>();
@@ -269,7 +283,7 @@ public class VolumeProvider {
 	 * <b>Note: only use after all volumes have been calculated.</b>
 	 * @return returns true if the volumes can be accepted, false otherwise  
 	 */
-	boolean done() {
+	public boolean done() {
 		groups.updateAll();
 		crh.commitBreakable();
 		crh.trimPageDetails();

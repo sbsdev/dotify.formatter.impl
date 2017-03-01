@@ -18,7 +18,7 @@ import org.daisy.dotify.formatter.impl.segment.TextSegment;
  * @author Joel Håkansson
  */
 
-abstract class Block implements Cloneable {
+public abstract class Block implements Cloneable {
 	private BlockContext context;
 	private AbstractBlockContentManager rdm;
 	private final String blockId;

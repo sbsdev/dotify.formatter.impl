@@ -1,7 +1,8 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.volume;
 
 import org.daisy.dotify.api.formatter.Condition;
 import org.daisy.dotify.api.formatter.Context;
+import org.daisy.dotify.formatter.impl.FormatterCoreImpl;
 
 
 class ConditionalBlock {

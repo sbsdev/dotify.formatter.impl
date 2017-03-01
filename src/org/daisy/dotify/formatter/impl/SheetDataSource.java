@@ -11,7 +11,7 @@ import org.daisy.dotify.formatter.impl.search.DefaultContext;
 import org.daisy.dotify.formatter.impl.search.DocumentSpace;
 import org.daisy.dotify.formatter.impl.search.SheetIdentity;
 
-class SheetDataSource implements SplitPointDataSource<Sheet> {
+public class SheetDataSource implements SplitPointDataSource<Sheet> {
 	private final PageStruct struct;
 	private final CrossReferenceHandler crh;
 	private final FormatterContext context;
@@ -29,7 +29,7 @@ class SheetDataSource implements SplitPointDataSource<Sheet> {
 	private List<Sheet> sheetBuffer;
 	private boolean volBreakAllowed;
 
-	SheetDataSource(PageStruct struct, CrossReferenceHandler crh, FormatterContext context, DefaultContext rcontext, List<BlockSequence> seqsIterator) {
+	public SheetDataSource(PageStruct struct, CrossReferenceHandler crh, FormatterContext context, DefaultContext rcontext, List<BlockSequence> seqsIterator) {
 		this(struct, crh, context, rcontext, seqsIterator, new ArrayList<>(), true, 0, 0, null, null, null, null, 0, 0);
 	}
 	

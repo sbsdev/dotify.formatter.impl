@@ -5,11 +5,11 @@ package org.daisy.dotify.formatter.impl;
  * 
  * @author Joel Håkansson
  */
-class PageStruct {
+public class PageStruct {
 	private PageSequenceBuilder2 currentSeq;
 	private int pageCount;
 
-	PageStruct() {
+	public PageStruct() {
 		currentSeq = null;
 		pageCount = 0;
 	}

@@ -33,7 +33,7 @@ import org.daisy.dotify.writer.impl.Page;
  * 
  * @author Joel Håkansson
  */
-class PageImpl implements Page {
+public class PageImpl implements Page {
 	private static final Pattern trailingWs = Pattern.compile("\\s*\\z");
 	private static final Pattern softHyphen = Pattern.compile("\u00ad");
 	private final CrossReferenceHandler crh;
@@ -116,7 +116,7 @@ class PageImpl implements Page {
 		getDetails().getMarkers().addAll(m);
 	}
 	
-	List<String> getAnchors() {
+	public List<String> getAnchors() {
 		return anchors;
 	}
 	
@@ -124,7 +124,7 @@ class PageImpl implements Page {
 		identifiers.add(id);
 	}
 	
-	List<String> getIdentifiers() {
+	public List<String> getIdentifiers() {
 		return identifiers;
 	}
 	
@@ -392,7 +392,7 @@ class PageImpl implements Page {
 	 * 
 	 * @return returns the page index in the sequence (zero based)
 	 */
-	int getPageIndex() {
+	public int getPageIndex() {
 		return pageIndex;
 	}
 

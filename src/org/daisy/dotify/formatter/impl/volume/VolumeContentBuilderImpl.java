@@ -1,4 +1,4 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.volume;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +20,7 @@ import org.daisy.dotify.api.formatter.TableProperties;
 import org.daisy.dotify.api.formatter.TextProperties;
 import org.daisy.dotify.api.formatter.TocProperties;
 import org.daisy.dotify.api.formatter.VolumeContentBuilder;
+import org.daisy.dotify.formatter.impl.FormatterCoreContext;
 
 class VolumeContentBuilderImpl extends Stack<VolumeSequence> implements VolumeContentBuilder {
 	/**

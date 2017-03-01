@@ -5,7 +5,7 @@ import org.daisy.dotify.api.translator.BrailleTranslatorFactoryMakerService;
 import org.daisy.dotify.api.translator.MarkerProcessorFactoryMakerService;
 import org.daisy.dotify.api.translator.TextBorderFactoryMakerService;
 
-class LazyFormatterContext {
+public class LazyFormatterContext {
 	private final BrailleTranslatorFactoryMakerService translatorFactory;
 	private final TextBorderFactoryMakerService tbf;
 	private final MarkerProcessorFactoryMakerService mpf;
@@ -22,7 +22,7 @@ class LazyFormatterContext {
 		this.config = config;
 	}
 	
-	synchronized FormatterContext getFormatterContext() {
+	public synchronized FormatterContext getFormatterContext() {
 		if (context==null) {
 			context = new FormatterContext(translatorFactory, tbf, mpf, config);
 		}

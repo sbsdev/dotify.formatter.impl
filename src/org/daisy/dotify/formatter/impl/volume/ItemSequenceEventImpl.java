@@ -1,4 +1,4 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.volume;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,6 +6,12 @@ import java.util.List;
 import org.daisy.dotify.api.formatter.FormatterCore;
 import org.daisy.dotify.api.formatter.ItemSequenceProperties;
 import org.daisy.dotify.api.formatter.ReferenceListBuilder;
+import org.daisy.dotify.formatter.impl.Block;
+import org.daisy.dotify.formatter.impl.BlockGroup;
+import org.daisy.dotify.formatter.impl.ContentCollectionImpl;
+import org.daisy.dotify.formatter.impl.FormatterContext;
+import org.daisy.dotify.formatter.impl.FormatterCoreContext;
+import org.daisy.dotify.formatter.impl.FormatterCoreImpl;
 import org.daisy.dotify.formatter.impl.search.AnchorData;
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.search.DefaultContext;

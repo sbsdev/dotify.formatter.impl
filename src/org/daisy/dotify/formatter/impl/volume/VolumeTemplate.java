@@ -1,4 +1,4 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.volume;
 
 import java.util.Map;
 
@@ -6,9 +6,10 @@ import org.daisy.dotify.api.formatter.Condition;
 import org.daisy.dotify.api.formatter.Context;
 import org.daisy.dotify.api.formatter.VolumeContentBuilder;
 import org.daisy.dotify.api.formatter.VolumeTemplateBuilder;
+import org.daisy.dotify.formatter.impl.FormatterCoreContext;
 
 
-class VolumeTemplate implements VolumeTemplateBuilder {
+public class VolumeTemplate implements VolumeTemplateBuilder {
 	private final Condition condition;
 	private final int splitterMax;
 	private final VolumeContentBuilderImpl preVolumeContent, postVolumeContent;
