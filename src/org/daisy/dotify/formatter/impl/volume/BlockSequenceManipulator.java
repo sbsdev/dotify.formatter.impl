@@ -21,7 +21,7 @@ class BlockSequenceManipulator {
 	private final SequenceProperties props;
 	private final LayoutMaster master;
 	
-	public BlockSequenceManipulator(BlockSequence b) {
+	BlockSequenceManipulator(BlockSequence b) {
 		this.sequence = new Stack<>();
 		for (Block bb : b) {
 			this.sequence.add(bb);
@@ -31,7 +31,7 @@ class BlockSequenceManipulator {
 		this.taggedEntries = tagSequence(this.sequence);
 	}
 	
-	public BlockSequenceManipulator(LayoutMaster master, SequenceProperties props) {
+	BlockSequenceManipulator(LayoutMaster master, SequenceProperties props) {
 		this.sequence = new Stack<>();
 		this.master = master;
 		this.props = props;
@@ -45,18 +45,18 @@ class BlockSequenceManipulator {
 		return ret;
 	}
 	
-	public BlockSequence newSequence() {
+	BlockSequence newSequence() {
 		return newSequence(sequence);
 	}
 	
-	public void insertGroup(Iterable<Block> blocks, String beforeId) {
+	void insertGroup(Iterable<Block> blocks, String beforeId) {
 		ArrayList<Block> call = new ArrayList<>();
 		for (Block b : blocks) {
 			call.add(b);
 		}
 		insertGroup(call, beforeId);
 	}
-	public void appendGroup(Iterable<Block> blocks) {
+	void appendGroup(Iterable<Block> blocks) {
 		ArrayList<Block> call = new ArrayList<>();
 		for (Block b : blocks) {
 			call.add(b);
@@ -65,7 +65,7 @@ class BlockSequenceManipulator {
 		taggedEntries = tagSequence(sequence);
 	}
 	
-	public void insertGroup(Collection<Block> seq, String beforeId) {
+	void insertGroup(Collection<Block> seq, String beforeId) {
 		Integer beforeIndex = taggedEntries.get(beforeId);
 		if (beforeIndex==null) {
 			throw new IllegalArgumentException("Cannot find identifier " + beforeId);
@@ -74,7 +74,7 @@ class BlockSequenceManipulator {
 		taggedEntries = tagSequence(sequence);
 	}
 
-	public void removeGroup(String id) {
+	void removeGroup(String id) {
 		Integer index = taggedEntries.get(id);
 		if (index==null) {
 			throw new IllegalArgumentException("Cannot find identifier " + id);
@@ -83,7 +83,7 @@ class BlockSequenceManipulator {
 		taggedEntries = tagSequence(sequence);
 	}
 	
-	public void removeRange(String fromId, String toId) {
+	void removeRange(String fromId, String toId) {
 		Integer fromIndex = taggedEntries.get(fromId);
 		Integer toIndex = taggedEntries.get(toId);
 		if (fromIndex==null || toIndex==null) {
@@ -95,7 +95,7 @@ class BlockSequenceManipulator {
 		taggedEntries = tagSequence(sequence);
 	}
 	
-	public void removeTail(String fromId) {
+	void removeTail(String fromId) {
 		Integer fromIndex = taggedEntries.get(fromId);
 		fromIndex++;
 		int count = sequence.size()-fromIndex;
@@ -120,7 +120,7 @@ class BlockSequenceManipulator {
 		return entries;
 	}
 	
-	public List<Block> getBlocks() {
+	List<Block> getBlocks() {
 		return sequence;
 	}
 	

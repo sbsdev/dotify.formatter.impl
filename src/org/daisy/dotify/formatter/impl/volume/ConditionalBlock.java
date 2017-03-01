@@ -9,16 +9,16 @@ class ConditionalBlock {
 	private final Condition condition;
 	private final FormatterCoreImpl sequence;
 	
-	public ConditionalBlock(FormatterCoreImpl sequence, Condition condition) {
+	ConditionalBlock(FormatterCoreImpl sequence, Condition condition) {
 		this.sequence = sequence;
 		this.condition = condition;
 	}
 	
-	public FormatterCoreImpl getSequence() {
+	FormatterCoreImpl getSequence() {
 		return sequence;
 	}
 	
-	public boolean appliesTo(Context context) {
+	boolean appliesTo(Context context) {
 		if (condition==null) {
 			return true;
 		}

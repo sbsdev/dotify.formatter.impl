@@ -28,7 +28,7 @@ class DynamicSequenceEventImpl implements VolumeSequence, DynamicSequenceBuilder
 	 * @param fc the formatter core context
 	 * @param props the sequence properties
 	 */
-	public DynamicSequenceEventImpl(FormatterCoreContext fc, SequenceProperties props) {
+	DynamicSequenceEventImpl(FormatterCoreContext fc, SequenceProperties props) {
 		this.fc = fc;
 		this.props = props;
 		this.formatters = new Stack<>();

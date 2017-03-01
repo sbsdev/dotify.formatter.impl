@@ -25,15 +25,15 @@ public class TableOfContentsImpl extends FormatterCoreImpl implements TableOfCon
 		this.refs = new LinkedHashMap<>();
 	}
 	
-	public boolean containsTocID(String id) {
+	boolean containsTocID(String id) {
 		return refs.containsKey(id);
 	}
 	
-	public Set<String> getTocIdList() {
+	Set<String> getTocIdList() {
 		return refs.keySet();
 	}
 	
-	public String getRefForID(String id) {
+	String getRefForID(String id) {
 		return refs.get(id);
 	}
 

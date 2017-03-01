@@ -27,7 +27,7 @@ class ItemSequenceEventImpl implements ReferenceListBuilder, BlockGroup {
 	private final FormatterCoreImpl volumeEndEvents;
 	private final FormatterCoreImpl collectionEndEvents;
 	
-	public ItemSequenceEventImpl(FormatterCoreContext fc, ItemSequenceProperties.Range range, String collectionID) {
+	ItemSequenceEventImpl(FormatterCoreContext fc, ItemSequenceProperties.Range range, String collectionID) {
 		this.collectionID = collectionID;
 		this.range = range;
 		this.collectionStartEvents = new FormatterCoreImpl(fc);

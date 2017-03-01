@@ -32,7 +32,7 @@ class VolumeContentBuilderImpl extends Stack<VolumeSequence> implements VolumeCo
 	private TocSequenceEventImpl tocSequence;
 	private final FormatterCoreContext fc;
 
-	public VolumeContentBuilderImpl(FormatterCoreContext fc, Map<String, TableOfContentsImpl> tocs) {
+	VolumeContentBuilderImpl(FormatterCoreContext fc, Map<String, TableOfContentsImpl> tocs) {
 		this.fc = fc;
 		this.tocs = tocs;
 		this.formatters = new ArrayList<>();

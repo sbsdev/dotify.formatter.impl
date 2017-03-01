@@ -29,7 +29,7 @@ class TocSequenceEventImpl implements VolumeSequence {
 	private final ArrayList<ConditionalBlock> tocEndEvents;
 	private final FormatterCoreContext fc;
 	
-	public TocSequenceEventImpl(FormatterCoreContext fc, SequenceProperties props, TableOfContentsImpl data, TocProperties.TocRange range, String volEventVar) {
+	TocSequenceEventImpl(FormatterCoreContext fc, SequenceProperties props, TableOfContentsImpl data, TocProperties.TocRange range, String volEventVar) {
 		this.fc = fc;
 		this.props = props;
 		this.data = data;
@@ -66,7 +66,7 @@ class TocSequenceEventImpl implements VolumeSequence {
 		return f;
 	}
 
-	public TocProperties.TocRange getRange() {
+	TocProperties.TocRange getRange() {
 		return range;
 	}
 
@@ -84,19 +84,19 @@ class TocSequenceEventImpl implements VolumeSequence {
 		return it;
 	}
 
-	public Iterable<Block> getVolumeStart(Context vars) throws IOException {
+	Iterable<Block> getVolumeStart(Context vars) throws IOException {
 		return getCompoundIterableB(volumeStartEvents, vars);
 	}
 	
-	public Iterable<Block> getVolumeEnd(Context vars) throws IOException {
+	Iterable<Block> getVolumeEnd(Context vars) throws IOException {
 		return getCompoundIterableB(volumeEndEvents, vars);
 	}
 	
-	public Iterable<Block> getTocStart(Context vars) throws IOException {
+	Iterable<Block> getTocStart(Context vars) throws IOException {
 		return getCompoundIterableB(tocStartEvents, vars);
 	}
 
-	public Iterable<Block> getTocEnd(Context vars) throws IOException {
+	Iterable<Block> getTocEnd(Context vars) throws IOException {
 		return getCompoundIterableB(tocEndEvents, vars);
 	}
 

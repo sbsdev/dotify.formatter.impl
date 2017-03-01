@@ -26,18 +26,18 @@ public class VolumeTemplate implements VolumeTemplateBuilder {
 	 * @param context the context to test
 	 * @return returns true if the Template should be applied to the volume
 	 */
-	public boolean appliesTo(Context context) {
+	boolean appliesTo(Context context) {
 		if (condition==null) {
 			return true;
 		}
 		return condition.evaluate(context);
 	}
 	
-	public Iterable<VolumeSequence> getPreVolumeContent() {
+	Iterable<VolumeSequence> getPreVolumeContent() {
 		return preVolumeContent;
 	}
 
-	public Iterable<VolumeSequence> getPostVolumeContent() {
+	Iterable<VolumeSequence> getPostVolumeContent() {
 		return postVolumeContent;
 	}
 
@@ -45,7 +45,7 @@ public class VolumeTemplate implements VolumeTemplateBuilder {
 	 * Gets the maximum number of sheets allowed.
 	 * @return returns the number of sheets allowed
 	 */
-	public int getVolumeMaxSize() {
+	int getVolumeMaxSize() {
 		return splitterMax;
 	}
 
