@@ -156,22 +156,61 @@ public class CrossReferenceHandler {
 		searchInfo.commitPageDetails();
 	}
 	
+	/**
+	 * Sets the sequence scope for the purpose of finding markers in a specific sequence.
+	 * @param space the document space
+	 * @param sequenceNumber the sequence number
+	 * @param fromIndex the start index
+	 * @param toIndex the end index
+	 */
 	public void setSequenceScope(DocumentSpace space, int sequenceNumber, int fromIndex, int toIndex) {
 		searchInfo.setSequenceScope(space, sequenceNumber, fromIndex, toIndex);
 	}
 	
+	/**
+	 * Sets the volume scope for the purpose of finding markers in a specific volume.
+	 * @param volumeNumber the volume number
+	 * @param fromIndex the start index
+	 * @param toIndex the end index
+	 */
 	public void setVolumeScope(int volumeNumber, int fromIndex, int toIndex) {
 		searchInfo.setVolumeScope(volumeNumber, fromIndex, toIndex);
 	}
 	
-	public String findMarker(PageId id, MarkerReferenceField f2) {
-		return searchInfo.findStartAndMarker(id, f2);
+	/**
+	 * <p>Finds a marker value starting from the page with the supplied id.</p>
+	 * <p>To find markers, the following methods must be used to register
+	 * data needed by this method:</p>
+	 * <ul><li>{@link #keepPageDetails(PageDetails)}</li>
+	 * <li>{@link #commitPageDetails()}</li>
+	 * <li>{@link #setSequenceScope(DocumentSpace, int, int, int)}</li>
+	 * <li>{@link #setVolumeScope(int, int, int)}</li></ul>
+	 * @param id the page id of the page where the search originates.
+	 * 			Note that this page is not necessarily the first page
+	 * 			searched (depending on the value of 
+	 * 			{@link MarkerReferenceField#getOffset()}).
+	 * @param spec the search specification
+	 * @return returns the marker value, or an empty string if not found
+	 */
+	public String findMarker(PageId id, MarkerReferenceField spec) {
+		return searchInfo.findStartAndMarker(id, spec);
 	}
 
+	/**
+	 * Returns true if some information has been changed since last use.
+	 * @return true if some information has been changed, false otherwise
+	 */
 	public boolean isDirty() {
 		return pageRefs.isDirty() || volumeRefs.isDirty() || anchorRefs.isDirty() || variables.isDirty() || breakable.isDirty() || overheadDirty || searchInfo.isDirty();
 	}
 	
+	/**
+	 * Sets the dirty flag on all tracked data. This is typically used to reset 
+	 * the value of the flag when rendering another pass. However, by setting this
+	 * value to true, it can be used to disable tracking for the remainder of 
+	 * the rendering.
+	 * @param value the value
+	 */
 	public void setDirty(boolean value) {
 		pageRefs.setDirty(value);
 		volumeRefs.setDirty(value);
