@@ -28,6 +28,8 @@ class PageTemplate implements PageTemplateBuilder {
 	private final List<MarginRegion> rightMarginRegion;
 	private final HashMap<Integer, Boolean> appliesTo;
 	private final float defaultRowSpacing;
+	private Float headerHeight;
+	private Float footerHeight;
 	private Integer flowIntoHeaderHeight;
 	private Integer flowIntoFooterHeight;
 	
@@ -52,14 +54,16 @@ class PageTemplate implements PageTemplateBuilder {
 
 	@Override
 	public void addToHeader(FieldList obj) {
-		// reset the cached value
+		// reset the cached values
+		headerHeight = null;
 		flowIntoHeaderHeight = null;
 		header.add(obj);
 	}
 	
 	@Override
 	public void addToFooter(FieldList obj) {
-		// reset the cached value
+		// reset the cached values
+		footerHeight = null;
 		flowIntoFooterHeight = null;
 		footer.add(obj);
 	}
@@ -76,6 +80,13 @@ class PageTemplate implements PageTemplateBuilder {
 		return header;
 	}
 	
+	float getHeaderHeight() {
+		if (headerHeight==null) {
+			headerHeight = getHeight(header, defaultRowSpacing);
+		}
+		return headerHeight;
+	}
+	
 	/**
 	 * Gets footer rows for a page using this Template. Each FieldList must 
 	 * fit within a single row, i.e. the combined length of all resolved strings in each FieldList must
@@ -85,6 +96,13 @@ class PageTemplate implements PageTemplateBuilder {
 	 */
 	List<FieldList> getFooter() {
 		return footer;
+	}
+	
+	float getFooterHeight() {
+		if (footerHeight==null) {
+			footerHeight = getHeight(footer, defaultRowSpacing);
+		}
+		return footerHeight;
 	}
 
 	/**
@@ -191,6 +209,9 @@ class PageTemplate implements PageTemplateBuilder {
 		}
 		return height;
 	}
-
+	
+	private static float getHeight(List<FieldList> list, float def) {
+		return (float)list.stream().mapToDouble(f -> f.getRowSpacing()!=null?f.getRowSpacing():def).sum();
+	}
 
 }

@@ -76,8 +76,8 @@ class PageImpl implements Page {
 		this.pagenum = pageIndex + 1;
 		this.template = master.getTemplate(pageIndex+1);
         this.flowHeight = master.getPageHeight() - 
-                (int)Math.ceil(getHeight(template.getHeader(), master.getRowSpacing())) -
-                (int)Math.ceil(getHeight(template.getFooter(), master.getRowSpacing())) -
+                (int)Math.ceil(template.getHeaderHeight()) -
+                (int)Math.ceil(template.getFooterHeight()) -
                 (master.getBorder() != null ? (int)Math.ceil(distributeRowSpacing(null, false).spacing*2) : 0);
 		this.isVolBreakAllowed = true;
 		this.keepPreviousSheets = 0;
@@ -87,10 +87,6 @@ class PageImpl implements Page {
 		this.border = buildBorder();
 		this.pageTemplate = master.getTemplate(pagenum);
 		this.finalRows = new BorderManager();
-	}
-	
-	private static float getHeight(List<FieldList> list, float def) {
-		return (float)list.stream().mapToDouble(f -> f.getRowSpacing()!=null?f.getRowSpacing():def).sum();
 	}
 
 	void addToPageArea(List<RowImpl> block) {
@@ -206,7 +202,7 @@ class PageImpl implements Page {
 					finalRows.addAll(after);
 				}
 		        finalRows.addAll(rows);
-		        float headerHeight = getHeight(pageTemplate.getHeader(), master.getRowSpacing());
+		        float headerHeight = pageTemplate.getHeaderHeight();
 		        if (!pageTemplate.getFooter().isEmpty() || borderStyle != TextBorderStyle.NONE || (master.getPageArea()!=null && master.getPageArea().getAlignment()==PageAreaProperties.Alignment.BOTTOM && !pageArea.isEmpty())) {
 		            float areaSize = (master.getPageArea()!=null && master.getPageArea().getAlignment()==PageAreaProperties.Alignment.BOTTOM ? pageAreaSpaceNeeded() : 0);
 		            while (Math.ceil(rowsNeeded(finalRows.offsetList(), master.getRowSpacing()) + areaSize) < getFlowHeight() + headerHeight) {
