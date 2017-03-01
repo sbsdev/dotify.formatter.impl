@@ -12,7 +12,7 @@ public class LazyFormatterContext {
 	private FormatterContext context = null;
 	private FormatterConfiguration config = null;
 
-	LazyFormatterContext(BrailleTranslatorFactoryMakerService translatorFactory, TextBorderFactoryMakerService tbf, MarkerProcessorFactoryMakerService mpf, FormatterConfiguration config) {
+	public LazyFormatterContext(BrailleTranslatorFactoryMakerService translatorFactory, TextBorderFactoryMakerService tbf, MarkerProcessorFactoryMakerService mpf, FormatterConfiguration config) {
 		if (config==null) {
 			throw new IllegalArgumentException();
 		}
@@ -29,7 +29,7 @@ public class LazyFormatterContext {
 		return context;
 	}
 
-	void setConfiguration(FormatterConfiguration config) {
+	public void setConfiguration(FormatterConfiguration config) {
 		if (config==null) {
 			throw new IllegalArgumentException();
 		}

@@ -23,7 +23,7 @@ public class FormatterCoreContext {
 		return tbf;
 	}
 	
-	FormatterConfiguration getConfiguration() {
+	public FormatterConfiguration getConfiguration() {
 		return config;
 	}
 

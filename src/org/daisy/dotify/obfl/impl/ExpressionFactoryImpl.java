@@ -3,7 +3,7 @@ package org.daisy.dotify.obfl.impl;
 import org.daisy.dotify.api.obfl.Expression;
 import org.daisy.dotify.api.obfl.ExpressionFactory;
 import org.daisy.dotify.api.text.Integer2TextFactoryMakerService;
-import org.daisy.dotify.formatter.impl.SPIHelper;
+import org.daisy.dotify.formatter.impl.base.SPIHelper;
 
 import aQute.bnd.annotation.component.Component;
 import aQute.bnd.annotation.component.Reference;

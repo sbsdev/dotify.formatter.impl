@@ -5,6 +5,7 @@ Import-Package:  \
 	org.daisy.dotify.api.writer; provide:=true, *
 Private-Package: org.daisy.dotify.engine.impl,\
 	org.daisy.dotify.formatter.impl,\
+	org.daisy.dotify.formatter.impl.base,\
 	org.daisy.dotify.formatter.impl.search,\
 	org.daisy.dotify.formatter.impl.segment,\
 	org.daisy.dotify.formatter.impl.volume,\

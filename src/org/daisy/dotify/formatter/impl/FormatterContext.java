@@ -68,13 +68,13 @@ public class FormatterContext extends FormatterCoreContext {
 		return ret;
 	}
 	
-	LayoutMasterBuilder newLayoutMaster(String name, LayoutMasterProperties properties) {
+	public LayoutMasterBuilder newLayoutMaster(String name, LayoutMasterProperties properties) {
 		LayoutMaster master = new LayoutMaster(this, properties);
 		masters.put(name, master);
 		return master;
 	}
 	
-	ContentCollectionImpl newContentCollection(String collectionId) {
+	public ContentCollectionImpl newContentCollection(String collectionId) {
 		ContentCollectionImpl collection = new ContentCollectionImpl(this);
 		collections.put(collectionId, collection);
 		return collection;
