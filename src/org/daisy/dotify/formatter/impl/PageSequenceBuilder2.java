@@ -221,6 +221,9 @@ class PageSequenceBuilder2 {
 						throw new RuntimeException("A layout unit was too big for the page.");
 					}
 				}
+				for (RowGroup rg : res.getSupplements()) {
+					currentPage().addToPageArea(rg.getRows());
+				}
 				force = res.getHead().size()==0;
 				data = res.getTail();
 				List<RowGroup> head = res.getHead();
@@ -248,9 +251,6 @@ class PageSequenceBuilder2 {
 				currentPage().setAvoidVolumeBreakAfter(lastPriority);
 				for (RowGroup rg : res.getDiscarded()) {
 					addProperties(rg);
-				}
-				for (RowGroup rg : res.getSupplements()) {
-					currentPage().addToPageArea(rg.getRows());
 				}
 				if (hasPageAreaCollection() && currentPage().pageAreaSpaceNeeded() > master.getPageArea().getMaxHeight()) {
 					reassignCollection();
