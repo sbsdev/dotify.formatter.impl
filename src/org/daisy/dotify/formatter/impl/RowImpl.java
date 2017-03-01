@@ -59,20 +59,6 @@ class RowImpl implements Row {
 		this.leaderSpace = template.leaderSpace;
 	}
 
-	@Deprecated
-	static RowImpl withRow(RowImpl r) {
-		RowImpl ret = new RowImpl(r.chars);
-		ret.markers = r.markers;
-		ret.anchors = r.anchors;
-		ret.leftMargin = r.leftMargin;
-		ret.rightMargin = r.rightMargin;
-		ret.alignment = r.alignment;
-		ret.rowSpacing = r.rowSpacing;
-		ret.adjustedForMargin = r.adjustedForMargin;
-		ret.leaderSpace = r.leaderSpace;
-		return ret;
-	}
-
 	/**
 	 * Create a new empty Row
 	 */

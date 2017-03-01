@@ -232,7 +232,7 @@ class PageSequenceBuilder2 {
 					for (RowImpl r : rg.getRows()) { 
 						if (r.shouldAdjustForMargin()) {
 							// clone the row as not to append the margins twice
-							r = RowImpl.withRow(r);
+							r = new RowImpl(r);
 							for (MarginRegion mr : currentPage().getPageTemplate().getLeftMarginRegion()) {
 								r.setLeftMargin(getMarginRegionValue(mr, r, false).append(r.getLeftMargin()));
 							}
