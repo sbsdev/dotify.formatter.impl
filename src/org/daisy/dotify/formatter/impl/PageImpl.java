@@ -56,9 +56,11 @@ class PageImpl implements Page {
 	private final PageTemplate pageTemplate;
 	private final BorderManager finalRows;
 
+	private boolean hasRows;
 	private boolean isVolBreakAllowed;
 	private int keepPreviousSheets;
 	private Integer volumeBreakAfterPriority;
+	private final BrailleTranslator filter;
 	
 	public PageImpl(CrossReferenceHandler crh, PageDetails details, LayoutMaster master, FormatterContext fcontext, int pageIndex, List<RowImpl> before, List<RowImpl> after) {
 		this.crh = crh;
@@ -87,13 +89,25 @@ class PageImpl implements Page {
 		this.border = buildBorder();
 		this.pageTemplate = master.getTemplate(pagenum);
 		this.finalRows = new BorderManager();
+		this.hasRows = false;
+		this.filter = fcontext.getDefaultTranslator();
 	}
 
 	void addToPageArea(List<RowImpl> block) {
+		if (hasRows) {
+			throw new IllegalStateException("Page area must be added before adding rows.");
+		}
 		pageArea.addAll(block);
 	}
 	
 	void newRow(RowImpl r) {
+		if (!hasRows) {
+			//add the header
+	        finalRows.addAll(renderFields(pageTemplate.getHeader(), filter));
+	        //add the top page area
+			addTopPageArea();
+		}
+		hasRows = true;
 		if (rows.isEmpty()) {
 			getDetails().startsContentMarkers();
 		}
@@ -185,6 +199,14 @@ class PageImpl implements Page {
 				.padToSize(!TextBorderStyle.NONE.equals(borderStyle))
 				.build();
 	}
+	
+	private void addTopPageArea() {
+        if (master.getPageArea()!=null && master.getPageArea().getAlignment()==PageAreaProperties.Alignment.TOP && !pageArea.isEmpty()) {
+			finalRows.addAll(before);
+			finalRows.addAll(pageArea);
+			finalRows.addAll(after);
+		}
+	}
 
 	/*
 	 * The assumption is made that by now all pages have been added to the parent sequence and volume scopes
@@ -194,12 +216,11 @@ class PageImpl implements Page {
 	public List<Row> getRows() {
 		try {
 			if (!finalRows.closed) {
-				BrailleTranslator filter = fcontext.getDefaultTranslator();
-		        finalRows.addAll(renderFields(pageTemplate.getHeader(), filter));
-		        if (master.getPageArea()!=null && master.getPageArea().getAlignment()==PageAreaProperties.Alignment.TOP && !pageArea.isEmpty()) {
-					finalRows.addAll(before);
-					finalRows.addAll(pageArea);
-					finalRows.addAll(after);
+				if (!hasRows) { 
+					//add the header
+			        finalRows.addAll(renderFields(pageTemplate.getHeader(), filter));
+			      //add top page area
+					addTopPageArea();
 				}
 		        finalRows.addAll(rows);
 		        float headerHeight = pageTemplate.getHeaderHeight();
