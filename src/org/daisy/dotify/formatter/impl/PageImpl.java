@@ -412,7 +412,7 @@ class PageImpl implements Page {
 		if (field instanceof CompoundField) {
 			ret = resolveCompoundField((CompoundField)field, p, b2);
 		} else if (field instanceof MarkerReferenceField) {
-			ret = crh.getSearchInfo().findStartAndMarker(p.getDetails().getPageId(), (MarkerReferenceField)field);
+			ret = crh.findMarker(p.getDetails().getPageId(), (MarkerReferenceField)field);
 		} else if (field instanceof CurrentPageField) {
 			ret = resolveCurrentPageField((CurrentPageField)field, p);
 		} else {

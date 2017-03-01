@@ -5,6 +5,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.daisy.dotify.api.formatter.MarkerReferenceField;
+
 public class CrossReferenceHandler {
 	private final LookupHandler<String, Integer> pageRefs;
 	private final LookupHandler<String, Integer> volumeRefs;
@@ -146,8 +148,24 @@ public class CrossReferenceHandler {
 		return breakable.get(ident, true);
 	}
 	
-	public SearchInfo getSearchInfo() {
-		return searchInfo;
+	public void keepPageDetails(PageDetails value) {
+		searchInfo.keepPageDetails(value);
+	}
+	
+	public void commitPageDetails() {
+		searchInfo.commitPageDetails();
+	}
+	
+	public void setSequenceScope(DocumentSpace space, int sequenceNumber, int fromIndex, int toIndex) {
+		searchInfo.setSequenceScope(space, sequenceNumber, fromIndex, toIndex);
+	}
+	
+	public void setVolumeScope(int volumeNumber, int fromIndex, int toIndex) {
+		searchInfo.setVolumeScope(volumeNumber, fromIndex, toIndex);
+	}
+	
+	public String findMarker(PageId id, MarkerReferenceField f2) {
+		return searchInfo.findStartAndMarker(id, f2);
 	}
 
 	public boolean isDirty() {

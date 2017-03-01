@@ -183,7 +183,7 @@ class SheetDataSource implements SplitPointDataSource<Sheet> {
 					//Last page in the sequence doesn't need volume keep priority
 					sheetBuffer.add(s.build());
 				}
-				crh.getSearchInfo().setSequenceScope(new DocumentSpace(rcontext.getSpace(), rcontext.getCurrentVolume()), seqsIndex, psb.getGlobalStartIndex(), psb.getToIndex());
+				crh.setSequenceScope(new DocumentSpace(rcontext.getSpace(), rcontext.getCurrentVolume()), seqsIndex, psb.getGlobalStartIndex(), psb.getToIndex());
 				struct.setCurrentSequence(psb);
 			}
 		}

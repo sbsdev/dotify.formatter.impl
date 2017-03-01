@@ -10,7 +10,7 @@ import org.daisy.dotify.api.formatter.MarkerReferenceField;
 import org.daisy.dotify.api.formatter.MarkerReferenceField.MarkerSearchDirection;
 import org.daisy.dotify.api.formatter.MarkerReferenceField.MarkerSearchScope;
 
-public class SearchInfo {
+class SearchInfo {
 
 	private final Map<DocumentSpace, DocumentSpaceData> spaces;
 	private final Map<String, PageDetails> uncommitted;
@@ -26,14 +26,14 @@ public class SearchInfo {
 		return value.getSequenceId().getSpace() + "-" + value.getPageId();
 	}
 	
-	public void keepPageDetails(PageDetails value) {
+	void keepPageDetails(PageDetails value) {
 		if (value.getPageId().getPageIndex()<0) {
 			throw new IllegalArgumentException("Negative page id not allowed.");
 		}
 		uncommitted.put(toKey(value), value);
 	}
 	
-	public void commitPageDetails() {
+	void commitPageDetails() {
 		for (Entry<String, PageDetails> entry : uncommitted.entrySet()) {
 			PageDetails value = entry.getValue();
 			DocumentSpaceData data = getViewForSpace(value.getSequenceId().getSpace());
@@ -61,12 +61,12 @@ public class SearchInfo {
 		return getViewForSpace(seqId.getSpace()).sequenceViews.get(seqId.getOrdinal());
 	}
 	
-	public void setSequenceScope(DocumentSpace space, int sequenceNumber, int fromIndex, int toIndex) {
+	void setSequenceScope(DocumentSpace space, int sequenceNumber, int fromIndex, int toIndex) {
 		View<PageDetails> pw = new View<PageDetails>(getViewForSpace(space).pageDetails, fromIndex, toIndex);
 		getViewForSpace(space).sequenceViews.put(sequenceNumber, pw);
 	}
 	
-	public void setVolumeScope(int volumeNumber, int fromIndex, int toIndex) {
+	void setVolumeScope(int volumeNumber, int fromIndex, int toIndex) {
 		setVolumeScope(volumeNumber, fromIndex, toIndex, DocumentSpace.BODY);
 	}
 
@@ -217,7 +217,7 @@ public class SearchInfo {
 		}
 	}
 	
-	public String findStartAndMarker(PageId id, MarkerReferenceField f2) {
+	String findStartAndMarker(PageId id, MarkerReferenceField f2) {
 		PageDetails p = getPageDetails(id);
 		if (p!=null) { 
 			PageDetails start;
@@ -234,11 +234,11 @@ public class SearchInfo {
 		}
 	}
 	
-	public boolean isDirty() {
+	boolean isDirty() {
 		return dirty;
 	}
 	
-	public void setDirty(boolean value) {
+	void setDirty(boolean value) {
 		this.dirty = value;
 	}
 }

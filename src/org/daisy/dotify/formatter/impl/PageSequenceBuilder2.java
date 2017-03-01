@@ -164,7 +164,7 @@ class PageSequenceBuilder2 {
 	PageImpl nextPage() throws PaginatorException, RestartPaginationException // pagination must be restarted in PageStructBuilder.paginateInner
 	{
 		PageImpl ret = nextPageInner();
-		crh.getSearchInfo().keepPageDetails(ret.getDetails());
+		crh.keepPageDetails(ret.getDetails());
 		//This is for pre/post volume contents, where the volume number is known
 		if (blockContext.getContext().getCurrentVolume()!=null) {
 			for (String id : ret.getIdentifiers()) {
