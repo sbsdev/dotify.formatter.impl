@@ -4,25 +4,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
-import org.daisy.dotify.api.formatter.CompoundField;
-import org.daisy.dotify.api.formatter.CurrentPageField;
-import org.daisy.dotify.api.formatter.Field;
-import org.daisy.dotify.api.formatter.FieldList;
 import org.daisy.dotify.api.formatter.FormattingTypes;
 import org.daisy.dotify.api.formatter.Marker;
-import org.daisy.dotify.api.formatter.MarkerReferenceField;
-import org.daisy.dotify.api.formatter.NoField;
 import org.daisy.dotify.api.formatter.PageAreaProperties;
 import org.daisy.dotify.api.translator.BrailleTranslator;
-import org.daisy.dotify.api.translator.DefaultTextAttribute;
 import org.daisy.dotify.api.translator.TextBorderStyle;
-import org.daisy.dotify.api.translator.Translatable;
-import org.daisy.dotify.api.translator.TranslationException;
 import org.daisy.dotify.api.writer.Row;
 import org.daisy.dotify.common.text.StringTools;
-import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.search.PageDetails;
 import org.daisy.dotify.writer.impl.Page;
 
@@ -35,8 +24,7 @@ import org.daisy.dotify.writer.impl.Page;
  */
 public class PageImpl implements Page {
 	private static final Pattern trailingWs = Pattern.compile("\\s*\\z");
-	private static final Pattern softHyphen = Pattern.compile("\u00ad");
-	private final CrossReferenceHandler crh;
+	private final FieldResolver fieldResolver;
 	private final PageDetails details;
 	private final LayoutMaster master;
 	private final FormatterContext fcontext;
@@ -61,8 +49,8 @@ public class PageImpl implements Page {
 	private Integer volumeBreakAfterPriority;
 	private final BrailleTranslator filter;
 	
-	public PageImpl(CrossReferenceHandler crh, PageDetails details, LayoutMaster master, FormatterContext fcontext, int pageIndex, List<RowImpl> before, List<RowImpl> after) {
-		this.crh = crh;
+	public PageImpl(FieldResolver fieldResolver, PageDetails details, LayoutMaster master, FormatterContext fcontext, int pageIndex, List<RowImpl> before, List<RowImpl> after) {
+		this.fieldResolver = fieldResolver;
 		this.details = details;
 		this.master = master;
 		this.fcontext = fcontext;
@@ -101,7 +89,7 @@ public class PageImpl implements Page {
 	void newRow(RowImpl r) {
 		if (!hasRows) {
 			//add the header
-	        finalRows.addAll(renderFields(pageTemplate.getHeader(), filter));
+	        finalRows.addAll(fieldResolver.renderFields(this, pageTemplate.getHeader(), filter));
 	        //add the top page area
 			addTopPageArea();
 			getDetails().startsContentMarkers();
@@ -214,7 +202,7 @@ public class PageImpl implements Page {
 			if (!finalRows.closed) {
 				if (!hasRows) { // the header hasn't been added yet 
 					//add the header
-			        finalRows.addAll(renderFields(pageTemplate.getHeader(), filter));
+			        finalRows.addAll(fieldResolver.renderFields(this, pageTemplate.getHeader(), filter));
 			      //add top page area
 					addTopPageArea();
 				}
@@ -229,7 +217,7 @@ public class PageImpl implements Page {
 						finalRows.addAll(pageArea);
 						finalRows.addAll(after);
 					}
-		            finalRows.addAll(renderFields(pageTemplate.getFooter(), filter));
+		            finalRows.addAll(fieldResolver.renderFields(this, pageTemplate.getFooter(), filter));
 				}
 			}
 			return finalRows.getRows();
@@ -402,77 +390,6 @@ public class PageImpl implements Page {
 	 */
 	int getFlowHeight() {
 		return flowHeight;
-	}
-
-    private List<RowImpl> renderFields(List<FieldList> fields, BrailleTranslator translator) throws PaginatorException {
-        ArrayList<RowImpl> ret = new ArrayList<>();
-		for (FieldList row : fields) {
-            try {
-                RowImpl r = new RowImpl(distribute(row, master.getFlowWidth(), fcontext.getSpaceCharacter()+"", translator));
-                r.setRowSpacing(row.getRowSpacing());
-                ret.add(r);
-            } catch (PaginatorToolsException e) {
-                throw new PaginatorException("Error while rendering header", e);
-			}
-		}
-		return ret;
-	}
-	
-    private String distribute(FieldList chunks, int width, String padding, BrailleTranslator translator) throws PaginatorToolsException {
-		ArrayList<String> chunkF = new ArrayList<>();
-		for (Field f : chunks.getFields()) {
-			DefaultTextAttribute.Builder b = new DefaultTextAttribute.Builder(null);
-            String resolved = softHyphen.matcher(resolveField(f, this, b)).replaceAll("");
-			Translatable.Builder tr = Translatable.text(fcontext.getConfiguration().isMarkingCapitalLetters()?resolved:resolved.toLowerCase()).
-										hyphenate(false);
-			if (resolved.length()>0) {
-				tr.attributes(b.build(resolved.length()));
-			}
-			try {
-				chunkF.add(translator.translate(tr.build()).getTranslatedRemainder());
-			} catch (TranslationException e) {
-				throw new PaginatorToolsException(e);
-			}
-		}
-        return PaginatorTools.distribute(chunkF, width, padding,
-                fcontext.getConfiguration().isAllowingTextOverflowTrimming()?
-                PaginatorTools.DistributeMode.EQUAL_SPACING_TRUNCATE:
-                PaginatorTools.DistributeMode.EQUAL_SPACING
-            );
-	}
-	
-	/*
-	 * Note that the result of this function is not constant because getPageInSequenceWithOffset(),
-	 * getPageInVolumeWithOffset() and shouldAdjustOutOfBounds() are not constant.
-	 */
-	private String resolveField(Field field, PageImpl p, DefaultTextAttribute.Builder b) {
-		if (field instanceof NoField) {
-			throw new UnsupportedOperationException("Not implemented");
-		}
-		String ret;
-		DefaultTextAttribute.Builder b2 = new DefaultTextAttribute.Builder(field.getTextStyle());
-		if (field instanceof CompoundField) {
-			ret = resolveCompoundField((CompoundField)field, p, b2);
-		} else if (field instanceof MarkerReferenceField) {
-			ret = crh.findMarker(p.getDetails().getPageId(), (MarkerReferenceField)field);
-		} else if (field instanceof CurrentPageField) {
-			ret = resolveCurrentPageField((CurrentPageField)field, p);
-		} else {
-			ret = field.toString();
-		}
-		if (ret.length()>0) {
-			b.add(b2.build(ret.length()));
-		}
-		return ret;
-	}
-
-	private String resolveCompoundField(CompoundField f, PageImpl p, DefaultTextAttribute.Builder b) {
-		return f.stream().map(f2 -> resolveField(f2, p, b)).collect(Collectors.joining());
-	}
-	
-	private static String resolveCurrentPageField(CurrentPageField f, PageImpl p) {
-		int pagenum = p.getPageIndex() + 1;
-		return f.getNumeralStyle().format(pagenum);
 	}
 	
 	/**

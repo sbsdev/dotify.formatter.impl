@@ -37,6 +37,7 @@ public class PageSequenceBuilder2 {
 	private final int pageNumberOffset;
 	private final Iterator<RowGroupDataSource> dataGroups;
 	private final int sequenceId;
+	private final FieldResolver fieldResolver;
 	
 	private SplitPointHandler<RowGroup> sph = new SplitPointHandler<>();
 	private boolean force;
@@ -59,6 +60,7 @@ public class PageSequenceBuilder2 {
 		this.context = context;
 		this.crh = crh;
 		this.sequenceId = sequenceId;
+		this.fieldResolver = new FieldResolver(master, context, crh);
 
 		this.collection = null;
 		this.areaProps = seq.getLayoutMaster().getPageArea();
@@ -107,7 +109,7 @@ public class PageSequenceBuilder2 {
 		PageImpl buffer = current;
 		SequenceId seqId = new SequenceId(sequenceId, new DocumentSpace(blockContext.getContext().getSpace(), blockContext.getContext().getCurrentVolume()));
 		PageDetails details = new PageDetails(master.duplex(), new PageId(pageCount, getGlobalStartIndex(), seqId));
-		current = new PageImpl(crh, details, master, context, pageCount+pageNumberOffset, staticAreaContent.getBefore(), staticAreaContent.getAfter());
+		current = new PageImpl(fieldResolver, details, master, context, pageCount+pageNumberOffset, staticAreaContent.getBefore(), staticAreaContent.getAfter());
 		pageCount ++;
 		if (keepNextSheets>0) {
 			currentPage().setAllowsVolumeBreak(false);
