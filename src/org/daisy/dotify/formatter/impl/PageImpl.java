@@ -33,7 +33,6 @@ public class PageImpl implements Page {
     private final ArrayList<RowImpl> pageArea;
     private final ArrayList<String> anchors;
     private final ArrayList<String> identifiers;
-	private final int pageIndex;
 	private final int pagenum;
 	private final int flowHeight;
 	private final PageTemplate template;
@@ -49,7 +48,7 @@ public class PageImpl implements Page {
 	private Integer volumeBreakAfterPriority;
 	private final BrailleTranslator filter;
 	
-	public PageImpl(FieldResolver fieldResolver, PageDetails details, LayoutMaster master, FormatterContext fcontext, int pageIndex, List<RowImpl> before, List<RowImpl> after) {
+	public PageImpl(FieldResolver fieldResolver, PageDetails details, LayoutMaster master, FormatterContext fcontext, List<RowImpl> before, List<RowImpl> after) {
 		this.fieldResolver = fieldResolver;
 		this.details = details;
 		this.master = master;
@@ -60,9 +59,8 @@ public class PageImpl implements Page {
 		this.pageArea = new ArrayList<>();
 		this.anchors = new ArrayList<>();
 		this.identifiers = new ArrayList<>();
-		this.pageIndex = pageIndex;
-		this.pagenum = pageIndex + 1;
-		this.template = master.getTemplate(pageIndex+1);
+		this.pagenum = details.getPageNumberIndex() + 1;
+		this.template = master.getTemplate(pagenum);
         this.flowHeight = master.getPageHeight() - 
                 (int)Math.ceil(template.getHeaderHeight()) -
                 (int)Math.ceil(template.getFooterHeight()) -
@@ -89,7 +87,7 @@ public class PageImpl implements Page {
 	void newRow(RowImpl r) {
 		if (!hasRows) {
 			//add the header
-	        finalRows.addAll(fieldResolver.renderFields(this, pageTemplate.getHeader(), filter));
+	        finalRows.addAll(fieldResolver.renderFields(getDetails(), pageTemplate.getHeader(), filter));
 	        //add the top page area
 			addTopPageArea();
 			getDetails().startsContentMarkers();
@@ -202,7 +200,7 @@ public class PageImpl implements Page {
 			if (!finalRows.closed) {
 				if (!hasRows) { // the header hasn't been added yet 
 					//add the header
-			        finalRows.addAll(fieldResolver.renderFields(this, pageTemplate.getHeader(), filter));
+			        finalRows.addAll(fieldResolver.renderFields(getDetails(), pageTemplate.getHeader(), filter));
 			      //add top page area
 					addTopPageArea();
 				}
@@ -217,7 +215,7 @@ public class PageImpl implements Page {
 						finalRows.addAll(pageArea);
 						finalRows.addAll(after);
 					}
-		            finalRows.addAll(fieldResolver.renderFields(this, pageTemplate.getFooter(), filter));
+		            finalRows.addAll(fieldResolver.renderFields(getDetails(), pageTemplate.getFooter(), filter));
 				}
 			}
 			return finalRows.getRows();
@@ -381,7 +379,7 @@ public class PageImpl implements Page {
 	 * @return returns the page index in the sequence (zero based)
 	 */
 	public int getPageIndex() {
-		return pageIndex;
+		return details.getPageNumberIndex();
 	}
 
 	/**

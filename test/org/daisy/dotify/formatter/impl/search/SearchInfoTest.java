@@ -45,7 +45,7 @@ public class SearchInfoTest {
 	
 	private static void addPages(SearchInfo si, int count, int offset, boolean duplex, int globalStartIndex, int sequenceId, DocumentSpace space, Map<Integer, ArrayList<Marker>> marker) {
 		for (int i=0; i<count; i++) {
-			PageDetails pd = new PageDetails(true, new PageId(i+offset, globalStartIndex, new SequenceId(sequenceId, space)));
+			PageDetails pd = new PageDetails(true, new PageId(i+offset, globalStartIndex, new SequenceId(sequenceId, space)), i+offset);
 			ArrayList<Marker> m = marker.get(i+offset);
 			if (m!=null) {
 				pd.getMarkers().addAll(m);

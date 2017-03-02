@@ -108,8 +108,8 @@ public class PageSequenceBuilder2 {
 	private PageImpl newPage() {
 		PageImpl buffer = current;
 		SequenceId seqId = new SequenceId(sequenceId, new DocumentSpace(blockContext.getContext().getSpace(), blockContext.getContext().getCurrentVolume()));
-		PageDetails details = new PageDetails(master.duplex(), new PageId(pageCount, getGlobalStartIndex(), seqId));
-		current = new PageImpl(fieldResolver, details, master, context, pageCount+pageNumberOffset, staticAreaContent.getBefore(), staticAreaContent.getAfter());
+		PageDetails details = new PageDetails(master.duplex(), new PageId(pageCount, getGlobalStartIndex(), seqId), pageNumberOffset);
+		current = new PageImpl(fieldResolver, details, master, context, staticAreaContent.getBefore(), staticAreaContent.getAfter());
 		pageCount ++;
 		if (keepNextSheets>0) {
 			currentPage().setAllowsVolumeBreak(false);

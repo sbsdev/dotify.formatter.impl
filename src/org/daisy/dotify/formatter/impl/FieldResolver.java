@@ -16,6 +16,7 @@ import org.daisy.dotify.api.translator.DefaultTextAttribute;
 import org.daisy.dotify.api.translator.Translatable;
 import org.daisy.dotify.api.translator.TranslationException;
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
+import org.daisy.dotify.formatter.impl.search.PageDetails;
 
 class FieldResolver {
 	private static final Pattern softHyphen = Pattern.compile("\u00ad");
@@ -29,7 +30,7 @@ class FieldResolver {
 		this.crh = crh;
 	}
 	
-    List<RowImpl> renderFields(PageImpl p, List<FieldList> fields, BrailleTranslator translator) throws PaginatorException {
+    List<RowImpl> renderFields(PageDetails p, List<FieldList> fields, BrailleTranslator translator) throws PaginatorException {
         ArrayList<RowImpl> ret = new ArrayList<>();
 		for (FieldList row : fields) {
             try {
@@ -43,7 +44,7 @@ class FieldResolver {
 		return ret;
 	}
 	
-    private String distribute(PageImpl p, FieldList chunks, int width, String padding, BrailleTranslator translator) throws PaginatorToolsException {
+    private String distribute(PageDetails p, FieldList chunks, int width, String padding, BrailleTranslator translator) throws PaginatorToolsException {
 		ArrayList<String> chunkF = new ArrayList<>();
 		for (Field f : chunks.getFields()) {
 			DefaultTextAttribute.Builder b = new DefaultTextAttribute.Builder(null);
@@ -70,7 +71,7 @@ class FieldResolver {
 	 * Note that the result of this function is not constant because getPageInSequenceWithOffset(),
 	 * getPageInVolumeWithOffset() and shouldAdjustOutOfBounds() are not constant.
 	 */
-	private String resolveField(Field field, PageImpl p, DefaultTextAttribute.Builder b) {
+	private String resolveField(Field field, PageDetails p, DefaultTextAttribute.Builder b) {
 		if (field instanceof NoField) {
 			throw new UnsupportedOperationException("Not implemented");
 		}
@@ -79,7 +80,7 @@ class FieldResolver {
 		if (field instanceof CompoundField) {
 			ret = resolveCompoundField((CompoundField)field, p, b2);
 		} else if (field instanceof MarkerReferenceField) {
-			ret = crh.findMarker(p.getDetails().getPageId(), (MarkerReferenceField)field);
+			ret = crh.findMarker(p.getPageId(), (MarkerReferenceField)field);
 		} else if (field instanceof CurrentPageField) {
 			ret = resolveCurrentPageField((CurrentPageField)field, p);
 		} else {
@@ -91,12 +92,12 @@ class FieldResolver {
 		return ret;
 	}
 
-	private String resolveCompoundField(CompoundField f, PageImpl p, DefaultTextAttribute.Builder b) {
+	private String resolveCompoundField(CompoundField f, PageDetails p, DefaultTextAttribute.Builder b) {
 		return f.stream().map(f2 -> resolveField(f2, p, b)).collect(Collectors.joining());
 	}
 	
-	private static String resolveCurrentPageField(CurrentPageField f, PageImpl p) {
-		int pagenum = p.getPageIndex() + 1;
+	private static String resolveCurrentPageField(CurrentPageField f, PageDetails p) {
+		int pagenum = p.getPageNumberIndex() + 1;
 		return f.getNumeralStyle().format(pagenum);
 	}
 
