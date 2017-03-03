@@ -36,8 +36,8 @@ public class PageSequenceBuilder2 {
 	private final LayoutMaster master;
 	private final int pageNumberOffset;
 	private final Iterator<RowGroupDataSource> dataGroups;
-	private final int sequenceId;
 	private final FieldResolver fieldResolver;
+	private final SequenceId seqId;
 	
 	private SplitPointHandler<RowGroup> sph = new SplitPointHandler<>();
 	private boolean force;
@@ -59,8 +59,6 @@ public class PageSequenceBuilder2 {
 		this.pageNumberOffset = pageOffset;
 		this.context = context;
 		this.crh = crh;
-		this.sequenceId = sequenceId;
-		this.fieldResolver = new FieldResolver(master, context, crh);
 
 		this.collection = null;
 		this.areaProps = seq.getLayoutMaster().getPageArea();
@@ -73,6 +71,9 @@ public class PageSequenceBuilder2 {
 		this.blockContext = new BlockContext(seq.getLayoutMaster().getFlowWidth(), crh, rcontext, context);
 		this.staticAreaContent = new PageAreaContent(seq.getLayoutMaster().getPageAreaBuilder(), blockContext);
 		this.dataGroups = prepareResult(master, seq, blockContext, new CollectionData(blockContext));
+		this.seqId = new SequenceId(sequenceId, new DocumentSpace(blockContext.getContext().getSpace(), blockContext.getContext().getCurrentVolume()));
+		PageDetails details = new PageDetails(master.duplex(), new PageId(pageCount, getGlobalStartIndex(), seqId), pageNumberOffset);
+		this.fieldResolver = new FieldResolver(master, context, crh, details);
 	}
 	
 	
@@ -107,7 +108,6 @@ public class PageSequenceBuilder2 {
 
 	private PageImpl newPage() {
 		PageImpl buffer = current;
-		SequenceId seqId = new SequenceId(sequenceId, new DocumentSpace(blockContext.getContext().getSpace(), blockContext.getContext().getCurrentVolume()));
 		PageDetails details = new PageDetails(master.duplex(), new PageId(pageCount, getGlobalStartIndex(), seqId), pageNumberOffset);
 		current = new PageImpl(fieldResolver, details, master, context, staticAreaContent.getBefore(), staticAreaContent.getAfter());
 		pageCount ++;

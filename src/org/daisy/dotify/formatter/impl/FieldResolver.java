@@ -23,11 +23,13 @@ class FieldResolver implements PageShape {
 	private final LayoutMaster master;
 	private final FormatterContext fcontext;
 	private final CrossReferenceHandler crh;
+	private final PageDetails detailsTemplate;
 
-	FieldResolver(LayoutMaster master, FormatterContext fcontext, CrossReferenceHandler crh) {
+	FieldResolver(LayoutMaster master, FormatterContext fcontext, CrossReferenceHandler crh, PageDetails detailsTemplate) {
 		this.master = master;
 		this.fcontext = fcontext;
 		this.crh = crh;
+		this.detailsTemplate = detailsTemplate;
 	}
 	
     List<RowImpl> renderFields(PageDetails p, List<FieldList> fields, BrailleTranslator translator) throws PaginatorException {
