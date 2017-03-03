@@ -22,6 +22,13 @@ public class PageDetails {
 		this.contentMarkersBegin = 0;
 		this.volumeNumber = 0;
 	}
+	
+	public PageDetails with(int ordinal) {
+		return new PageDetails(
+				this.duplex, 
+				this.pageId.with(ordinal),
+				pageNumberIndex - this.pageId.getOrdinal());
+	}
 
 	private boolean duplex() {
 		return duplex;

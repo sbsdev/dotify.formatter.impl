@@ -114,8 +114,26 @@ class FieldResolver implements PageShape {
 
 	@Override
 	public int getWidth(int pagenum, int rowOffset) {
-		//FIXME: not null
-		return getWidth(null, rowOffset);
+		while (true) {
+			// Iterates until rowOffset is less than the height of the page.
+			// Since each page could potentially have a different flow height we cannot
+			// simply divide, we have to retrieve the page template for each page
+			// and look at the actual value...
+			PageTemplate p = master.getTemplate(pagenum);
+			int flowHeight = master.getFlowHeight(p);
+			if (rowOffset>flowHeight) {
+				if (flowHeight<=0) {
+					throw new RuntimeException("Error in code.");
+				}
+				// subtract the height of the page we're on
+				rowOffset-=flowHeight;
+				// move to the next page
+				pagenum++;
+			} else {
+				break;
+			}
+		}
+		return getWidth(detailsTemplate.with(pagenum-1), rowOffset);
 	}
 
 	int getWidth(PageDetails details, int rowOffset) {

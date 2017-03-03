@@ -15,6 +15,10 @@ public final class PageId {
 		return ordinal;
 	}
 	
+	PageId with(int ordinal) {
+		return new PageId(ordinal, this.globalStartIndex, this.sequenceId);
+	}
+	
 	int getPageIndex() {
 		return globalStartIndex + ordinal;
 	}
