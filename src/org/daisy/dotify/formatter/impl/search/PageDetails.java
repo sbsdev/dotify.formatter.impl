@@ -39,6 +39,10 @@ public class PageDetails {
 		return pageNumberIndex;
 	}
 	
+	public int getPageNumber() {
+		return pageNumberIndex + 1;
+	}
+	
 	int getVolumeNumber() {
 		return volumeNumber;
 	}

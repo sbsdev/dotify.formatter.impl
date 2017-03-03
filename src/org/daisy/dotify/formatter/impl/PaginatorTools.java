@@ -33,7 +33,7 @@ class PaginatorTools {
 	/**
 	 * See distributeRetain
 	 */
-	private static List<String> distributeEqualSpacing(ArrayList<String> units, int width, String padding, boolean truncate) throws PaginatorToolsException {
+	private static List<String> distributeEqualSpacing(List<String> units, int width, String padding, boolean truncate) throws PaginatorToolsException {
 		if (units.size()==1) {
 			String unit = units.get(0);
 			if (unit.codePointCount(0, unit.length()) > width) {
@@ -94,7 +94,7 @@ class PaginatorTools {
 		return ret;
 	}
 	
-	private static String distributeTable(ArrayList<String> units, int width, String padding) throws PaginatorToolsException {
+	private static String distributeTable(List<String> units, int width, String padding) throws PaginatorToolsException {
 		double target = width/(double)units.size();
 		StringBuffer sb = new StringBuffer();
 		int used = 0;
@@ -132,7 +132,7 @@ class PaginatorTools {
 	 * @return returns a string of <tt>width</tt> chars 
 	 * @throws PaginatorToolsException if distribution fails
 	 */
-	static String distribute(ArrayList<String> units, int width, String padding, DistributeMode mode) throws PaginatorToolsException {
+	static String distribute(List<String> units, int width, String padding, DistributeMode mode) throws PaginatorToolsException {
 		switch (mode) {
 		case UNISIZE_TABLE_CELL:
 			return distributeTable(units, width, padding);
@@ -152,7 +152,7 @@ class PaginatorTools {
 	 *         <tt>width</tt>.
 	 * @throws PaginatorToolsException if distribution fails
 	 */
-	static List<String> distributeRetain(ArrayList<String> units, int width, String padding, DistributeMode mode) throws PaginatorToolsException {
+	static List<String> distributeRetain(List<String> units, int width, String padding, DistributeMode mode) throws PaginatorToolsException {
 		switch (mode) {
 		case EQUAL_SPACING:
 			return distributeEqualSpacing(units, width, padding, false);
