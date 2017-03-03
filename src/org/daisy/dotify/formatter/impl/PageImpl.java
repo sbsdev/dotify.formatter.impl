@@ -61,10 +61,7 @@ public class PageImpl implements Page {
 		this.identifiers = new ArrayList<>();
 		this.pagenum = details.getPageNumberIndex() + 1;
 		this.template = master.getTemplate(pagenum);
-        this.flowHeight = master.getPageHeight() - 
-                (int)Math.ceil(template.getHeaderHeight()) -
-                (int)Math.ceil(template.getFooterHeight()) -
-                (master.getBorder() != null ? (int)Math.ceil(distributeRowSpacing(null, false).spacing*2) : 0);
+        this.flowHeight = master.getFlowHeight(template);
 		this.isVolBreakAllowed = true;
 		this.keepPreviousSheets = 0;
 		this.volumeBreakAfterPriority = null;
@@ -252,7 +249,7 @@ public class PageImpl implements Page {
 
 		private void addTopBorder() {
 			RowImpl r = new RowImpl(border.getTopBorder());
-			DistributedRowSpacing rs = distributeRowSpacing(master.getRowSpacing(), true);
+			DistributedRowSpacing rs = master.distributeRowSpacing(master.getRowSpacing(), true);
 			r.setRowSpacing(rs.spacing);
 			addRowInner(r);
 		}
@@ -282,7 +279,7 @@ public class PageImpl implements Page {
 			Float rs2 = row.getRowSpacing();
 			if (!TextBorderStyle.NONE.equals(borderStyle)) {
 				//distribute row spacing
-				rs = distributeRowSpacing(rs2, true);
+				rs = master.distributeRowSpacing(rs2, true);
 				r2.setRowSpacing(rs.spacing);
 			} else {
 				r2.setRowSpacing(rs2);
@@ -388,39 +385,6 @@ public class PageImpl implements Page {
 	 */
 	int getFlowHeight() {
 		return flowHeight;
-	}
-	
-	/**
-	 * Divide a row-spacing value into several rows with a row-spacing < 2.
-	 * <p>E.g. A row spacing of 2.5 will return:</p>
-	 * <dl>
-	 * 	<dt>RowSpacing.spacing</dt><dd>1.25</dd> 
-	 *  <dt>RowSpacing.lines</dt><dd>2</dd>
-	 * </dl>
-	 * @param rs
-	 * @return
-	 */
-	private DistributedRowSpacing distributeRowSpacing(Float rs, boolean nullIfEqualToDefault) {
-		if (rs == null) {
-			//use default
-			rs = this.master.getRowSpacing();
-		}
-		int ins = Math.max((int)Math.floor(rs), 1);
-		Float spacing = rs / ins;
-		if (nullIfEqualToDefault && spacing.equals(this.master.getRowSpacing())) {
-			return new DistributedRowSpacing(null, ins);
-		} else {
-			return new DistributedRowSpacing(spacing, ins);
-		}
-	}
-	
-	private class DistributedRowSpacing {
-		private final Float spacing;
-		private final int lines;
-		DistributedRowSpacing(Float s, int l) {
-			this.spacing = s;
-			this.lines = l;
-		}
 	}
 	
 	void setKeepWithPreviousSheets(int value) {

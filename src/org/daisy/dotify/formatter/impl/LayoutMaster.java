@@ -132,4 +132,35 @@ public class LayoutMaster implements LayoutMasterBuilder, SectionProperties {
 		pageArea = new PageAreaBuilderImpl(fc, properties);
 		return pageArea;
 	}
+	
+	/**
+	 * Divide a row-spacing value into several rows with a row-spacing < 2.
+	 * <p>E.g. A row spacing of 2.5 will return:</p>
+	 * <dl>
+	 * 	<dt>RowSpacing.spacing</dt><dd>1.25</dd> 
+	 *  <dt>RowSpacing.lines</dt><dd>2</dd>
+	 * </dl>
+	 * @param rs
+	 * @return
+	 */
+	DistributedRowSpacing distributeRowSpacing(Float rs, boolean nullIfEqualToDefault) {
+		if (rs == null) {
+			//use default
+			rs = getRowSpacing();
+		}
+		int ins = Math.max((int)Math.floor(rs), 1);
+		Float spacing = rs / ins;
+		if (nullIfEqualToDefault && spacing.equals(getRowSpacing())) {
+			return new DistributedRowSpacing(null, ins);
+		} else {
+			return new DistributedRowSpacing(spacing, ins);
+		}
+	}
+	
+	int getFlowHeight(PageTemplate template) {
+		return getPageHeight() - 
+				(int)Math.ceil(template.getHeaderHeight()) + template.validateAndAnalyzeHeader() -
+				(int)Math.ceil(template.getFooterHeight()) + template.validateAndAnalyzeFooter() -
+				(getBorder() != null ? (int)Math.ceil(distributeRowSpacing(null, false).spacing*2) : 0);
+	}
 }
