@@ -16,6 +16,7 @@ import org.daisy.dotify.api.translator.TranslationException;
 import org.daisy.dotify.common.split.SplitPoint;
 import org.daisy.dotify.common.split.SplitPointDataSource;
 import org.daisy.dotify.common.split.SplitPointHandler;
+import org.daisy.dotify.common.split.SplitPointSpecification;
 import org.daisy.dotify.common.split.StandardSplitOption;
 import org.daisy.dotify.common.split.Supplements;
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
@@ -207,14 +208,12 @@ public class PageSequenceBuilder2 {
 				force = false;
 			}
 			if (!data.isEmpty()) {
-				//Discards leading skippable row groups, but retains their properties
-				SplitPoint<RowGroup> sl = SplitPointHandler.trimLeading(data);
-				for (RowGroup rg : sl.getDiscarded()) {
-					addProperties(rg);
-				}
-				data = sl.getTail();
+				data = discardSkippableLeading(data);
 				int flowHeight = currentPage().getFlowHeight();
-				SplitPoint<RowGroup> res = sph.split(flowHeight, data, force?StandardSplitOption.ALLOW_FORCE:null);
+				// Using a copy to find the break point so that only the required data is rendered
+				SplitPointSpecification spec = sph.find(flowHeight, new RowGroupDataSource((RowGroupDataSource)data), force?StandardSplitOption.ALLOW_FORCE:null);
+				// Now apply the information to the live data
+				SplitPoint<RowGroup> res = sph.split(spec, data);
 				if (res.getHead().size()==0 && force) {
 					if (firstUnitHasSupplements(data) && hasPageAreaCollection()) {
 						reassignCollection();
@@ -267,6 +266,22 @@ public class PageSequenceBuilder2 {
 		PageImpl ret = current;
 		current = null;
 		return ret;
+	}
+	
+	/**
+	 * Discards leading skippable row groups, but retains their properties (via side effect).
+	 * @param data the data
+	 * @return returns the tail
+	 */
+	private SplitPointDataSource<RowGroup> discardSkippableLeading(SplitPointDataSource<RowGroup> data) {
+		// Using a copy to find the skippable data, so that only the required data is rendered
+		int index = SplitPointHandler.findLeading(new RowGroupDataSource((RowGroupDataSource)data));
+		// Now apply the information to the live data
+		SplitPoint<RowGroup> sl = SplitPointHandler.skipLeading(data, index);
+		for (RowGroup rg : sl.getDiscarded()) {
+			addProperties(rg);
+		}
+		return sl.getTail();
 	}
 	
 	private static Integer getLastPriority(List<RowGroup> list) {

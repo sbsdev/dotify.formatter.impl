@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.daisy.dotify.common.split.SplitPointDataSource;
+import org.daisy.dotify.common.split.SplitResult;
 import org.daisy.dotify.common.split.Supplements;
 
 class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
@@ -27,6 +28,10 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 		
 		RowGroupData() {
 			this.data = null;
+		}
+		
+		RowGroupData(RowGroupData template) {
+			this.data = template.data==null?null:new ArrayList<>(template.data);
 		}
 
 		RowGroupData(RowGroupData template, int offset) {
@@ -80,6 +85,16 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 		this.supplements = supplements;
 		this.vs = vs;
 		this.blockIndex = 0;
+	}
+	
+	RowGroupDataSource(RowGroupDataSource template) {
+		this.master = template.master;
+		this.bc = template.bc;
+		this.data = new RowGroupData(template.data);
+		this.blocks = template.blocks;
+		this.supplements = template.supplements;
+		this.vs = template.vs;
+		this.blockIndex = template.blockIndex;
 	}
 	
 	private RowGroupDataSource(LayoutMaster master, BlockContext bc, RowGroupData data, List<Block> blocks, Supplements<RowGroup> supplements, VerticalSpacing vs, int blockIndex) {
@@ -172,6 +187,13 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 			data.processBlock(master, b, b.getBlockContentManager(bc));
 		}
 		return true;
+	}
+
+	@Override
+	public SplitResult<RowGroup> split(int atIndex) {
+		SplitPointDataSource<RowGroup> tail = tail(atIndex);
+		List<RowGroup> head = head(atIndex);
+		return new SplitResult<RowGroup>(head, tail);
 	}
 
 }

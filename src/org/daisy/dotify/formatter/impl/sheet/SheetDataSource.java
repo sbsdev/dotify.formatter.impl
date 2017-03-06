@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.daisy.dotify.common.split.SplitPointDataSource;
+import org.daisy.dotify.common.split.SplitResult;
 import org.daisy.dotify.common.split.Supplements;
 import org.daisy.dotify.formatter.impl.BlockSequence;
 import org.daisy.dotify.formatter.impl.FormatterContext;
@@ -206,6 +207,11 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 			crh.keepBreakable(si, false);
 			i++;
 		}
+	}
+
+	@Override
+	public SplitResult<Sheet> split(int atIndex) {
+		return new SplitResult<Sheet>(head(atIndex), tail(atIndex));
 	}
 
 }
