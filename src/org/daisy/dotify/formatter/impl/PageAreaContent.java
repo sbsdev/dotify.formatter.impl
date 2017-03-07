@@ -1,31 +1,34 @@
 package org.daisy.dotify.formatter.impl;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 class PageAreaContent {
-	private List<RowImpl> before;
-	private List<RowImpl> after;
-
+	private final List<RowImpl> before;
+	private final List<RowImpl> after;
 
 	PageAreaContent(PageAreaBuilderImpl pab, BlockContext bc) {
-		this.before = new ArrayList<>();
-		this.after = new ArrayList<>();
 		if (pab !=null) {
 			//Assumes before is static
-			for (Block b : pab.getBeforeArea()) {
-				for (RowImpl r : b.getBlockContentManager(bc)) {
-					before.add(r);
-				}
-			}
+			this.before = Collections.unmodifiableList(renderRows(pab.getBeforeArea(), bc));
 
 			//Assumes after is static
-			for (Block b : pab.getAfterArea()) {
-				for (RowImpl r : b.getBlockContentManager(bc)) {
-					after.add(r);
-				}
+			this.after = Collections.unmodifiableList(renderRows(pab.getAfterArea(), bc));
+		} else {
+			this.before = Collections.emptyList();
+			this.after = Collections.emptyList();
+		}
+	}
+
+	private static List<RowImpl> renderRows(Iterable<Block> blocks, BlockContext bc) {
+		List<RowImpl> ret = new ArrayList<>();
+		for (Block b : blocks) {
+			for (RowImpl r : b.getBlockContentManager(bc)) {
+				ret.add(r);
 			}
 		}
+		return ret;
 	}
 	
 	List<RowImpl> getBefore() {
