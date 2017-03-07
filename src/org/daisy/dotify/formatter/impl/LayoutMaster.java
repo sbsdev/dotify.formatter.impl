@@ -30,6 +30,36 @@ public class LayoutMaster implements LayoutMasterBuilder, SectionProperties {
 		this.pageArea = null;
 	}
 	
+	/**
+	 * Creates a new object with the same section properties
+	 * as this object.
+	 * @return returns a new object
+	 */
+	public SectionProperties newSectionProperties() {
+		return new SectionProperties() {
+
+			@Override
+			public int getPageWidth() {
+				return props.getPageWidth();
+			}
+
+			@Override
+			public int getPageHeight() {
+				return props.getPageHeight();
+			}
+
+			@Override
+			public float getRowSpacing() {
+				return props.getRowSpacing();
+			}
+
+			@Override
+			public boolean duplex() {
+				return props.duplex();
+			}
+		};
+	}
+	
 	@Override
 	public PageTemplateBuilder newTemplate(Condition c) {
 		PageTemplate p = new PageTemplate(c, getRowSpacing());

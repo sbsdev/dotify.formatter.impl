@@ -4,24 +4,30 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.daisy.dotify.api.writer.SectionProperties;
 import org.daisy.dotify.common.split.SplitPointUnit;
 import org.daisy.dotify.formatter.impl.PageImpl;
-import org.daisy.dotify.formatter.impl.PageSequenceBuilder2;
 public class Sheet implements SplitPointUnit {
 	private static final List<String> SUPPLEMENTS = Collections.unmodifiableList(new ArrayList<String>());
-	private final PageSequenceBuilder2 master;
+	private final SectionProperties master;
 	private final List<PageImpl> pages;
 	private final boolean breakable, skippable, collapsible;
 	private final Integer avoidVolumeBreakAfterPriority;
 	
 	static class Builder {
-		private final PageSequenceBuilder2 master;
+		private final SectionProperties sectionProperties;
 		private final List<PageImpl> pages;
 		private boolean breakable = false;
 		private Integer avoidVolumeBreakAfterPriority = null;
 
-		Builder(PageSequenceBuilder2 master) {
-			this.master = master;
+		/**
+		 * Creates a new builder.
+		 * @param props the section properties. Note that this object is used as
+		 * section separator, meaning that each new section MUST have a separate
+		 * object even if the data is the same.
+		 */
+		Builder(SectionProperties props) {
+			this.sectionProperties = props;
 			this.pages = new ArrayList<>();
 		}
 	
@@ -53,7 +59,7 @@ public class Sheet implements SplitPointUnit {
 		if (builder.pages.size()>2) {
 			throw new IllegalArgumentException("A sheet can not contain more than two pages.");
 		}
-		this.master = builder.master;
+		this.master = builder.sectionProperties;
 		this.pages = Collections.unmodifiableList(new ArrayList<>(builder.pages));
 		this.breakable = builder.breakable && builder.avoidVolumeBreakAfterPriority==null;
 		this.avoidVolumeBreakAfterPriority = builder.avoidVolumeBreakAfterPriority;
@@ -61,7 +67,7 @@ public class Sheet implements SplitPointUnit {
 		this.collapsible = pages.isEmpty();
 	}
 	
-	public PageSequenceBuilder2 getPageSequence() {
+	public SectionProperties getSectionProperties() {
 		return master;
 	}
 	

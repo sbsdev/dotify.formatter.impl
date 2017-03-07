@@ -4,12 +4,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.daisy.dotify.api.writer.SectionProperties;
 import org.daisy.dotify.common.split.SplitPointDataSource;
 import org.daisy.dotify.common.split.SplitResult;
 import org.daisy.dotify.common.split.Supplements;
 import org.daisy.dotify.formatter.impl.BlockSequence;
 import org.daisy.dotify.formatter.impl.FormatterContext;
-import org.daisy.dotify.formatter.impl.LayoutMaster;
 import org.daisy.dotify.formatter.impl.PageImpl;
 import org.daisy.dotify.formatter.impl.PageSequenceBuilder2;
 import org.daisy.dotify.formatter.impl.PageStruct;
@@ -28,7 +28,7 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 	private final int sheetsServed;
 	private int seqsIndex;
 	private PageSequenceBuilder2 psb;
-	private LayoutMaster lm;
+	private SectionProperties sectionProperties;
 	private Sheet.Builder s;
 	private SheetIdentity si;
 	private int sheetIndex;
@@ -43,7 +43,7 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 	
 	SheetDataSource(PageStruct struct, CrossReferenceHandler crh, FormatterContext context, DefaultContext rcontext, List<BlockSequence> seqsIterator, List<Sheet> sheetBuffer, boolean volBreakAllowed, int sheetsServed, int seqsIndex,
 			PageSequenceBuilder2 psb,
-			LayoutMaster lm,
+			SectionProperties sectionProperties,
 			Sheet.Builder s,
 			SheetIdentity si,
 			int sheetIndex,
@@ -56,7 +56,7 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 		this.sheetsServed = sheetsServed;
 		this.seqsIndex = seqsIndex;
 		this.psb = psb;
-		this.lm = lm;
+		this.sectionProperties = sectionProperties;
 		this.s = s;
 		this.si = si;
 		this.sheetIndex = sheetIndex;
@@ -98,7 +98,7 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 			newBuffer = new ArrayList<>(sheetBuffer.subList(fromIndex, sheetBuffer.size()));
 		}
 		return new SheetDataSource(struct, crh, context, rcontext, seqsIterator, newBuffer, volBreakAllowed, sheetsServed+fromIndex, seqsIndex, 
-				psb, lm, s, si, sheetIndex, pageIndex);
+				psb, sectionProperties, s, si, sheetIndex, pageIndex);
 	}
 
 	@Override
@@ -144,7 +144,7 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 				seqsIndex++;
 				int offset = struct.getCurrentPageOffset();
 				psb = new PageSequenceBuilder2(struct.getPageCount(), bs.getLayoutMaster(), bs.getInitialPageNumber()!=null?bs.getInitialPageNumber() - 1:offset, crh, bs, context, rcontext, seqsIndex);
-				lm = bs.getLayoutMaster();
+				sectionProperties = bs.getLayoutMaster().newSectionProperties();
 				s = null;
 				si = null;
 				sheetIndex = 0;
@@ -154,13 +154,13 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 			while (psb.hasNext() && currentSheet == sheetBuffer.size()) {
 				PageImpl p = psb.nextPage();
 				struct.increasePageCount();
-				if (!lm.duplex() || pageIndex % 2 == 0) {
+				if (!sectionProperties.duplex() || pageIndex % 2 == 0) {
 					volBreakAllowed = true;
 					if (s!=null) {
 						Sheet r = s.build();
 						sheetBuffer.add(r);
 					}
-					s = new Sheet.Builder(psb);
+					s = new Sheet.Builder(sectionProperties);
 					si = new SheetIdentity(rcontext.getSpace(), rcontext.getCurrentVolume()==null?0:rcontext.getCurrentVolume(), sheetsServed + sheetBuffer.size());
 					sheetIndex++;
 				}
@@ -180,7 +180,7 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 
 				setPreviousSheet(si.getSheetIndex()-1, Math.min(p.keepPreviousSheets(), sheetIndex-1), rcontext);
 				volBreakAllowed &= p.allowsVolumeBreak();
-				if (!lm.duplex() || pageIndex % 2 == 1) {
+				if (!sectionProperties.duplex() || pageIndex % 2 == 1) {
 					crh.keepBreakable(si, volBreakAllowed);
 				}
 				s.add(p);
