@@ -32,6 +32,7 @@ class PageTemplate implements PageTemplateBuilder {
 	private Float footerHeight;
 	private Integer flowIntoHeaderHeight;
 	private Integer flowIntoFooterHeight;
+	private Integer totalMarginRegion;
 	
 	PageTemplate(float rowSpacing) {
 		this(null, rowSpacing);
@@ -125,11 +126,13 @@ class PageTemplate implements PageTemplateBuilder {
 
 	@Override
 	public void addToLeftMargin(MarginRegion margin) {
+		totalMarginRegion = null;
 		leftMarginRegion.add(margin);
 	}
 
 	@Override
 	public void addToRightMargin(MarginRegion margin) {
+		totalMarginRegion = null;
 		rightMarginRegion.add(margin);
 	}
 
@@ -212,6 +215,14 @@ class PageTemplate implements PageTemplateBuilder {
 	
 	private static float getHeight(List<FieldList> list, float def) {
 		return (float)list.stream().mapToDouble(f -> f.getRowSpacing()!=null?f.getRowSpacing():def).sum();
+	}
+	
+	int getTotalMarginRegionWidth() {
+		if (totalMarginRegion==null) {
+			totalMarginRegion = getLeftMarginRegion().stream().mapToInt(mr -> mr.getWidth()).sum()
+							 + getRightMarginRegion().stream().mapToInt(mr -> mr.getWidth()).sum();
+		}
+		return totalMarginRegion;
 	}
 
 }

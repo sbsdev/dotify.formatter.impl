@@ -76,22 +76,10 @@ public class PageSequenceBuilder2 {
 		PageDetails details = new PageDetails(master.duplex(), new PageId(pageCount, getGlobalStartIndex(), seqId), pageNumberOffset);
 		this.fieldResolver = new FieldResolver(master, context, crh, details);
 	}
-	
-	
-	private static int getTotalMarginRegionWidth(LayoutMaster master) {
-		int mw = 0;
-		for (MarginRegion mr : master.getTemplate(1).getLeftMarginRegion()) {
-			mw += mr.getWidth();
-		}
-		for (MarginRegion mr : master.getTemplate(1).getRightMarginRegion()) {
-			mw += mr.getWidth();
-		}
-		return mw;
-	}
 
 	static Iterator<RowGroupDataSource> prepareResult(LayoutMaster master, BlockSequence in, BlockContext blockContext, CollectionData cd) {
 		//TODO: This assumes that all page templates have margin regions that are of the same width  
-		final BlockContext bc = new BlockContext(in.getLayoutMaster().getFlowWidth() - getTotalMarginRegionWidth(master), blockContext.getRefs(), blockContext.getContext(), blockContext.getFcontext());
+		final BlockContext bc = new BlockContext(in.getLayoutMaster().getFlowWidth() - master.getTemplate(1).getTotalMarginRegionWidth(), blockContext.getRefs(), blockContext.getContext(), blockContext.getFcontext());
 		final Iterator<RowGroupSequence> source = ScenarioProcessor.process(master, in, bc).iterator();
 		Iterator<RowGroupDataSource> ret = new Iterator<RowGroupDataSource>() {
 			@Override
