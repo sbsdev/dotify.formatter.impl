@@ -77,6 +77,32 @@ public class PageSequenceBuilder2 {
 		this.fieldResolver = new FieldResolver(master, context, crh, details);
 	}
 
+	public PageSequenceBuilder2(PageSequenceBuilder2 template) {
+		this.context = template.context;
+		this.crh = template.crh;
+		this.staticAreaContent = template.staticAreaContent;
+		this.areaProps = template.areaProps;
+		this.collection = template.collection; // Probably this doesn't have to be copied...
+		this.blockContext = template.blockContext;
+		this.master = template.master;
+		this.pageNumberOffset = template.pageNumberOffset;
+		this.dataGroups = template.dataGroups;
+		this.fieldResolver = template.fieldResolver;
+		this.seqId = template.seqId;
+		this.sph = template.sph;
+		this.force = template.force;
+		this.data = RowGroupDataSource.copyUnlessNull((RowGroupDataSource)data);
+		this.current = PageImpl.copyUnlessNull(template.current);
+		this.keepNextSheets = template.keepNextSheets;
+		this.pageCount = template.pageCount;
+		this.fromIndex = template.fromIndex;
+		this.toIndex = template.toIndex;
+	}
+	
+	public static PageSequenceBuilder2 copyUnlessNull(PageSequenceBuilder2 template) {
+		return template==null?null:new PageSequenceBuilder2(template);
+	}
+
 	static Iterator<RowGroupDataSource> prepareResult(LayoutMaster master, BlockSequence in, BlockContext blockContext, CollectionData cd) {
 		//TODO: This assumes that all page templates have margin regions that are of the same width  
 		final BlockContext bc = new BlockContext(in.getLayoutMaster().getFlowWidth() - master.getTemplate(1).getTotalMarginRegionWidth(), blockContext.getRefs(), blockContext.getContext(), blockContext.getFcontext());

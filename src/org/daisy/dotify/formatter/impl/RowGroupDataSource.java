@@ -97,6 +97,10 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 		this.blockIndex = template.blockIndex;
 	}
 	
+	static RowGroupDataSource copyUnlessNull(RowGroupDataSource template) {
+		return template==null?null:new RowGroupDataSource(template);
+	}
+	
 	private RowGroupDataSource(LayoutMaster master, BlockContext bc, RowGroupData data, List<Block> blocks, Supplements<RowGroup> supplements, VerticalSpacing vs, int blockIndex) {
 		this.master = master;
 		this.bc = bc;

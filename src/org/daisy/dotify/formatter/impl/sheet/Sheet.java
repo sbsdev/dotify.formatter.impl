@@ -30,6 +30,15 @@ public class Sheet implements SplitPointUnit {
 			this.sectionProperties = props;
 			this.pages = new ArrayList<>();
 		}
+		
+		Builder(Builder template) {
+			this.sectionProperties = template.sectionProperties;
+			this.pages = new ArrayList<>(template.pages);
+		}
+		
+		static Builder copyUnlessNull(Builder template) {
+			return (template==null?null:new Builder(template));
+		}
 	
 		Builder add(PageImpl value) {
 			pages.add(value);

@@ -73,6 +73,36 @@ public class PageImpl implements Page {
 		this.hasRows = false;
 		this.filter = fcontext.getDefaultTranslator();
 	}
+	
+	public PageImpl(PageImpl template) {
+		this.fieldResolver = template.fieldResolver;
+		this.details = template.details;
+		this.master = template.master;
+		this.fcontext = template.fcontext;
+		this.before = new ArrayList<>(template.before);
+		this.after = new ArrayList<>(template.after);
+	    this.pageArea = new ArrayList<>(template.pageArea);
+	    this.anchors = new ArrayList<>(template.anchors);
+	    this.identifiers = new ArrayList<>(template.identifiers);
+		this.pagenum = template.pagenum;
+		this.flowHeight = template.flowHeight;
+		this.template = template.template;
+		this.pageMargin = template.pageMargin;
+		this.borderStyle = template.borderStyle;
+		this.border = template.border;
+		this.pageTemplate = template.pageTemplate;
+		this.finalRows = new BorderManager(template.finalRows);
+
+		this.hasRows = template.hasRows;
+		this.isVolBreakAllowed = template.isVolBreakAllowed;
+		this.keepPreviousSheets = template.keepPreviousSheets;
+		this.volumeBreakAfterPriority = template.volumeBreakAfterPriority;
+		this.filter = template.filter;
+	}
+	
+	public static PageImpl copyUnlessNull(PageImpl page) {
+		return page==null?null:new PageImpl(page);
+	}
 
 	void addToPageArea(List<RowImpl> block) {
 		if (hasRows) {
@@ -129,6 +159,11 @@ public class PageImpl implements Page {
 		private HeightCalculator(float defSpacing) {
 			this.defSpacing = defSpacing < 1 ? 1 : defSpacing;
 			this.ret = 0;
+		}
+		
+		private HeightCalculator(HeightCalculator template) {
+			this.defSpacing = template.defSpacing;
+			this.ret = template.ret;
 		}
 		
 		float getRowSpacing(Row r) {
@@ -239,6 +274,14 @@ public class PageImpl implements Page {
         		addTopBorder();
         	}
         	this.offsetHeight = hc.getCurrentHeight();
+        }
+        
+        private BorderManager(BorderManager template) {
+        	this.hc = new HeightCalculator(template.hc);
+        	this.ret2 = new ArrayList<>(template.ret2);
+        	this.rs = template.rs;
+        	this.closed = template.closed;
+        	this.offsetHeight = template.offsetHeight;
         }
 
         //This method is used to compensate for the fact that the top border was calculated outside of the main logic before

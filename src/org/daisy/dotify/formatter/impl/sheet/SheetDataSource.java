@@ -41,6 +41,24 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 		this(struct, crh, context, rcontext, seqsIterator, new ArrayList<>(), true, 0, 0, null, null, null, null, 0, 0);
 	}
 	
+	public SheetDataSource(SheetDataSource template) {
+		this.struct = new PageStruct(template.struct);
+		this.crh = template.crh;
+		this.context = template.context;
+		this.rcontext = template.rcontext;
+		this.seqsIterator = template.seqsIterator;
+		this.seqsIndex = template.seqsIndex;
+		this.psb = PageSequenceBuilder2.copyUnlessNull(template.psb);
+		this.sectionProperties = template.sectionProperties;
+		this.s = Sheet.Builder.copyUnlessNull(template.s);
+		this.si = template.si;
+		this.sheetsServed = template.sheetsServed;
+		this.sheetIndex = template.sheetIndex;
+		this.pageIndex = template.pageIndex;
+		this.sheetBuffer = new ArrayList<>(template.sheetBuffer);
+		this.volBreakAllowed = template.volBreakAllowed;
+	}
+	
 	SheetDataSource(PageStruct struct, CrossReferenceHandler crh, FormatterContext context, DefaultContext rcontext, List<BlockSequence> seqsIterator, List<Sheet> sheetBuffer, boolean volBreakAllowed, int sheetsServed, int seqsIndex,
 			PageSequenceBuilder2 psb,
 			SectionProperties sectionProperties,

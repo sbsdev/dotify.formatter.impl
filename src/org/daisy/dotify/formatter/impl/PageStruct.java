@@ -14,6 +14,11 @@ public class PageStruct {
 		pageCount = 0;
 	}
 
+	public PageStruct(PageStruct template) {
+		this.currentSeq = template.currentSeq; //Copy not needed, since the only use for this is to check identity
+		this.pageCount = template.pageCount;
+	}
+
 	public void setCurrentSequence(PageSequenceBuilder2 seq) {
 		currentSeq = seq;
 	}
