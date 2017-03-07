@@ -22,6 +22,7 @@ public class CrossReferenceHandler {
 	private static final String PAGES_IN_DOCUMENT = "pages-in-document";
     private Set<String> pageIds;
 	private boolean overheadDirty = false;
+	private boolean readOnly = false;
 	
 	public CrossReferenceHandler() {
 		this.pageRefs = new LookupHandler<>();
@@ -34,6 +35,14 @@ public class CrossReferenceHandler {
         this.pageIds = new HashSet<>();
 	}
 	
+	public void setReadOnly() {
+		readOnly = true;
+	}
+	
+	public void setReadWrite() {
+		readOnly = false;
+	}
+	
 	/**
 	 * Gets the volume for the specified identifier.
 	 * @param refid the identifier to get the volume for
@@ -44,6 +53,7 @@ public class CrossReferenceHandler {
 	}
 	
 	public void setVolumeNumber(String refid, int volume) {
+		if (readOnly) { return; }
 		volumeRefs.put(refid, volume);
 	}
 	
@@ -57,6 +67,7 @@ public class CrossReferenceHandler {
 	}
 	
 	public void setPageNumber(String refid, int page) {
+		if (readOnly) { return; }
         if (!pageIds.add(refid)) {
             throw new IllegalArgumentException("Identifier not unique: " + refid);
         }
@@ -68,40 +79,49 @@ public class CrossReferenceHandler {
 	}
 	
 	public void setAnchorData(int volume, Iterable<AnchorData> data) {
+		if (readOnly) { return; }
 		anchorRefs.put(volume, data);
 	}
 	
 	public void setVolumeCount(int volumes) {
+		if (readOnly) { return; }
 		variables.put(VOLUMES_KEY, volumes);
 	}
 	
 	public void setSheetsInVolume(int volume, int value) {
+		if (readOnly) { return; }
 		variables.put(SHEETS_IN_VOLUME+volume, value);
 	}
 	
 	public void setSheetsInDocument(int value) {
+		if (readOnly) { return; }
 		variables.put(SHEETS_IN_DOCUMENT, value);
 	}
 	
 	private void setPagesInVolume(int volume, int value) {
+		if (readOnly) { return; }
 		//TODO: use this method
 		variables.put(PAGES_IN_VOLUME+volume, value);
 	}
 	
 	private void setPagesInDocument(int value) {
+		if (readOnly) { return; }
 		//TODO: use this method
 		variables.put(PAGES_IN_DOCUMENT, value);
 	}
 	
 	public void keepBreakable(SheetIdentity ident, boolean value) {
+		if (readOnly) { return; }
 		breakable.keep(ident, value);
 	}
 	
 	public void commitBreakable() {
+		if (readOnly) { return; }
 		breakable.commit();
 	}
 	
 	public void trimPageDetails() {
+		if (readOnly) { return; }
 		//FIXME: implement
 	}
 	
@@ -110,6 +130,7 @@ public class CrossReferenceHandler {
 			throw new IndexOutOfBoundsException("Volume must be greater than or equal to 1");
 		}
 		if (volumeOverhead.get(volumeNumber)==null) {
+			if (readOnly) { return new Overhead(0, 0); }
 			volumeOverhead.put(volumeNumber, new Overhead(0, 0));
 			overheadDirty = true;
 		}
@@ -117,6 +138,7 @@ public class CrossReferenceHandler {
 	}
 	
 	public void setOverhead(int volumeNumber, Overhead overhead) {
+		if (readOnly) { return; }
 		volumeOverhead.put(volumeNumber, overhead);
 	}
 
@@ -149,10 +171,12 @@ public class CrossReferenceHandler {
 	}
 	
 	public void keepPageDetails(PageDetails value) {
+		if (readOnly) { return; }
 		searchInfo.keepPageDetails(value);
 	}
 	
 	public void commitPageDetails() {
+		if (readOnly) { return; }
 		searchInfo.commitPageDetails();
 	}
 	
@@ -164,6 +188,7 @@ public class CrossReferenceHandler {
 	 * @param toIndex the end index
 	 */
 	public void setSequenceScope(DocumentSpace space, int sequenceNumber, int fromIndex, int toIndex) {
+		if (readOnly) { return; }
 		searchInfo.setSequenceScope(space, sequenceNumber, fromIndex, toIndex);
 	}
 	
@@ -174,6 +199,7 @@ public class CrossReferenceHandler {
 	 * @param toIndex the end index
 	 */
 	public void setVolumeScope(int volumeNumber, int fromIndex, int toIndex) {
+		if (readOnly) { return; }
 		searchInfo.setVolumeScope(volumeNumber, fromIndex, toIndex);
 	}
 	
@@ -212,6 +238,7 @@ public class CrossReferenceHandler {
 	 * @param value the value
 	 */
 	public void setDirty(boolean value) {
+		if (readOnly) { return; }
 		pageRefs.setDirty(value);
 		volumeRefs.setDirty(value);
 		anchorRefs.setDirty(value);
@@ -222,6 +249,7 @@ public class CrossReferenceHandler {
 	}
 
     public void resetUniqueChecks() {
+		if (readOnly) { return; }
         pageIds = new HashSet<>();
     }
 

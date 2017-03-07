@@ -1,9 +1,9 @@
 package org.daisy.dotify.formatter.impl;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.daisy.dotify.api.formatter.BlockPosition;
 import org.daisy.dotify.api.formatter.FallbackRule;
@@ -36,7 +36,7 @@ public class PageSequenceBuilder2 {
 	private final BlockContext blockContext;
 	private final LayoutMaster master;
 	private final int pageNumberOffset;
-	private final Iterator<RowGroupDataSource> dataGroups;
+	private final List<RowGroupDataSource> dataGroups;
 	private final FieldResolver fieldResolver;
 	private final SequenceId seqId;
 	
@@ -47,6 +47,7 @@ public class PageSequenceBuilder2 {
 	PageImpl current;
 	int keepNextSheets;
 	int pageCount = 0;
+	private int dataGroupsIndex;
 
 	//From view, temporary
 	private final int fromIndex;
@@ -72,6 +73,7 @@ public class PageSequenceBuilder2 {
 		this.blockContext = new BlockContext(seq.getLayoutMaster().getFlowWidth(), crh, rcontext, context);
 		this.staticAreaContent = new PageAreaContent(seq.getLayoutMaster().getPageAreaBuilder(), blockContext);
 		this.dataGroups = prepareResult(master, seq, blockContext, new CollectionData(blockContext));
+		this.dataGroupsIndex = 0;
 		this.seqId = new SequenceId(sequenceId, new DocumentSpace(blockContext.getContext().getSpace(), blockContext.getContext().getCurrentVolume()));
 		PageDetails details = new PageDetails(master.duplex(), new PageId(pageCount, getGlobalStartIndex(), seqId), pageNumberOffset);
 		this.fieldResolver = new FieldResolver(master, context, crh, details);
@@ -87,6 +89,7 @@ public class PageSequenceBuilder2 {
 		this.master = template.master;
 		this.pageNumberOffset = template.pageNumberOffset;
 		this.dataGroups = template.dataGroups;
+		this.dataGroupsIndex = template.dataGroupsIndex;
 		this.fieldResolver = template.fieldResolver;
 		this.seqId = template.seqId;
 		this.sph = template.sph;
@@ -103,22 +106,13 @@ public class PageSequenceBuilder2 {
 		return template==null?null:new PageSequenceBuilder2(template);
 	}
 
-	static Iterator<RowGroupDataSource> prepareResult(LayoutMaster master, BlockSequence in, BlockContext blockContext, CollectionData cd) {
+	static List<RowGroupDataSource> prepareResult(LayoutMaster master, BlockSequence in, BlockContext blockContext, CollectionData cd) {
 		//TODO: This assumes that all page templates have margin regions that are of the same width  
 		final BlockContext bc = new BlockContext(in.getLayoutMaster().getFlowWidth() - master.getTemplate(1).getTotalMarginRegionWidth(), blockContext.getRefs(), blockContext.getContext(), blockContext.getFcontext());
-		final Iterator<RowGroupSequence> source = ScenarioProcessor.process(master, in, bc).iterator();
-		Iterator<RowGroupDataSource> ret = new Iterator<RowGroupDataSource>() {
-			@Override
-			public boolean hasNext() {
-				return source.hasNext();
-			}
-
-			@Override
-			public RowGroupDataSource next() {
-				RowGroupSequence rgs = source.next();
-				return new RowGroupDataSource(master, bc, rgs.getBlocks(), rgs.getVerticalSpacing(), cd);
-			}};
-		return ret;
+		return ScenarioProcessor.process(master, in, bc)
+				.stream()
+				.map(rgs -> new RowGroupDataSource(master, bc, rgs.getBlocks(), rgs.getVerticalSpacing(), cd))
+				.collect(Collectors.toList());
 	}
 
 	private PageImpl newPage() {
@@ -175,7 +169,7 @@ public class PageSequenceBuilder2 {
 	}
 	
 	public boolean hasNext() {
-		return dataGroups.hasNext() || (data!=null && !data.isEmpty()) || current!=null;
+		return dataGroupsIndex<dataGroups.size() || (data!=null && !data.isEmpty()) || current!=null;
 	}
 	
 	public PageImpl nextPage() throws PaginatorException, RestartPaginationException // pagination must be restarted in PageStructBuilder.paginateInner
@@ -194,10 +188,11 @@ public class PageSequenceBuilder2 {
 
 	private PageImpl nextPageInner() throws PaginatorException, RestartPaginationException // pagination must be restarted in PageStructBuilder.paginateInner
 	{
-		while (dataGroups.hasNext() || (data!=null && !data.isEmpty())) {
-			if ((data==null || data.isEmpty()) && dataGroups.hasNext()) {
+		while (dataGroupsIndex<dataGroups.size() || (data!=null && !data.isEmpty())) {
+			if ((data==null || data.isEmpty()) && dataGroupsIndex<dataGroups.size()) {
 				//pick up next group
-				data = dataGroups.next();
+				data = dataGroups.get(dataGroupsIndex);
+				dataGroupsIndex++;
 				if (((RowGroupDataSource)data).getVerticalSpacing()!=null) {
 					VerticalSpacing vSpacing = ((RowGroupDataSource)data).getVerticalSpacing();
 					if (pageCount==0) {

@@ -50,7 +50,7 @@ class ScenarioProcessor {
 		return states.containsKey(id);
 	}
 	
-	static Iterable<RowGroupSequence> process(LayoutMaster master, Iterable<Block> seq, BlockContext bc) {
+	static List<RowGroupSequence> process(LayoutMaster master, Iterable<Block> seq, BlockContext bc) {
 		final ScenarioProcessor rec = new ScenarioProcessor();
 		for (Block g : seq)  {
 			try {
