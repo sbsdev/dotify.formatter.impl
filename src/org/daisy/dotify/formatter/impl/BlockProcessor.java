@@ -47,28 +47,25 @@ abstract class BlockProcessor {
             );
 			setKeepWithNext(-1);
 		}
-		List<RowGroup> store = new ArrayList<>();
 
 		InnerBlockProcessor ibp = new InnerBlockProcessor(master, g, bcm);
+		boolean hasContent = false;
 		while (ibp.hasNext()) {
-			store.add(ibp.next());
+			hasContent = true;
+			RowGroup b = ibp.next();
+			if (!ibp.hasNext()) {
+				b.setAvoidVolumeBreakAfterPriority(g.getAvoidVolumeBreakAfterPriority());
+			} else {
+				b.setAvoidVolumeBreakAfterPriority(g.getAvoidVolumeBreakInsidePriority());
+			}
+			addRowGroup(b);
 		}
 
-		if (store.isEmpty() && hasSequence()) {
+		if (!hasContent && hasSequence()) {
 			RowGroup gx = peekResult();
 			if (gx!=null && gx.getAvoidVolumeBreakAfterPriority()==g.getAvoidVolumeBreakInsidePriority()
 					&&gx.getAvoidVolumeBreakAfterPriority()!=g.getAvoidVolumeBreakAfterPriority()) {
 				gx.setAvoidVolumeBreakAfterPriority(g.getAvoidVolumeBreakAfterPriority());
-			}
-		} else {
-			for (int j=0; j<store.size(); j++) {
-				RowGroup b = store.get(j);
-				if (j==store.size()-1) { //!hasNext()
-					b.setAvoidVolumeBreakAfterPriority(g.getAvoidVolumeBreakAfterPriority());
-				} else {
-					b.setAvoidVolumeBreakAfterPriority(g.getAvoidVolumeBreakInsidePriority());
-				}
-				addRowGroup(b);
 			}
 		}
 	}
