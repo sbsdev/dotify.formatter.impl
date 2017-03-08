@@ -160,8 +160,17 @@ abstract class AbstractBlockContentManager implements Iterable<RowImpl> {
 	List<RowImpl> getPostContentRows() {
 		return postContentRows;
 	}
+	
+	boolean hasPostContentRows() {
+		return !postContentRows.isEmpty();
+	}
+	
 	List<RowImpl> getSkippablePostContentRows() {
 		return skippablePostContentRows;
+	}
+	
+	boolean hasSkippablePostContentRows() {
+		return !skippablePostContentRows.isEmpty();
 	}
 	
 	/**

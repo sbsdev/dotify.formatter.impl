@@ -53,45 +53,7 @@ abstract class BlockProcessor {
 		while (ibp.hasNext()) {
 			store.add(ibp.next());
 		}
-		
-		Iterator<RowImpl> ri = bcm.iterator();
 
-		int i = 0;
-		List<RowImpl> rl3 = bcm.getPostContentRows();
-		OrphanWidowControl owc = new OrphanWidowControl(g.getRowDataProperties().getOrphans(),
-														g.getRowDataProperties().getWidows(), 
-														bcm.getRowCount());
-		while (ri.hasNext()) {
-			i++;
-			RowImpl r = ri.next();
-			r.setAdjustedForMargin(true);
-			if (!ri.hasNext()) {
-				//we're at the last line, this should be kept with the next block's first line
-				setKeepWithNext(g.getKeepWithNext());
-			}
-			RowGroup.Builder rgb = new RowGroup.Builder(master.getRowSpacing()).add(r).
-					collapsible(false).skippable(false).breakable(
-							r.allowsBreakAfter()&&
-							owc.allowsBreakAfter(i-1)&&
-							getKeepWithNext()<=0 &&
-							(Keep.AUTO==g.getKeepType() || i==bcm.getRowCount()) &&
-							(i<bcm.getRowCount() || rl3.isEmpty())
-							);
-			if (i==1) { //First item
-				setProperties(rgb, bcm, g);
-			}
-			store.add(rgb.build());
-			setKeepWithNext(getKeepWithNext()-1);
-		}
-		if (!rl3.isEmpty()) {
-			store.add(new RowGroup.Builder(master.getRowSpacing(), rl3).
-				collapsible(false).skippable(false).breakable(getKeepWithNext()<0).build());
-		}
-		List<RowImpl> rl4 = bcm.getSkippablePostContentRows();
-		if (!rl4.isEmpty()) {
-			store.add(new RowGroup.Builder(master.getRowSpacing(), rl4).
-				collapsible(true).skippable(true).breakable(getKeepWithNext()<0).build());
-		}
 		if (store.isEmpty() && hasSequence()) {
 			RowGroup gx = peekResult();
 			if (gx!=null && gx.getAvoidVolumeBreakAfterPriority()==g.getAvoidVolumeBreakInsidePriority()
@@ -111,11 +73,13 @@ abstract class BlockProcessor {
 		}
 	}
 	
-	private static class InnerBlockProcessor implements Iterator<RowGroup> {
+	private class InnerBlockProcessor implements Iterator<RowGroup> {
 		private final LayoutMaster master;
 		private final Block g;
 		private final AbstractBlockContentManager bcm;
 		private final Iterator<RowImpl> ri;
+		private final OrphanWidowControl owc;
+		private int i;
 		private int phase;
 
 		private InnerBlockProcessor(LayoutMaster master, Block g, AbstractBlockContentManager bcm) {
@@ -124,6 +88,11 @@ abstract class BlockProcessor {
 			this.bcm = bcm;
 			this.ri = bcm.iterator();
 			this.phase = 0;
+			this.i = 0;
+			this.owc = new OrphanWidowControl(g.getRowDataProperties().getOrphans(),
+					g.getRowDataProperties().getWidows(), 
+					bcm.getRowCount());
+
 		}
 		
 		@Override
@@ -134,7 +103,13 @@ abstract class BlockProcessor {
 				||
 				phase < 2 && bcm.hasInnerPreContentRows()
 				||
-				phase < 3 && shouldAddGroupForEmptyContent();
+				phase < 3 && shouldAddGroupForEmptyContent()
+				||
+				phase < 4 && ri.hasNext()
+				||
+				phase < 5 && bcm.hasPostContentRows()
+				||
+				phase < 6 && bcm.hasSkippablePostContentRows();
 		}
 		
 		@Override
@@ -165,7 +140,44 @@ abstract class BlockProcessor {
 				}
 			}
 			if (phase==3) {
+				if (ri.hasNext()) {
+					i++;
+					RowImpl r = ri.next();
+					r.setAdjustedForMargin(true);
+					if (!ri.hasNext()) {
+						//we're at the last line, this should be kept with the next block's first line
+						setKeepWithNext(g.getKeepWithNext());
+					}
+					RowGroup.Builder rgb = new RowGroup.Builder(master.getRowSpacing()).add(r).
+							collapsible(false).skippable(false).breakable(
+									r.allowsBreakAfter()&&
+									owc.allowsBreakAfter(i-1)&&
+									getKeepWithNext()<=0 &&
+									(Keep.AUTO==g.getKeepType() || i==bcm.getRowCount()) &&
+									(i<bcm.getRowCount() || !bcm.hasPostContentRows())
+									);
+					if (i==1) { //First item
+						setProperties(rgb, bcm, g);
+					}
+					setKeepWithNext(getKeepWithNext()-1);
+					return rgb.build();
+				} else {
+					phase++;
+				}
+			}
+			if (phase==4) {
 				phase++;
+				if (bcm.hasPostContentRows()) {
+					return new RowGroup.Builder(master.getRowSpacing(), bcm.getPostContentRows()).
+						collapsible(false).skippable(false).breakable(getKeepWithNext()<0).build();
+				}
+			}
+			if (phase==5) {
+				phase++;
+				if (bcm.hasSkippablePostContentRows()) {
+					return new RowGroup.Builder(master.getRowSpacing(), bcm.getSkippablePostContentRows()).
+						collapsible(true).skippable(true).breakable(getKeepWithNext()<0).build();
+				}
 			}
 			return null;
 		}
