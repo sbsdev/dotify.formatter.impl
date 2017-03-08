@@ -2,7 +2,6 @@ package org.daisy.dotify.formatter.impl;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 
 import org.daisy.dotify.api.formatter.FormattingTypes.BreakBefore;
 import org.daisy.dotify.api.formatter.FormattingTypes.Keep;
@@ -30,14 +29,6 @@ abstract class BlockProcessor {
 		this.keepWithNext = template.keepWithNext;
 	}
 
-	private int getKeepWithNext() {
-		return keepWithNext;
-	}
-
-	private void setKeepWithNext(int keepWithNext) {
-		this.keepWithNext = keepWithNext;
-	}
-		
 	void processBlock(LayoutMaster master, Block g, AbstractBlockContentManager bcm) {
 		if (!hasSequence() || ((g.getBreakBeforeType()==BreakBefore.PAGE  || g.getVerticalPosition()!=null) && hasResult())) {
             newRowGroupSequence(
@@ -45,13 +36,19 @@ abstract class BlockProcessor {
                             new VerticalSpacing(g.getVerticalPosition(), new RowImpl("", bcm.getLeftMarginParent(), bcm.getRightMarginParent()))
                                     :null
             );
-			setKeepWithNext(-1);
+			keepWithNext = -1;
 		}
 
 		InnerBlockProcessor ibp = new InnerBlockProcessor(master, g, bcm);
-		boolean hasContent = false;
+		if (!ibp.hasNext() && hasSequence()) {
+			RowGroup gx = peekResult();
+			if (gx!=null && gx.getAvoidVolumeBreakAfterPriority()==g.getAvoidVolumeBreakInsidePriority()
+					&&gx.getAvoidVolumeBreakAfterPriority()!=g.getAvoidVolumeBreakAfterPriority()) {
+				gx.setAvoidVolumeBreakAfterPriority(g.getAvoidVolumeBreakAfterPriority());
+			}
+		}
+
 		while (ibp.hasNext()) {
-			hasContent = true;
 			RowGroup b = ibp.next();
 			if (!ibp.hasNext()) {
 				b.setAvoidVolumeBreakAfterPriority(g.getAvoidVolumeBreakAfterPriority());
@@ -61,13 +58,6 @@ abstract class BlockProcessor {
 			addRowGroup(b);
 		}
 
-		if (!hasContent && hasSequence()) {
-			RowGroup gx = peekResult();
-			if (gx!=null && gx.getAvoidVolumeBreakAfterPriority()==g.getAvoidVolumeBreakInsidePriority()
-					&&gx.getAvoidVolumeBreakAfterPriority()!=g.getAvoidVolumeBreakAfterPriority()) {
-				gx.setAvoidVolumeBreakAfterPriority(g.getAvoidVolumeBreakAfterPriority());
-			}
-		}
 	}
 	
 	private class InnerBlockProcessor implements Iterator<RowGroup> {
@@ -76,6 +66,7 @@ abstract class BlockProcessor {
 		private final AbstractBlockContentManager bcm;
 		private final Iterator<RowImpl> ri;
 		private final OrphanWidowControl owc;
+		private final boolean otherData;
 		private int i;
 		private int phase;
 
@@ -89,6 +80,8 @@ abstract class BlockProcessor {
 			this.owc = new OrphanWidowControl(g.getRowDataProperties().getOrphans(),
 					g.getRowDataProperties().getWidows(), 
 					bcm.getRowCount());
+			this.otherData = (!bcm.getGroupAnchors().isEmpty() || !bcm.getGroupMarkers().isEmpty() || !"".equals(g.getIdentifier())
+					|| g.getKeepWithNextSheets()>0 || g.getKeepWithPreviousSheets()>0);
 
 		}
 		
@@ -143,20 +136,20 @@ abstract class BlockProcessor {
 					r.setAdjustedForMargin(true);
 					if (!ri.hasNext()) {
 						//we're at the last line, this should be kept with the next block's first line
-						setKeepWithNext(g.getKeepWithNext());
+						keepWithNext = g.getKeepWithNext();
 					}
 					RowGroup.Builder rgb = new RowGroup.Builder(master.getRowSpacing()).add(r).
 							collapsible(false).skippable(false).breakable(
 									r.allowsBreakAfter()&&
 									owc.allowsBreakAfter(i-1)&&
-									getKeepWithNext()<=0 &&
+									keepWithNext<=0 &&
 									(Keep.AUTO==g.getKeepType() || i==bcm.getRowCount()) &&
 									(i<bcm.getRowCount() || !bcm.hasPostContentRows())
 									);
 					if (i==1) { //First item
 						setProperties(rgb, bcm, g);
 					}
-					setKeepWithNext(getKeepWithNext()-1);
+					keepWithNext = keepWithNext-1;
 					return rgb.build();
 				} else {
 					phase++;
@@ -166,22 +159,21 @@ abstract class BlockProcessor {
 				phase++;
 				if (bcm.hasPostContentRows()) {
 					return new RowGroup.Builder(master.getRowSpacing(), bcm.getPostContentRows()).
-						collapsible(false).skippable(false).breakable(getKeepWithNext()<0).build();
+						collapsible(false).skippable(false).breakable(keepWithNext<0).build();
 				}
 			}
 			if (phase==5) {
 				phase++;
 				if (bcm.hasSkippablePostContentRows()) {
 					return new RowGroup.Builder(master.getRowSpacing(), bcm.getSkippablePostContentRows()).
-						collapsible(true).skippable(true).breakable(getKeepWithNext()<0).build();
+						collapsible(true).skippable(true).breakable(keepWithNext<0).build();
 				}
 			}
 			return null;
 		}
 		
 		private boolean shouldAddGroupForEmptyContent() {
-			return !ri.hasNext() && (!bcm.getGroupAnchors().isEmpty() || !bcm.getGroupMarkers().isEmpty() || !"".equals(g.getIdentifier())
-					|| g.getKeepWithNextSheets()>0 || g.getKeepWithPreviousSheets()>0);
+			return !ri.hasNext() && otherData;
 		}
 	}
 	
