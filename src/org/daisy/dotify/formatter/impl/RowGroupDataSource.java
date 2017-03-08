@@ -16,11 +16,11 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 		}
 	};
 	private final LayoutMaster master;
-	private final BlockContext bc;
 	private final RowGroupData data;
 	private final Supplements<RowGroup> supplements;
 	private final VerticalSpacing vs;
 	private final List<Block> blocks;
+	private BlockContext bc;
 	private int blockIndex;
 	
 	private class RowGroupData extends BlockProcessor {
@@ -140,6 +140,7 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 		return this.data.getList().get(n);
 	}
 	
+	@Override
 	public List<RowGroup> head(int n) {
 		if (n==0) {
 			return Collections.emptyList();
@@ -149,6 +150,7 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 		return this.data.getList().subList(0, n);
 	}
 	
+	@Override
 	public List<RowGroup> getRemaining() {
 		ensureBuffer(-1);
 		return this.data.getList().subList(0, data.size());
@@ -174,6 +176,10 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 
 	VerticalSpacing getVerticalSpacing() {
 		return vs;
+	}
+	
+	void setContext(BlockContext c) {
+		this.bc = c;
 	}
 	
 	/**

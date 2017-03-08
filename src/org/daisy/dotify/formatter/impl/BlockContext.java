@@ -15,6 +15,10 @@ class BlockContext {
 		this.context = context;
 		this.fcontext = fcontext;
 	}
+	
+	public BlockContext copyWithContext(DefaultContext dc) {
+		return new BlockContext(flowWidth, refs, dc, fcontext);
+	}
 
 	public int getFlowWidth() {
 		return flowWidth;

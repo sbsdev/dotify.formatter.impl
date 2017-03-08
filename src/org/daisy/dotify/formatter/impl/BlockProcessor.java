@@ -49,6 +49,7 @@ abstract class BlockProcessor {
 		}
 		rowGroupIterator = new InnerBlockProcessor(master, g, bcm);
 		if (!rowGroupIterator.hasNext() && hasSequence()) {
+			//FIXME: this has to be changed when streaming processing is fully implemented (can't change an already returned result)
 			RowGroup gx = peekResult();
 			if (gx!=null && gx.getAvoidVolumeBreakAfterPriority()==g.getAvoidVolumeBreakInsidePriority()
 					&&gx.getAvoidVolumeBreakAfterPriority()!=g.getAvoidVolumeBreakAfterPriority()) {

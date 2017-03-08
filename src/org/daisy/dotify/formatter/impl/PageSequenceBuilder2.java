@@ -216,6 +216,9 @@ public class PageSequenceBuilder2 {
 				}
 				force = false;
 			}
+			/*
+			((RowGroupDataSource)data).setContext(blockContext.copyWithContext(
+					DefaultContext.from(blockContext.getContext()).currentPage(currentPage().getDetails().getPageNumber()).build()));*/
 			if (!data.isEmpty()) {
 				data = discardSkippableLeading(data);
 				int flowHeight = currentPage().getFlowHeight();
