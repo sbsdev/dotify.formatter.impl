@@ -13,6 +13,7 @@ import org.daisy.dotify.api.formatter.FormattingTypes.Keep;
  */
 abstract class BlockProcessor {
 	private int keepWithNext = 0;
+	private InnerBlockProcessor rowGroupIterator;
 	
 	abstract void newRowGroupSequence(VerticalSpacing vs);
 	
@@ -30,6 +31,13 @@ abstract class BlockProcessor {
 	}
 
 	void processBlock(LayoutMaster master, Block g, AbstractBlockContentManager bcm) {
+		loadBlock(master, g, bcm);
+		while (rowGroupIterator.hasNext()) {
+			addRowGroup(rowGroupIterator.next());
+		}
+	}
+	
+	void loadBlock(LayoutMaster master, Block g, AbstractBlockContentManager bcm) {
 		if (!hasSequence() || ((g.getBreakBeforeType()==BreakBefore.PAGE  || g.getVerticalPosition()!=null) && hasResult())) {
             newRowGroupSequence(
                     g.getVerticalPosition()!=null?
@@ -38,26 +46,14 @@ abstract class BlockProcessor {
             );
 			keepWithNext = -1;
 		}
-
-		InnerBlockProcessor ibp = new InnerBlockProcessor(master, g, bcm);
-		if (!ibp.hasNext() && hasSequence()) {
+		rowGroupIterator = new InnerBlockProcessor(master, g, bcm);
+		if (!rowGroupIterator.hasNext() && hasSequence()) {
 			RowGroup gx = peekResult();
 			if (gx!=null && gx.getAvoidVolumeBreakAfterPriority()==g.getAvoidVolumeBreakInsidePriority()
 					&&gx.getAvoidVolumeBreakAfterPriority()!=g.getAvoidVolumeBreakAfterPriority()) {
 				gx.setAvoidVolumeBreakAfterPriority(g.getAvoidVolumeBreakAfterPriority());
 			}
 		}
-
-		while (ibp.hasNext()) {
-			RowGroup b = ibp.next();
-			if (!ibp.hasNext()) {
-				b.setAvoidVolumeBreakAfterPriority(g.getAvoidVolumeBreakAfterPriority());
-			} else {
-				b.setAvoidVolumeBreakAfterPriority(g.getAvoidVolumeBreakInsidePriority());
-			}
-			addRowGroup(b);
-		}
-
 	}
 	
 	private class InnerBlockProcessor implements Iterator<RowGroup> {
@@ -104,6 +100,16 @@ abstract class BlockProcessor {
 		
 		@Override
 		public RowGroup next() {
+			RowGroup b = nextInner();
+			if (!rowGroupIterator.hasNext()) {
+				b.setAvoidVolumeBreakAfterPriority(g.getAvoidVolumeBreakAfterPriority());
+			} else {
+				b.setAvoidVolumeBreakAfterPriority(g.getAvoidVolumeBreakInsidePriority());
+			}
+			return b;
+		}
+
+		private RowGroup nextInner() {
 			if (phase==0) {
 				phase++;
 				//if there is a row group, return it (otherwise, try next phase)
