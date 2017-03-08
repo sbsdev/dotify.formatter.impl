@@ -185,10 +185,16 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 			if (blockIndex>=blocks.size()) {
 				return false;
 			}
-			//get next block
-			Block b = blocks.get(blockIndex);
-			blockIndex++;			
-			data.processBlock(master, b, b.getBlockContentManager(bc));
+			if (!data.hasNextInBlock()) {
+				//get next block
+				Block b = blocks.get(blockIndex);
+				blockIndex++;
+				data.loadBlock(master, b, b.getBlockContentManager(bc));
+			}
+			// TODO: this loop should be removed for row-by-row processing
+			while (data.hasNextInBlock()) {
+				data.processNextRowGroup();
+			}
 		}
 		return true;
 	}

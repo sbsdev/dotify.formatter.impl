@@ -56,6 +56,16 @@ abstract class BlockProcessor {
 		}
 	}
 	
+	void processNextRowGroup() {
+		if (hasNextInBlock()) {
+			addRowGroup(rowGroupIterator.next());
+		}
+	}
+	
+	boolean hasNextInBlock() {
+		return rowGroupIterator!=null && rowGroupIterator.hasNext();
+	}
+	
 	private class InnerBlockProcessor implements Iterator<RowGroup> {
 		private final LayoutMaster master;
 		private final Block g;
