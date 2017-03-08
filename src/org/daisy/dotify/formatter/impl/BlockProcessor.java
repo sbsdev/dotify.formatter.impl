@@ -1,6 +1,7 @@
 package org.daisy.dotify.formatter.impl;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.daisy.dotify.api.formatter.FormattingTypes.BreakBefore;
@@ -58,7 +59,8 @@ abstract class BlockProcessor {
 									collapsible(false).skippable(false).breakable(false).build());
 		}
 		
-		if (bcm.getRowCount()==0) { //TODO: Does this interfere with collapsing margins? 
+		Iterator<RowImpl> ri = bcm.iterator();
+		if (!ri.hasNext()) { //TODO: Does this interfere with collapsing margins? 
 			if (!bcm.getGroupAnchors().isEmpty() || !bcm.getGroupMarkers().isEmpty() || !"".equals(g.getIdentifier())
 					|| g.getKeepWithNextSheets()>0 || g.getKeepWithPreviousSheets()>0 ) {
 				RowGroup.Builder rgb = new RowGroup.Builder(master.getRowSpacing(), new ArrayList<RowImpl>());
@@ -72,10 +74,11 @@ abstract class BlockProcessor {
 		OrphanWidowControl owc = new OrphanWidowControl(g.getRowDataProperties().getOrphans(),
 														g.getRowDataProperties().getWidows(), 
 														bcm.getRowCount());
-		for (RowImpl r : bcm) {
+		while (ri.hasNext()) {
 			i++;
+			RowImpl r = ri.next();
 			r.setAdjustedForMargin(true);
-			if (i==bcm.getRowCount()) {
+			if (!ri.hasNext()) {
 				//we're at the last line, this should be kept with the next block's first line
 				setKeepWithNext(g.getKeepWithNext());
 			}

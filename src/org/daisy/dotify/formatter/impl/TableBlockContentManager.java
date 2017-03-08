@@ -19,6 +19,11 @@ class TableBlockContentManager extends AbstractBlockContentManager {
 	public Iterator<RowImpl> iterator() {
 		return rows.iterator();
 	}
+	
+	@Override
+	boolean supportsVariableWidth() {
+		return false;
+	}
 
 	@Override
 	int getRowCount() {

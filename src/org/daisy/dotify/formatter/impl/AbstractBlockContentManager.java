@@ -115,6 +115,14 @@ abstract class AbstractBlockContentManager implements Iterable<RowImpl> {
 	abstract int getForceBreakCount();
 	
 	abstract int getRowCount();
+	
+	/**
+	 * Returns true if this manager supports rows with variable maximum
+	 * width, false otherwise.
+	 * @return true if variable maximum width is supported, false otherwise
+	 */
+	abstract boolean supportsVariableWidth();
+
 	/**
 	 * Returns true if this RowDataManager contains objects that makes the formatting volatile,
 	 * i.e. prone to change due to for example cross references.

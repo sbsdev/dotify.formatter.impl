@@ -59,24 +59,6 @@ class BlockContentManager extends AbstractBlockContentManager {
 		calculateRows(segments);
 	}
 	
-	public int getBlockHeight() {
-		return getRowCount() + 
-				rdp.getOuterSpaceBefore() + rdp.getInnerSpaceBefore() + 
-				rdp.getOuterSpaceAfter() + rdp.getInnerSpaceAfter() + 
-				(rdp.getLeadingDecoration()!=null?1:0)+
-				(rdp.getTrailingDecoration()!=null?1:0);
-	}
-	
-	public boolean isCollapsable() {
-		return getRowCount() +
-				rdp.getInnerSpaceAfter() +
-				rdp.getInnerSpaceBefore() == 0 
-				&&
-				leftMargin.isSpaceOnly() &&
-				rightMargin.isSpaceOnly() &&
-				rdp.getLeadingDecoration()==null && rdp.getTrailingDecoration()==null;
-	}
-	
 	private void calculateRows(Stack<Segment> segments) {
 		isVolatile = false;
 		
@@ -263,8 +245,14 @@ class BlockContentManager extends AbstractBlockContentManager {
 		}
 	}
 
+	@Override
 	public int getRowCount() {
 		return rows.size();
+	}
+	
+	@Override
+	boolean supportsVariableWidth() {
+		return true;
 	}
 
 	@Override
