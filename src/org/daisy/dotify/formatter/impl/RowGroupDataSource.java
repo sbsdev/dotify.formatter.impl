@@ -31,10 +31,12 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 		}
 		
 		RowGroupData(RowGroupData template) {
+			super(template);
 			this.data = template.data==null?null:new ArrayList<>(template.data);
 		}
 
 		RowGroupData(RowGroupData template, int offset) {
+			super(template);
 			this.data = new ArrayList<>(template.data.subList(offset, template.data.size()));
 		}
 
@@ -127,7 +129,7 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 
 	@Override
 	public boolean isEmpty() {
-		return this.data.size()==0 && blockIndex>=blocks.size();
+		return this.data.size()==0 && blockIndex>=blocks.size() && !data.hasNextInBlock();
 	}
 
 	@Override
@@ -182,7 +184,7 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 	 */
 	private boolean ensureBuffer(int index) {
 		while (index<0 || this.data.size()<=index) {
-			if (blockIndex>=blocks.size()) {
+			if (blockIndex>=blocks.size() && !data.hasNextInBlock()) {
 				return false;
 			}
 			if (!data.hasNextInBlock()) {
@@ -191,10 +193,7 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 				blockIndex++;
 				data.loadBlock(master, b, b.getBlockContentManager(bc));
 			}
-			// TODO: this loop should be removed for row-by-row processing
-			while (data.hasNextInBlock()) {
-				data.processNextRowGroup();
-			}
+			data.processNextRowGroup();
 		}
 		return true;
 	}

@@ -403,8 +403,8 @@ public class PageSequenceBuilder2 {
 						AbstractBlockContentManager bcm = g.getBlockContentManager(c);
 						b.addAll(bcm.getCollapsiblePreContentRows());
 						b.addAll(bcm.getInnerPreContentRows());
-						for (RowImpl r : bcm) {
-							b.add(r);
+						for (int i=0; i<bcm.getRowCount(); i++) {
+							b.add(bcm.get(i));
 						}
 						b.addAll(bcm.getPostContentRows());
 						b.addAll(bcm.getSkippablePostContentRows());

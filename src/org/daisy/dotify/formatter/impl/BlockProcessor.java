@@ -28,6 +28,7 @@ abstract class BlockProcessor {
 
 	BlockProcessor(BlockProcessor template) {
 		this.keepWithNext = template.keepWithNext;
+		this.rowGroupIterator = copyUnlessNull(template.rowGroupIterator);
 	}
 
 	void processBlock(LayoutMaster master, Block g, AbstractBlockContentManager bcm) {
@@ -66,23 +67,37 @@ abstract class BlockProcessor {
 		return rowGroupIterator!=null && rowGroupIterator.hasNext();
 	}
 	
+	private InnerBlockProcessor copyUnlessNull(InnerBlockProcessor template) {
+		return template==null?null:new InnerBlockProcessor(template);
+	}
+
+	
 	private class InnerBlockProcessor implements Iterator<RowGroup> {
 		private final LayoutMaster master;
 		private final Block g;
 		private final AbstractBlockContentManager bcm;
-		private final Iterator<RowImpl> ri;
+		
 		private final OrphanWidowControl owc;
 		private final boolean otherData;
-		private int i;
+		private int rowIndex;
 		private int phase;
+		
+		private InnerBlockProcessor(InnerBlockProcessor template) {
+			this.master = template.master;
+			this.g= template.g;
+			this.bcm = template.bcm;
+			this.owc = template.owc;
+			this.otherData = template.otherData;
+			this.rowIndex = template.rowIndex;
+			this.phase = template.phase;
+		}
 
 		private InnerBlockProcessor(LayoutMaster master, Block g, AbstractBlockContentManager bcm) {
 			this.master = master;
 			this.g = g;
 			this.bcm = bcm;
-			this.ri = bcm.iterator();
 			this.phase = 0;
-			this.i = 0;
+			this.rowIndex = 0;
 			this.owc = new OrphanWidowControl(g.getRowDataProperties().getOrphans(),
 					g.getRowDataProperties().getWidows(), 
 					bcm.getRowCount());
@@ -101,7 +116,7 @@ abstract class BlockProcessor {
 				||
 				phase < 3 && shouldAddGroupForEmptyContent()
 				||
-				phase < 4 && ri.hasNext()
+				phase < 4 && rowIndex<bcm.getRowCount()
 				||
 				phase < 5 && bcm.hasPostContentRows()
 				||
@@ -146,23 +161,23 @@ abstract class BlockProcessor {
 				}
 			}
 			if (phase==3) {
-				if (ri.hasNext()) {
-					i++;
-					RowImpl r = ri.next();
+				if (rowIndex<bcm.getRowCount()) {
+					RowImpl r = bcm.get(rowIndex);
+					rowIndex++;
 					r.setAdjustedForMargin(true);
-					if (!ri.hasNext()) {
+					if (rowIndex>=bcm.getRowCount()) {
 						//we're at the last line, this should be kept with the next block's first line
 						keepWithNext = g.getKeepWithNext();
 					}
 					RowGroup.Builder rgb = new RowGroup.Builder(master.getRowSpacing()).add(r).
 							collapsible(false).skippable(false).breakable(
 									r.allowsBreakAfter()&&
-									owc.allowsBreakAfter(i-1)&&
+									owc.allowsBreakAfter(rowIndex-1)&&
 									keepWithNext<=0 &&
-									(Keep.AUTO==g.getKeepType() || i==bcm.getRowCount()) &&
-									(i<bcm.getRowCount() || !bcm.hasPostContentRows())
+									(Keep.AUTO==g.getKeepType() || rowIndex==bcm.getRowCount()) &&
+									(rowIndex<bcm.getRowCount() || !bcm.hasPostContentRows())
 									);
-					if (i==1) { //First item
+					if (rowIndex==1) { //First item
 						setProperties(rgb, bcm, g);
 					}
 					keepWithNext = keepWithNext-1;
@@ -189,7 +204,7 @@ abstract class BlockProcessor {
 		}
 		
 		private boolean shouldAddGroupForEmptyContent() {
-			return !ri.hasNext() && otherData;
+			return rowIndex>=bcm.getRowCount() && otherData;
 		}
 	}
 	

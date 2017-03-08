@@ -6,7 +6,7 @@ import java.util.List;
 import org.daisy.dotify.api.formatter.Marker;
 import org.daisy.dotify.common.text.StringTools;
 
-abstract class AbstractBlockContentManager implements Iterable<RowImpl> {
+abstract class AbstractBlockContentManager {
 	protected boolean isVolatile;
 	protected final int flowWidth;
 	protected final RowDataProperties rdp;
@@ -115,6 +115,8 @@ abstract class AbstractBlockContentManager implements Iterable<RowImpl> {
 	abstract int getForceBreakCount();
 	
 	abstract int getRowCount();
+	
+	abstract RowImpl get(int index);
 	
 	/**
 	 * Returns true if this manager supports rows with variable maximum

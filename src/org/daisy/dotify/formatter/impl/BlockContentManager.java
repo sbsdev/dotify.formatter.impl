@@ -251,15 +251,15 @@ class BlockContentManager extends AbstractBlockContentManager {
 	}
 	
 	@Override
+	RowImpl get(int i) {
+		return rows.get(i);
+	}
+	
+	@Override
 	boolean supportsVariableWidth() {
 		return true;
 	}
 
-	@Override
-	public Iterator<RowImpl> iterator() {
-		return rows.iterator();
-	}
-	
 	private void layout(String c, String locale, String mode) {
 		layout(Translatable.text(fcontext.getConfiguration().isMarkingCapitalLetters()?c:c.toLowerCase()).locale(locale).build(), mode);
 	}

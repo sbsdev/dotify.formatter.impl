@@ -24,8 +24,9 @@ class PageAreaContent {
 	private static List<RowImpl> renderRows(Iterable<Block> blocks, BlockContext bc) {
 		List<RowImpl> ret = new ArrayList<>();
 		for (Block b : blocks) {
-			for (RowImpl r : b.getBlockContentManager(bc)) {
-				ret.add(r);
+			AbstractBlockContentManager bcm = b.getBlockContentManager(bc);
+			for (int i=0; i<bcm.getRowCount(); i++) {
+				ret.add(bcm.get(i));
 			}
 		}
 		return ret;
