@@ -144,9 +144,17 @@ abstract class AbstractBlockContentManager implements Iterable<RowImpl> {
 	List<RowImpl> getCollapsiblePreContentRows() {
 		return collapsiblePreContentRows;
 	}
+	
+	boolean hasCollapsiblePreContentRows() {
+		return !collapsiblePreContentRows.isEmpty();
+	}
 
 	List<RowImpl> getInnerPreContentRows() {
 		return innerPreContentRows;
+	}
+	
+	boolean hasInnerPreContentRows() {
+		return !innerPreContentRows.isEmpty();
 	}
 
 	List<RowImpl> getPostContentRows() {

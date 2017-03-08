@@ -48,26 +48,13 @@ abstract class BlockProcessor {
 			setKeepWithNext(-1);
 		}
 		List<RowGroup> store = new ArrayList<>();
-		List<RowImpl> rl1 = bcm.getCollapsiblePreContentRows();
-		if (!rl1.isEmpty()) {
-			store.add(new RowGroup.Builder(master.getRowSpacing(), rl1).
-									collapsible(true).skippable(false).breakable(false).build());
-		}
-		List<RowImpl> rl2 = bcm.getInnerPreContentRows();
-		if (!rl2.isEmpty()) {
-			store.add(new RowGroup.Builder(master.getRowSpacing(), rl2).
-									collapsible(false).skippable(false).breakable(false).build());
+
+		InnerBlockProcessor ibp = new InnerBlockProcessor(master, g, bcm);
+		while (ibp.hasNext()) {
+			store.add(ibp.next());
 		}
 		
 		Iterator<RowImpl> ri = bcm.iterator();
-		if (!ri.hasNext()) { //TODO: Does this interfere with collapsing margins? 
-			if (!bcm.getGroupAnchors().isEmpty() || !bcm.getGroupMarkers().isEmpty() || !"".equals(g.getIdentifier())
-					|| g.getKeepWithNextSheets()>0 || g.getKeepWithPreviousSheets()>0 ) {
-				RowGroup.Builder rgb = new RowGroup.Builder(master.getRowSpacing(), new ArrayList<RowImpl>());
-				setProperties(rgb, bcm, g);
-				store.add(rgb.build());
-			}
-		}
 
 		int i = 0;
 		List<RowImpl> rl3 = bcm.getPostContentRows();
@@ -114,13 +101,78 @@ abstract class BlockProcessor {
 		} else {
 			for (int j=0; j<store.size(); j++) {
 				RowGroup b = store.get(j);
-				if (j==store.size()-1) {
+				if (j==store.size()-1) { //!hasNext()
 					b.setAvoidVolumeBreakAfterPriority(g.getAvoidVolumeBreakAfterPriority());
 				} else {
 					b.setAvoidVolumeBreakAfterPriority(g.getAvoidVolumeBreakInsidePriority());
 				}
 				addRowGroup(b);
 			}
+		}
+	}
+	
+	private static class InnerBlockProcessor implements Iterator<RowGroup> {
+		private final LayoutMaster master;
+		private final Block g;
+		private final AbstractBlockContentManager bcm;
+		private final Iterator<RowImpl> ri;
+		private int phase;
+
+		private InnerBlockProcessor(LayoutMaster master, Block g, AbstractBlockContentManager bcm) {
+			this.master = master;
+			this.g = g;
+			this.bcm = bcm;
+			this.ri = bcm.iterator();
+			this.phase = 0;
+		}
+		
+		@Override
+		public boolean hasNext() {
+			// these conditions must match the ones in next()
+			return 
+				phase < 1 && bcm.hasCollapsiblePreContentRows()
+				||
+				phase < 2 && bcm.hasInnerPreContentRows()
+				||
+				phase < 3 && shouldAddGroupForEmptyContent();
+		}
+		
+		@Override
+		public RowGroup next() {
+			if (phase==0) {
+				phase++;
+				//if there is a row group, return it (otherwise, try next phase)
+				if (bcm.hasCollapsiblePreContentRows()) {
+					return new RowGroup.Builder(master.getRowSpacing(), bcm.getCollapsiblePreContentRows()).
+											collapsible(true).skippable(false).breakable(false).build();
+				}
+			}
+			if (phase==1) {
+				phase++;
+				//if there is a row group, return it (otherwise, try next phase)
+				if (bcm.hasInnerPreContentRows()) {
+					return new RowGroup.Builder(master.getRowSpacing(), bcm.getInnerPreContentRows()).
+											collapsible(false).skippable(false).breakable(false).build();
+				}
+			}
+			if (phase==2) {
+				phase++;
+				//TODO: Does this interfere with collapsing margins?
+				if (shouldAddGroupForEmptyContent()) {
+					RowGroup.Builder rgb = new RowGroup.Builder(master.getRowSpacing(), new ArrayList<RowImpl>());
+					setProperties(rgb, bcm, g);
+					return rgb.build();
+				}
+			}
+			if (phase==3) {
+				phase++;
+			}
+			return null;
+		}
+		
+		private boolean shouldAddGroupForEmptyContent() {
+			return !ri.hasNext() && (!bcm.getGroupAnchors().isEmpty() || !bcm.getGroupMarkers().isEmpty() || !"".equals(g.getIdentifier())
+					|| g.getKeepWithNextSheets()>0 || g.getKeepWithPreviousSheets()>0);
 		}
 	}
 	
