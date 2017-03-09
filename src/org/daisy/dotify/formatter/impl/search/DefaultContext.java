@@ -25,6 +25,7 @@ public class DefaultContext implements Context {
 			this.currentPage = base.getCurrentPage();
 			this.metaVolume = base.getMetaVolume();
 			this.metaPage = base.getMetaPage();
+			this.space = base.space;
 			this.crh = base.crh;
 		}
 		

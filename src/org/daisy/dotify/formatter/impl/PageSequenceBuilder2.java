@@ -216,9 +216,9 @@ public class PageSequenceBuilder2 {
 				}
 				force = false;
 			}
-			/*
-			((RowGroupDataSource)data).setContext(blockContext.copyWithContext(
-					DefaultContext.from(blockContext.getContext()).currentPage(currentPage().getDetails().getPageNumber()).build()));*/
+			
+			((RowGroupDataSource)data).setContext(((RowGroupDataSource)data).getContext().copyWithContext(
+					DefaultContext.from(blockContext.getContext()).currentPage(currentPage().getDetails().getPageNumber()).build()));
 			if (!data.isEmpty()) {
 				SplitPointDataSource<RowGroup> copy = new RowGroupDataSource((RowGroupDataSource)data);
 				// Using a copy to find the skippable data, so that only the required data is rendered

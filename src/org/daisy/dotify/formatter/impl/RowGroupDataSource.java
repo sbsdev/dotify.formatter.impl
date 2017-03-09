@@ -37,7 +37,13 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 
 		RowGroupData(RowGroupData template, int offset) {
 			super(template);
-			this.data = new ArrayList<>(template.data.subList(offset, template.data.size()));
+			if (template.data==null) {
+				this.data = null;
+			} else if (template.data.size()>0) {
+				this.data = new ArrayList<>(template.data.subList(offset, template.data.size()));
+			} else {
+				this.data = new ArrayList<>();
+			}
 		}
 
 		@Override
@@ -124,7 +130,7 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 
 	@Override
 	public boolean hasElementAt(int index) {
-		return ensureBuffer(index);
+		return ensureBuffer(index+1);
 	}
 
 	@Override
@@ -134,7 +140,7 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 
 	@Override
 	public RowGroup get(int n) {
-		if (!ensureBuffer(n)) {
+		if (!ensureBuffer(n+1)) {
 			throw new IndexOutOfBoundsException("" + n);
 		}
 		return this.data.getList().get(n);
@@ -144,8 +150,8 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 	public List<RowGroup> head(int n) {
 		if (n==0) {
 			return Collections.emptyList();
-		} else if (!ensureBuffer(n-1)) {
-			//throw new IndexOutOfBoundsException();
+		} else if (!ensureBuffer(n)) {
+			throw new IndexOutOfBoundsException();
 		}
 		return this.data.getList().subList(0, n);
 	}
@@ -166,7 +172,7 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 
 	@Override
 	public int getSize(int limit) {
-		if (!ensureBuffer(limit-1))  {
+		if (!ensureBuffer(limit))  {
 			//we have buffered all elements
 			return this.data.size();
 		} else {
@@ -176,6 +182,10 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 
 	VerticalSpacing getVerticalSpacing() {
 		return vs;
+	}
+	
+	BlockContext getContext() {
+		return bc;
 	}
 	
 	void setContext(BlockContext c) {
@@ -189,7 +199,7 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 	 * @return returns true if the index element was available, false otherwise
 	 */
 	private boolean ensureBuffer(int index) {
-		while (index<0 || this.data.size()<=index) {
+		while (index<0 || this.data.size()<index) {
 			if (blockIndex>=blocks.size() && !data.hasNextInBlock()) {
 				return false;
 			}
