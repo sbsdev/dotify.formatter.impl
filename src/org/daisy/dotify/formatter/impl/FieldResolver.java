@@ -42,9 +42,9 @@ class FieldResolver implements PageShape {
     
     RowImpl renderField(PageDetails p, FieldList field, BrailleTranslator translator) throws PaginatorException {
     	try {
-            RowImpl r = new RowImpl(distribute(p, field, master.getFlowWidth(), fcontext.getSpaceCharacter()+"", translator));
-            r.setRowSpacing(field.getRowSpacing());
-            return r;
+            return new RowImpl.Builder(distribute(p, field, master.getFlowWidth(), fcontext.getSpaceCharacter()+"", translator))
+            		.rowSpacing(field.getRowSpacing())
+            		.build();
         } catch (PaginatorToolsException e) {
             throw new PaginatorException("Error while rendering header", e);
 		}

@@ -260,7 +260,7 @@ public class PageImpl implements Page {
 		private HeightCalculator hc;
 		private List<Row> ret2;
 		private DistributedRowSpacing rs = null;
-		private RowImpl r2 = null;
+		private RowImpl lastRow = null;
 		private boolean closed;
 		//This variable is used to compensate for the fact that the top border was calculated outside of the main logic before
         //and can be removed once the logic has been updated.
@@ -291,9 +291,10 @@ public class PageImpl implements Page {
         }
 
 		private void addTopBorder() {
-			RowImpl r = new RowImpl(border.getTopBorder());
 			DistributedRowSpacing rs = master.distributeRowSpacing(master.getRowSpacing(), true);
-			r.setRowSpacing(rs.spacing);
+			RowImpl r = new RowImpl.Builder(border.getTopBorder())
+					.rowSpacing(rs.spacing)
+					.build();
 			addRowInner(r);
 		}
 		
@@ -311,22 +312,24 @@ public class PageImpl implements Page {
             if (rs!=null) {
 				RowImpl s = null;
 				for (int i = 0; i < rs.lines-1; i++) {
-					s = new RowImpl(border.addBorderToRow(r2.getLeftMargin().getContent(), r2.getRightMargin().getContent()));
-					s.setRowSpacing(rs.spacing);
+					s = new RowImpl.Builder(border.addBorderToRow(lastRow.getLeftMargin().getContent(), lastRow.getRightMargin().getContent()))
+							.rowSpacing(rs.spacing)
+							.build();
 					addRowInner(s);
 				}
 			}
 
-			r2 = addBorders(row);
-			addRowInner(r2);
+			RowImpl.Builder r2Builder = addBorders(row);
 			Float rs2 = row.getRowSpacing();
 			if (!TextBorderStyle.NONE.equals(borderStyle)) {
 				//distribute row spacing
 				rs = master.distributeRowSpacing(rs2, true);
-				r2.setRowSpacing(rs.spacing);
+				r2Builder.rowSpacing(rs.spacing);
 			} else {
-				r2.setRowSpacing(rs2);
-			}			
+				r2Builder.rowSpacing(rs2);
+			}
+			lastRow = r2Builder.build();
+			addRowInner(lastRow);
 		}
 
 		private void close() {
@@ -338,14 +341,16 @@ public class PageImpl implements Page {
                 addRowInner(new RowImpl(border.getBottomBorder()));
 			}
 			if (ret2.size()>0) {
-                RowImpl last = ((RowImpl)ret2.get(ret2.size()-1));
+				RowImpl last = (RowImpl)ret2.remove(ret2.size()-1);
+                RowImpl.Builder lastB = new RowImpl.Builder(last);
 				if (master.getRowSpacing()!=1) {
 					//set row spacing on the last row to 1.0
-					last.setRowSpacing(1f);
+					lastB.rowSpacing(1f);
 				} else if (last.getRowSpacing()!=null) {
 					//ignore row spacing on the last row if overall row spacing is 1.0
-					last.setRowSpacing(null);
+					lastB.rowSpacing(null);
 				}
+				ret2.add(lastB.build());
 			}
 		}
 		
@@ -367,7 +372,7 @@ public class PageImpl implements Page {
 
 	}
 	
-	private RowImpl addBorders(RowImpl row) {
+	private RowImpl.Builder addBorders(RowImpl row) {
 		String res = "";
 		if (row.getChars().length() > 0) {
 			// remove trailing whitespace
@@ -391,7 +396,7 @@ public class PageImpl implements Page {
 		if (rowWidth > master.getPageWidth()) {
 			throw new PaginatorException("Row is too long (" + rowWidth + "/" + master.getPageWidth() + ") '" + res + "'");
 		}
-		return new RowImpl(res);
+		return new RowImpl.Builder(res);
 	}
 	
 	static String padLeft(int w, RowImpl row, char space) {

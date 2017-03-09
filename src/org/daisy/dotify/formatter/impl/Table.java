@@ -385,10 +385,11 @@ class Table extends Block {
 			}
 			j += cr.getInfo().getColSpan()-1;
 		}
-		RowImpl row = new RowImpl(tableRow.toString(), leftMargin, rightMargin);
+		RowImpl row = new RowImpl.Builder(tableRow.toString()).leftMargin(leftMargin).rightMargin(rightMargin)
+				.rowSpacing(tableProps.getRowSpacing())
+				.build();
 		row.addMarkers(markers);
 		row.addAnchors(anchors);
-		row.setRowSpacing(tableProps.getRowSpacing());
 		return row;
 	}
 

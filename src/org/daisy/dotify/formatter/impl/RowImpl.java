@@ -20,7 +20,7 @@ class RowImpl implements Row {
 	private final MarginProperties leftMargin;
 	private final MarginProperties rightMargin;
 	private final Alignment alignment;
-	private Float rowSpacing;
+	private final Float rowSpacing;
 	private boolean adjustedForMargin = false;
 	private boolean allowsBreakAfter = true;
 	private int leaderSpace;
@@ -64,6 +64,10 @@ class RowImpl implements Row {
 		}
 		Builder alignment(Alignment value) {
 			this.alignment = value;
+			return this;
+		}
+		Builder rowSpacing(Float value) {
+			this.rowSpacing = value;
 			return this;
 		}
 		RowImpl build() {
@@ -242,12 +246,7 @@ class RowImpl implements Row {
 	public Float getRowSpacing() {
 		return rowSpacing;
 	}
-	
-	public void setRowSpacing(Float value) {
-		this.rowSpacing = value;
-	}
-	
-	
+
 	boolean shouldAdjustForMargin() {
 		return adjustedForMargin;
 	}

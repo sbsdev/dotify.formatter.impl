@@ -71,8 +71,9 @@ abstract class AbstractBlockContentManager {
 	private static List<RowImpl> makeCollapsiblePreContentRows(RowDataProperties rdp, MarginProperties leftParent, MarginProperties rightParent) {
 		List<RowImpl> ret = new ArrayList<>();
 		for (int i=0; i<rdp.getOuterSpaceBefore();i++) {
-			RowImpl row = new RowImpl("", leftParent, rightParent);
-			row.setRowSpacing(rdp.getRowSpacing());
+			RowImpl row = new RowImpl.Builder("").leftMargin(leftParent).rightMargin(rightParent)
+					.rowSpacing(rdp.getRowSpacing())
+					.build();
 			ret.add(row);
 		}
 		return ret;
@@ -97,8 +98,8 @@ abstract class AbstractBlockContentManager {
 				.leftMargin(leftParent)
 				.rightMargin(rightParent)
 				.alignment(rdp.getAlignment())
+				.rowSpacing(rdp.getRowSpacing())
 				.build();
-		row.setRowSpacing(rdp.getRowSpacing());
 		return row;
 	}
 	
@@ -109,8 +110,8 @@ abstract class AbstractBlockContentManager {
 	protected RowImpl createAndConfigureNewEmptyRow(MarginProperties left, MarginProperties right) {
 		RowImpl r = new RowImpl.Builder("").leftMargin(left).rightMargin(right)
 				.alignment(rdp.getAlignment())
+				.rowSpacing(rdp.getRowSpacing())
 				.build();
-		r.setRowSpacing(rdp.getRowSpacing());
 		return r;
 	}
 	
