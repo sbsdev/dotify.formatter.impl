@@ -168,10 +168,12 @@ class BlockContentManager extends AbstractBlockContentManager {
 				if (minLeft < leftMargin.getContent().length() || minRight < rightMargin.getContent().length()) {
 					throw new RuntimeException("coding error");
 				}
-					rows.add(new RowImpl(StringTools.fill(fcontext.getSpaceCharacter(), minLeft - leftMargin.getContent().length())
-					                     + StringTools.fill(rdp.getUnderlineStyle(), flowWidth - minLeft - minRight),
-					                     leftMargin,
-					                     rightMargin));
+					rows.add(new RowImpl.Builder(StringTools.fill(fcontext.getSpaceCharacter(), minLeft - leftMargin.getContent().length())
+					                     + StringTools.fill(rdp.getUnderlineStyle(), flowWidth - minLeft - minRight))
+								.leftMargin(leftMargin)
+								.rightMargin(rightMargin)
+								.adjustedForMargin(true)
+								.build());
 			}
 		}
 	}

@@ -165,7 +165,6 @@ abstract class BlockProcessor {
 				if (rowIndex<bcm.getRowCount()) {
 					RowImpl r = bcm.get(rowIndex);
 					rowIndex++;
-					r.setAdjustedForMargin(true);
 					if (rowIndex>=bcm.getRowCount()) {
 						//we're at the last line, this should be kept with the next block's first line
 						keepWithNext = g.getKeepWithNext();

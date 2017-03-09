@@ -21,7 +21,7 @@ class RowImpl implements Row {
 	private final MarginProperties rightMargin;
 	private final Alignment alignment;
 	private final Float rowSpacing;
-	private boolean adjustedForMargin = false;
+	private final boolean adjustedForMargin;
 	private boolean allowsBreakAfter = true;
 	private int leaderSpace;
 	
@@ -70,6 +70,10 @@ class RowImpl implements Row {
 			this.rowSpacing = value;
 			return this;
 		}
+		Builder adjustedForMargin(boolean value) {
+			this.adjustedForMargin = value;
+			return this;
+		}
 		RowImpl build() {
 			return new RowImpl(this);
 		}
@@ -103,6 +107,7 @@ class RowImpl implements Row {
 		this.rightMargin = rightMargin;
 		this.alignment = Alignment.LEFT;
 		this.rowSpacing = null;
+		this.adjustedForMargin = false;
 		this.leaderSpace = 0;
 	}
 	
@@ -250,10 +255,7 @@ class RowImpl implements Row {
 	boolean shouldAdjustForMargin() {
 		return adjustedForMargin;
 	}
-	void setAdjustedForMargin(boolean value) {
-		this.adjustedForMargin = value;
-	}
-	
+
 	boolean allowsBreakAfter() {
 		return allowsBreakAfter;
 	}

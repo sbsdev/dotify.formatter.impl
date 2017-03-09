@@ -73,6 +73,7 @@ abstract class AbstractBlockContentManager {
 		for (int i=0; i<rdp.getOuterSpaceBefore();i++) {
 			RowImpl row = new RowImpl.Builder("").leftMargin(leftParent).rightMargin(rightParent)
 					.rowSpacing(rdp.getRowSpacing())
+					.adjustedForMargin(true)
 					.build();
 			ret.add(row);
 		}
@@ -99,6 +100,7 @@ abstract class AbstractBlockContentManager {
 				.rightMargin(rightParent)
 				.alignment(rdp.getAlignment())
 				.rowSpacing(rdp.getRowSpacing())
+				.adjustedForMargin(true)
 				.build();
 		return row;
 	}
@@ -111,6 +113,7 @@ abstract class AbstractBlockContentManager {
 		RowImpl r = new RowImpl.Builder("").leftMargin(left).rightMargin(right)
 				.alignment(rdp.getAlignment())
 				.rowSpacing(rdp.getRowSpacing())
+				.adjustedForMargin(true)
 				.build();
 		return r;
 	}

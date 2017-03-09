@@ -387,6 +387,7 @@ class Table extends Block {
 		}
 		RowImpl row = new RowImpl.Builder(tableRow.toString()).leftMargin(leftMargin).rightMargin(rightMargin)
 				.rowSpacing(tableProps.getRowSpacing())
+				.adjustedForMargin(true)
 				.build();
 		row.addMarkers(markers);
 		row.addAnchors(anchors);
