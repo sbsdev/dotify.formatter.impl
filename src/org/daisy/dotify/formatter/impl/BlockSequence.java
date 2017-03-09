@@ -1,5 +1,7 @@
 package org.daisy.dotify.formatter.impl;
 
+import java.util.List;
+
 import org.daisy.dotify.api.formatter.FormatterSequence;
 import org.daisy.dotify.api.formatter.SequenceProperties;
 
@@ -12,6 +14,7 @@ public class BlockSequence extends FormatterCoreImpl implements FormatterSequenc
 	private static final long serialVersionUID = -6105005856680272131L;
 	private final LayoutMaster master;
 	private final SequenceProperties props;
+	private List<RowGroupSequence> cache;
 	
 	public BlockSequence(FormatterContext fc, SequenceProperties props, LayoutMaster master) {
 		super(fc);
@@ -37,6 +40,21 @@ public class BlockSequence extends FormatterCoreImpl implements FormatterSequenc
 	
 	public SequenceProperties getSequenceProperties() {
 		return props;
+	}
+	
+	/**
+	 * Removes additional scenarios from the block list.
+	 * @param master the layout master
+	 * @param bc the block context
+	 * @param useCache if true, only select scenario once. This may reduce the accuracy somewhat, 
+	 * 					but it's probably not worth the processing.
+	 * @return returns the filtered block sequence
+	 */
+	List<RowGroupSequence> selectScenario(LayoutMaster master, BlockContext bc, boolean useCache) {
+		if (cache==null || !useCache) {
+			cache = ScenarioProcessor.process(master, this, bc); 
+		}
+		return cache;
 	}
 
 }

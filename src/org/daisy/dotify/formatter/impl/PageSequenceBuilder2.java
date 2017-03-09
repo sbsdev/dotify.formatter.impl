@@ -109,7 +109,7 @@ public class PageSequenceBuilder2 {
 	static List<RowGroupDataSource> prepareResult(LayoutMaster master, BlockSequence in, BlockContext blockContext, CollectionData cd) {
 		//TODO: This assumes that all page templates have margin regions that are of the same width  
 		final BlockContext bc = new BlockContext(in.getLayoutMaster().getFlowWidth() - master.getTemplate(1).getTotalMarginRegionWidth(), blockContext.getRefs(), blockContext.getContext(), blockContext.getFcontext());
-		return ScenarioProcessor.process(master, in, bc)
+		return in.selectScenario(master, bc, true)
 				.stream()
 				.map(rgs -> new RowGroupDataSource(master, bc, rgs.getBlocks(), rgs.getVerticalSpacing(), cd))
 				.collect(Collectors.toList());
