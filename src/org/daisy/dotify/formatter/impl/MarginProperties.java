@@ -1,5 +1,6 @@
 package org.daisy.dotify.formatter.impl;
 class MarginProperties {
+	static final MarginProperties EMPTY_MARGIN = new MarginProperties();
 	private final String margin;
 	private final boolean spaceOnly;
 	

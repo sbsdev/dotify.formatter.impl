@@ -93,10 +93,11 @@ abstract class AbstractBlockContentManager {
 	protected RowImpl makeDecorationRow(int flowWidth, SingleLineDecoration d, MarginProperties leftParent, MarginProperties rightParent) {
 		int w = flowWidth - rightParent.getContent().length() - leftParent.getContent().length();
 		int aw = w-d.getLeftCorner().length()-d.getRightCorner().length();
-		RowImpl row = new RowImpl(d.getLeftCorner() + StringTools.fill(d.getLinePattern(), aw) + d.getRightCorner());
-		row.setLeftMargin(leftParent);
-		row.setRightMargin(rightParent);
-		row.setAlignment(rdp.getAlignment());
+		RowImpl row = new RowImpl.Builder(d.getLeftCorner() + StringTools.fill(d.getLinePattern(), aw) + d.getRightCorner())
+				.leftMargin(leftParent)
+				.rightMargin(rightParent)
+				.alignment(rdp.getAlignment())
+				.build();
 		row.setRowSpacing(rdp.getRowSpacing());
 		return row;
 	}
@@ -106,8 +107,9 @@ abstract class AbstractBlockContentManager {
 	}
 
 	protected RowImpl createAndConfigureNewEmptyRow(MarginProperties left, MarginProperties right) {
-		RowImpl r = new RowImpl("", left, right);
-		r.setAlignment(rdp.getAlignment());
+		RowImpl r = new RowImpl.Builder("").leftMargin(left).rightMargin(right)
+				.alignment(rdp.getAlignment())
+				.build();
 		r.setRowSpacing(rdp.getRowSpacing());
 		return r;
 	}

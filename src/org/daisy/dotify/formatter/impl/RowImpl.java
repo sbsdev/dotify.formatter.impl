@@ -19,11 +19,47 @@ class RowImpl implements Row {
 	private List<String> anchors;
 	private MarginProperties leftMargin;
 	private MarginProperties rightMargin;
-	private Alignment alignment;
+	private final Alignment alignment;
 	private Float rowSpacing;
 	private boolean adjustedForMargin = false;
 	private boolean allowsBreakAfter = true;
 	private int leaderSpace;
+	
+	static class Builder {
+		private final String chars;
+		private MarginProperties leftMargin = MarginProperties.EMPTY_MARGIN;
+		private MarginProperties rightMargin = MarginProperties.EMPTY_MARGIN;
+		private Alignment alignment = Alignment.LEFT;
+		Builder(String chars) {
+			this.chars = chars;
+		}
+		Builder leftMargin(MarginProperties value) {
+			this.leftMargin = value;
+			return this;
+		}
+		Builder rightMargin(MarginProperties value) {
+			this.rightMargin = value;
+			return this;
+		}
+		Builder alignment(Alignment value) {
+			this.alignment = value;
+			return this;
+		}
+		RowImpl build() {
+			return new RowImpl(this);
+		}
+	}
+	
+	private RowImpl(Builder builder) {
+		this.chars = builder.chars;
+		this.markers = new ArrayList<>();
+		this.anchors = new ArrayList<>();
+		this.leftMargin = builder.leftMargin;
+		this.rightMargin = builder.rightMargin;
+		this.alignment = builder.alignment;
+		this.rowSpacing = null;
+		this.leaderSpace = 0;
+	}
 	
 	/**
 	 * Create a new Row
@@ -188,14 +224,6 @@ class RowImpl implements Row {
 	 */
 	public Alignment getAlignment() {
 		return alignment;
-	}
-
-	/**
-	 * Sets the alignment value for the row
-	 * @param alignment the new value
-	 */
-	public void setAlignment(Alignment alignment) {
-		this.alignment = alignment;
 	}
 
 	@Override
