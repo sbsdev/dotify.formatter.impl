@@ -210,9 +210,8 @@ class Table extends Block {
 			// render into rows
 			boolean tableRowHasData = false;
 			while (hasMoreContent(r)) { //while content
-				RowImpl row = getResultRow(r, context, columnWidth, colSpacing, leftMargin, rightMargin, FillStyle.EMPTY);
+				RowImpl row = getResultRow(r, context, columnWidth, colSpacing, leftMargin, rightMargin, FillStyle.EMPTY, false);
 				//TODO: this will keep the whole table row together (if possible), but it could be more advanced
-				row.setAllowsBreakAfter(false);
 				result.add(row);
 				tableRowHasData = true;
 			}
@@ -222,26 +221,27 @@ class Table extends Block {
 				if (tableProps.getTableRowSpacing()>0) {
 					{
 						// separate, do this border
-						RowImpl row = getResultRow(r, context, columnWidth, colSpacing, leftMargin, rightMargin, FillStyle.THIS_BORDER);
+						RowImpl row = getResultRow(r, context, columnWidth, colSpacing, leftMargin, rightMargin, FillStyle.THIS_BORDER, true);
 						if (row!=null) { result.add(row); }
 					}{
 						// space
-						RowImpl row = getResultRow(r, context, columnWidth, colSpacing, leftMargin, rightMargin, FillStyle.EMPTY);
+						RowImpl row = getResultRow(r, context, columnWidth, colSpacing, leftMargin, rightMargin, FillStyle.EMPTY, true);
 						if (row!=null) { result.add(row); }
 					}
 				} else {
 					// merged
-					RowImpl row = getResultRow(r, context, columnWidth, colSpacing, leftMargin, rightMargin, FillStyle.MERGE);
+					RowImpl row = getResultRow(r, context, columnWidth, colSpacing, leftMargin, rightMargin, FillStyle.MERGE, true);
 					//row.setAllowsBreakAfter(false);
 					if (row!=null) { result.add(row); }
 				}
 			}
 			if (tableRowHasData) {
-				result.get(result.size()-1).setAllowsBreakAfter(true);
+				// modify last row
+				result.add(new RowImpl.Builder(result.remove(result.size()-1)).allowsBreakAfter(true).build());
 			}
 			if (addBorder && r<td.getGridHeight()-1 && tableProps.getTableRowSpacing()>0) {
 				// separate, do next border
-				RowImpl row = getResultRow(r, context, columnWidth, colSpacing, leftMargin, rightMargin, FillStyle.NEXT_BORDER);
+				RowImpl row = getResultRow(r, context, columnWidth, colSpacing, leftMargin, rightMargin, FillStyle.NEXT_BORDER, true);
 				if (row!=null) { result.add(row); }
 			}
 		}
@@ -321,7 +321,7 @@ class Table extends Block {
 		MERGE
 	}
 	
-	private RowImpl getResultRow(int r, BlockContext context, int[] columnWidth, int[] colSpacing, MarginProperties leftMargin, MarginProperties rightMargin, FillStyle f) {
+	private RowImpl getResultRow(int r, BlockContext context, int[] columnWidth, int[] colSpacing, MarginProperties leftMargin, MarginProperties rightMargin, FillStyle f, boolean allowsBreakAfter) {
 		CellData cr;
 		StringBuilder tableRow = new StringBuilder();
 		List<Marker> markers = new ArrayList<>();
@@ -388,6 +388,7 @@ class Table extends Block {
 		RowImpl row = new RowImpl.Builder(tableRow.toString()).leftMargin(leftMargin).rightMargin(rightMargin)
 				.rowSpacing(tableProps.getRowSpacing())
 				.adjustedForMargin(true)
+				.allowsBreakAfter(allowsBreakAfter)
 				.build();
 		row.addMarkers(markers);
 		row.addAnchors(anchors);

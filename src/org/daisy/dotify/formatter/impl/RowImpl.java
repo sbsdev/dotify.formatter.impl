@@ -22,7 +22,7 @@ class RowImpl implements Row {
 	private final Alignment alignment;
 	private final Float rowSpacing;
 	private final boolean adjustedForMargin;
-	private boolean allowsBreakAfter = true;
+	private final boolean allowsBreakAfter;
 	private int leaderSpace;
 	
 	static class Builder {
@@ -74,6 +74,11 @@ class RowImpl implements Row {
 			this.adjustedForMargin = value;
 			return this;
 		}
+		Builder allowsBreakAfter(boolean value) {
+			this.allowsBreakAfter = value;
+			return this;
+		}
+
 		RowImpl build() {
 			return new RowImpl(this);
 		}
@@ -108,6 +113,7 @@ class RowImpl implements Row {
 		this.alignment = Alignment.LEFT;
 		this.rowSpacing = null;
 		this.adjustedForMargin = false;
+		this.allowsBreakAfter = true;
 		this.leaderSpace = 0;
 	}
 	
@@ -260,9 +266,6 @@ class RowImpl implements Row {
 		return allowsBreakAfter;
 	}
 	
-	void setAllowsBreakAfter(boolean value) {
-		this.allowsBreakAfter = value;
-	}
 	@Override
 	public int hashCode() {
 		final int prime = 31;
