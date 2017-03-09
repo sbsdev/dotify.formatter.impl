@@ -179,6 +179,10 @@ public abstract class Block implements Cloneable {
 		return avoidVolumeBreakAfterPriority;
 	}
 	
+	void setAvoidVolumeBreakAfterPriority(Integer value) {
+		this.avoidVolumeBreakAfterPriority = value;
+	}
+	
 	Integer getAvoidVolumeBreakInsidePriority() {
 		return avoidVolumeBreakInsidePriority;
 	}
