@@ -17,8 +17,8 @@ class RowImpl implements Row {
 	private String chars;
 	private List<Marker> markers;
 	private List<String> anchors;
-	private MarginProperties leftMargin;
-	private MarginProperties rightMargin;
+	private final MarginProperties leftMargin;
+	private final MarginProperties rightMargin;
 	private final Alignment alignment;
 	private Float rowSpacing;
 	private boolean adjustedForMargin = false;
@@ -27,12 +27,33 @@ class RowImpl implements Row {
 	
 	static class Builder {
 		private final String chars;
+		private List<Marker> markers = new ArrayList<>();
+		private List<String> anchors = new ArrayList<>();
 		private MarginProperties leftMargin = MarginProperties.EMPTY_MARGIN;
 		private MarginProperties rightMargin = MarginProperties.EMPTY_MARGIN;
 		private Alignment alignment = Alignment.LEFT;
+		private Float rowSpacing = null;
+		private boolean adjustedForMargin = false;
+		private boolean allowsBreakAfter = true;
+		private int leaderSpace = 0;
+
 		Builder(String chars) {
 			this.chars = chars;
 		}
+
+		Builder(RowImpl template) {
+			this.chars = template.chars;
+			this.markers = new ArrayList<>(template.markers);
+			this.anchors = new ArrayList<>(template.anchors);
+			this.leftMargin = template.leftMargin;
+			this.rightMargin = template.rightMargin;
+			this.alignment = template.alignment;
+			this.rowSpacing = template.rowSpacing;
+			this.adjustedForMargin = template.adjustedForMargin;
+			this.allowsBreakAfter = template.allowsBreakAfter;
+			this.leaderSpace = template.leaderSpace;
+		}
+
 		Builder leftMargin(MarginProperties value) {
 			this.leftMargin = value;
 			return this;
@@ -52,13 +73,15 @@ class RowImpl implements Row {
 	
 	private RowImpl(Builder builder) {
 		this.chars = builder.chars;
-		this.markers = new ArrayList<>();
-		this.anchors = new ArrayList<>();
+		this.markers = builder.markers;
+		this.anchors = builder.anchors;
 		this.leftMargin = builder.leftMargin;
 		this.rightMargin = builder.rightMargin;
 		this.alignment = builder.alignment;
-		this.rowSpacing = null;
-		this.leaderSpace = 0;
+		this.rowSpacing = builder.rowSpacing;
+		this.adjustedForMargin = builder.adjustedForMargin;
+		this.allowsBreakAfter = builder.allowsBreakAfter;
+		this.leaderSpace = builder.leaderSpace;
 	}
 	
 	/**
@@ -92,6 +115,7 @@ class RowImpl implements Row {
 		this.alignment = template.alignment;
 		this.rowSpacing = template.rowSpacing;
 		this.adjustedForMargin = template.adjustedForMargin;
+		this.allowsBreakAfter = template.allowsBreakAfter;
 		this.leaderSpace = template.leaderSpace;
 	}
 
@@ -195,14 +219,6 @@ class RowImpl implements Row {
 	}
 
 	/**
-	 * Set the left margin
-	 * @param value the left margin, in characters
-	 */
-	public void setLeftMargin(MarginProperties value) {
-		leftMargin = value;
-	}
-
-	/**
 	 * Get the left margin value for the Row, in characters
 	 * @return returns the left margin
 	 */
@@ -212,10 +228,6 @@ class RowImpl implements Row {
 
 	public MarginProperties getRightMargin() {
 		return rightMargin;
-	}
-
-	public void setRightMargin(MarginProperties rightMargin) {
-		this.rightMargin = rightMargin;
 	}
 
 	/**

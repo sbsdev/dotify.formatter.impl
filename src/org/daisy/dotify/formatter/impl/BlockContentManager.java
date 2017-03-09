@@ -1,8 +1,8 @@
 package org.daisy.dotify.formatter.impl;
 
 import static java.lang.Math.min;
+
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
 import java.util.logging.Logger;

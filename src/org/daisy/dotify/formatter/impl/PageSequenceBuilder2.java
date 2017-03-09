@@ -245,15 +245,22 @@ public class PageSequenceBuilder2 {
 					for (RowImpl r : rg.getRows()) { 
 						if (r.shouldAdjustForMargin()) {
 							// clone the row as not to append the margins twice
-							r = new RowImpl(r);
+							RowImpl.Builder b = new RowImpl.Builder(r);
+							MarkerRef rf = r::hasMarkerWithName;
+							MarginProperties margin = r.getLeftMargin();
 							for (MarginRegion mr : currentPage().getPageTemplate().getLeftMarginRegion()) {
-								r.setLeftMargin(getMarginRegionValue(mr, r, false).append(r.getLeftMargin()));
+								margin = getMarginRegionValue(mr, rf, false).append(margin);
 							}
+							b.leftMargin(margin);
+							margin = r.getRightMargin();
 							for (MarginRegion mr : currentPage().getPageTemplate().getRightMarginRegion()) {
-								r.setRightMargin(r.getRightMargin().append(getMarginRegionValue(mr, r, true)));
+								margin = margin.append(getMarginRegionValue(mr, rf, true));
 							}
+							b.rightMargin(margin);
+							currentPage().newRow(b.build());
+						} else {
+							currentPage().newRow(r);
 						}
-						currentPage().newRow(r);
 					}
 				}
 				Integer lastPriority = getLastPriority(head);
@@ -312,7 +319,12 @@ public class PageSequenceBuilder2 {
 		return master.getPageArea()!=null && collection!=null;
 	}
 	
-	private MarginProperties getMarginRegionValue(MarginRegion mr, RowImpl r, boolean rightSide) throws PaginatorException {
+	@FunctionalInterface
+	interface MarkerRef {
+		boolean hasMarkerWithName(String name);
+	}
+	
+	private MarginProperties getMarginRegionValue(MarginRegion mr, MarkerRef r, boolean rightSide) throws PaginatorException {
 		String ret = "";
 		int w = mr.getWidth();
 		if (mr instanceof MarkerIndicatorRegion) {
@@ -344,7 +356,7 @@ public class PageSequenceBuilder2 {
 		}
 	}
 	
-	private String firstMarkerForRow(RowImpl r, MarkerIndicatorRegion mrr) {
+	private String firstMarkerForRow(MarkerRef r, MarkerIndicatorRegion mrr) {
 		return mrr.getIndicators().stream()
 				.filter(mi -> r.hasMarkerWithName(mi.getName()))
 				.map(mi -> mi.getIndicator())
