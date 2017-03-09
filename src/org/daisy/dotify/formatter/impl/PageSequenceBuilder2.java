@@ -220,10 +220,20 @@ public class PageSequenceBuilder2 {
 			((RowGroupDataSource)data).setContext(blockContext.copyWithContext(
 					DefaultContext.from(blockContext.getContext()).currentPage(currentPage().getDetails().getPageNumber()).build()));*/
 			if (!data.isEmpty()) {
-				data = discardSkippableLeading(data);
+				SplitPointDataSource<RowGroup> copy = new RowGroupDataSource((RowGroupDataSource)data);
+				// Using a copy to find the skippable data, so that only the required data is rendered
+				int index = SplitPointHandler.findLeading(copy);
+				// Now apply the information to the live data
+				SplitPoint<RowGroup> sl = SplitPointHandler.skipLeading(data, index);
+				for (RowGroup rg : sl.getDiscarded()) {
+					addProperties(rg);
+				}
+				data = sl.getTail();
+				// And on copy...
+				copy = SplitPointHandler.skipLeading(copy, index).getTail();
 				int flowHeight = currentPage().getFlowHeight();
-				// Using a copy to find the break point so that only the required data is rendered
-				SplitPointSpecification spec = sph.find(flowHeight, new RowGroupDataSource((RowGroupDataSource)data), force?StandardSplitOption.ALLOW_FORCE:null);
+				// Using copy to find the break point so that only the required data is rendered
+				SplitPointSpecification spec = sph.find(flowHeight, copy, force?StandardSplitOption.ALLOW_FORCE:null);
 				// Now apply the information to the live data
 				SplitPoint<RowGroup> res = sph.split(spec, data);
 				if (res.getHead().size()==0 && force) {
@@ -285,22 +295,6 @@ public class PageSequenceBuilder2 {
 		PageImpl ret = current;
 		current = null;
 		return ret;
-	}
-	
-	/**
-	 * Discards leading skippable row groups, but retains their properties (via side effect).
-	 * @param data the data
-	 * @return returns the tail
-	 */
-	private SplitPointDataSource<RowGroup> discardSkippableLeading(SplitPointDataSource<RowGroup> data) {
-		// Using a copy to find the skippable data, so that only the required data is rendered
-		int index = SplitPointHandler.findLeading(new RowGroupDataSource((RowGroupDataSource)data));
-		// Now apply the information to the live data
-		SplitPoint<RowGroup> sl = SplitPointHandler.skipLeading(data, index);
-		for (RowGroup rg : sl.getDiscarded()) {
-			addProperties(rg);
-		}
-		return sl.getTail();
 	}
 	
 	private static Integer getLastPriority(List<RowGroup> list) {
