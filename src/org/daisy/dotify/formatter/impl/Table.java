@@ -389,9 +389,9 @@ class Table extends Block {
 				.rowSpacing(tableProps.getRowSpacing())
 				.adjustedForMargin(true)
 				.allowsBreakAfter(allowsBreakAfter)
+				.addMarkers(markers)
+				.addAnchors(anchors)
 				.build();
-		row.addMarkers(markers);
-		row.addAnchors(anchors);
 		return row;
 	}
 

@@ -79,6 +79,20 @@ class RowImpl implements Row {
 			return this;
 		}
 
+		Builder addAnchors(List<String> refs) {
+			anchors.addAll(refs);
+			return this;
+		}
+
+		/**
+		 * Add a collection of markers to the Row
+		 * @param list the list of markers
+		 */
+		Builder addMarkers(List<Marker> list) {
+			markers.addAll(list);
+			return this;
+		}
+
 		RowImpl build() {
 			return new RowImpl(this);
 		}
@@ -181,20 +195,8 @@ class RowImpl implements Row {
 	public void addAnchor(String ref) {
 		anchors.add(ref);
 	}
-	
-	public void addAnchors(List<String> refs) {
-		anchors.addAll(refs);
-	}
 	public void addAnchors(int index, List<String> refs) {
 		anchors.addAll(index, refs);
-	}
-
-	/**
-	 * Add a collection of markers to the Row
-	 * @param list the list of markers
-	 */
-	public void addMarkers(List<Marker> list) {
-		markers.addAll(list);
 	}
 	
 	/**
