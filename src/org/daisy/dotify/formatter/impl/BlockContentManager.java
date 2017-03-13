@@ -69,9 +69,9 @@ class BlockContentManager extends AbstractBlockContentManager {
 				{
 					//flush
 					layoutLeader();
+					flushCurrentRow();
 					MarginProperties ret = new MarginProperties(leftMargin.getContent()+StringTools.fill(fcontext.getSpaceCharacter(), rdp.getTextIndent()), leftMargin.isSpaceOnly());
 					currentRow = createAndConfigureEmptyNewRow(ret);
-					rows.add(currentRow);
 					break;
 				}
 				case Text:
@@ -145,10 +145,10 @@ class BlockContentManager extends AbstractBlockContentManager {
 				}
 			}
 		}
-		
 		if (currentLeader!=null || item!=null) {
 			layoutLeader();
 		}
+		flushCurrentRow();
 		if (rows.size()>0) {
 			rows.get(0).addAnchors(0, groupAnchors);
 			groupAnchors.clear();
@@ -184,6 +184,13 @@ class BlockContentManager extends AbstractBlockContentManager {
 	private List<Object> layoutOrApplyAfterLeader = null;
 	private String currentLeaderMode = null;
 	private boolean seenSegmentAfterLeader = false;
+	
+	private void flushCurrentRow() {
+		if (currentRow!=null) {
+			rows.add(currentRow);
+			currentRow = null;
+		}
+	}
 	
 	private void layoutAfterLeader(Translatable spec, String mode) {
 		if (currentLeader!=null) {
@@ -308,8 +315,8 @@ class BlockContentManager extends AbstractBlockContentManager {
 	}
 	
 	private void newRow(BrailleTranslatorResult chars, String contentBefore, int indent, int blockIndent, String mode) {
+		flushCurrentRow();
 		currentRow = createAndConfigureEmptyNewRow(leftMargin);
-		rows.add(currentRow);
 		newRow(new RowInfo(getPreText(contentBefore, indent, blockIndent), currentRow), chars, blockIndent, mode);
 	}
 	
@@ -334,8 +341,8 @@ class BlockContentManager extends AbstractBlockContentManager {
 			int align = getLeaderAlign(currentLeader, btr.countRemaining());
 			
 			if (m.preTabPos>leaderPos || offset - align < 0) { // if tab position has been passed or if text does not fit within row, try on a new row
+				flushCurrentRow();
 				currentRow = createAndConfigureEmptyNewRow(m.row.getLeftMargin());
-				rows.add(currentRow);
 				m = new RowInfo(StringTools.fill(fcontext.getSpaceCharacter(), rdp.getTextIndent()+blockIndent), currentRow);
 				//update offset
 				offset = leaderPos-m.preTabPos;
