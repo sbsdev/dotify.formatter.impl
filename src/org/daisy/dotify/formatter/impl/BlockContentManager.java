@@ -41,6 +41,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 	private final int available;
 	private final Context context;
 
+	private RowImpl currentRow;
 	private Leader currentLeader;
 	private ListItem item;
 	private int forceCount;
@@ -69,7 +70,8 @@ class BlockContentManager extends AbstractBlockContentManager {
 					//flush
 					layoutLeader();
 					MarginProperties ret = new MarginProperties(leftMargin.getContent()+StringTools.fill(fcontext.getSpaceCharacter(), rdp.getTextIndent()), leftMargin.isSpaceOnly());
-					rows.add(createAndConfigureEmptyNewRow(ret));
+					currentRow = createAndConfigureEmptyNewRow(ret);
+					rows.add(currentRow);
 					break;
 				}
 				case Text:
@@ -211,10 +213,10 @@ class BlockContentManager extends AbstractBlockContentManager {
 			}
 			layoutOrApplyAfterLeader.add(marker);
 		} else {
-			if (rows.isEmpty()) {
+			if (currentRow==null) {
 				groupMarkers.add(marker);
 			} else {
-				rows.peek().addMarker(marker);
+				currentRow.addMarker(marker);
 			}
 		}
 	}
@@ -226,10 +228,10 @@ class BlockContentManager extends AbstractBlockContentManager {
 			}
 			layoutOrApplyAfterLeader.add(anchor);
 		} else {
-			if (rows.isEmpty()) {
+			if (currentRow==null) {
 				groupAnchors.add(anchor.getReferenceID());
 			} else {
-				rows.peek().addAnchor(anchor.getReferenceID());
+				currentRow.addAnchor(anchor.getReferenceID());
 			}
 		}
 	}
@@ -276,7 +278,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 
 	private void layout(BrailleTranslatorResult btr, String mode) {
 		// process first row, is it a new block or should we continue the current row?
-		if (rows.size()==0) {
+		if (currentRow==null) {
 			// add to left margin
 			if (item!=null) { //currentListType!=BlockProperties.ListType.NONE) {
 				String listLabel;
@@ -307,7 +309,8 @@ class BlockContentManager extends AbstractBlockContentManager {
 	}
 	
 	private void newRow(BrailleTranslatorResult chars, String contentBefore, int indent, int blockIndent, String mode) {
-		newRow(new RowInfo(getPreText(contentBefore, indent, blockIndent), createAndConfigureEmptyNewRow(leftMargin)), chars, blockIndent, mode);
+		currentRow = createAndConfigureEmptyNewRow(leftMargin);
+		newRow(new RowInfo(getPreText(contentBefore, indent, blockIndent), currentRow), chars, blockIndent, mode);
 	}
 	
 	private String getPreText(String contentBefore, int indent, int blockIndent) {
@@ -332,7 +335,8 @@ class BlockContentManager extends AbstractBlockContentManager {
 			
 			if (m.preTabPos>leaderPos || offset - align < 0) { // if tab position has been passed or if text does not fit within row, try on a new row
 				rows.add(m.row);
-				m = new RowInfo(StringTools.fill(fcontext.getSpaceCharacter(), rdp.getTextIndent()+blockIndent), createAndConfigureEmptyNewRow(m.row.getLeftMargin()));
+				currentRow = createAndConfigureEmptyNewRow(m.row.getLeftMargin());
+				m = new RowInfo(StringTools.fill(fcontext.getSpaceCharacter(), rdp.getTextIndent()+blockIndent), currentRow);
 				//update offset
 				offset = leaderPos-m.preTabPos;
 			}
