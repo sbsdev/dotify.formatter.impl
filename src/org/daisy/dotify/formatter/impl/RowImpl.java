@@ -14,16 +14,16 @@ import org.daisy.dotify.api.writer.Row;
  * @author Joel Håkansson
  */
 class RowImpl implements Row {
-	private String chars;
-	private List<Marker> markers;
-	private List<String> anchors;
+	private final String chars;
+	private final List<Marker> markers;
+	private final List<String> anchors;
 	private final MarginProperties leftMargin;
 	private final MarginProperties rightMargin;
 	private final Alignment alignment;
 	private final Float rowSpacing;
 	private final boolean adjustedForMargin;
 	private final boolean allowsBreakAfter;
-	private int leaderSpace;
+	private final int leaderSpace;
 	
 	static class Builder {
 		private String chars;
@@ -89,13 +89,21 @@ class RowImpl implements Row {
 			return this;
 		}
 		
+		/**
+		 * Adds an anchor to the Row
+		 * @param ref the anchor
+		 * @return returns this builder
+		 */
 		Builder addAnchor(String ref) {
 			anchors.add(ref);
 			return this;
 		}
 		
-		//FIXME: this isn't according to the builder pattern, but we'll allow it as a transition
-		public void setLeaderSpace(int value) {
+		public void addAnchors(int index, List<String> refs) {
+			anchors.addAll(index, refs);
+		}
+
+		public void leaderSpace(int value) {
 			this.leaderSpace = value;
 		}
 
@@ -113,10 +121,27 @@ class RowImpl implements Row {
 			return this;
 		}
 		
+		/**
+		 * Add a marker to the Row
+		 * @param value the marker
+		 * @return returns this builder
+		 */
 		Builder addMarker(Marker value) {
 			markers.add(value);
 			return this;
 		}
+		
+		/**
+		 * Add a collection of markers to the Row
+		 * @param index the position in the marker list to insert the markers
+		 * @param list the list of markers
+	     * @throws IndexOutOfBoundsException if the index is out of range
+	     *         (<tt>index &lt; 0 || index &gt; getMarkers().size()</tt>)
+		 */
+		public void addMarkers(int index, List<Marker> list) {
+			markers.addAll(index, list);
+		}
+
 
 		RowImpl build() {
 			return new RowImpl(this);
@@ -188,14 +213,6 @@ class RowImpl implements Row {
 	public String getChars() {
 		return chars;
 	}
-
-	public void setChars(String chars) {
-		this.chars = chars;
-	}
-	
-	public void setLeaderSpace(int value) {
-		this.leaderSpace = value;
-	}
 	
 	public int getLeaderSpace() {
 		return leaderSpace;
@@ -203,36 +220,6 @@ class RowImpl implements Row {
 
 	public int getWidth() {
 		return chars.length()+leftMargin.getContent().length()+rightMargin.getContent().length();
-	}
-	
-	/**
-	 * Add a marker to the Row
-	 * @param marker
-	 */
-	public void addMarker(Marker marker) {
-		markers.add(marker);
-	}
-
-	/**
-	 * Add an anchor to the Row
-	 * @param ref
-	 */
-	public void addAnchor(String ref) {
-		anchors.add(ref);
-	}
-	public void addAnchors(int index, List<String> refs) {
-		anchors.addAll(index, refs);
-	}
-	
-	/**
-	 * Add a collection of markers to the Row
-	 * @param index the position in the marker list to insert the markers
-	 * @param list the list of markers
-     * @throws IndexOutOfBoundsException if the index is out of range
-     *         (<tt>index &lt; 0 || index &gt; getMarkers().size()</tt>)
-	 */
-	public void addMarkers(int index, List<Marker> list) {
-		markers.addAll(index, list);
 	}
 
 	/**

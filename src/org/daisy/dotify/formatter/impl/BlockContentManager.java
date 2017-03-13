@@ -150,10 +150,14 @@ class BlockContentManager extends AbstractBlockContentManager {
 		}
 		flushCurrentRow();
 		if (rows.size()>0) {
-			rows.get(0).addAnchors(0, groupAnchors);
+			// Open first row for editing
+			RowImpl.Builder first = new RowImpl.Builder(rows.get(0));
+			first.addAnchors(0, groupAnchors);
 			groupAnchors.clear();
-			rows.get(0).addMarkers(0, groupMarkers);
+			first.addMarkers(0, groupMarkers);
 			groupMarkers.clear();
+			// Update the row
+			rows.set(0, first.build());
 			if (rdp.getUnderlineStyle() != null) {
 				int minLeft = flowWidth;
 				int minRight = flowWidth;
@@ -382,7 +386,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 			m.row.text(m.preContent + trailingWsBraillePattern.matcher(m.preTabText).replaceAll(""));
 		} else {
 			m.row.text(m.preContent + m.preTabText + tabSpace + next);
-			m.row.setLeaderSpace(m.row.getLeaderSpace()+tabSpace.length());
+			m.row.leaderSpace(m.row.getLeaderSpace()+tabSpace.length());
 		}
 		if (btr instanceof AggregatedBrailleTranslatorResult) {
 			AggregatedBrailleTranslatorResult abtr = ((AggregatedBrailleTranslatorResult)btr);
