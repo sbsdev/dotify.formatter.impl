@@ -297,8 +297,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 				newRow(btr, "", rdp.getFirstLineIndent(), rdp.getBlockIndent(), mode);
 			}
 		} else {
-			RowImpl r  = rows.pop();
-			newRow(new RowInfo("", r), btr, rdp.getBlockIndent(), mode);
+			newRow(new RowInfo("", currentRow), btr, rdp.getBlockIndent(), mode);
 		}
 		while (btr.hasNext()) { //LayoutTools.length(chars.toString())>0
 			newRow(btr, "", rdp.getTextIndent(), rdp.getBlockIndent(), mode);
@@ -310,6 +309,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 	
 	private void newRow(BrailleTranslatorResult chars, String contentBefore, int indent, int blockIndent, String mode) {
 		currentRow = createAndConfigureEmptyNewRow(leftMargin);
+		rows.add(currentRow);
 		newRow(new RowInfo(getPreText(contentBefore, indent, blockIndent), currentRow), chars, blockIndent, mode);
 	}
 	
@@ -334,8 +334,8 @@ class BlockContentManager extends AbstractBlockContentManager {
 			int align = getLeaderAlign(currentLeader, btr.countRemaining());
 			
 			if (m.preTabPos>leaderPos || offset - align < 0) { // if tab position has been passed or if text does not fit within row, try on a new row
-				rows.add(m.row);
 				currentRow = createAndConfigureEmptyNewRow(m.row.getLeftMargin());
+				rows.add(currentRow);
 				m = new RowInfo(StringTools.fill(fcontext.getSpaceCharacter(), rdp.getTextIndent()+blockIndent), currentRow);
 				//update offset
 				offset = leaderPos-m.preTabPos;
@@ -373,11 +373,9 @@ class BlockContentManager extends AbstractBlockContentManager {
 		String next = softHyphenPattern.matcher(btr.nextTranslatedRow(m.maxLenText - contentLen, force)).replaceAll("");
 		if ("".equals(next) && "".equals(tabSpace)) {
 			m.row.setChars(m.preContent + trailingWsBraillePattern.matcher(m.preTabText).replaceAll(""));
-			rows.add(m.row);
 		} else {
 			m.row.setChars(m.preContent + m.preTabText + tabSpace + next);
 			m.row.setLeaderSpace(m.row.getLeaderSpace()+tabSpace.length());
-			rows.add(m.row);
 		}
 		if (btr instanceof AggregatedBrailleTranslatorResult) {
 			AggregatedBrailleTranslatorResult abtr = ((AggregatedBrailleTranslatorResult)btr);
