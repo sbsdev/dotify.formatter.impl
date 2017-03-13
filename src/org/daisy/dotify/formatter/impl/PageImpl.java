@@ -341,7 +341,9 @@ public class PageImpl implements Page {
                 addRowInner(new RowImpl(border.getBottomBorder()));
 			}
 			if (ret2.size()>0) {
-				RowImpl last = (RowImpl)ret2.remove(ret2.size()-1);
+				int index = ret2.size()-1;
+				RowImpl last = (RowImpl)ret2.get(index);
+				// Create a builder copy for editing
                 RowImpl.Builder lastB = new RowImpl.Builder(last);
 				if (master.getRowSpacing()!=1) {
 					//set row spacing on the last row to 1.0
@@ -350,7 +352,8 @@ public class PageImpl implements Page {
 					//ignore row spacing on the last row if overall row spacing is 1.0
 					lastB.rowSpacing(null);
 				}
-				ret2.add(lastB.build());
+				// Update the row
+				ret2.set(index, lastB.build());
 			}
 		}
 		
