@@ -41,7 +41,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 	private final int available;
 	private final Context context;
 
-	private RowImpl currentRow;
+	private RowImpl.Builder currentRow;
 	private Leader currentLeader;
 	private ListItem item;
 	private int forceCount;
@@ -71,7 +71,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 					layoutLeader();
 					flushCurrentRow();
 					MarginProperties ret = new MarginProperties(leftMargin.getContent()+StringTools.fill(fcontext.getSpaceCharacter(), rdp.getTextIndent()), leftMargin.isSpaceOnly());
-					currentRow = createAndConfigureEmptyNewRow(ret);
+					currentRow = createAndConfigureEmptyNewRowBuilder(ret);
 					break;
 				}
 				case Text:
@@ -187,7 +187,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 	
 	private void flushCurrentRow() {
 		if (currentRow!=null) {
-			rows.add(currentRow);
+			rows.add(currentRow.build());
 			currentRow = null;
 		}
 	}
@@ -316,7 +316,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 	
 	private void newRow(BrailleTranslatorResult chars, String contentBefore, int indent, int blockIndent, String mode) {
 		flushCurrentRow();
-		currentRow = createAndConfigureEmptyNewRow(leftMargin);
+		currentRow = createAndConfigureEmptyNewRowBuilder(leftMargin);
 		newRow(new RowInfo(getPreText(contentBefore, indent, blockIndent), currentRow), chars, blockIndent, mode);
 	}
 	
@@ -342,7 +342,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 			
 			if (m.preTabPos>leaderPos || offset - align < 0) { // if tab position has been passed or if text does not fit within row, try on a new row
 				flushCurrentRow();
-				currentRow = createAndConfigureEmptyNewRow(m.row.getLeftMargin());
+				currentRow = createAndConfigureEmptyNewRowBuilder(rows.peek().getLeftMargin());
 				m = new RowInfo(StringTools.fill(fcontext.getSpaceCharacter(), rdp.getTextIndent()+blockIndent), currentRow);
 				//update offset
 				offset = leaderPos-m.preTabPos;
@@ -379,9 +379,9 @@ class BlockContentManager extends AbstractBlockContentManager {
 		//don't know if soft hyphens need to be replaced, but we'll keep it for now
 		String next = softHyphenPattern.matcher(btr.nextTranslatedRow(m.maxLenText - contentLen, force)).replaceAll("");
 		if ("".equals(next) && "".equals(tabSpace)) {
-			m.row.setChars(m.preContent + trailingWsBraillePattern.matcher(m.preTabText).replaceAll(""));
+			m.row.text(m.preContent + trailingWsBraillePattern.matcher(m.preTabText).replaceAll(""));
 		} else {
-			m.row.setChars(m.preContent + m.preTabText + tabSpace + next);
+			m.row.text(m.preContent + m.preTabText + tabSpace + next);
 			m.row.setLeaderSpace(m.row.getLeaderSpace()+tabSpace.length());
 		}
 		if (btr instanceof AggregatedBrailleTranslatorResult) {
@@ -409,12 +409,13 @@ class BlockContentManager extends AbstractBlockContentManager {
 		final String preContent;
 		final int preTabPos;
 		final int maxLenText;
-		final RowImpl row;
-		private RowInfo(String preContent, RowImpl r) {
-			this.preTabText = r.getChars();
+		final RowImpl.Builder row;
+		private RowInfo(String preContent, RowImpl.Builder r) {
+			RowImpl ri = r.build();
+			this.preTabText = ri.getChars();
 			this.row = r;
 			this.preContent = preContent;
-			int preContentPos = r.getLeftMargin().getContent().length()+StringTools.length(preContent);
+			int preContentPos = ri.getLeftMargin().getContent().length()+StringTools.length(preContent);
 			this.preTabTextLen = StringTools.length(preTabText);
 			this.preTabPos = preContentPos+preTabTextLen;
 			this.maxLenText = available-(preContentPos);
@@ -498,16 +499,16 @@ class BlockContentManager extends AbstractBlockContentManager {
 		}
 		
 		List<Marker> pendingMarkers = new ArrayList<Marker>();
-		private void addMarkers(RowImpl row) {
-			for (Marker m : pendingMarkers)
-				row.addMarker(m);
+		private void addMarkers(RowImpl.Builder row) {
+			row.addMarkers(pendingMarkers);
 			pendingMarkers.clear();
 		}
 
 		List<AnchorSegment> pendingAnchors = new ArrayList<AnchorSegment>();
-		private void addAnchors(RowImpl row) {
-			for (AnchorSegment a : pendingAnchors)
+		private void addAnchors(RowImpl.Builder row) {
+			for (AnchorSegment a : pendingAnchors) {
 				row.addAnchor(a.getReferenceID());
+			}
 			pendingAnchors.clear();
 		}
 

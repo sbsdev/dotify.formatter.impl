@@ -106,16 +106,22 @@ abstract class AbstractBlockContentManager {
 	}
 	
 	protected RowImpl createAndConfigureEmptyNewRow(MarginProperties left) {
-		return createAndConfigureNewEmptyRow(left, rightMargin);
+		return createAndConfigureEmptyNewRowBuilder(left).build();
+	}
+
+	protected RowImpl.Builder createAndConfigureEmptyNewRowBuilder(MarginProperties left) {
+		return createAndConfigureNewEmptyRowBuilder(left, rightMargin);
 	}
 
 	protected RowImpl createAndConfigureNewEmptyRow(MarginProperties left, MarginProperties right) {
-		RowImpl r = new RowImpl.Builder("").leftMargin(left).rightMargin(right)
+		return createAndConfigureNewEmptyRowBuilder(left, right).build();
+	}
+
+	protected RowImpl.Builder createAndConfigureNewEmptyRowBuilder(MarginProperties left, MarginProperties right) {
+		return new RowImpl.Builder("").leftMargin(left).rightMargin(right)
 				.alignment(rdp.getAlignment())
 				.rowSpacing(rdp.getRowSpacing())
-				.adjustedForMargin(true)
-				.build();
-		return r;
+				.adjustedForMargin(true);
 	}
 	
 	abstract int getForceBreakCount();

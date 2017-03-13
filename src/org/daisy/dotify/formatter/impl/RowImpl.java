@@ -26,7 +26,7 @@ class RowImpl implements Row {
 	private int leaderSpace;
 	
 	static class Builder {
-		private final String chars;
+		private String chars;
 		private List<Marker> markers = new ArrayList<>();
 		private List<String> anchors = new ArrayList<>();
 		private MarginProperties leftMargin = MarginProperties.EMPTY_MARGIN;
@@ -52,6 +52,11 @@ class RowImpl implements Row {
 			this.adjustedForMargin = template.adjustedForMargin;
 			this.allowsBreakAfter = template.allowsBreakAfter;
 			this.leaderSpace = template.leaderSpace;
+		}
+		
+		Builder text(String value) {
+			this.chars = value;
+			return this;
 		}
 
 		Builder leftMargin(MarginProperties value) {
@@ -83,6 +88,21 @@ class RowImpl implements Row {
 			anchors.addAll(refs);
 			return this;
 		}
+		
+		Builder addAnchor(String ref) {
+			anchors.add(ref);
+			return this;
+		}
+		
+		//FIXME: this isn't according to the builder pattern, but we'll allow it as a transition
+		public void setLeaderSpace(int value) {
+			this.leaderSpace = value;
+		}
+
+		//FIXME: this isn't according to the builder pattern, but we'll allow it as a transition
+		public int getLeaderSpace() {
+			return leaderSpace;
+		}
 
 		/**
 		 * Add a collection of markers to the Row
@@ -90,6 +110,11 @@ class RowImpl implements Row {
 		 */
 		Builder addMarkers(List<Marker> list) {
 			markers.addAll(list);
+			return this;
+		}
+		
+		Builder addMarker(Marker value) {
+			markers.add(value);
 			return this;
 		}
 
