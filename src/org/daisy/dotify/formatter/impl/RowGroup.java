@@ -120,10 +120,7 @@ class RowGroup implements SplitPointUnit {
 	 * @param template the instance to copy
 	 */
 	RowGroup(RowGroup template) {
-		this.rows = new ArrayList<>();
-		for (RowImpl r : template.rows) {
-			rows.add(new RowImpl(r));
-		}
+		this.rows = new ArrayList<>(template.rows);
 		this.markers = new ArrayList<>(template.markers);
 		this.anchors = new ArrayList<>(template.anchors);
 		this.breakable = template.breakable;

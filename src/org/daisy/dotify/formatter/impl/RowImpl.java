@@ -208,23 +208,6 @@ class RowImpl implements Row {
 		this.allowsBreakAfter = true;
 		this.leaderSpace = 0;
 	}
-	
-	/**
-	 * Creates a deep copy of the supplied instance
-	 * @param template the instance to copy
-	 */
-	RowImpl(RowImpl template) {
-		this.chars = template.chars;
-		this.markers = new ArrayList<>(template.markers);
-		this.anchors = new ArrayList<>(template.anchors);
-		this.leftMargin = template.leftMargin;
-		this.rightMargin = template.rightMargin;
-		this.alignment = template.alignment;
-		this.rowSpacing = template.rowSpacing;
-		this.adjustedForMargin = template.adjustedForMargin;
-		this.allowsBreakAfter = template.allowsBreakAfter;
-		this.leaderSpace = template.leaderSpace;
-	}
 
 	/**
 	 * Create a new empty Row
