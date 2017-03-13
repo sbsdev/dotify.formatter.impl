@@ -415,11 +415,10 @@ class BlockContentManager extends AbstractBlockContentManager {
 		final int maxLenText;
 		final RowImpl.Builder row;
 		private RowInfo(String preContent, RowImpl.Builder r) {
-			RowImpl ri = r.build();
-			this.preTabText = ri.getChars();
+			this.preTabText = r.getText();
 			this.row = r;
 			this.preContent = preContent;
-			int preContentPos = ri.getLeftMargin().getContent().length()+StringTools.length(preContent);
+			int preContentPos = r.getLeftMargin().getContent().length()+StringTools.length(preContent);
 			this.preTabTextLen = StringTools.length(preTabText);
 			this.preTabPos = preContentPos+preTabTextLen;
 			this.maxLenText = available-(preContentPos);

@@ -1,6 +1,7 @@
 package org.daisy.dotify.formatter.impl;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.daisy.dotify.api.formatter.FormattingTypes.Alignment;
@@ -36,6 +37,7 @@ class RowImpl implements Row {
 		private boolean adjustedForMargin = false;
 		private boolean allowsBreakAfter = true;
 		private int leaderSpace = 0;
+		private boolean built = false;
 
 		Builder(String chars) {
 			this.chars = chars;
@@ -59,10 +61,21 @@ class RowImpl implements Row {
 			return this;
 		}
 
+		//FIXME: this isn't according to the builder pattern, but we'll allow it as a transition
+		String getText() {
+			return chars;
+		}
+
 		Builder leftMargin(MarginProperties value) {
 			this.leftMargin = value;
 			return this;
 		}
+		
+		//FIXME: this isn't according to the builder pattern, but we'll allow it as a transition
+		MarginProperties getLeftMargin() {
+			return leftMargin;
+		}
+
 		Builder rightMargin(MarginProperties value) {
 			this.rightMargin = value;
 			return this;
@@ -85,6 +98,7 @@ class RowImpl implements Row {
 		}
 
 		Builder addAnchors(List<String> refs) {
+			assertNotBuilt();
 			anchors.addAll(refs);
 			return this;
 		}
@@ -95,11 +109,13 @@ class RowImpl implements Row {
 		 * @return returns this builder
 		 */
 		Builder addAnchor(String ref) {
+			assertNotBuilt();
 			anchors.add(ref);
 			return this;
 		}
 		
 		public void addAnchors(int index, List<String> refs) {
+			assertNotBuilt();
 			anchors.addAll(index, refs);
 		}
 
@@ -117,6 +133,7 @@ class RowImpl implements Row {
 		 * @param list the list of markers
 		 */
 		Builder addMarkers(List<Marker> list) {
+			assertNotBuilt();
 			markers.addAll(list);
 			return this;
 		}
@@ -127,6 +144,7 @@ class RowImpl implements Row {
 		 * @return returns this builder
 		 */
 		Builder addMarker(Marker value) {
+			assertNotBuilt();
 			markers.add(value);
 			return this;
 		}
@@ -139,19 +157,29 @@ class RowImpl implements Row {
 	     *         (<tt>index &lt; 0 || index &gt; getMarkers().size()</tt>)
 		 */
 		public void addMarkers(int index, List<Marker> list) {
+			assertNotBuilt();
 			markers.addAll(index, list);
 		}
-
+		
+		private void assertNotBuilt() {
+			// We're using this method to check if the builder has been used instead of 
+			// copying the internal lists. This is assumed to be faster.
+			if (built) {
+				throw new IllegalStateException("Cannot build more than once.");
+			}
+		}
 
 		RowImpl build() {
+			assertNotBuilt();
+			built = true;
 			return new RowImpl(this);
 		}
 	}
 	
 	private RowImpl(Builder builder) {
 		this.chars = builder.chars;
-		this.markers = builder.markers;
-		this.anchors = builder.anchors;
+		this.markers = Collections.unmodifiableList(builder.markers);
+		this.anchors = Collections.unmodifiableList(builder.anchors);
 		this.leftMargin = builder.leftMargin;
 		this.rightMargin = builder.rightMargin;
 		this.alignment = builder.alignment;
@@ -170,8 +198,8 @@ class RowImpl implements Row {
 	}
 	public RowImpl(String chars, MarginProperties leftMargin, MarginProperties rightMargin) {
 		this.chars = chars;
-		this.markers = new ArrayList<>();
-		this.anchors = new ArrayList<>();
+		this.markers = Collections.emptyList();
+		this.anchors = Collections.emptyList();
 		this.leftMargin = leftMargin;
 		this.rightMargin = rightMargin;
 		this.alignment = Alignment.LEFT;
