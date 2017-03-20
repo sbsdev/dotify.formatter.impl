@@ -152,14 +152,6 @@ class BlockContentManager extends AbstractBlockContentManager {
 		}
 		flushCurrentRow();
 		if (rows.size()>0) {
-			// Open first row for editing
-			RowImpl.Builder first = new RowImpl.Builder(rows.get(0));
-			first.addAnchors(0, groupAnchors);
-			groupAnchors.clear();
-			first.addMarkers(0, groupMarkers);
-			groupMarkers.clear();
-			// Update the row
-			rows.set(0, first.build());
 			if (rdp.getUnderlineStyle() != null) {
 				int minLeft = flowWidth;
 				int minRight = flowWidth;
@@ -193,6 +185,13 @@ class BlockContentManager extends AbstractBlockContentManager {
 	
 	private void flushCurrentRow() {
 		if (currentRow!=null) {
+			if (rows.isEmpty()) {
+				// Clear group anchors and markers (since we have content, we don't need them)
+				currentRow.addAnchors(0, groupAnchors);
+				groupAnchors.clear();
+				currentRow.addMarkers(0, groupMarkers);
+				groupMarkers.clear();
+			}
 			rows.add(currentRow.build());
 			currentRow = null;
 		}
