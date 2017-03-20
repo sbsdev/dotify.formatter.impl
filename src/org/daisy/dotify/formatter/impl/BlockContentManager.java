@@ -49,6 +49,11 @@ class BlockContentManager extends AbstractBlockContentManager {
 	private int forceCount;
 	private int minLeft;
 	private int minRight;
+
+	// List of BrailleTranslatorResult or Marker or AnchorSegment
+	private List<Object> layoutOrApplyAfterLeader = null;
+	private String currentLeaderMode = null;
+	private boolean seenSegmentAfterLeader = false;
 	
 	BlockContentManager(int flowWidth, Stack<Segment> segments, RowDataProperties rdp, CrossReferenceHandler refs, Context context, FormatterContext fcontext) {
 		super(flowWidth, rdp, fcontext);
@@ -167,12 +172,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 						.build());
 		}
 	}
-	
-	// List of BrailleTranslatorResult or Marker or AnchorSegment
-	private List<Object> layoutOrApplyAfterLeader = null;
-	private String currentLeaderMode = null;
-	private boolean seenSegmentAfterLeader = false;
-	
+
 	private void flushCurrentRow() {
 		if (currentRow!=null) {
 			if (rows.isEmpty()) {
