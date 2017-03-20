@@ -49,6 +49,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 	private int forceCount;
 	private int minLeft;
 	private int minRight;
+	private int segmentIndex;
 
 	// List of BrailleTranslatorResult or Marker or AnchorSegment
 	private List<Object> layoutOrApplyAfterLeader = null;
@@ -69,12 +70,26 @@ class BlockContentManager extends AbstractBlockContentManager {
 		this.rows = new Stack<>();
 		this.minLeft = flowWidth;
 		this.minRight = flowWidth;
+		this.segmentIndex = 0;
+		this.isVolatile = false;
 	}
 	
-	private void ensureBuffer() {
-		isVolatile = false;
-		
-		for (Segment s : segments) {
+	/**
+	 * Ensures that the specified result index is available in the result list.
+	 * Note that this function is modeled after {@link RowGroupDataSource}, but that it
+	 * isn't used in the same way (yet).
+	 * @param index the index to ensure
+	 * @return returns true if the specified index is available in the result list, false
+	 * if the specified index cannot be made available (because the input doesn't contain
+	 * the required amount of data).
+	 */
+	private boolean ensureBuffer(int index) {
+		while (index<0 || rows.size()<index) {
+			if (!hasMoreData()) {
+				return false;
+			}
+			Segment s = segments.get(segmentIndex);
+			segmentIndex++;
 			switch (s.getSegmentType()) {
 				case NewLine:
 				{
@@ -155,22 +170,29 @@ class BlockContentManager extends AbstractBlockContentManager {
 					break;
 				}
 			}
-		}
-		if (currentLeader!=null || item!=null) {
-			layoutLeader();
-		}
-		flushCurrentRow();
-		if (rows.size()>0 && rdp.getUnderlineStyle() != null) {
-			if (minLeft < leftMargin.getContent().length() || minRight < rightMargin.getContent().length()) {
-				throw new RuntimeException("coding error");
+			if (!hasMoreData()) {
+				if (currentLeader!=null || item!=null) {
+					layoutLeader();
+				}
+				flushCurrentRow();
+				if (rows.size()>0 && rdp.getUnderlineStyle() != null) {
+					if (minLeft < leftMargin.getContent().length() || minRight < rightMargin.getContent().length()) {
+						throw new RuntimeException("coding error");
+					}
+					rows.add(new RowImpl.Builder(StringTools.fill(fcontext.getSpaceCharacter(), minLeft - leftMargin.getContent().length())
+					                     + StringTools.fill(rdp.getUnderlineStyle(), flowWidth - minLeft - minRight))
+								.leftMargin(leftMargin)
+								.rightMargin(rightMargin)
+								.adjustedForMargin(true)
+								.build());
+				}
 			}
-			rows.add(new RowImpl.Builder(StringTools.fill(fcontext.getSpaceCharacter(), minLeft - leftMargin.getContent().length())
-			                     + StringTools.fill(rdp.getUnderlineStyle(), flowWidth - minLeft - minRight))
-						.leftMargin(leftMargin)
-						.rightMargin(rightMargin)
-						.adjustedForMargin(true)
-						.build());
 		}
+		return true;
+	}
+	
+	private boolean hasMoreData() {
+		return segmentIndex<segments.size();
 	}
 
 	private void flushCurrentRow() {
@@ -269,7 +291,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 	
     private void verifyCalculated() {
         if (!hasCalculated) {
-            ensureBuffer();
+            ensureBuffer(-1);
             hasCalculated = true;
         }
     }
