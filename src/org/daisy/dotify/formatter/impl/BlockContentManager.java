@@ -40,7 +40,9 @@ class BlockContentManager extends AbstractBlockContentManager {
 	private final CrossReferenceHandler refs;
 	private final int available;
 	private final Context context;
+	private final Stack<Segment> segments;
 
+	private boolean hasCalculated;
 	private RowImpl.Builder currentRow;
 	private Leader currentLeader;
 	private ListItem item;
@@ -53,14 +55,14 @@ class BlockContentManager extends AbstractBlockContentManager {
 		this.available = flowWidth - rightMargin.getContent().length();
 
 		this.item = rdp.getListItem();
-		
-		this.rows = new Stack<>();
-		this.context = context;
 
-		calculateRows(segments);
+		this.context = context;
+		this.hasCalculated = false;
+		this.segments = segments;
+		this.rows = new Stack<>();
 	}
 	
-	private void calculateRows(Stack<Segment> segments) {
+	private void ensureBuffer() {
 		isVolatile = false;
 		
 		for (Segment s : segments) {
@@ -262,11 +264,20 @@ class BlockContentManager extends AbstractBlockContentManager {
 
 	@Override
 	public int getRowCount() {
+		verifyCalculated();
 		return rows.size();
 	}
 	
+    private void verifyCalculated() {
+        if (!hasCalculated) {
+            ensureBuffer();
+            hasCalculated = true;
+        }
+    }
+	
 	@Override
 	RowImpl get(int i) {
+		verifyCalculated();
 		return rows.get(i);
 	}
 	
@@ -430,6 +441,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 
 	@Override
 	int getForceBreakCount() {
+		verifyCalculated();
 		return forceCount;
 	}
 	
