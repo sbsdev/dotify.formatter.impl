@@ -1,6 +1,5 @@
 package org.daisy.dotify.formatter.impl;
 
-import java.util.Iterator;
 import java.util.List;
 
 class TableBlockContentManager extends AbstractBlockContentManager {
@@ -8,11 +7,10 @@ class TableBlockContentManager extends AbstractBlockContentManager {
 	private final int forceCount;
 
 	TableBlockContentManager(int flowWidth, int minWidth, int forceCount, List<RowImpl> rows, RowDataProperties rdp, FormatterContext fcontext, boolean isVolatile) {
-		super(flowWidth, rdp, fcontext);
+		super(flowWidth, rdp, isVolatile, fcontext);
 		this.minWidth = minWidth;
 		this.rows = rows;
 		this.forceCount = forceCount;
-		this.isVolatile = isVolatile;
 	}
 	
 	@Override

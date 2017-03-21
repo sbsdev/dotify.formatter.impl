@@ -55,8 +55,8 @@ class BlockContentManager extends AbstractBlockContentManager {
 	private String currentLeaderMode = null;
 	private boolean seenSegmentAfterLeader = false;
 	
-	BlockContentManager(int flowWidth, Stack<Segment> segments, RowDataProperties rdp, CrossReferenceHandler refs, Context context, FormatterContext fcontext) {
-		super(flowWidth, rdp, fcontext);
+	BlockContentManager(int flowWidth, Stack<Segment> segments, RowDataProperties rdp, boolean isVolatile, CrossReferenceHandler refs, Context context, FormatterContext fcontext) {
+		super(flowWidth, rdp, isVolatile, fcontext);
 		this.refs = refs;
 		this.currentLeader = null;
 		this.available = flowWidth - rightMargin.getContent().length();
@@ -69,7 +69,6 @@ class BlockContentManager extends AbstractBlockContentManager {
 		this.minLeft = flowWidth;
 		this.minRight = flowWidth;
 		this.segmentIndex = 0;
-		this.isVolatile = false;
 	}
 	
 	/**
@@ -122,7 +121,6 @@ class BlockContentManager extends AbstractBlockContentManager {
 				}
 				case Reference:
 				{
-					isVolatile = true;
 					PageNumberReferenceSegment rs = (PageNumberReferenceSegment)s;
 					Integer page = null;
 					if (refs!=null) {
@@ -141,7 +139,6 @@ class BlockContentManager extends AbstractBlockContentManager {
 				}
 				case Evaluate:
 				{
-					isVolatile = true;
 					Evaluate e = (Evaluate)s;
 					String txt = e.getExpression().render(context);
 					if (!txt.isEmpty()) // Don't create a new row if the evaluated expression is empty

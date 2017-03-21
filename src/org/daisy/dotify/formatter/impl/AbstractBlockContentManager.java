@@ -7,7 +7,7 @@ import org.daisy.dotify.api.formatter.Marker;
 import org.daisy.dotify.common.text.StringTools;
 
 abstract class AbstractBlockContentManager {
-	protected boolean isVolatile;
+	protected final boolean isVolatile;
 	protected final int flowWidth;
 	protected final RowDataProperties rdp;
 	protected final FormatterContext fcontext;
@@ -23,8 +23,9 @@ abstract class AbstractBlockContentManager {
 	private final List<RowImpl> skippablePostContentRows;
 	protected int minWidth;
 	
-	AbstractBlockContentManager(int flowWidth, RowDataProperties rdp, FormatterContext fcontext) {
+	AbstractBlockContentManager(int flowWidth, RowDataProperties rdp, boolean isVolatile, FormatterContext fcontext) {
 		this.flowWidth = flowWidth;
+		this.isVolatile = isVolatile;
 		this.leftParent = rdp.getLeftMargin().buildMarginParent(fcontext.getSpaceCharacter());
 		this.rightParent = rdp.getRightMargin().buildMarginParent(fcontext.getSpaceCharacter());
 		this.leftMargin = rdp.getLeftMargin().buildMargin(fcontext.getSpaceCharacter());
