@@ -19,7 +19,7 @@ class StyledSegmentGroup extends SegmentGroup {
 	private final StyledSegmentGroup parentStyle;
 	private final int idx;
 	private final String name;
-	private MarkerProcessor mp;
+	private MarkerProcessor markerProcessorCache;
 	private SegmentGroup processAttributes;
 	
 	StyledSegmentGroup(String name, FormatterCoreContext fc) {
@@ -66,16 +66,16 @@ class StyledSegmentGroup extends SegmentGroup {
 	}
 	
 	private MarkerProcessor getMarkerProcessor() {
-		if (mp == null) {
+		if (markerProcessorCache == null) {
 			try {
 				String locale = fc.getConfiguration().getLocale();
 				String mode = fc.getTranslatorMode();
-				mp = fc.getMarkerProcessorFactoryMakerService().newMarkerProcessor(locale, mode);
+				markerProcessorCache = fc.getMarkerProcessorFactoryMakerService().newMarkerProcessor(locale, mode);
 			} catch (MarkerProcessorConfigurationException e) {
 				throw new IllegalArgumentException(e);
 			}
 		}
-		return mp;
+		return markerProcessorCache;
 	}
 	
 	/**
