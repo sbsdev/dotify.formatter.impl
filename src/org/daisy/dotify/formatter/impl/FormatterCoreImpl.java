@@ -223,7 +223,7 @@ public class FormatterCoreImpl extends Stack<Block> implements FormatterCore, Bl
 		bi.setRowDataProperties(builder.build());
 		//set the volume keep after for the closing block to the parent priority 
 		bi.setVolumeKeepAfterPriority(getCurrentVolumeKeepPriority());
-		if (bi.segments.isEmpty()) {
+		if (bi.isEmpty()) {
 			// if this group doesn't have data, then 
 			// apply this blocks volume break after priority to the previous block 
 			// if that block's break after priority is equal to this block's break

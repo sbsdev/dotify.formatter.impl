@@ -53,6 +53,11 @@ class Table extends Block {
 	void closeTable() {
 		td.closeTable();
 	}
+	
+	@Override
+	boolean isEmpty() {
+		return td.isEmpty();
+	}
 
 	public FormatterCore beginsTableCell(TableCellProperties props) {
 		return td.beginsTableCell(props);

@@ -11,9 +11,11 @@ import org.daisy.dotify.formatter.impl.segment.TextSegment;
 class RegularBlock extends Block {
 	private boolean isVolatile;
 	private boolean hasProcessedAttributes;
+	private final Stack<Segment> segments;
 
 	RegularBlock(String blockId, RowDataProperties rdp, RenderingScenario scenario) {
 		super(blockId, rdp, scenario);
+		this.segments = new Stack<>();
 		this.isVolatile = false;
 		this.hasProcessedAttributes = false;
 	}
@@ -42,6 +44,11 @@ class RegularBlock extends Block {
 			}
 		}
 		segments.push(s);
+	}
+	
+	@Override
+	boolean isEmpty() {
+		return segments.isEmpty();
 	}
 
 	@Override

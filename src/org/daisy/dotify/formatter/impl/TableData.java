@@ -144,6 +144,10 @@ class TableData implements Iterable<TableRow> {
 		return rows.size();
 	}
 	
+	boolean isEmpty() {
+		return rows.isEmpty();
+	}
+	
 	TableRow getRow(int i) {
 		return rows.get(i);
 	}

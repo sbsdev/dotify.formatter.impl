@@ -1,7 +1,5 @@
 package org.daisy.dotify.formatter.impl;
 
-import java.util.Stack;
-
 import org.daisy.dotify.api.formatter.BlockPosition;
 import org.daisy.dotify.api.formatter.FormattingTypes;
 import org.daisy.dotify.api.formatter.RenderingScenario;
@@ -30,7 +28,6 @@ public abstract class Block implements Cloneable {
 	private Integer avoidVolumeBreakInsidePriority;
 	private Integer avoidVolumeBreakAfterPriority;
 	private String id;
-	protected final Stack<Segment> segments;
 	protected RowDataProperties rdp;
 	private BlockPosition verticalPosition;
 	protected Integer metaVolume = null, metaPage = null;
@@ -50,7 +47,6 @@ public abstract class Block implements Cloneable {
 		this.avoidVolumeBreakAfterPriority = null;
 		this.id = "";
 		this.blockId = blockId;
-		this.segments = new Stack<>();
 		this.rdp = rdp;
 		this.verticalPosition = null;
 		this.rdm = null;
@@ -60,6 +56,8 @@ public abstract class Block implements Cloneable {
 	public abstract void addSegment(Segment s);
 
 	public abstract void addSegment(TextSegment s);
+	
+	abstract boolean isEmpty();
 	
 	public FormattingTypes.BreakBefore getBreakBeforeType() {
 		return breakBefore;
