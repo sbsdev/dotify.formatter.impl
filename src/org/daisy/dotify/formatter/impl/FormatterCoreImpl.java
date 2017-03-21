@@ -42,7 +42,6 @@ import org.daisy.dotify.formatter.impl.segment.LeaderSegment;
 import org.daisy.dotify.formatter.impl.segment.MarkerSegment;
 import org.daisy.dotify.formatter.impl.segment.NewLineSegment;
 import org.daisy.dotify.formatter.impl.segment.PageNumberReferenceSegment;
-import org.daisy.dotify.formatter.impl.segment.Segment;
 import org.daisy.dotify.formatter.impl.segment.TextSegment;
 
 public class FormatterCoreImpl extends Stack<Block> implements FormatterCore, BlockGroup {
@@ -275,7 +274,7 @@ public class FormatterCoreImpl extends Stack<Block> implements FormatterCore, Bl
 	}
 	
 	public Block newBlock(String blockId, RowDataProperties rdp) {
-		return this.push(new BlockWithConnectedSegments(blockId, rdp, scenario));
+		return this.push(new RegularBlock(blockId, rdp, scenario));
 	}
 	
 	public Block getCurrentBlock() {
@@ -682,42 +681,6 @@ public class FormatterCoreImpl extends Stack<Block> implements FormatterCore, Bl
 		
 		TextSegment processAttributes() {
 			return parentStyle.processAttributes().getSegmentAt(idx);
-		}
-	}
-
-	static class BlockWithConnectedSegments extends RegularBlock {
-		
-		BlockWithConnectedSegments(String blockId, RowDataProperties rdp, RenderingScenario scenario) {
-			super(blockId, rdp, scenario);
-		}
-		
-		@Override
-		protected AbstractBlockContentManager newBlockContentManager(BlockContext context) {
-			Stack<Segment> processedSegments = processAttributes(segments);
-			segments.clear();
-			for (Segment s : processedSegments)
-				if (s instanceof TextSegment) {
-					// cast to TextSegment in order to enable merging
-					addSegment((TextSegment)s);
-				} else {
-					addSegment(s);
-				}
-			return super.newBlockContentManager(context);
-		}
-		
-		/*
-		 * Process non-null text attributes of text segments. "Connected" segments are processed
-		 * together.
-		 */
-		static Stack<Segment> processAttributes(Stack<Segment> segments) {
-			Stack<Segment> processedSegments = new Stack<Segment>();
-			for (Segment s : segments) {
-				if (s instanceof ConnectedTextSegment) {
-					s = ((ConnectedTextSegment)s).processAttributes();
-				}
-				processedSegments.push(s);
-			}
-			return processedSegments;
 		}
 	}
 }
