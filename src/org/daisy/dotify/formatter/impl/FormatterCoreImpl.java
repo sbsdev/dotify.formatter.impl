@@ -62,7 +62,6 @@ public class FormatterCoreImpl extends Stack<Block> implements FormatterCore, Bl
 	private final boolean discardIdentifiers;
 	private Table table;
 	protected final FormatterCoreContext fc;
-	private MarkerProcessor mp;
 	//The code where this variable is used is not very nice, but it will do to get the feature running
 	private Boolean endStart = null;
 	// TODO: fix recursive keep problem
@@ -506,9 +505,9 @@ public class FormatterCoreImpl extends Stack<Block> implements FormatterCore, Bl
 	@Override
 	public void startStyle(String style) {
 		if (styles.isEmpty()) {
-			styles.push(new Style(style));
+			styles.push(new Style(style, fc));
 		} else {
-			styles.push(new Style(style, styles.peek()));
+			styles.push(new Style(style, styles.peek(), fc));
 		}
 	}
 
@@ -518,169 +517,5 @@ public class FormatterCoreImpl extends Stack<Block> implements FormatterCore, Bl
 	}
 	
 	private Stack<Style> styles = new Stack<Style>();
-	
-	static class SegmentGroup {
-		
-		final List<Object> segments = new ArrayList<Object>();
-		int n = 0;
-		
-		/*
-		 * @returns the index of segment inside the group
-		 */
-		int add(TextSegment segment) {
-			segments.add(segment);
-			n++;
-			return n - 1;
-		}
-		
-		/*
-		 * @returns the index of the child group inside the parent group
-		 */
-		int add(SegmentGroup group) {
-			segments.add(group);
-			n++;
-			return n - 1;
-		}
-		
-		TextSegment getSegmentAt(int idx) {
-			return (TextSegment)segments.get(idx);
-		}
-		
-		SegmentGroup getGroupAt(int idx) {
-			return (SegmentGroup)segments.get(idx);
-		}
-	}
-	
-	/*
-	 * Associates a text style with a group of segments.
-	 */
-	class Style extends SegmentGroup {
-		
-		final Style parentStyle;
-		final int idx;
-		final String name;
-		
-		Style(String name) {
-			this(name, null);
-		}
-		
-		Style(String name, Style parentStyle) {
-			super();
-			this.parentStyle = parentStyle;
-			if (parentStyle != null)
-				idx = parentStyle.add(this);
-			else
-				idx = -1;
-			this.name = name;
-		}
-		
-		SegmentGroup processAttributes;
-		SegmentGroup processAttributes() {
-			if (parentStyle != null) {
-				return parentStyle.processAttributes().getGroupAt(idx);
-			} else {
-				
-				// FIXME: either make group incl. children immutable, or recompute whenever group is mutated
-				if (processAttributes == null) {
-					List<String> text = _text(segments);
-					TextAttribute attributes = _attributes(name, segments);
-					if (mp == null) {
-						try {
-							String locale = fc.getConfiguration().getLocale();
-							String mode = fc.getTranslatorMode();
-							mp = fc.getMarkerProcessorFactoryMakerService().newMarkerProcessor(locale, mode);
-						} catch (MarkerProcessorConfigurationException e) {
-							throw new IllegalArgumentException(e);
-						}
-					}
-					String[] processedText = mp.processAttributesRetain(attributes, text.toArray(new String[text.size()]));
-					processAttributes = _processAttributes(segments, Arrays.asList(processedText).iterator());
-				}
-				return processAttributes;
-			}
-		}
-	}
-		
-	static List<String> _text(List<Object> segments) {
-		List<String> l = new ArrayList<String>();
-		for (Object o : segments) {
-			if (o instanceof TextSegment) {
-				TextSegment s = (TextSegment)o;
-				l.add(s.getText());
-			} else {
-				SegmentGroup g = (SegmentGroup)o;
-				l.addAll(_text(g.segments));
-			}
-		}
-		return l;
-	}
-	
-	static TextAttribute _attributes(String name, List<Object> segments) {
-		DefaultTextAttribute.Builder b = new DefaultTextAttribute.Builder(name);
-		int w = 0;
-		for (Object o : segments) {
-			if (o instanceof TextSegment) {
-				TextSegment s = (TextSegment)o;
-				TextAttribute a = new DefaultTextAttribute.Builder().build(s.getText().length());
-				b.add(a);
-				w += a.getWidth();
-			} else if (o instanceof Style) {
-				Style s = (Style)o;
-				TextAttribute a = _attributes(s.name, s.segments);
-				b.add(a);
-				w += a.getWidth();
-			} else {
-				SegmentGroup g = (SegmentGroup)o;
-				TextAttribute a = _attributes(null, g.segments);
-				b.add(a);
-				w += a.getWidth();
-			}
-		}
-		return b.build(w);
-	}
-	
-	static SegmentGroup _processAttributes(List<Object> segments, Iterator<String> processedText) {
-		SegmentGroup processedGroup = new SegmentGroup();
-		for (Object o : segments) {
-			if (o instanceof TextSegment) {
-				processedGroup.add(new TextSegment(processedText.next(), ((TextSegment)o).getTextProperties()));
-			} else {
-				processedGroup.add(_processAttributes(((Style)o).segments, processedText));
-			}
-		}
-		return processedGroup;
-	}
 
-	
-	/*
-	 * Text segment that is "connected" with other segments through Style elements.
-	 */
-	static class ConnectedTextSegment extends TextSegment {
-		
-		final Style parentStyle;
-		final int idx;
-		final int width;
-		
-		ConnectedTextSegment(String chars, TextProperties tp, Style parentStyle) {
-			super(chars, tp);
-			this.parentStyle = parentStyle;
-			idx = parentStyle.add(this);
-			width = chars.length();
-		}
-		
-		@Override
-		public TextAttribute getTextAttribute() {
-			DefaultTextAttribute.Builder b = new DefaultTextAttribute.Builder();
-			Style s = parentStyle;
-			while (s != null) {
-				b = new DefaultTextAttribute.Builder(s.name).add(b.build(width));
-				s = s.parentStyle;
-			}
-			return b.build(width);
-		}
-		
-		TextSegment processAttributes() {
-			return parentStyle.processAttributes().getSegmentAt(idx);
-		}
-	}
 }

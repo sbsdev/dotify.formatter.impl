@@ -3,11 +3,10 @@ package org.daisy.dotify.formatter.impl;
 import java.util.Stack;
 
 import org.daisy.dotify.api.formatter.RenderingScenario;
-import org.daisy.dotify.formatter.impl.FormatterCoreImpl.ConnectedTextSegment;
 import org.daisy.dotify.formatter.impl.search.DefaultContext;
 import org.daisy.dotify.formatter.impl.segment.Segment;
-import org.daisy.dotify.formatter.impl.segment.TextSegment;
 import org.daisy.dotify.formatter.impl.segment.Segment.SegmentType;
+import org.daisy.dotify.formatter.impl.segment.TextSegment;
 
 class RegularBlock extends Block {
 	private boolean isVolatile;
