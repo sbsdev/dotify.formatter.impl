@@ -48,7 +48,7 @@ public class FormatterCoreImpl extends Stack<Block> implements FormatterCore, Bl
 	private Margin rightMargin;
 	
 	private Stack<Integer> blockIndentParent;
-	private Stack<Style> styles;
+	private Stack<StyledSegmentGroup> styles;
 	private int blockIndent;
 	private ListItem listItem;
 	protected RenderingScenario scenario;
@@ -73,7 +73,7 @@ public class FormatterCoreImpl extends Stack<Block> implements FormatterCore, Bl
 		this.listItem = null;
 		this.blockIndent = 0;
 		this.blockIndentParent = new Stack<>();
-		this.styles = new Stack<Style>();
+		this.styles = new Stack<StyledSegmentGroup>();
 		blockIndentParent.add(0);
 		this.discardIdentifiers = discardIdentifiers;
 		this.scenario = null;
@@ -337,7 +337,7 @@ public class FormatterCoreImpl extends Stack<Block> implements FormatterCore, Bl
 			} else {
 				String[] style = new String[styles.size()];
 				int i = 0;
-				for (Style s : styles) {
+				for (StyledSegmentGroup s : styles) {
 					style[i++] = s.name;
 				}
 				r = new PageNumberReferenceSegment(identifier, numeralStyle, style);
@@ -357,7 +357,7 @@ public class FormatterCoreImpl extends Stack<Block> implements FormatterCore, Bl
 			} else {
 				String[] style = new String[styles.size()];
 				int i = 0;
-				for (Style s : styles) {
+				for (StyledSegmentGroup s : styles) {
 					style[i++] = s.name;
 				}
 				e = new Evaluate(exp, t, style);
@@ -500,9 +500,9 @@ public class FormatterCoreImpl extends Stack<Block> implements FormatterCore, Bl
 	@Override
 	public void startStyle(String style) {
 		if (styles.isEmpty()) {
-			styles.push(new Style(style, fc));
+			styles.push(new StyledSegmentGroup(style, fc));
 		} else {
-			styles.push(new Style(style, styles.peek(), fc));
+			styles.push(new StyledSegmentGroup(style, styles.peek(), fc));
 		}
 	}
 

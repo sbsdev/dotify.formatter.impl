@@ -9,11 +9,11 @@ import org.daisy.dotify.formatter.impl.segment.TextSegment;
  * Text segment that is "connected" with other segments through Style elements.
  */
 class ConnectedTextSegment extends TextSegment {		
-	final Style parentStyle;
+	final StyledSegmentGroup parentStyle;
 	final int idx;
 	final int width;
 	
-	ConnectedTextSegment(String chars, TextProperties tp, Style parentStyle) {
+	ConnectedTextSegment(String chars, TextProperties tp, StyledSegmentGroup parentStyle) {
 		super(chars, tp);
 		this.parentStyle = parentStyle;
 		idx = parentStyle.add(this);
@@ -23,7 +23,7 @@ class ConnectedTextSegment extends TextSegment {
 	@Override
 	public TextAttribute getTextAttribute() {
 		DefaultTextAttribute.Builder b = new DefaultTextAttribute.Builder();
-		Style s = parentStyle;
+		StyledSegmentGroup s = parentStyle;
 		while (s != null) {
 			b = new DefaultTextAttribute.Builder(s.name).add(b.build(width));
 			s = s.parentStyle;

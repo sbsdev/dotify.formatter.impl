@@ -14,18 +14,19 @@ import org.daisy.dotify.formatter.impl.segment.TextSegment;
 /**
  * Associates a text style with a group of segments.
  */
-class Style extends SegmentGroup {
+class StyledSegmentGroup extends SegmentGroup {
 	final FormatterCoreContext fc;
-	final Style parentStyle;
+	final StyledSegmentGroup parentStyle;
 	final int idx;
 	final String name;
 	private MarkerProcessor mp;
+	private SegmentGroup processAttributes;
 	
-	Style(String name, FormatterCoreContext fc) {
+	StyledSegmentGroup(String name, FormatterCoreContext fc) {
 		this(name, null, fc);
 	}
 	
-	Style(String name, Style parentStyle, FormatterCoreContext fc) {
+	StyledSegmentGroup(String name, StyledSegmentGroup parentStyle, FormatterCoreContext fc) {
 		super();
 		this.fc = fc;
 		this.parentStyle = parentStyle;
@@ -35,8 +36,7 @@ class Style extends SegmentGroup {
 			idx = -1;
 		this.name = name;
 	}
-	
-	SegmentGroup processAttributes;
+
 	SegmentGroup processAttributes() {
 		if (parentStyle != null) {
 			return parentStyle.processAttributes().getGroupAt(idx);
@@ -44,25 +44,34 @@ class Style extends SegmentGroup {
 			
 			// FIXME: either make group incl. children immutable, or recompute whenever group is mutated
 			if (processAttributes == null) {
-				List<String> text = _text(segments);
-				TextAttribute attributes = _attributes(name, segments);
-				if (mp == null) {
-					try {
-						String locale = fc.getConfiguration().getLocale();
-						String mode = fc.getTranslatorMode();
-						mp = fc.getMarkerProcessorFactoryMakerService().newMarkerProcessor(locale, mode);
-					} catch (MarkerProcessorConfigurationException e) {
-						throw new IllegalArgumentException(e);
-					}
-				}
-				String[] processedText = mp.processAttributesRetain(attributes, text.toArray(new String[text.size()]));
+				List<String> text = extractText(segments);
+				TextAttribute attributes = makeTextAttribute(name, segments);
+				String[] processedText = getMarkerProcessor().processAttributesRetain(attributes, text.toArray(new String[text.size()]));
 				processAttributes = _processAttributes(segments, Arrays.asList(processedText).iterator());
 			}
 			return processAttributes;
 		}
 	}
 	
-	private static List<String> _text(List<Object> segments) {
+	private MarkerProcessor getMarkerProcessor() {
+		if (mp == null) {
+			try {
+				String locale = fc.getConfiguration().getLocale();
+				String mode = fc.getTranslatorMode();
+				mp = fc.getMarkerProcessorFactoryMakerService().newMarkerProcessor(locale, mode);
+			} catch (MarkerProcessorConfigurationException e) {
+				throw new IllegalArgumentException(e);
+			}
+		}
+		return mp;
+	}
+	
+	/**
+	 * Extracts the text from all segments into a list. 
+	 * @param segments the segments
+	 * @return returns a list of strings
+	 */
+	private static List<String> extractText(List<Object> segments) {
 		List<String> l = new ArrayList<String>();
 		for (Object o : segments) {
 			if (o instanceof TextSegment) {
@@ -70,13 +79,20 @@ class Style extends SegmentGroup {
 				l.add(s.getText());
 			} else {
 				SegmentGroup g = (SegmentGroup)o;
-				l.addAll(_text(g.segments));
+				l.addAll(extractText(g.segments));
 			}
 		}
 		return l;
 	}
 	
-	private static TextAttribute _attributes(String name, List<Object> segments) {
+	/**
+	 * Creates a text attribute with the specified name and content. If the content
+	 * contains styled segments, their styles are also added to the text attribute.
+	 * @param name the name of the text attribute
+	 * @param segments the children of the text attribute
+	 * @return returns a new text attribute
+	 */
+	private static TextAttribute makeTextAttribute(String name, List<Object> segments) {
 		DefaultTextAttribute.Builder b = new DefaultTextAttribute.Builder(name);
 		int w = 0;
 		for (Object o : segments) {
@@ -85,14 +101,14 @@ class Style extends SegmentGroup {
 				TextAttribute a = new DefaultTextAttribute.Builder().build(s.getText().length());
 				b.add(a);
 				w += a.getWidth();
-			} else if (o instanceof Style) {
-				Style s = (Style)o;
-				TextAttribute a = _attributes(s.name, s.segments);
+			} else if (o instanceof StyledSegmentGroup) {
+				StyledSegmentGroup s = (StyledSegmentGroup)o;
+				TextAttribute a = makeTextAttribute(s.name, s.segments);
 				b.add(a);
 				w += a.getWidth();
 			} else {
 				SegmentGroup g = (SegmentGroup)o;
-				TextAttribute a = _attributes(null, g.segments);
+				TextAttribute a = makeTextAttribute(null, g.segments);
 				b.add(a);
 				w += a.getWidth();
 			}
@@ -106,7 +122,7 @@ class Style extends SegmentGroup {
 			if (o instanceof TextSegment) {
 				processedGroup.add(new TextSegment(processedText.next(), ((TextSegment)o).getTextProperties()));
 			} else {
-				processedGroup.add(_processAttributes(((Style)o).segments, processedText));
+				processedGroup.add(_processAttributes(((StyledSegmentGroup)o).segments, processedText));
 			}
 		}
 		return processedGroup;
