@@ -15,10 +15,10 @@ import org.daisy.dotify.formatter.impl.segment.TextSegment;
  * Associates a text style with a group of segments.
  */
 class StyledSegmentGroup extends SegmentGroup {
-	final FormatterCoreContext fc;
-	final StyledSegmentGroup parentStyle;
-	final int idx;
-	final String name;
+	private final FormatterCoreContext fc;
+	private final StyledSegmentGroup parentStyle;
+	private final int idx;
+	private final String name;
 	private MarkerProcessor mp;
 	private SegmentGroup processAttributes;
 	
@@ -126,5 +126,13 @@ class StyledSegmentGroup extends SegmentGroup {
 			}
 		}
 		return processedGroup;
+	}
+
+	String getName() {
+		return name;
+	}
+
+	StyledSegmentGroup getParentStyle() {
+		return parentStyle;
 	}
 }

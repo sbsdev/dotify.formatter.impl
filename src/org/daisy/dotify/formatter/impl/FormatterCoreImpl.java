@@ -338,7 +338,7 @@ public class FormatterCoreImpl extends Stack<Block> implements FormatterCore, Bl
 				String[] style = new String[styles.size()];
 				int i = 0;
 				for (StyledSegmentGroup s : styles) {
-					style[i++] = s.name;
+					style[i++] = s.getName();
 				}
 				r = new PageNumberReferenceSegment(identifier, numeralStyle, style);
 			}
@@ -358,7 +358,7 @@ public class FormatterCoreImpl extends Stack<Block> implements FormatterCore, Bl
 				String[] style = new String[styles.size()];
 				int i = 0;
 				for (StyledSegmentGroup s : styles) {
-					style[i++] = s.name;
+					style[i++] = s.getName();
 				}
 				e = new Evaluate(exp, t, style);
 			}

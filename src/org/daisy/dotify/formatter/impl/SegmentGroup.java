@@ -6,7 +6,7 @@ import java.util.List;
 import org.daisy.dotify.formatter.impl.segment.TextSegment;
 
 class SegmentGroup {		
-	final List<Object> segments = new ArrayList<Object>();
+	protected final List<Object> segments = new ArrayList<Object>();
 	
 	/*
 	 * @returns the index of segment inside the group
