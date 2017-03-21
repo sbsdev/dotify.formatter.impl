@@ -10,14 +10,12 @@ import org.daisy.dotify.formatter.impl.segment.TextSegment;
 
 class RegularBlock extends Block {
 	private boolean isVolatile;
-	private boolean hasProcessedAttributes;
 	private final Stack<Segment> segments;
 
 	RegularBlock(String blockId, RowDataProperties rdp, RenderingScenario scenario) {
 		super(blockId, rdp, scenario);
 		this.segments = new Stack<>();
 		this.isVolatile = false;
-		this.hasProcessedAttributes = false;
 	}
 	
 	private void markIfVolatile(Segment s) {
@@ -33,11 +31,15 @@ class RegularBlock extends Block {
 	
 	public void addSegment(TextSegment s) {
 		markIfVolatile(s);
+		addSegment(s, segments);
+	}
+	
+	private static void addSegment(TextSegment s, Stack<Segment> segments) {
 		if (segments.size() > 0 && segments.peek().getSegmentType() == SegmentType.Text) {
 			TextSegment ts = ((TextSegment) segments.peek());
 			if (ts.getTextProperties().equals(s.getTextProperties())
 			    && ts.getTextAttribute() == null && s.getTextAttribute() == null) {
-				// Logger.getLogger(this.getClass().getCanonicalName()).finer("Appending chars to existing text segment.");
+				// Appending chars to existing text segment
 				segments.pop();
 				segments.push(new TextSegment(ts.getText() + "" + s.getText(), ts.getTextProperties()));
 				return;
@@ -53,35 +55,27 @@ class RegularBlock extends Block {
 
 	@Override
 	protected AbstractBlockContentManager newBlockContentManager(BlockContext context) {
-		if (!hasProcessedAttributes) {
-			Stack<Segment> processedSegments = processAttributes(segments);
-			segments.clear();
-			for (Segment s : processedSegments) {
-				if (s instanceof TextSegment) {
-					// cast to TextSegment in order to enable merging
-					addSegment((TextSegment)s);
-				} else {
-					addSegment(s);
-				}
-			}
-			hasProcessedAttributes = true;
-		}
-		return new BlockContentManager(context.getFlowWidth(), segments, rdp, isVolatile, context.getRefs(),
+		return new BlockContentManager(context.getFlowWidth(), processAttributes(segments), rdp, isVolatile, context.getRefs(),
 				DefaultContext.from(context.getContext()).metaVolume(metaVolume).metaPage(metaPage).build(),
 				context.getFcontext());
 	}
 	
-	/*
+	/**
 	 * Process non-null text attributes of text segments. "Connected" segments are processed
 	 * together.
 	 */
-	static Stack<Segment> processAttributes(Stack<Segment> segments) {
+	private static Stack<Segment> processAttributes(Stack<Segment> segments) {
 		Stack<Segment> processedSegments = new Stack<Segment>();
 		for (Segment s : segments) {
 			if (s instanceof ConnectedTextSegment) {
 				s = ((ConnectedTextSegment)s).processAttributes();
 			}
-			processedSegments.push(s);
+			if (s instanceof TextSegment) {
+				// cast to TextSegment in order to enable merging
+				addSegment((TextSegment)s, processedSegments);
+			} else {
+				processedSegments.push(s);
+			}
 		}
 		return processedSegments;
 	}

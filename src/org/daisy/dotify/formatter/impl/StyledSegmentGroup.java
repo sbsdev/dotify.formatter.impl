@@ -59,7 +59,7 @@ class StyledSegmentGroup extends SegmentGroup {
 				List<String> text = extractText(segments);
 				TextAttribute attributes = makeTextAttribute(name, segments);
 				String[] processedText = getMarkerProcessor().processAttributesRetain(attributes, text.toArray(new String[text.size()]));
-				processAttributes = _processAttributes(segments, Arrays.asList(processedText).iterator());
+				processAttributes = updateSegments(segments, Arrays.asList(processedText).iterator());
 			}
 			return processAttributes;
 		}
@@ -128,13 +128,20 @@ class StyledSegmentGroup extends SegmentGroup {
 		return b.build(w);
 	}
 	
-	private static SegmentGroup _processAttributes(List<Object> segments, Iterator<String> processedText) {
+	/**
+	 * Updates text segments with the processed text and replaces any {@link StyledSegmentGroup} with
+	 * unstyled {@link SegmentGroup}s. 
+	 * @param segments the segments
+	 * @param processedText the processed text pieces
+	 * @return returns a new SegmentGroup containing the updated segments
+	 */
+	private static SegmentGroup updateSegments(List<Object> segments, Iterator<String> processedText) {
 		SegmentGroup processedGroup = new SegmentGroup();
 		for (Object o : segments) {
 			if (o instanceof TextSegment) {
 				processedGroup.add(new TextSegment(processedText.next(), ((TextSegment)o).getTextProperties()));
 			} else {
-				processedGroup.add(_processAttributes(((StyledSegmentGroup)o).segments, processedText));
+				processedGroup.add(updateSegments(((StyledSegmentGroup)o).segments, processedText));
 			}
 		}
 		return processedGroup;
