@@ -59,6 +59,8 @@ public abstract class Block implements Cloneable {
 	
 	abstract boolean isEmpty();
 	
+	protected abstract AbstractBlockContentManager newBlockContentManager(BlockContext context);
+
 	FormattingTypes.BreakBefore getBreakBeforeType() {
 		return breakBefore;
 	}
@@ -151,8 +153,6 @@ public abstract class Block implements Cloneable {
 		return rdm;
 	}
 	
-	protected abstract AbstractBlockContentManager newBlockContentManager(BlockContext context);
-
 	public void setMetaVolume(Integer metaVolume) {
 		this.metaVolume = metaVolume;
 	}

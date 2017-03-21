@@ -69,6 +69,19 @@ abstract class AbstractBlockContentManager {
 		}
 	}
 	
+	abstract int getForceBreakCount();
+
+	abstract int getRowCount();
+
+	abstract RowImpl get(int index);
+
+	/**
+	 * Returns true if this manager supports rows with variable maximum
+	 * width, false otherwise.
+	 * @return true if variable maximum width is supported, false otherwise
+	 */
+	abstract boolean supportsVariableWidth();
+
 	private static List<RowImpl> makeCollapsiblePreContentRows(RowDataProperties rdp, MarginProperties leftParent, MarginProperties rightParent) {
 		List<RowImpl> ret = new ArrayList<>();
 		for (int i=0; i<rdp.getOuterSpaceBefore();i++) {
@@ -125,19 +138,6 @@ abstract class AbstractBlockContentManager {
 				.adjustedForMargin(true);
 	}
 	
-	abstract int getForceBreakCount();
-	
-	abstract int getRowCount();
-	
-	abstract RowImpl get(int index);
-	
-	/**
-	 * Returns true if this manager supports rows with variable maximum
-	 * width, false otherwise.
-	 * @return true if variable maximum width is supported, false otherwise
-	 */
-	abstract boolean supportsVariableWidth();
-
 	/**
 	 * Returns true if this RowDataManager contains objects that makes the formatting volatile,
 	 * i.e. prone to change due to for example cross references.
