@@ -1,9 +1,6 @@
 package org.daisy.dotify.formatter.impl;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
@@ -25,10 +22,6 @@ import org.daisy.dotify.api.formatter.TableCellProperties;
 import org.daisy.dotify.api.formatter.TableProperties;
 import org.daisy.dotify.api.formatter.TextProperties;
 import org.daisy.dotify.api.translator.Border;
-import org.daisy.dotify.api.translator.DefaultTextAttribute;
-import org.daisy.dotify.api.translator.MarkerProcessor;
-import org.daisy.dotify.api.translator.MarkerProcessorConfigurationException;
-import org.daisy.dotify.api.translator.TextAttribute;
 import org.daisy.dotify.api.translator.TextBorderConfigurationException;
 import org.daisy.dotify.api.translator.TextBorderFactory;
 import org.daisy.dotify.api.translator.TextBorderFactoryMakerService;
@@ -55,6 +48,7 @@ public class FormatterCoreImpl extends Stack<Block> implements FormatterCore, Bl
 	private Margin rightMargin;
 	
 	private Stack<Integer> blockIndentParent;
+	private Stack<Style> styles;
 	private int blockIndent;
 	private ListItem listItem;
 	protected RenderingScenario scenario;
@@ -79,6 +73,7 @@ public class FormatterCoreImpl extends Stack<Block> implements FormatterCore, Bl
 		this.listItem = null;
 		this.blockIndent = 0;
 		this.blockIndentParent = new Stack<>();
+		this.styles = new Stack<Style>();
 		blockIndentParent.add(0);
 		this.discardIdentifiers = discardIdentifiers;
 		this.scenario = null;
@@ -515,7 +510,5 @@ public class FormatterCoreImpl extends Stack<Block> implements FormatterCore, Bl
 	public void endStyle() {
 		styles.pop();
 	}
-	
-	private Stack<Style> styles = new Stack<Style>();
 
 }

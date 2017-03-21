@@ -7,15 +7,13 @@ import org.daisy.dotify.formatter.impl.segment.TextSegment;
 
 class SegmentGroup {		
 	final List<Object> segments = new ArrayList<Object>();
-	int n = 0;
 	
 	/*
 	 * @returns the index of segment inside the group
 	 */
 	int add(TextSegment segment) {
 		segments.add(segment);
-		n++;
-		return n - 1;
+		return segments.size()-1;
 	}
 	
 	/*
@@ -23,8 +21,7 @@ class SegmentGroup {
 	 */
 	int add(SegmentGroup group) {
 		segments.add(group);
-		n++;
-		return n - 1;
+		return segments.size()-1;
 	}
 	
 	TextSegment getSegmentAt(int idx) {
