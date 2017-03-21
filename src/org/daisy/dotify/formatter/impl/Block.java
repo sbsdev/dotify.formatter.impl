@@ -53,77 +53,77 @@ public abstract class Block implements Cloneable {
 		this.rs = rs;
 	}
 	
-	public abstract void addSegment(Segment s);
+	abstract void addSegment(Segment s);
 
-	public abstract void addSegment(TextSegment s);
+	abstract void addSegment(TextSegment s);
 	
 	abstract boolean isEmpty();
 	
-	public FormattingTypes.BreakBefore getBreakBeforeType() {
+	FormattingTypes.BreakBefore getBreakBeforeType() {
 		return breakBefore;
 	}
 	
-	public FormattingTypes.Keep getKeepType() {
+	FormattingTypes.Keep getKeepType() {
 		return keep;
 	}
 	
-	public int getKeepWithNext() {
+	int getKeepWithNext() {
 		return keepWithNext;
 	}
 	
-	public int getKeepWithPreviousSheets() {
+	int getKeepWithPreviousSheets() {
 		return keepWithPreviousSheets;
 	}
 	
-	public int getKeepWithNextSheets() {
+	int getKeepWithNextSheets() {
 		return keepWithNextSheets;
 	}
 	
-	public Integer getVolumeKeepInsidePriority() {
+	Integer getVolumeKeepInsidePriority() {
 		return avoidVolumeBreakInsidePriority;
 	}
 	
-	public Integer getVolumeKeepAfterPriority() {
+	Integer getVolumeKeepAfterPriority() {
 		return avoidVolumeBreakAfterPriority;
 	}
 	
-	public String getIdentifier() {
+	String getIdentifier() {
 		return id;
 	}
 
-	public BlockPosition getVerticalPosition() {
+	BlockPosition getVerticalPosition() {
 		return verticalPosition;
 	}
 
-	public void setBreakBeforeType(FormattingTypes.BreakBefore breakBefore) {
+	void setBreakBeforeType(FormattingTypes.BreakBefore breakBefore) {
 		this.breakBefore = breakBefore;
 	}
 	
-	public void setKeepType(FormattingTypes.Keep keep) {
+	void setKeepType(FormattingTypes.Keep keep) {
 		this.keep = keep;
 	}
 	
-	public void setKeepWithNext(int keepWithNext) {
+	void setKeepWithNext(int keepWithNext) {
 		this.keepWithNext = keepWithNext;
 	}
 	
-	public void setKeepWithPreviousSheets(int keepWithPreviousSheets) {
+	void setKeepWithPreviousSheets(int keepWithPreviousSheets) {
 		this.keepWithPreviousSheets = keepWithPreviousSheets;
 	}
 	
-	public void setKeepWithNextSheets(int keepWithNextSheets) {
+	void setKeepWithNextSheets(int keepWithNextSheets) {
 		this.keepWithNextSheets = keepWithNextSheets;
 	}
 	
-	public void setVolumeKeepInsidePriority(Integer priority) {
+	void setVolumeKeepInsidePriority(Integer priority) {
 		this.avoidVolumeBreakInsidePriority = priority;
 	}
 	
-	public void setVolumeKeepAfterPriority(Integer priority) {
+	void setVolumeKeepAfterPriority(Integer priority) {
 		this.avoidVolumeBreakAfterPriority = priority;
 	}
 	
-	public void setIdentifier(String id) {
+	void setIdentifier(String id) {
 		this.id = id;
 	}
 
@@ -131,7 +131,7 @@ public abstract class Block implements Cloneable {
 	 * Sets the vertical position of the block on page.
 	 * @param vertical the position
 	 */
-	public void setVerticalPosition(BlockPosition vertical) {
+	void setVerticalPosition(BlockPosition vertical) {
 		this.verticalPosition = vertical;
 	}
 
@@ -139,7 +139,7 @@ public abstract class Block implements Cloneable {
 		return blockId;
 	}
 	
-	public AbstractBlockContentManager getBlockContentManager(BlockContext context) {
+	AbstractBlockContentManager getBlockContentManager(BlockContext context) {
 		if (!context.equals(this.context)) {
 			//invalidate, if existing
 			rdm = null;
@@ -161,11 +161,11 @@ public abstract class Block implements Cloneable {
 		this.metaPage = metaPage;
 	}
 	
-	public RowDataProperties getRowDataProperties() {
+	RowDataProperties getRowDataProperties() {
 		return rdp;
 	}
 	
-	public void setRowDataProperties(RowDataProperties value) {
+	void setRowDataProperties(RowDataProperties value) {
 		rdp = value;
 	}
 
