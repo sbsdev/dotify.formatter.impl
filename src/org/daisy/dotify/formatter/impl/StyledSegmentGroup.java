@@ -37,12 +37,24 @@ class StyledSegmentGroup extends SegmentGroup {
 		this.name = name;
 	}
 
+	@Override
+	int add(TextSegment segment) {
+		// remove cached value
+		processAttributes = null;
+		return super.add(segment);
+	}
+
+	@Override
+	int add(SegmentGroup group) {
+		// remove cached value
+		processAttributes = null;
+		return super.add(group);
+	}
+
 	SegmentGroup processAttributes() {
 		if (parentStyle != null) {
 			return parentStyle.processAttributes().getGroupAt(idx);
 		} else {
-			
-			// FIXME: either make group incl. children immutable, or recompute whenever group is mutated
 			if (processAttributes == null) {
 				List<String> text = extractText(segments);
 				TextAttribute attributes = makeTextAttribute(name, segments);
