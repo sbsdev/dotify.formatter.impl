@@ -1,26 +1,30 @@
 package org.daisy.dotify.formatter.impl;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.daisy.dotify.api.formatter.Marker;
 import org.daisy.dotify.common.text.StringTools;
 
 abstract class AbstractBlockContentManager {
+	//Immutable
 	protected final int flowWidth;
-	protected final RowDataProperties rdp;
-	protected final FormatterContext fcontext;
-	protected final MarginProperties leftParent;
-	protected final MarginProperties rightParent;
+	private final MarginProperties leftParent;
+	private final MarginProperties rightParent;
 	protected final MarginProperties leftMargin;
 	protected final MarginProperties rightMargin;
-	protected final ArrayList<Marker> groupMarkers;
-	protected final ArrayList<String> groupAnchors;
 	private final List<RowImpl> collapsiblePreContentRows;
 	private final List<RowImpl> innerPreContentRows;
 	private final List<RowImpl> postContentRows;
 	private final List<RowImpl> skippablePostContentRows;
 	private final int minWidth;
+	
+	//Mutable
+	protected final RowDataProperties rdp;
+	protected final FormatterContext fcontext;
+	protected final ArrayList<Marker> groupMarkers;
+	protected final ArrayList<String> groupAnchors;
 	
 	AbstractBlockContentManager(int flowWidth, RowDataProperties rdp, FormatterContext fcontext) {
 		this(flowWidth, rdp, fcontext, null);
@@ -38,37 +42,39 @@ abstract class AbstractBlockContentManager {
 		this.groupAnchors = new ArrayList<>();
 		this.collapsiblePreContentRows = makeCollapsiblePreContentRows(rdp, leftParent, rightParent);	
 		this.innerPreContentRows = makeInnerPreContentRows();
-		this.postContentRows = new ArrayList<>();
 		this.minWidth = minWidth==null ? flowWidth-leftMargin.getContent().length()-rightMargin.getContent().length() : minWidth;
 
-		this.skippablePostContentRows = new ArrayList<>();
+		List<RowImpl> postContentRowsBuilder = new ArrayList<>();
+		List<RowImpl> skippablePostContentRowsBuilder = new ArrayList<>();
 		MarginProperties margin = new MarginProperties(leftMargin.getContent()+StringTools.fill(fcontext.getSpaceCharacter(), rdp.getTextIndent()), leftMargin.isSpaceOnly());
 		if (rdp.getTrailingDecoration()==null) {
 			if (leftMargin.isSpaceOnly() && rightMargin.isSpaceOnly()) {
 				for (int i=0; i<rdp.getInnerSpaceAfter(); i++) {
-					skippablePostContentRows.add(createAndConfigureEmptyNewRow(margin));
+					skippablePostContentRowsBuilder.add(createAndConfigureEmptyNewRow(margin));
 				}
 			} else {
 				for (int i=0; i<rdp.getInnerSpaceAfter(); i++) {
-					postContentRows.add(createAndConfigureEmptyNewRow(margin));
+					postContentRowsBuilder.add(createAndConfigureEmptyNewRow(margin));
 				}
 			}
 		} else {
 			for (int i=0; i<rdp.getInnerSpaceAfter(); i++) {
-				postContentRows.add(createAndConfigureEmptyNewRow(margin));
+				postContentRowsBuilder.add(createAndConfigureEmptyNewRow(margin));
 			}
-			postContentRows.add(makeDecorationRow(flowWidth, rdp.getTrailingDecoration(), leftParent, rightParent));
+			postContentRowsBuilder.add(makeDecorationRow(flowWidth, rdp.getTrailingDecoration(), leftParent, rightParent));
 		}
 		
 		if (leftParent.isSpaceOnly() && rightParent.isSpaceOnly()) {
 			for (int i=0; i<rdp.getOuterSpaceAfter();i++) {
-				skippablePostContentRows.add(createAndConfigureNewEmptyRow(leftParent, rightParent));
+				skippablePostContentRowsBuilder.add(createAndConfigureNewEmptyRow(leftParent, rightParent));
 			}
 		} else {
 			for (int i=0; i<rdp.getOuterSpaceAfter();i++) {
-				postContentRows.add(createAndConfigureNewEmptyRow(leftParent, rightParent));
+				postContentRowsBuilder.add(createAndConfigureNewEmptyRow(leftParent, rightParent));
 			}
 		}
+		this.postContentRows = Collections.unmodifiableList(postContentRowsBuilder);
+		this.skippablePostContentRows = Collections.unmodifiableList(skippablePostContentRowsBuilder);
 	}
 	
 	abstract int getForceBreakCount();
@@ -93,7 +99,7 @@ abstract class AbstractBlockContentManager {
 					.build();
 			ret.add(row);
 		}
-		return ret;
+		return Collections.unmodifiableList(ret);
 	}
 	
 	private List<RowImpl> makeInnerPreContentRows() {
@@ -105,7 +111,7 @@ abstract class AbstractBlockContentManager {
 			MarginProperties margin = new MarginProperties(leftMargin.getContent()+StringTools.fill(fcontext.getSpaceCharacter(), rdp.getTextIndent()), leftMargin.isSpaceOnly());
 			ret.add(createAndConfigureEmptyNewRow(margin));
 		}
-		return ret;
+		return Collections.unmodifiableList(ret);
 	}
 	
 	protected RowImpl makeDecorationRow(int flowWidth, SingleLineDecoration d, MarginProperties leftParent, MarginProperties rightParent) {
