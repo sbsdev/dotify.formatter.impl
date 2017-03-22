@@ -55,8 +55,8 @@ class BlockContentManager extends AbstractBlockContentManager {
 	private String currentLeaderMode = null;
 	private boolean seenSegmentAfterLeader = false;
 	
-	BlockContentManager(int flowWidth, Stack<Segment> segments, RowDataProperties rdp, boolean isVolatile, CrossReferenceHandler refs, Context context, FormatterContext fcontext) {
-		super(flowWidth, rdp, isVolatile, fcontext);
+	BlockContentManager(int flowWidth, Stack<Segment> segments, RowDataProperties rdp, CrossReferenceHandler refs, Context context, FormatterContext fcontext) {
+		super(flowWidth, rdp, fcontext);
 		this.refs = refs;
 		this.currentLeader = null;
 		this.available = flowWidth - rightMargin.getContent().length();

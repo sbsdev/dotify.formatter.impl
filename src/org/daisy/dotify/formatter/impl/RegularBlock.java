@@ -9,28 +9,22 @@ import org.daisy.dotify.formatter.impl.segment.Segment.SegmentType;
 import org.daisy.dotify.formatter.impl.segment.TextSegment;
 
 class RegularBlock extends Block {
-	private boolean isVolatile;
 	private final Stack<Segment> segments;
 
 	RegularBlock(String blockId, RowDataProperties rdp, RenderingScenario scenario) {
 		super(blockId, rdp, scenario);
 		this.segments = new Stack<>();
-		this.isVolatile = false;
 	}
-	
-	private void markIfVolatile(Segment s) {
-		if (s.getSegmentType()==SegmentType.Reference || s.getSegmentType()==SegmentType.Evaluate) {
-			isVolatile = true;
-		}
-	}
-	
+
+	@Override
 	public void addSegment(Segment s) {
-		markIfVolatile(s);
+		super.addSegment(s);
 		segments.add(s);
 	}
 	
+	@Override
 	public void addSegment(TextSegment s) {
-		markIfVolatile(s);
+		super.addSegment(s);
 		addSegment(s, segments);
 	}
 	
@@ -55,7 +49,7 @@ class RegularBlock extends Block {
 
 	@Override
 	protected AbstractBlockContentManager newBlockContentManager(BlockContext context) {
-		return new BlockContentManager(context.getFlowWidth(), processAttributes(segments), rdp, isVolatile, context.getRefs(),
+		return new BlockContentManager(context.getFlowWidth(), processAttributes(segments), rdp, context.getRefs(),
 				DefaultContext.from(context.getContext()).metaVolume(metaVolume).metaPage(metaPage).build(),
 				context.getFcontext());
 	}

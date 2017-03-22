@@ -65,11 +65,13 @@ class Table extends Block {
 
 	@Override
 	public void addSegment(TextSegment s) {
+		super.addSegment(s);
 		((FormatterCoreImpl)td.getCurrentCell()).getCurrentBlock().addSegment(s);
 	}
 	
 	@Override
 	public void addSegment(Segment s) {
+		super.addSegment(s);
 		((FormatterCoreImpl)td.getCurrentCell()).getCurrentBlock().addSegment(s);
 	}
 
@@ -94,7 +96,7 @@ class Table extends Block {
 		DefaultContext dc = DefaultContext.from(context.getContext()).metaVolume(metaVolume).metaPage(metaPage).build();
 		resultCache = new HashMap<>();
 		Result r = minimizeCost(currentColumnWidth, colSpace, tableProps.getPreferredEmtpySpace(), context, dc, leftMargin, rightMargin);
-		return new TableBlockContentManager(context.getFlowWidth(), r.minWidth, r.forceCount, r.rows, rdp, context.getFcontext(), r.isVolatile);
+		return new TableBlockContentManager(context.getFlowWidth(), r.minWidth, r.forceCount, r.rows, rdp, context.getFcontext());
 	}
 	
 	private Result minimizeCost(int[] columnWidth, int[] colSpacing, int spacePreferred, BlockContext context, DefaultContext dc, MarginProperties leftMargin, MarginProperties rightMargin) {
@@ -161,7 +163,6 @@ class Table extends Block {
 		int[] widths;
 		int minWidth;
 		int forceCount;
-		boolean isVolatile=false;
 	}
 	
 	private static Result min(Result v, Result ... values) {
@@ -261,7 +262,6 @@ class Table extends Block {
 		ret.cost = costFunc;
 		int minWidth = context.getFlowWidth();
 		int forceCount = 0;
-		boolean isVolatile = false;
 		for (TableRow row : td) {
 			for (TableCell cell : row) {
 				int flowWidth = 0;
@@ -273,7 +273,6 @@ class Table extends Block {
 					flowWidth += columnWidth[ci+j];
 				}
 				CellData cd = cell.render(context.getFcontext(), dc, context.getRefs(), flowWidth);
-				isVolatile |= cd.isVolatile();
 				minWidth = Math.min(cd.getMinWidth(), minWidth);
 				forceCount += cd.getForceCount();
 				costFunc.addCell(cd.getRows(), flowWidth, cd.getForceCount());
@@ -281,7 +280,6 @@ class Table extends Block {
 		}
 		ret.forceCount = forceCount;
 		ret.minWidth = minWidth;
-		ret.isVolatile = isVolatile;
 		return ret;
 	}
 	

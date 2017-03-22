@@ -4,6 +4,7 @@ import org.daisy.dotify.api.formatter.BlockPosition;
 import org.daisy.dotify.api.formatter.FormattingTypes;
 import org.daisy.dotify.api.formatter.RenderingScenario;
 import org.daisy.dotify.formatter.impl.segment.Segment;
+import org.daisy.dotify.formatter.impl.segment.Segment.SegmentType;
 import org.daisy.dotify.formatter.impl.segment.TextSegment;
 
 /**
@@ -32,6 +33,7 @@ public abstract class Block implements Cloneable {
 	private BlockPosition verticalPosition;
 	protected Integer metaVolume = null, metaPage = null;
 	private final RenderingScenario rs;
+	private boolean isVolatile;
 
 	Block(String blockId, RowDataProperties rdp) {
 		this(blockId, rdp, null);
@@ -51,15 +53,36 @@ public abstract class Block implements Cloneable {
 		this.verticalPosition = null;
 		this.rdm = null;
 		this.rs = rs;
+		this.isVolatile = false;
 	}
-	
-	abstract void addSegment(Segment s);
 
-	abstract void addSegment(TextSegment s);
-	
 	abstract boolean isEmpty();
 	
 	protected abstract AbstractBlockContentManager newBlockContentManager(BlockContext context);
+	
+	void addSegment(Segment s) {
+		markIfVolatile(s);
+	}
+
+	void addSegment(TextSegment s) {
+		markIfVolatile(s);
+	}
+	
+	private void markIfVolatile(Segment s) {
+		if (s.getSegmentType()==SegmentType.Reference || s.getSegmentType()==SegmentType.Evaluate) {
+			isVolatile = true;
+		}
+	}
+
+	/**
+	 * Returns true if this RowDataManager contains objects that makes the formatting volatile,
+	 * i.e. prone to change due to for example cross references.
+	 * @return returns true if, and only if, the RowDataManager should be discarded if a new pass is requested,
+	 * false otherwise
+	 */
+	boolean isVolatile() {
+		return isVolatile;
+	}
 
 	FormattingTypes.BreakBefore getBreakBeforeType() {
 		return breakBefore;
@@ -147,7 +170,7 @@ public abstract class Block implements Cloneable {
 			rdm = null;
 		}
 		this.context = context;
-		if (rdm==null || rdm.isVolatile()) {
+		if (rdm==null || isVolatile()) {
 			rdm = newBlockContentManager(context);
 		}
 		return rdm;

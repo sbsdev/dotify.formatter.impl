@@ -36,12 +36,10 @@ class TableCell extends FormatterCoreImpl {
 		List<Block> blocks = getBlocks(context, c, crh);
 		int minWidth = flowWidth;
 		int forceCount = 0;
-		boolean isVolatile = false;
 		for (Block block : blocks) {
 			AbstractBlockContentManager bcm = block.getBlockContentManager(
 					new BlockContext(flowWidth, crh, c, context)
 					);
-			isVolatile |= bcm.isVolatile();
 			forceCount += bcm.getForceBreakCount();
 			minWidth = Math.min(bcm.getMinimumAvailableWidth(), minWidth);
 			rowData.addAll(bcm.getCollapsiblePreContentRows());
@@ -52,7 +50,7 @@ class TableCell extends FormatterCoreImpl {
 			rowData.addAll(bcm.getPostContentRows());
 			rowData.addAll(bcm.getSkippablePostContentRows());
 		}
-		rendered = new CellData(rowData, flowWidth, info, minWidth, forceCount, isVolatile);
+		rendered = new CellData(rowData, flowWidth, info, minWidth, forceCount);
 		return rendered;
 	}
 

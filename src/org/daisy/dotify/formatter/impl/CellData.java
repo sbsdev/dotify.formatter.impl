@@ -9,17 +9,15 @@ class CellData {
 	private final int cellWidth;
 	private final int minWidth;
 	private final int forceCount;
-	private final boolean isVolatile;
 	private Iterator<RowImpl> rowsIterator;
 
-	CellData(List<RowImpl> rows, int cellWidth, TableCellInfo info, int minWidth, int forceCount, boolean isVolatile) {
+	CellData(List<RowImpl> rows, int cellWidth, TableCellInfo info, int minWidth, int forceCount) {
 		this.rows = rows;
 		this.info = info;
 		this.cellWidth = cellWidth;
 		this.minWidth = minWidth;
 		this.forceCount = forceCount;
 		this.rowsIterator = rows.iterator();
-		this.isVolatile = isVolatile;
 	}
 	
 	List<RowImpl> getRows() {
@@ -52,10 +50,6 @@ class CellData {
 	
 	int getForceCount() {
 		return forceCount;
-	}
-	
-	boolean isVolatile() {
-		return isVolatile;
 	}
 	
 }

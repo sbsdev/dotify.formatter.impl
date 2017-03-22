@@ -7,7 +7,6 @@ import org.daisy.dotify.api.formatter.Marker;
 import org.daisy.dotify.common.text.StringTools;
 
 abstract class AbstractBlockContentManager {
-	protected final boolean isVolatile;
 	protected final int flowWidth;
 	protected final RowDataProperties rdp;
 	protected final FormatterContext fcontext;
@@ -23,9 +22,8 @@ abstract class AbstractBlockContentManager {
 	private final List<RowImpl> skippablePostContentRows;
 	protected int minWidth;
 	
-	AbstractBlockContentManager(int flowWidth, RowDataProperties rdp, boolean isVolatile, FormatterContext fcontext) {
+	AbstractBlockContentManager(int flowWidth, RowDataProperties rdp, FormatterContext fcontext) {
 		this.flowWidth = flowWidth;
-		this.isVolatile = isVolatile;
 		this.leftParent = rdp.getLeftMargin().buildMarginParent(fcontext.getSpaceCharacter());
 		this.rightParent = rdp.getRightMargin().buildMarginParent(fcontext.getSpaceCharacter());
 		this.leftMargin = rdp.getLeftMargin().buildMargin(fcontext.getSpaceCharacter());
@@ -136,16 +134,6 @@ abstract class AbstractBlockContentManager {
 				.alignment(rdp.getAlignment())
 				.rowSpacing(rdp.getRowSpacing())
 				.adjustedForMargin(true);
-	}
-	
-	/**
-	 * Returns true if this RowDataManager contains objects that makes the formatting volatile,
-	 * i.e. prone to change due to for example cross references.
-	 * @return returns true if, and only if, the RowDataManager should be discarded if a new pass is requested,
-	 * false otherwise
-	 */
-	boolean isVolatile() {
-		return isVolatile;
 	}
 
 	MarginProperties getLeftMarginParent() {
