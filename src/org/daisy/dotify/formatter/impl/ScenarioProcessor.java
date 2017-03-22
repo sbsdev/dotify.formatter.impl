@@ -68,27 +68,21 @@ class ScenarioProcessor {
 	 * @param rec
 	 */
 	void processBlock(LayoutMaster master, Block g, BlockContext context) {
-		// FIXME: These calls have to be on separate lines, because variable data might mutate
-		AbstractBlockContentManager ret = processBlockInner(g, context);
-		data.processBlock(master, g, ret);
-	}
-
-	private AbstractBlockContentManager processBlockInner(Block g, BlockContext context) {
 		AbstractBlockContentManager ret = g.getBlockContentManager(context);
 		if (g.getRenderingScenario()!=null) {
 			if (invalid!=null && g.getRenderingScenario()==invalid) {
 				//we're still in the same scenario
-				return ret;
-			}
-			if (current==null) {
+				data.processBlock(master, g, ret);
+			} else if (current==null) {
 				height = data.calcSize();
 				cost = Double.MAX_VALUE;
-				minWidth = ret.getMinimumAvailableWidth();
 				forceCount = 0;
 				clearState(scenario);
 				saveState(baseline);
 				current = g.getRenderingScenario();
 				invalid = null;
+				data.processBlock(master, g, ret);
+				minWidth = ret.getMinimumAvailableWidth();
 			} else {
 				if (current!=g.getRenderingScenario()) {
 					if (invalid!=null) {
@@ -98,6 +92,7 @@ class ScenarioProcessor {
 						} else {
 							restoreState(baseline);
 						}
+						data.processBlock(master, g, ret);
 					} else {
 						//TODO: measure, evaluate
 						float size = data.calcSize()-height;
@@ -108,18 +103,21 @@ class ScenarioProcessor {
 							saveState(scenario);
 						}
 						restoreState(baseline);
+						data.processBlock(master, g, ret);
 						minWidth = ret.getMinimumAvailableWidth();
 						forceCount = 0;
 					}
 					current = g.getRenderingScenario();
-				} // we're rendering the current scenario
+				} else { // we're rendering the current scenario
+					data.processBlock(master, g, ret);
+				}
 				forceCount += ret.getForceBreakCount();
 				minWidth = Math.min(minWidth, ret.getMinimumAvailableWidth());
 			}
 		} else {
 			finishBlockProcessing();
+			data.processBlock(master, g, ret);
 		}
-		return ret;
 	}
 	
 	private void finishBlockProcessing() {
