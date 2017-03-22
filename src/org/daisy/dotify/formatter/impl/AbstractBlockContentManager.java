@@ -10,6 +10,7 @@ import org.daisy.dotify.common.text.StringTools;
 abstract class AbstractBlockContentManager {
 	//Immutable
 	protected final int flowWidth;
+	protected final RowDataProperties rdp;
 	private final MarginProperties leftParent;
 	private final MarginProperties rightParent;
 	protected final MarginProperties leftMargin;
@@ -21,7 +22,6 @@ abstract class AbstractBlockContentManager {
 	private final int minWidth;
 	
 	//Mutable
-	protected final RowDataProperties rdp;
 	protected final FormatterContext fcontext;
 	protected final ArrayList<Marker> groupMarkers;
 	protected final ArrayList<String> groupAnchors;

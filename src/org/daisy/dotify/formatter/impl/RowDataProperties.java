@@ -6,7 +6,13 @@ import org.daisy.dotify.api.formatter.FormattingTypes;
 import org.daisy.dotify.api.formatter.FormattingTypes.Alignment;
 import org.daisy.dotify.formatter.impl.Margin.Type;
 
-class RowDataProperties {
+/**
+ * Provides properties for a block. {@link RowDataProperties} are
+ * immutable. 
+ * @author Joel Håkansson
+ *
+ */
+final class RowDataProperties {
 	private final int blockIndent, blockIndentParent;
 	private final Margin leftMargin;
 	private final Margin rightMargin;

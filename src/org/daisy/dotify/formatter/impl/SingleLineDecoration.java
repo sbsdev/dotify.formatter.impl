@@ -1,6 +1,12 @@
 package org.daisy.dotify.formatter.impl;
 
-class SingleLineDecoration {
+/**
+ * Provides a definition for a single line decoration.
+ * {@link SingleLineDecoration}s are immutable. 
+ * @author Joel Håkansson
+ *
+ */
+final class SingleLineDecoration {
 	private final String leftCorner;
 	private final String rightCorner;
 	private final String linePattern;

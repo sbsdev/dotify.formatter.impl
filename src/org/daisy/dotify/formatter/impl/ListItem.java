@@ -2,7 +2,11 @@ package org.daisy.dotify.formatter.impl;
 
 import org.daisy.dotify.api.formatter.FormattingTypes;
 
-class ListItem {
+/**
+ * Provides a list item. List items are immutable.
+ * @author Joel Håkansson
+ */
+final class ListItem {
 	private final String label;
 	private final FormattingTypes.ListStyle type;
 	

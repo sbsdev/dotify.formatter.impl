@@ -8,13 +8,11 @@ import org.daisy.dotify.api.formatter.FormattingTypes.Alignment;
 import org.daisy.dotify.api.formatter.Marker;
 import org.daisy.dotify.api.writer.Row;
 
-
-
 /**
- * Row represents a single row of text
+ * Provides a single row of text. {@link RowImpl}s are immutable.
  * @author Joel Håkansson
  */
-class RowImpl implements Row {
+final class RowImpl implements Row {
 	private final String chars;
 	private final List<Marker> markers;
 	private final List<String> anchors;
