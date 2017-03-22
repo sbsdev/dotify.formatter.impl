@@ -7,8 +7,7 @@ class TableBlockContentManager extends AbstractBlockContentManager {
 	private final int forceCount;
 
 	TableBlockContentManager(int flowWidth, int minWidth, int forceCount, List<RowImpl> rows, RowDataProperties rdp, FormatterContext fcontext) {
-		super(flowWidth, rdp, fcontext);
-		this.minWidth = minWidth;
+		super(flowWidth, rdp, fcontext, minWidth);
 		this.rows = rows;
 		this.forceCount = forceCount;
 	}

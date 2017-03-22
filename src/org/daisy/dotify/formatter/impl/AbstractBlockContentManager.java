@@ -20,9 +20,13 @@ abstract class AbstractBlockContentManager {
 	private final List<RowImpl> innerPreContentRows;
 	private final List<RowImpl> postContentRows;
 	private final List<RowImpl> skippablePostContentRows;
-	protected int minWidth;
+	private final int minWidth;
 	
 	AbstractBlockContentManager(int flowWidth, RowDataProperties rdp, FormatterContext fcontext) {
+		this(flowWidth, rdp, fcontext, null);
+	}
+	
+	AbstractBlockContentManager(int flowWidth, RowDataProperties rdp, FormatterContext fcontext, Integer minWidth) {
 		this.flowWidth = flowWidth;
 		this.leftParent = rdp.getLeftMargin().buildMarginParent(fcontext.getSpaceCharacter());
 		this.rightParent = rdp.getRightMargin().buildMarginParent(fcontext.getSpaceCharacter());
@@ -35,7 +39,7 @@ abstract class AbstractBlockContentManager {
 		this.collapsiblePreContentRows = makeCollapsiblePreContentRows(rdp, leftParent, rightParent);	
 		this.innerPreContentRows = makeInnerPreContentRows();
 		this.postContentRows = new ArrayList<>();
-		this.minWidth = flowWidth-leftMargin.getContent().length()-rightMargin.getContent().length();
+		this.minWidth = minWidth==null ? flowWidth-leftMargin.getContent().length()-rightMargin.getContent().length() : minWidth;
 
 		this.skippablePostContentRows = new ArrayList<>();
 		MarginProperties margin = new MarginProperties(leftMargin.getContent()+StringTools.fill(fcontext.getSpaceCharacter(), rdp.getTextIndent()), leftMargin.isSpaceOnly());
