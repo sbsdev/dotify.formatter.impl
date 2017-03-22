@@ -1,11 +1,16 @@
 package org.daisy.dotify.formatter.impl;
 
 import java.util.ArrayList;
-import java.util.Stack;
+import java.util.Collections;
+import java.util.List;
 
 import org.daisy.dotify.common.text.StringTools;
 
-class Margin extends Stack<MarginComponent> {
+/**
+ * Provides a margin. Margins are immutable.
+ * @author Joel Håkansson
+ */
+final class Margin {
 	enum Type {
 		LEFT(false),
 		RIGHT(true)
@@ -17,15 +22,12 @@ class Margin extends Stack<MarginComponent> {
 		}
 	}
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 9008010676189297081L;
-
 	private final Type t;
+	private final List<MarginComponent> components;
 
-	Margin(Type t) {
+	Margin(Type t, List<MarginComponent> components) {
 		this.t = t;
+		this.components = Collections.unmodifiableList(new ArrayList<>(components));
 	}
 	
 	MarginProperties buildMargin(char spaceCharacter) {
@@ -40,13 +42,13 @@ class Margin extends Stack<MarginComponent> {
 		boolean isSpace = true;
 		ArrayList<String> inp = new ArrayList<>();
 		int j = 0;
-		for (MarginComponent c : this) {
+		for (MarginComponent c : components) {
 			inp.add(StringTools.fill(spaceCharacter, c.getOuterOffset()));
-			if (!parent || j<size()-1) {
+			if (!parent || j<components.size()-1) {
 				inp.add(c.getBorder());
 				isSpace &= isSpace(spaceCharacter, c.getBorder());
 			}
-			if (!parent || j<size()-1) {
+			if (!parent || j<components.size()-1) {
 				inp.add(StringTools.fill(spaceCharacter, c.getInnerOffset()));
 			}
 			j++;
@@ -76,26 +78,28 @@ class Margin extends Stack<MarginComponent> {
 	@Override
 	public int hashCode() {
 		final int prime = 31;
-		int result = super.hashCode();
+		int result = 1;
+		result = prime * result + ((components == null) ? 0 : components.hashCode());
 		result = prime * result + ((t == null) ? 0 : t.hashCode());
 		return result;
 	}
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj) {
+		if (this == obj)
 			return true;
-		}
-		if (!super.equals(obj)) {
+		if (obj == null)
 			return false;
-		}
-		if (getClass() != obj.getClass()) {
+		if (getClass() != obj.getClass())
 			return false;
-		}
 		Margin other = (Margin) obj;
-		if (t != other.t) {
+		if (components == null) {
+			if (other.components != null)
+				return false;
+		} else if (!components.equals(other.components))
 			return false;
-		}
+		if (t != other.t)
+			return false;
 		return true;
 	}
 

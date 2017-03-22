@@ -1,5 +1,7 @@
 package org.daisy.dotify.formatter.impl;
 
+import java.util.Collections;
+
 import org.daisy.dotify.api.formatter.FormattingTypes;
 import org.daisy.dotify.api.formatter.FormattingTypes.Alignment;
 import org.daisy.dotify.formatter.impl.Margin.Type;
@@ -36,8 +38,8 @@ class RowDataProperties {
 		private int widows = 0;
 		private Alignment align = Alignment.LEFT;
 		private Float rowSpacing = null;
-		private Margin leftMargin = new Margin(Type.LEFT);
-		private Margin rightMargin = new Margin(Type.RIGHT);
+		private Margin leftMargin = new Margin(Type.LEFT, Collections.emptyList());
+		private Margin rightMargin = new Margin(Type.RIGHT, Collections.emptyList());
 		private SingleLineDecoration leadingDecoration = null;
 		private SingleLineDecoration trailingDecoration = null;
 		private String underlineStyle = null;

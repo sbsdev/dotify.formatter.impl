@@ -44,8 +44,8 @@ public class FormatterCoreImpl extends Stack<Block> implements FormatterCore, Bl
 	private static final long serialVersionUID = -7775469339792146048L;
 	private static final Logger logger = Logger.getLogger(FormatterCoreImpl.class.getCanonicalName());
 	protected final Stack<AncestorContext> propsContext;
-	private Margin leftMargin;
-	private Margin rightMargin;
+	private Stack<MarginComponent> leftMarginComps;
+	private Stack<MarginComponent> rightMarginComps;
 	
 	private Stack<Integer> blockIndentParent;
 	private Stack<StyledSegmentGroup> styles;
@@ -68,8 +68,8 @@ public class FormatterCoreImpl extends Stack<Block> implements FormatterCore, Bl
 		super();
 		this.fc = fc;
 		this.propsContext = new Stack<>();
-		this.leftMargin = new Margin(Type.LEFT);
-		this.rightMargin = new Margin(Type.RIGHT);
+		this.leftMarginComps = new Stack<>();
+		this.rightMarginComps = new Stack<>();
 		this.listItem = null;
 		this.blockIndent = 0;
 		this.blockIndentParent = new Stack<>();
@@ -100,8 +100,8 @@ public class FormatterCoreImpl extends Stack<Block> implements FormatterCore, Bl
 			lb = t.getLeftBorder();
 			rb = t.getRightBorder();
 		}
-		leftMargin.push(new MarginComponent(lb, p.getMargin().getLeftSpacing(), p.getPadding().getLeftSpacing()));
-		rightMargin.push(new MarginComponent(rb, p.getMargin().getRightSpacing(), p.getPadding().getRightSpacing()));
+		leftMarginComps.push(new MarginComponent(lb, p.getMargin().getLeftSpacing(), p.getPadding().getLeftSpacing()));
+		rightMarginComps.push(new MarginComponent(rb, p.getMargin().getRightSpacing(), p.getPadding().getRightSpacing()));
 		if (propsContext.size()>0) {
 			addToBlockIndent(propsContext.peek().getBlockProperties().getBlockIndent());
 		}
@@ -115,8 +115,8 @@ public class FormatterCoreImpl extends Stack<Block> implements FormatterCore, Bl
 					widows(p.getWidows()).
 					blockIndent(blockIndent).
 					blockIndentParent(blockIndentParent.peek()).
-					leftMargin((Margin)leftMargin.clone()).
-					rightMargin((Margin)rightMargin.clone()).
+					leftMargin(new Margin(Type.LEFT, leftMarginComps)).
+					rightMargin(new Margin(Type.RIGHT, rightMarginComps)).
 					outerSpaceBefore(p.getMargin().getTopSpacing()).
 					underlineStyle(p.getUnderlineStyle());
 		Block c = newBlock(blockId, rdp.build());
@@ -234,8 +234,8 @@ public class FormatterCoreImpl extends Stack<Block> implements FormatterCore, Bl
 			}
 		}
 		}
-		leftMargin.pop();
-		rightMargin.pop();
+		leftMarginComps.pop();
+		rightMarginComps.pop();
 		if (propsContext.size()>0) {
 			AncestorContext ac = propsContext.peek(); 
 			BlockProperties p = ac.getBlockProperties();
@@ -251,9 +251,9 @@ public class FormatterCoreImpl extends Stack<Block> implements FormatterCore, Bl
 						widows(p.getWidows()).
 						blockIndent(blockIndent).
 						blockIndentParent(blockIndentParent.peek()).
-						leftMargin((Margin)leftMargin.clone()). //.stackMarginComp(formatterContext, false, false)
+						leftMargin(new Margin(Type.LEFT, leftMarginComps)). //.stackMarginComp(formatterContext, false, false)
 						//leftMarginParent((Margin)leftMargin.clone()). //.stackMarginComp(formatterContext, true, false)
-						rightMargin((Margin)rightMargin.clone()). //.stackMarginComp(formatterContext, false, true)
+						rightMargin(new Margin(Type.RIGHT, rightMarginComps)). //.stackMarginComp(formatterContext, false, true)
 						//rightMarginParent((Margin)rightMargin.clone())
 						//.stackMarginComp(formatterContext, true, true)
 						underlineStyle(p.getUnderlineStyle());
@@ -440,21 +440,21 @@ public class FormatterCoreImpl extends Stack<Block> implements FormatterCore, Bl
 			lb = borderStyle.getLeftBorder();
 			rb = borderStyle.getRightBorder();
 		}
-		Margin leftMargin = (Margin)this.leftMargin.clone();
-		Margin rightMargin = (Margin)this.rightMargin.clone();
-		leftMargin.add(new MarginComponent(lb, props.getMargin().getLeftSpacing(), props.getPadding().getLeftSpacing()));//
-		rightMargin.add(new MarginComponent(rb, props.getMargin().getRightSpacing(), props.getPadding().getRightSpacing()));//
+		leftMarginComps.push(new MarginComponent(lb, props.getMargin().getLeftSpacing(), props.getPadding().getLeftSpacing()));//
+		rightMarginComps.push(new MarginComponent(rb, props.getMargin().getRightSpacing(), props.getPadding().getRightSpacing()));//
 		RowDataProperties.Builder rdp = new RowDataProperties.Builder()
 				//text properties are not relevant here, since a table block doesn't support mixed content
 				//textIndent, firstLineIndent, align, orphans, widows, blockIndent and blockIndentParent
 				//rowSpacing is handled by the table itself
-				.leftMargin(leftMargin)
-				.rightMargin(rightMargin)
+				.leftMargin(new Margin(Type.LEFT, leftMarginComps))
+				.rightMargin(new Margin(Type.RIGHT, rightMarginComps))
 				//all margins are set here, because the table is an opaque block
 				.outerSpaceBefore(props.getMargin().getTopSpacing())
 				.outerSpaceAfter(props.getMargin().getBottomSpacing())
 				.innerSpaceBefore(props.getPadding().getTopSpacing())
 				.innerSpaceAfter(props.getPadding().getBottomSpacing());
+		leftMarginComps.pop();
+		rightMarginComps.pop();
 		if (borderStyle!=null) {
 			if (borderStyle.getTopLeftCorner().length()+borderStyle.getTopBorder().length()+borderStyle.getTopRightCorner().length()>0) {
 				rdp.leadingDecoration(new SingleLineDecoration(borderStyle.getTopLeftCorner(), borderStyle.getTopBorder(), borderStyle.getTopRightCorner()));
