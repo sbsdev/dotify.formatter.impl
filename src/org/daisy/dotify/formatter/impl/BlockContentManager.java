@@ -3,6 +3,7 @@ package org.daisy.dotify.formatter.impl;
 import static java.lang.Math.min;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Stack;
 import java.util.logging.Logger;
@@ -40,7 +41,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 	private final CrossReferenceHandler refs;
 	private final int available;
 	private final Context context;
-	private final Stack<Segment> segments;
+	private final List<Segment> segments;
 
 	private RowImpl.Builder currentRow;
 	private Leader currentLeader;
@@ -51,9 +52,9 @@ class BlockContentManager extends AbstractBlockContentManager {
 	private int segmentIndex;
 
 	// List of BrailleTranslatorResult or Marker or AnchorSegment
-	private List<Object> layoutOrApplyAfterLeader = null;
-	private String currentLeaderMode = null;
-	private boolean seenSegmentAfterLeader = false;
+	private List<Object> layoutOrApplyAfterLeader;
+	private String currentLeaderMode;
+	private boolean seenSegmentAfterLeader;
 	
 	BlockContentManager(int flowWidth, Stack<Segment> segments, RowDataProperties rdp, CrossReferenceHandler refs, Context context, FormatterContext fcontext) {
 		super(flowWidth, rdp, fcontext);
@@ -64,11 +65,41 @@ class BlockContentManager extends AbstractBlockContentManager {
 		this.item = rdp.getListItem();
 
 		this.context = context;
-		this.segments = segments;
+		this.segments = Collections.unmodifiableList(segments);
 		this.rows = new Stack<>();
 		this.minLeft = flowWidth;
 		this.minRight = flowWidth;
 		this.segmentIndex = 0;
+		this.layoutOrApplyAfterLeader = null;
+		this.currentLeaderMode = null;
+		this.seenSegmentAfterLeader = false;
+	}
+	
+	BlockContentManager(BlockContentManager template) {
+		super(template);
+		this.rows = new Stack<>();
+		this.rows.addAll(template.rows);
+		// Refs is mutable, but for now we assume that the same context should be used.
+		this.refs = template.refs;
+		this.available = template.available;
+		// Context is mutable, but for now we assume that the same context should be used.
+		this.context = template.context;
+		this.segments = template.segments;
+		this.currentRow = template.currentRow==null?null:new RowImpl.Builder(template.currentRow);
+		this.currentLeader = template.currentLeader;
+		this.item = template.item;
+		this.forceCount = template.forceCount;
+		this.minLeft = template.minLeft;
+		this.minRight = template.minRight;
+		this.segmentIndex = template.segmentIndex;
+		this.layoutOrApplyAfterLeader = template.layoutOrApplyAfterLeader==null?null:new ArrayList<>(template.layoutOrApplyAfterLeader);
+		this.currentLeaderMode = template.currentLeaderMode;
+		this.seenSegmentAfterLeader = template.seenSegmentAfterLeader;
+	}
+	
+	@Override
+	AbstractBlockContentManager copy() {
+		return new BlockContentManager(this);
 	}
 	
 	/**

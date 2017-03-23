@@ -1,5 +1,6 @@
 package org.daisy.dotify.formatter.impl;
 
+import java.util.Collections;
 import java.util.List;
 
 class TableBlockContentManager extends AbstractBlockContentManager {
@@ -8,8 +9,19 @@ class TableBlockContentManager extends AbstractBlockContentManager {
 
 	TableBlockContentManager(int flowWidth, int minWidth, int forceCount, List<RowImpl> rows, RowDataProperties rdp, FormatterContext fcontext) {
 		super(flowWidth, rdp, fcontext, minWidth);
-		this.rows = rows;
+		this.rows = Collections.unmodifiableList(rows);
 		this.forceCount = forceCount;
+	}
+	
+	TableBlockContentManager(TableBlockContentManager template) {
+		super(template);
+		this.rows = template.rows;
+		this.forceCount = template.forceCount;
+	}
+	
+	@Override
+	AbstractBlockContentManager copy() {
+		return new TableBlockContentManager(this);
 	}
 	
 	@Override

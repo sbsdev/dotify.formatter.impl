@@ -78,7 +78,7 @@ abstract class BlockProcessor {
 		private InnerBlockProcessor(InnerBlockProcessor template) {
 			this.master = template.master;
 			this.g= template.g;
-			this.bcm = template.bcm;
+			this.bcm = template.bcm==null?null:template.bcm.copy();
 			this.owc = template.owc;
 			this.otherData = template.otherData;
 			this.rowIndex = template.rowIndex;

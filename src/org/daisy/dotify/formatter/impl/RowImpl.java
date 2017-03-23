@@ -54,6 +54,19 @@ final class RowImpl implements Row {
 			this.leaderSpace = template.leaderSpace;
 		}
 		
+		Builder(RowImpl.Builder template) {
+			this.chars = template.chars;
+			this.markers = new ArrayList<>(template.markers);
+			this.anchors = new ArrayList<>(template.anchors);
+			this.leftMargin = template.leftMargin;
+			this.rightMargin = template.rightMargin;
+			this.alignment = template.alignment;
+			this.rowSpacing = template.rowSpacing;
+			this.adjustedForMargin = template.adjustedForMargin;
+			this.allowsBreakAfter = template.allowsBreakAfter;
+			this.leaderSpace = template.leaderSpace;
+		}
+
 		Builder text(String value) {
 			this.chars = value;
 			return this;

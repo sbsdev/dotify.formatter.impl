@@ -77,11 +77,31 @@ abstract class AbstractBlockContentManager {
 		this.skippablePostContentRows = Collections.unmodifiableList(skippablePostContentRowsBuilder);
 	}
 	
+	AbstractBlockContentManager(AbstractBlockContentManager template) {
+		this.flowWidth = template.flowWidth;
+		this.rdp = template.rdp;
+		this.leftParent = template.leftParent;
+		this.rightParent = template.rightParent;
+		this.leftMargin = template.leftMargin;
+		this.rightMargin = template.rightMargin;
+		this.collapsiblePreContentRows = template.collapsiblePreContentRows;
+		this.innerPreContentRows = template.innerPreContentRows;
+		this.postContentRows = template.postContentRows;
+		this.skippablePostContentRows = template.skippablePostContentRows;
+		this.minWidth = template.minWidth;
+		// FIXME: fcontext is mutable, but mutating is related to DOM creation, and we assume for now that DOM creation is NOT going on when rendering has begun.
+		this.fcontext = template.fcontext;
+		this.groupAnchors = new ArrayList<>(template.groupAnchors);
+		this.groupMarkers = new ArrayList<>(template.groupMarkers);
+	}
+	
 	abstract int getForceBreakCount();
 
 	abstract int getRowCount();
 
 	abstract RowImpl get(int index);
+	
+	abstract AbstractBlockContentManager copy();
 
 	/**
 	 * Returns true if this manager supports rows with variable maximum
