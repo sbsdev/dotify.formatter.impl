@@ -67,8 +67,8 @@ class ScenarioData extends BlockProcessor {
 		return dataGroups;
 	}
 	
-	void processBlock(LayoutMaster master, Block g, AbstractBlockContentManager bcm) {
-		loadBlock(master, g, bcm);
+	void processBlock(LayoutMaster master, Block g, BlockContext bc) {
+		loadBlock(master, g, bc);
 		while (hasNextInBlock()) {
 			processNextRowGroup();
 		}

@@ -480,7 +480,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 	}
 
 	@Override
-	int getForceBreakCount() {
+	public int getForceBreakCount() {
 		ensureBuffer(-1);
 		return forceCount;
 	}

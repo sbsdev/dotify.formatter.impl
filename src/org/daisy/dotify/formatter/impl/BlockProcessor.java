@@ -31,7 +31,8 @@ abstract class BlockProcessor {
 		this.rowGroupIterator = copyUnlessNull(template.rowGroupIterator);
 	}
 	
-	void loadBlock(LayoutMaster master, Block g, AbstractBlockContentManager bcm) {
+	void loadBlock(LayoutMaster master, Block g, BlockContext bc) {
+		AbstractBlockContentManager bcm = g.getBlockContentManager(bc);
 		if (!hasSequence() || ((g.getBreakBeforeType()==BreakBefore.PAGE  || g.getVerticalPosition()!=null) && hasResult())) {
             newRowGroupSequence(
                     g.getVerticalPosition()!=null?
@@ -57,6 +58,17 @@ abstract class BlockProcessor {
 		return template==null?null:new InnerBlockProcessor(template);
 	}
 
+	/**
+	 * Gets the current block's statistics, or null if no block has been loaded.
+	 * @return returns the block statistics, or null
+	 */
+	BlockStatistics getBlockStatistics() {
+		if (rowGroupIterator!=null) {
+			return rowGroupIterator.bcm;
+		} else {
+			return null;
+		}
+	}
 	
 	private class InnerBlockProcessor implements Iterator<RowGroup> {
 		private final LayoutMaster master;

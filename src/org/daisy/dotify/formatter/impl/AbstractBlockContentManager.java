@@ -7,7 +7,7 @@ import java.util.List;
 import org.daisy.dotify.api.formatter.Marker;
 import org.daisy.dotify.common.text.StringTools;
 
-abstract class AbstractBlockContentManager {
+abstract class AbstractBlockContentManager implements BlockStatistics {
 	//Immutable
 	protected final int flowWidth;
 	protected final RowDataProperties rdp;
@@ -95,8 +95,6 @@ abstract class AbstractBlockContentManager {
 		this.groupMarkers = new ArrayList<>(template.groupMarkers);
 	}
 	
-	abstract int getForceBreakCount();
-
 	abstract int getRowCount();
 
 	abstract RowImpl get(int index);
@@ -206,11 +204,8 @@ abstract class AbstractBlockContentManager {
 		return !skippablePostContentRows.isEmpty();
 	}
 	
-	/**
-	 * Gets the minimum width available for content (excluding margins)
-	 * @return returns the available width, in characters
-	 */
-	int getMinimumAvailableWidth() {
+	@Override
+	public int getMinimumAvailableWidth() {
 		return minWidth;
 	}
 

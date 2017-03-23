@@ -68,11 +68,10 @@ class ScenarioProcessor {
 	 * @param rec
 	 */
 	void processBlock(LayoutMaster master, Block g, BlockContext context) {
-		AbstractBlockContentManager ret = g.getBlockContentManager(context);
 		if (g.getRenderingScenario()!=null) {
 			if (invalid!=null && g.getRenderingScenario()==invalid) {
 				//we're still in the same scenario
-				data.processBlock(master, g, ret);
+				data.processBlock(master, g, context);
 			} else if (current==null) {
 				height = data.calcSize();
 				cost = Double.MAX_VALUE;
@@ -81,8 +80,8 @@ class ScenarioProcessor {
 				saveState(baseline);
 				current = g.getRenderingScenario();
 				invalid = null;
-				data.processBlock(master, g, ret);
-				minWidth = ret.getMinimumAvailableWidth();
+				data.processBlock(master, g, context);
+				minWidth = data.getBlockStatistics().getMinimumAvailableWidth();
 			} else {
 				if (current!=g.getRenderingScenario()) {
 					if (invalid!=null) {
@@ -92,7 +91,7 @@ class ScenarioProcessor {
 						} else {
 							restoreState(baseline);
 						}
-						data.processBlock(master, g, ret);
+						data.processBlock(master, g, context);
 					} else {
 						//TODO: measure, evaluate
 						float size = data.calcSize()-height;
@@ -103,20 +102,20 @@ class ScenarioProcessor {
 							saveState(scenario);
 						}
 						restoreState(baseline);
-						data.processBlock(master, g, ret);
-						minWidth = ret.getMinimumAvailableWidth();
+						data.processBlock(master, g, context);
+						minWidth = data.getBlockStatistics().getMinimumAvailableWidth();
 						forceCount = 0;
 					}
 					current = g.getRenderingScenario();
 				} else { // we're rendering the current scenario
-					data.processBlock(master, g, ret);
+					data.processBlock(master, g, context);
 				}
-				forceCount += ret.getForceBreakCount();
-				minWidth = Math.min(minWidth, ret.getMinimumAvailableWidth());
+				forceCount += data.getBlockStatistics().getForceBreakCount();
+				minWidth = Math.min(minWidth, data.getBlockStatistics().getMinimumAvailableWidth());
 			}
 		} else {
 			finishBlockProcessing();
-			data.processBlock(master, g, ret);
+			data.processBlock(master, g, context);
 		}
 	}
 	

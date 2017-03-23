@@ -144,7 +144,7 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 				//get next block
 				Block b = blocks.get(blockIndex);
 				blockIndex++;
-				data.loadBlock(master, b, b.getBlockContentManager(bc));
+				data.loadBlock(master, b, bc);
 			}
 			data.processNextRowGroup();
 		}

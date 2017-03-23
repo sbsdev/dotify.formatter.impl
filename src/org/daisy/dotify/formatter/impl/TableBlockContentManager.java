@@ -40,7 +40,7 @@ class TableBlockContentManager extends AbstractBlockContentManager {
 	}
 
 	@Override
-	int getForceBreakCount() {
+	public int getForceBreakCount() {
 		return forceCount;
 	}
 
