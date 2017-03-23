@@ -38,10 +38,6 @@ public abstract class Block {
 	private boolean isVolatile;
 	private BlockAddress blockAddress;
 
-	Block(String blockId, RowDataProperties rdp) {
-		this(blockId, rdp, null);
-	}
-	
 	Block(String blockId, RowDataProperties rdp, RenderingScenario rs) {
 		this.context = null;
 		this.rdm = null;
@@ -80,6 +76,7 @@ public abstract class Block {
 		this.metaPage = template.metaPage;
 		this.rs = template.rs;
 		this.isVolatile = template.isVolatile;
+		this.blockAddress = template.blockAddress;
 	}
 	
 	/**

@@ -16,6 +16,7 @@ import org.daisy.dotify.formatter.impl.BlockSequence;
 import org.daisy.dotify.formatter.impl.FormatterContext;
 import org.daisy.dotify.formatter.impl.FormatterCoreContext;
 import org.daisy.dotify.formatter.impl.FormatterCoreImpl;
+import org.daisy.dotify.formatter.impl.search.BlockAddress;
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.search.DefaultContext;
 
@@ -28,6 +29,8 @@ class TocSequenceEventImpl implements VolumeSequence {
 	private final ArrayList<ConditionalBlock> volumeEndEvents;
 	private final ArrayList<ConditionalBlock> tocEndEvents;
 	private final FormatterCoreContext fc;
+	private final long groupNumber;
+	private BlockAddress currentBlockAddress;
 	
 	TocSequenceEventImpl(FormatterCoreContext fc, SequenceProperties props, TableOfContentsImpl data, TocProperties.TocRange range, String volEventVar) {
 		this.fc = fc;
@@ -38,6 +41,7 @@ class TocSequenceEventImpl implements VolumeSequence {
 		this.volumeStartEvents = new ArrayList<>();
 		this.volumeEndEvents = new ArrayList<>();
 		this.tocEndEvents = new ArrayList<>();
+		this.groupNumber = BlockAddress.getNextGroupNumber();
 	}
 
 	FormatterCore addTocStart(Condition condition) {
@@ -70,33 +74,36 @@ class TocSequenceEventImpl implements VolumeSequence {
 		return range;
 	}
 
-	private static Iterable<Block> getCompoundIterableB(Iterable<ConditionalBlock> events, Context vars) {
+	private Iterable<Block> getCompoundIterableB(Iterable<ConditionalBlock> events, Context vars) {
 		ArrayList<Block> it = new ArrayList<>();
 		for (ConditionalBlock ev : events) {
 			if (ev.appliesTo(vars)) {
 				Iterable<Block> tmp = ev.getSequence();
 				for (Block b : tmp) {
 					//always clone these blocks, as they may be placed in multiple contexts
-					it.add(b.copy());
+					Block bl = b.copy();
+					currentBlockAddress = new BlockAddress(groupNumber, currentBlockAddress.getBlockNumber()+1);
+					bl.setBlockAddress(currentBlockAddress);
+					it.add(bl);
 				}
 			}
 		}
 		return it;
 	}
 
-	Iterable<Block> getVolumeStart(Context vars) throws IOException {
+	private Iterable<Block> getVolumeStart(Context vars) throws IOException {
 		return getCompoundIterableB(volumeStartEvents, vars);
 	}
 	
-	Iterable<Block> getVolumeEnd(Context vars) throws IOException {
+	private Iterable<Block> getVolumeEnd(Context vars) throws IOException {
 		return getCompoundIterableB(volumeEndEvents, vars);
 	}
 	
-	Iterable<Block> getTocStart(Context vars) throws IOException {
+	private Iterable<Block> getTocStart(Context vars) throws IOException {
 		return getCompoundIterableB(tocStartEvents, vars);
 	}
 
-	Iterable<Block> getTocEnd(Context vars) throws IOException {
+	private Iterable<Block> getTocEnd(Context vars) throws IOException {
 		return getCompoundIterableB(tocEndEvents, vars);
 	}
 
@@ -107,6 +114,7 @@ class TocSequenceEventImpl implements VolumeSequence {
 
 	@Override
 	public BlockSequence getBlockSequence(FormatterContext context, DefaultContext vars, CrossReferenceHandler crh) {
+		currentBlockAddress = new BlockAddress(groupNumber, 0);
 		try {
 			BlockSequenceManipulator fsm = new BlockSequenceManipulator(
 					context.getMasters().get(getSequenceProperties().getMasterName()), 

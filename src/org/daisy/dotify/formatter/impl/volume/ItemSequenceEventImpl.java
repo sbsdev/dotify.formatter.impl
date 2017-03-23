@@ -13,6 +13,7 @@ import org.daisy.dotify.formatter.impl.FormatterContext;
 import org.daisy.dotify.formatter.impl.FormatterCoreContext;
 import org.daisy.dotify.formatter.impl.FormatterCoreImpl;
 import org.daisy.dotify.formatter.impl.search.AnchorData;
+import org.daisy.dotify.formatter.impl.search.BlockAddress;
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.search.DefaultContext;
 
@@ -26,6 +27,7 @@ class ItemSequenceEventImpl implements ReferenceListBuilder, BlockGroup {
 	private final FormatterCoreImpl pageEndEvents;
 	private final FormatterCoreImpl volumeEndEvents;
 	private final FormatterCoreImpl collectionEndEvents;
+	private final long groupNumber;
 	
 	ItemSequenceEventImpl(FormatterCoreContext fc, ItemSequenceProperties.Range range, String collectionID) {
 		this.collectionID = collectionID;
@@ -36,6 +38,7 @@ class ItemSequenceEventImpl implements ReferenceListBuilder, BlockGroup {
 		this.pageEndEvents = new FormatterCoreImpl(fc);
 		this.volumeEndEvents = new FormatterCoreImpl(fc);
 		this.collectionEndEvents = new FormatterCoreImpl(fc);
+		this.groupNumber = BlockAddress.getNextGroupNumber();
 	}
 
 	@Override
@@ -75,7 +78,7 @@ class ItemSequenceEventImpl implements ReferenceListBuilder, BlockGroup {
 		if (c==null) {
 			return ret;
 		}
-
+		BlockAddress currentBlockAddress = new BlockAddress(groupNumber, 0);
 		ret.addAll(collectionStartEvents);
 		boolean hasContents = false;
 		for (int i=0; i<crh.getVolumeCount(); i++) {
@@ -95,6 +98,8 @@ class ItemSequenceEventImpl implements ReferenceListBuilder, BlockGroup {
 							ArrayList<Block> b = new ArrayList<>();
 							for (Block blk : pageStartEvents) {
 								Block bl = blk.copy();
+								currentBlockAddress = new BlockAddress(groupNumber, currentBlockAddress.getBlockNumber()+1);
+								bl.setBlockAddress(currentBlockAddress);
 								bl.setMetaPage(ad.getPageIndex()+1);
 								bl.setMetaVolume(i+1);
 								b.add(bl);
@@ -108,6 +113,8 @@ class ItemSequenceEventImpl implements ReferenceListBuilder, BlockGroup {
 							ArrayList<Block> b = new ArrayList<>();
 							for (Block blk : pageEndEvents) {
 								Block bl = blk.copy();
+								currentBlockAddress = new BlockAddress(groupNumber, currentBlockAddress.getBlockNumber()+1);
+								bl.setBlockAddress(currentBlockAddress);
 								bl.setMetaPage(ad.getPageIndex()+1);
 								bl.setMetaVolume(i+1);
 								b.add(bl);
@@ -119,12 +126,16 @@ class ItemSequenceEventImpl implements ReferenceListBuilder, BlockGroup {
 				if (range == ItemSequenceProperties.Range.DOCUMENT && !volume.isEmpty()) {
 					for (Block blk : volumeStartEvents) {
 						Block bl = blk.copy();
+						currentBlockAddress = new BlockAddress(groupNumber, currentBlockAddress.getBlockNumber()+1);
+						bl.setBlockAddress(currentBlockAddress);
 						bl.setMetaVolume(i+1);
 						ret.add(bl);
 					}
 					ret.addAll(volume);
 					for (Block blk : volumeEndEvents) {
 						Block bl = blk.copy();
+						currentBlockAddress = new BlockAddress(groupNumber, currentBlockAddress.getBlockNumber()+1);
+						bl.setBlockAddress(currentBlockAddress);
 						bl.setMetaVolume(i+1);
 						ret.add(bl);
 					}

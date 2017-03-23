@@ -27,6 +27,7 @@ import org.daisy.dotify.api.translator.TextBorderFactory;
 import org.daisy.dotify.api.translator.TextBorderFactoryMakerService;
 import org.daisy.dotify.api.translator.TextBorderStyle;
 import org.daisy.dotify.formatter.impl.Margin.Type;
+import org.daisy.dotify.formatter.impl.search.BlockAddress;
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.search.DefaultContext;
 import org.daisy.dotify.formatter.impl.segment.AnchorSegment;
@@ -44,6 +45,8 @@ public class FormatterCoreImpl extends Stack<Block> implements FormatterCore, Bl
 	private static final long serialVersionUID = -7775469339792146048L;
 	private static final Logger logger = Logger.getLogger(FormatterCoreImpl.class.getCanonicalName());
 	protected final Stack<AncestorContext> propsContext;
+	private final long groupNumber;
+	private BlockAddress currentBlockAddress;
 	private Stack<MarginComponent> leftMarginComps;
 	private Stack<MarginComponent> rightMarginComps;
 	
@@ -66,6 +69,7 @@ public class FormatterCoreImpl extends Stack<Block> implements FormatterCore, Bl
 	
 	public FormatterCoreImpl(FormatterCoreContext fc, boolean discardIdentifiers) {
 		super();
+		this.groupNumber = BlockAddress.getNextGroupNumber();
 		this.fc = fc;
 		this.propsContext = new Stack<>();
 		this.leftMarginComps = new Stack<>();
@@ -77,6 +81,7 @@ public class FormatterCoreImpl extends Stack<Block> implements FormatterCore, Bl
 		blockIndentParent.add(0);
 		this.discardIdentifiers = discardIdentifiers;
 		this.scenario = null;
+		this.currentBlockAddress = new BlockAddress(groupNumber, 0);
 	}
 
 	@Override
@@ -268,7 +273,10 @@ public class FormatterCoreImpl extends Stack<Block> implements FormatterCore, Bl
 	}
 	
 	public Block newBlock(String blockId, RowDataProperties rdp) {
-		return this.push(new RegularBlock(blockId, rdp, scenario));
+		RegularBlock block = new RegularBlock(blockId, rdp, scenario);
+		currentBlockAddress = new BlockAddress(groupNumber, currentBlockAddress.getBlockNumber()+1);
+		block.setBlockAddress(currentBlockAddress);
+		return this.push(block);
 	}
 	
 	public Block getCurrentBlock() {
@@ -464,6 +472,8 @@ public class FormatterCoreImpl extends Stack<Block> implements FormatterCore, Bl
 			}
 		}
 		table = new Table(fc, props, rdp.build(), fc.getTextBorderFactoryMakerService(), fc.getTranslatorMode(), scenario);
+		currentBlockAddress = new BlockAddress(groupNumber, currentBlockAddress.getBlockNumber()+1);
+		table.setBlockAddress(currentBlockAddress);
 		add(table);
 		//no need to create and configure a regular block (as is done in startBlock)
 		//if there is a list item, we ignore it
