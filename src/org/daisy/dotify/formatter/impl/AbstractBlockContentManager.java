@@ -95,8 +95,6 @@ abstract class AbstractBlockContentManager implements BlockStatistics {
 		this.groupMarkers = new ArrayList<>(template.groupMarkers);
 	}
 	
-	abstract int getRowCount();
-	
 	abstract AbstractBlockContentManager copy();
     
     /**

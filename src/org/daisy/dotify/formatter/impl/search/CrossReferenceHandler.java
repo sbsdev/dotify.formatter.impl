@@ -13,6 +13,7 @@ public class CrossReferenceHandler {
 	private final LookupHandler<Integer, Iterable<AnchorData>> anchorRefs;
 	private final LookupHandler<String, Integer> variables;
 	private final LookupHandler<SheetIdentity, Boolean> breakable;
+	private final LookupHandler<BlockAddress, Integer> rowCount;
 	private final Map<Integer, Overhead> volumeOverhead;
 	private final SearchInfo searchInfo;
 	private static final String VOLUMES_KEY = "volumes";
@@ -30,6 +31,7 @@ public class CrossReferenceHandler {
 		this.anchorRefs = new LookupHandler<>();
 		this.variables = new LookupHandler<>();
 		this.breakable = new LookupHandler<>();
+		this.rowCount = new LookupHandler<>();
 		this.volumeOverhead = new HashMap<>();
 		this.searchInfo = new SearchInfo();
         this.pageIds = new HashSet<>();
@@ -120,6 +122,11 @@ public class CrossReferenceHandler {
 		breakable.commit();
 	}
 	
+	public void setRowCount(BlockAddress blockId, int value) {
+		if (readOnly) { return; }
+		rowCount.put(blockId, value);
+	}
+	
 	public void trimPageDetails() {
 		if (readOnly) { return; }
 		//FIXME: implement
@@ -168,6 +175,10 @@ public class CrossReferenceHandler {
 	
 	public boolean getBreakable(SheetIdentity ident) {
 		return breakable.get(ident, true);
+	}
+	
+	public int getRowCount(BlockAddress blockId) {
+		return rowCount.get(blockId, Integer.MAX_VALUE);
 	}
 	
 	public void keepPageDetails(PageDetails value) {

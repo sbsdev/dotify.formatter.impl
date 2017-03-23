@@ -37,7 +37,7 @@ class TableBlockContentManager extends AbstractBlockContentManager {
 	}
 
 	@Override
-	int getRowCount() {
+	public int getRowCount() {
 		return rows.size();
 	}
 

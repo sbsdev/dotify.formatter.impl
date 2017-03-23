@@ -3,6 +3,7 @@ package org.daisy.dotify.formatter.impl;
 import org.daisy.dotify.api.formatter.BlockPosition;
 import org.daisy.dotify.api.formatter.FormattingTypes;
 import org.daisy.dotify.api.formatter.RenderingScenario;
+import org.daisy.dotify.formatter.impl.search.BlockAddress;
 import org.daisy.dotify.formatter.impl.segment.Segment;
 import org.daisy.dotify.formatter.impl.segment.Segment.SegmentType;
 import org.daisy.dotify.formatter.impl.segment.TextSegment;
@@ -34,6 +35,7 @@ public abstract class Block implements Cloneable {
 	protected Integer metaVolume = null, metaPage = null;
 	private final RenderingScenario rs;
 	private boolean isVolatile;
+	private BlockAddress blockAddress;
 
 	Block(String blockId, RowDataProperties rdp) {
 		this(blockId, rdp, null);
@@ -72,6 +74,14 @@ public abstract class Block implements Cloneable {
 		if (s.getSegmentType()==SegmentType.Reference || s.getSegmentType()==SegmentType.Evaluate) {
 			isVolatile = true;
 		}
+	}
+
+	public BlockAddress getBlockAddress() {
+		return blockAddress;
+	}
+
+	public void setBlockAddress(BlockAddress blockAddress) {
+		this.blockAddress = blockAddress;
 	}
 
 	/**
