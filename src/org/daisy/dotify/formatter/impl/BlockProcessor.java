@@ -30,13 +30,6 @@ abstract class BlockProcessor {
 		this.keepWithNext = template.keepWithNext;
 		this.rowGroupIterator = copyUnlessNull(template.rowGroupIterator);
 	}
-
-	void processBlock(LayoutMaster master, Block g, AbstractBlockContentManager bcm) {
-		loadBlock(master, g, bcm);
-		while (rowGroupIterator.hasNext()) {
-			addRowGroup(rowGroupIterator.next());
-		}
-	}
 	
 	void loadBlock(LayoutMaster master, Block g, AbstractBlockContentManager bcm) {
 		if (!hasSequence() || ((g.getBreakBeforeType()==BreakBefore.PAGE  || g.getVerticalPosition()!=null) && hasResult())) {
