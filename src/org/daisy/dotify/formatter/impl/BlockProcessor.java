@@ -114,7 +114,7 @@ abstract class BlockProcessor {
 				||
 				phase < 3 && shouldAddGroupForEmptyContent()
 				||
-				phase < 4 && rowIndex<bcm.getRowCount()
+				phase < 4 && bcm.hasNext()
 				||
 				phase < 5 && bcm.hasPostContentRows()
 				||
@@ -171,8 +171,8 @@ abstract class BlockProcessor {
 									r.allowsBreakAfter()&&
 									owc.allowsBreakAfter(rowIndex-1)&&
 									keepWithNext<=0 &&
-									(Keep.AUTO==g.getKeepType() || rowIndex==bcm.getRowCount()) &&
-									(rowIndex<bcm.getRowCount() || !bcm.hasPostContentRows())
+									(Keep.AUTO==g.getKeepType() || !bcm.hasNext()) &&
+									(bcm.hasNext() || !bcm.hasPostContentRows())
 									);
 					if (rowIndex==1) { //First item
 						setProperties(rgb, bcm, g);
@@ -201,7 +201,7 @@ abstract class BlockProcessor {
 		}
 		
 		private boolean shouldAddGroupForEmptyContent() {
-			return rowIndex>=bcm.getRowCount() && otherData;
+			return !bcm.hasNext() && otherData;
 		}
 	}
 	

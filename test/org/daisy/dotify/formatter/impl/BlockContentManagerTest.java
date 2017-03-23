@@ -1,6 +1,7 @@
 package org.daisy.dotify.formatter.impl;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.mock;
 
 import java.util.Stack;
@@ -40,10 +41,10 @@ public class BlockContentManagerTest {
 		AbstractBlockContentManager m = new BlockContentManager(10, segments, rdp, refs, context, c);
 
 		//test
-		assertEquals(3, m.getRowCount());
 		assertEquals("⠀⠄⠄⠄⠀⠄⠄⠄", m.getNext().getChars());
 		assertEquals("⠀⠀⠀⠄⠄⠄⠀⠄⠄⠄", m.getNext().getChars());
 		assertEquals("⠀⠀⠀⠄⠄⠄⠀⠄⠄⠄", m.getNext().getChars());
+		assertFalse(m.hasNext());
 	}
 	
 	@Test
@@ -62,8 +63,8 @@ public class BlockContentManagerTest {
 		AbstractBlockContentManager m = new BlockContentManager(10, segments, rdp, refs, context, c);
 
 		//test
-		assertEquals(1, m.getRowCount());
 		assertEquals("⠀⠀⠀⠀⠀⠀⠀⠄⠄⠄", m.getNext().getChars());
+		assertFalse(m.hasNext());
 	}
 	
 	@Test
@@ -83,7 +84,6 @@ public class BlockContentManagerTest {
 		AbstractBlockContentManager m = new BlockContentManager(10, segments, rdp, refs, context, c);
 
 		//test
-		assertEquals(4, m.getRowCount());
 		assertEquals("⠀⠄⠄⠄⠀⠄⠄⠄", m.getNext().getChars());
 		RowImpl r = m.getNext();
 		assertEquals("⠀⠀⠀⠄⠄⠄", r.getLeftMargin().getContent()+r.getChars());
@@ -91,6 +91,7 @@ public class BlockContentManagerTest {
 		assertEquals("⠀⠀⠀⠄⠄⠄", r.getLeftMargin().getContent()+r.getChars());
 		r = m.getNext();
 		assertEquals("⠀⠀⠀⠄⠄⠄", r.getLeftMargin().getContent()+r.getChars());
+		assertFalse(m.hasNext());
 	}
 
 	
