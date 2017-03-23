@@ -77,7 +77,7 @@ class TocSequenceEventImpl implements VolumeSequence {
 				Iterable<Block> tmp = ev.getSequence();
 				for (Block b : tmp) {
 					//always clone these blocks, as they may be placed in multiple contexts
-					it.add((Block)b.clone());
+					it.add(b.copy());
 				}
 			}
 		}

@@ -40,6 +40,19 @@ class Table extends Block {
 		this.td = new TableData(fc);
 		this.tbh = new TableBorderHandler(tableProps.getTableColSpacing(), tbf, mode);
 	}
+	
+	Table(Table template) {
+		super(template);
+		this.headerRows = template.headerRows;
+		this.td = template.td;
+		this.tableProps = template.tableProps;
+		this.resultCache = template.resultCache;
+		this.tbh = template.tbh;
+	}
+	
+	public Table copy() {
+		return new Table(this);
+	}
 
 	public void beginsTableBody() {
 		//FIXME: add check here that the table header has complete rows, i.e. no open rowspans 

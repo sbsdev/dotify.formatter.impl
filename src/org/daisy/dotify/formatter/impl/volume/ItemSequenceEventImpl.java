@@ -94,7 +94,7 @@ class ItemSequenceEventImpl implements ReferenceListBuilder, BlockGroup {
 						{
 							ArrayList<Block> b = new ArrayList<>();
 							for (Block blk : pageStartEvents) {
-								Block bl = (Block)blk.clone();
+								Block bl = blk.copy();
 								bl.setMetaPage(ad.getPageIndex()+1);
 								bl.setMetaVolume(i+1);
 								b.add(bl);
@@ -107,7 +107,7 @@ class ItemSequenceEventImpl implements ReferenceListBuilder, BlockGroup {
 						{
 							ArrayList<Block> b = new ArrayList<>();
 							for (Block blk : pageEndEvents) {
-								Block bl = (Block)blk.clone();
+								Block bl = blk.copy();
 								bl.setMetaPage(ad.getPageIndex()+1);
 								bl.setMetaVolume(i+1);
 								b.add(bl);
@@ -118,13 +118,13 @@ class ItemSequenceEventImpl implements ReferenceListBuilder, BlockGroup {
 				}
 				if (range == ItemSequenceProperties.Range.DOCUMENT && !volume.isEmpty()) {
 					for (Block blk : volumeStartEvents) {
-						Block bl = (Block)blk.clone();
+						Block bl = blk.copy();
 						bl.setMetaVolume(i+1);
 						ret.add(bl);
 					}
 					ret.addAll(volume);
 					for (Block blk : volumeEndEvents) {
-						Block bl = (Block)blk.clone();
+						Block bl = blk.copy();
 						bl.setMetaVolume(i+1);
 						ret.add(bl);
 					}

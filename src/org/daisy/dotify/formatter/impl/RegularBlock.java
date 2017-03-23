@@ -15,6 +15,15 @@ class RegularBlock extends Block {
 		super(blockId, rdp, scenario);
 		this.segments = new Stack<>();
 	}
+	
+	RegularBlock(RegularBlock template) {
+		super(template);
+		this.segments = template.segments;
+	}
+	
+	public RegularBlock copy() {
+		return new RegularBlock(this);
+	}
 
 	@Override
 	public void addSegment(Segment s) {

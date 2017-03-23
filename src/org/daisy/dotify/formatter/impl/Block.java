@@ -18,7 +18,7 @@ import org.daisy.dotify.formatter.impl.segment.TextSegment;
  * @author Joel Håkansson
  */
 
-public abstract class Block implements Cloneable {
+public abstract class Block {
 	private BlockContext context;
 	private AbstractBlockContentManager rdm;
 	private final String blockId;
@@ -32,7 +32,8 @@ public abstract class Block implements Cloneable {
 	private String id;
 	protected RowDataProperties rdp;
 	private BlockPosition verticalPosition;
-	protected Integer metaVolume = null, metaPage = null;
+	protected Integer metaVolume;
+	protected Integer metaPage;
 	private final RenderingScenario rs;
 	private boolean isVolatile;
 	private BlockAddress blockAddress;
@@ -42,6 +43,9 @@ public abstract class Block implements Cloneable {
 	}
 	
 	Block(String blockId, RowDataProperties rdp, RenderingScenario rs) {
+		this.context = null;
+		this.rdm = null;
+		this.blockId = blockId;
 		this.breakBefore = FormattingTypes.BreakBefore.AUTO;
 		this.keep = FormattingTypes.Keep.AUTO;
 		this.keepWithNext = 0;
@@ -50,13 +54,39 @@ public abstract class Block implements Cloneable {
 		this.avoidVolumeBreakInsidePriority = null;
 		this.avoidVolumeBreakAfterPriority = null;
 		this.id = "";
-		this.blockId = blockId;
 		this.rdp = rdp;
 		this.verticalPosition = null;
-		this.rdm = null;
+		this.metaVolume = null;
+		this.metaPage = null;
 		this.rs = rs;
 		this.isVolatile = false;
 	}
+	
+	Block(Block template) {
+		this.context = template.context;
+		this.rdm = template.rdm;
+		this.blockId = template.blockId;
+		this.breakBefore = template.breakBefore;
+		this.keep = template.keep;
+		this.keepWithNext = template.keepWithNext;
+		this.keepWithPreviousSheets = template.keepWithPreviousSheets;
+		this.keepWithNextSheets = template.keepWithNextSheets;
+		this.avoidVolumeBreakInsidePriority = template.avoidVolumeBreakInsidePriority;
+		this.avoidVolumeBreakAfterPriority = template.avoidVolumeBreakAfterPriority;
+		this.id = template.id;
+		this.rdp = template.rdp;
+		this.verticalPosition = template.verticalPosition;
+		this.metaVolume = template.metaVolume;
+		this.metaPage = template.metaPage;
+		this.rs = template.rs;
+		this.isVolatile = template.isVolatile;
+	}
+	
+	/**
+	 * Makes a copy of the block. For now, the copy is shallow (like the previous clone method was).
+	 * @return returns a new copy
+	 */
+	public abstract Block copy();
 
 	abstract boolean isEmpty();
 	
@@ -219,21 +249,5 @@ public abstract class Block implements Cloneable {
 	Integer getAvoidVolumeBreakInsidePriority() {
 		return avoidVolumeBreakInsidePriority;
 	}
-	
-
-	@Override
-	public Object clone() {
-    	try {
-	    	Block newObject = (Block)super.clone();
-	    	/* Probably no need to deep copy clone segments
-	    	if (this.segments!=null) {
-	    		newObject.segments = (Stack<Segment>)this.segments.clone();
-	    	}*/
-	    	return newObject;
-    	} catch (CloneNotSupportedException e) { 
-    	    // this shouldn't happen, since we are Cloneable
-    	    throw new InternalError();
-    	}
-    }
 
 }
