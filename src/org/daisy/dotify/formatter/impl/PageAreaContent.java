@@ -25,8 +25,8 @@ class PageAreaContent {
 		List<RowImpl> ret = new ArrayList<>();
 		for (Block b : blocks) {
 			AbstractBlockContentManager bcm = b.getBlockContentManager(bc);
-			for (int i=0; i<bcm.getRowCount(); i++) {
-				ret.add(bcm.get(i));
+			while (bcm.hasNext()) {
+				ret.add(bcm.getNext());
 			}
 		}
 		return ret;

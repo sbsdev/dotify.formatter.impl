@@ -159,10 +159,10 @@ abstract class BlockProcessor {
 				}
 			}
 			if (phase==3) {
-				if (rowIndex<bcm.getRowCount()) {
-					RowImpl r = bcm.get(rowIndex);
+				if (bcm.hasNext()) {
+					RowImpl r = bcm.getNext();
 					rowIndex++;
-					if (rowIndex>=bcm.getRowCount()) {
+					if (!bcm.hasNext()) {
 						//we're at the last line, this should be kept with the next block's first line
 						keepWithNext = g.getKeepWithNext();
 					}

@@ -41,9 +41,9 @@ public class BlockContentManagerTest {
 
 		//test
 		assertEquals(3, m.getRowCount());
-		assertEquals("⠀⠄⠄⠄⠀⠄⠄⠄", m.get(0).getChars());
-		assertEquals("⠀⠀⠀⠄⠄⠄⠀⠄⠄⠄", m.get(1).getChars());
-		assertEquals("⠀⠀⠀⠄⠄⠄⠀⠄⠄⠄", m.get(2).getChars());
+		assertEquals("⠀⠄⠄⠄⠀⠄⠄⠄", m.getNext().getChars());
+		assertEquals("⠀⠀⠀⠄⠄⠄⠀⠄⠄⠄", m.getNext().getChars());
+		assertEquals("⠀⠀⠀⠄⠄⠄⠀⠄⠄⠄", m.getNext().getChars());
 	}
 	
 	@Test
@@ -63,7 +63,7 @@ public class BlockContentManagerTest {
 
 		//test
 		assertEquals(1, m.getRowCount());
-		assertEquals("⠀⠀⠀⠀⠀⠀⠀⠄⠄⠄", m.get(0).getChars());
+		assertEquals("⠀⠀⠀⠀⠀⠀⠀⠄⠄⠄", m.getNext().getChars());
 	}
 	
 	@Test
@@ -84,12 +84,12 @@ public class BlockContentManagerTest {
 
 		//test
 		assertEquals(4, m.getRowCount());
-		assertEquals("⠀⠄⠄⠄⠀⠄⠄⠄", m.get(0).getChars());
-		RowImpl r = m.get(1);
+		assertEquals("⠀⠄⠄⠄⠀⠄⠄⠄", m.getNext().getChars());
+		RowImpl r = m.getNext();
 		assertEquals("⠀⠀⠀⠄⠄⠄", r.getLeftMargin().getContent()+r.getChars());
-		r = m.get(2);
+		r = m.getNext();
 		assertEquals("⠀⠀⠀⠄⠄⠄", r.getLeftMargin().getContent()+r.getChars());
-		r = m.get(3);
+		r = m.getNext();
 		assertEquals("⠀⠀⠀⠄⠄⠄", r.getLeftMargin().getContent()+r.getChars());
 	}
 

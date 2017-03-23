@@ -172,6 +172,8 @@ public abstract class Block implements Cloneable {
 		this.context = context;
 		if (rdm==null || isVolatile()) {
 			rdm = newBlockContentManager(context);
+		} else {
+			rdm.reset();
 		}
 		return rdm;
 	}

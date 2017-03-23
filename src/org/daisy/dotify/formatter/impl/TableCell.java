@@ -42,8 +42,8 @@ class TableCell extends FormatterCoreImpl {
 					);
 			rowData.addAll(bcm.getCollapsiblePreContentRows());
 			rowData.addAll(bcm.getInnerPreContentRows());
-			for (int i=0; i<bcm.getRowCount(); i++) {
-				rowData.add(bcm.get(i));
+			while (bcm.hasNext()) {
+				rowData.add(bcm.getNext());
 			}
 			forceCount += bcm.getForceBreakCount();
 			minWidth = Math.min(bcm.getMinimumAvailableWidth(), minWidth);

@@ -55,24 +55,16 @@ class BlockContentManager extends AbstractBlockContentManager {
 	private List<Object> layoutOrApplyAfterLeader;
 	private String currentLeaderMode;
 	private boolean seenSegmentAfterLeader;
+	private int rowIndex;
 	
 	BlockContentManager(int flowWidth, Stack<Segment> segments, RowDataProperties rdp, CrossReferenceHandler refs, Context context, FormatterContext fcontext) {
 		super(flowWidth, rdp, fcontext);
 		this.refs = refs;
-		this.currentLeader = null;
 		this.available = flowWidth - rightMargin.getContent().length();
-
-		this.item = rdp.getListItem();
-
 		this.context = context;
 		this.segments = Collections.unmodifiableList(segments);
 		this.rows = new Stack<>();
-		this.minLeft = flowWidth;
-		this.minRight = flowWidth;
-		this.segmentIndex = 0;
-		this.layoutOrApplyAfterLeader = null;
-		this.currentLeaderMode = null;
-		this.seenSegmentAfterLeader = false;
+		initFields();
 	}
 	
 	BlockContentManager(BlockContentManager template) {
@@ -95,26 +87,46 @@ class BlockContentManager extends AbstractBlockContentManager {
 		this.layoutOrApplyAfterLeader = template.layoutOrApplyAfterLeader==null?null:new ArrayList<>(template.layoutOrApplyAfterLeader);
 		this.currentLeaderMode = template.currentLeaderMode;
 		this.seenSegmentAfterLeader = template.seenSegmentAfterLeader;
+		this.rowIndex = template.rowIndex;
 	}
+	
+    private void initFields() {
+		currentLeader = null;
+		item = rdp.getListItem();
+		minLeft = flowWidth;
+		minRight = flowWidth;
+		segmentIndex = 0;
+		layoutOrApplyAfterLeader = null;
+		currentLeaderMode = null;
+		seenSegmentAfterLeader = false;
+		rowIndex = 0;
+    }
 	
 	@Override
 	AbstractBlockContentManager copy() {
 		return new BlockContentManager(this);
 	}
 	
+	private boolean ensureBuffer(int index) {
+		return ensureBuffer(index, false);
+	}
+
 	/**
 	 * Ensures that the specified result index is available in the result list.
 	 * Note that this function is modeled after {@link RowGroupDataSource}, but that it
 	 * isn't used in the same way (yet).
 	 * @param index the index to ensure
+	 * @param testOnly if a row should actually be produced
 	 * @return returns true if the specified index is available in the result list, false
 	 * if the specified index cannot be made available (because the input doesn't contain
 	 * the required amount of data).
 	 */
-	private boolean ensureBuffer(int index) {
+	private boolean ensureBuffer(int index, boolean testOnly) {
 		while (index<0 || rows.size()<index) {
 			if (!hasMoreData()) {
 				return false;
+			} else if (testOnly) {
+				return true;
 			}
 			Segment s = segments.get(segmentIndex);
 			segmentIndex++;
@@ -314,17 +326,31 @@ class BlockContentManager extends AbstractBlockContentManager {
 		ensureBuffer(-1);
 		return rows.size();
 	}
-
-	@Override
-	RowImpl get(int i) {
-		ensureBuffer(i);
-		return rows.get(i);
-	}
 	
 	@Override
 	boolean supportsVariableWidth() {
 		return true;
 	}
+	
+    @Override
+    void reset() {
+    	super.reset();
+    	rows.clear();
+    	initFields();
+    }
+
+    @Override
+    boolean hasNext() {
+        return ensureBuffer(rowIndex+1, true);
+    }
+
+    @Override
+    RowImpl getNext() {
+    	ensureBuffer(rowIndex+1);
+        RowImpl ret = rows.get(rowIndex);
+        rowIndex++;
+        return ret;
+    }
 
 	private void layout(String c, String locale, String mode) {
 		layout(Translatable.text(fcontext.getConfiguration().isMarkingCapitalLetters()?c:c.toLowerCase()).locale(locale).build(), mode);

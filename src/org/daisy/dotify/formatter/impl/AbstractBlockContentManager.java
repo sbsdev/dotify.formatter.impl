@@ -96,10 +96,20 @@ abstract class AbstractBlockContentManager implements BlockStatistics {
 	}
 	
 	abstract int getRowCount();
-
-	abstract RowImpl get(int index);
 	
 	abstract AbstractBlockContentManager copy();
+    
+    /**
+     * Returns true if the manager has more rows.
+     * @return returns true if there are more rows, false otherwise
+     */
+    abstract boolean hasNext();
+    
+    /**
+     * Gets the next row from the manager with the specified width
+     * @return returns the next row
+     */
+    abstract RowImpl getNext();
 
 	/**
 	 * Returns true if this manager supports rows with variable maximum
@@ -107,6 +117,14 @@ abstract class AbstractBlockContentManager implements BlockStatistics {
 	 * @return true if variable maximum width is supported, false otherwise
 	 */
 	abstract boolean supportsVariableWidth();
+
+    /**
+     * Resets the state of the content manager to the first row.
+     */
+    void reset() {
+    	groupAnchors.clear();
+    	groupMarkers.clear();
+    }
 
 	private static List<RowImpl> makeCollapsiblePreContentRows(RowDataProperties rdp, MarginProperties leftParent, MarginProperties rightParent) {
 		List<RowImpl> ret = new ArrayList<>();
