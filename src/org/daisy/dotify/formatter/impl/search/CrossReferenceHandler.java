@@ -21,6 +21,7 @@ public class CrossReferenceHandler {
 	private final LookupHandler<BlockAddress, Integer> rowCount;
     private final LookupHandler<BlockAddress, List<String>> groupAnchors;
     private final LookupHandler<BlockAddress, List<Marker>> groupMarkers;
+    private final LookupHandler<BlockAddress, List<String>> groupIdentifiers;
 	private final LookupHandler<PageId, TransitionProperties> transitionProperties;
 	private final Map<Integer, Overhead> volumeOverhead;
     private final Map<String, Integer> counters;
@@ -43,6 +44,7 @@ public class CrossReferenceHandler {
 		this.rowCount = new LookupHandler<>();
         this.groupAnchors = new LookupHandler<>();
         this.groupMarkers = new LookupHandler<>();
+        this.groupIdentifiers = new LookupHandler<>();
 		this.transitionProperties = new LookupHandler<>();
 		this.volumeOverhead = new HashMap<>();
 		this.counters = new HashMap<>();
@@ -169,6 +171,13 @@ public class CrossReferenceHandler {
 		groupMarkers.put(blockId, markers.isEmpty() ? Collections.emptyList() : new ArrayList<>(markers));
 	}
 	
+	public void setGroupIdentifiers(BlockAddress blockId, List<String> identifiers) {
+		if (readOnly) {
+			return;
+		}
+		groupIdentifiers.put(blockId, identifiers.isEmpty() ? Collections.emptyList() : new ArrayList<>(identifiers));
+	}
+	
 	public Overhead getOverhead(int volumeNumber) {
 		if (volumeNumber<1) {
 			throw new IndexOutOfBoundsException("Volume must be greater than or equal to 1");
@@ -233,6 +242,10 @@ public class CrossReferenceHandler {
 
 	public List<Marker> getGroupMarkers(BlockAddress blockId) {
 		return groupMarkers.get(blockId, Collections.emptyList());
+	}
+	
+	public List<String> getGroupIdentifiers(BlockAddress blockId) {
+		return groupIdentifiers.get(blockId, Collections.emptyList());
 	}
 	
 	public int getRowCount(BlockAddress blockId) {

@@ -67,6 +67,7 @@ import org.daisy.dotify.api.formatter.ReferenceListBuilder;
 import org.daisy.dotify.api.formatter.RenameFallbackRule;
 import org.daisy.dotify.api.formatter.RenderingScenario;
 import org.daisy.dotify.api.formatter.SequenceProperties;
+import org.daisy.dotify.api.formatter.SpanProperties;
 import org.daisy.dotify.api.formatter.StringField;
 import org.daisy.dotify.api.formatter.TableCellProperties;
 import org.daisy.dotify.api.formatter.TableOfContents;
@@ -802,6 +803,12 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
 	
 	private void parseSpan(XMLEvent event, XMLEventReader input, BlockContentBuilder fc, TextProperties tp) throws XMLStreamException {
 		tp = getTextProperties(event, tp);
+		String id = getAttr(event, ObflQName.ATTR_ID);
+		SpanProperties.Builder propsBuilder = new SpanProperties.Builder();
+		if (id != null && !"".equals(id)) {
+			propsBuilder.identifier(id);
+		}
+		fc.startSpan(propsBuilder.build());
 		while (input.hasNext()) {
 			event=input.nextEvent();
 			if (event.isCharacters()) {
@@ -819,6 +826,7 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
 				fc.insertAnchor(parseAnchor(event));
 			}
 			else if (equalsEnd(event, ObflQName.SPAN)) {
+				fc.endSpan();
 				break;
 			} else {
 				report(event);
