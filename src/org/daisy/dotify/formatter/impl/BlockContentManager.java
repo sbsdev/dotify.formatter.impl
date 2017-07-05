@@ -92,6 +92,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 	
     private void initFields() {
 		currentLeader = null;
+		currentRow = null;
 		item = rdp.getListItem();
 		minLeft = flowWidth;
 		minRight = flowWidth;
