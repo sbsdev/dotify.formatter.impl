@@ -23,7 +23,6 @@ import org.daisy.dotify.formatter.impl.segment.TextSegment;
 
 class Table extends Block {
 	private static final Logger logger = Logger.getLogger(Table.class.getCanonicalName());
-	@SuppressWarnings("unused")
 	private int headerRows;
 	private final TableData td;
 	private final TableProperties tableProps;
@@ -348,7 +347,7 @@ class Table extends Block {
 			if (cr.getRowIterator().hasNext()) {
 				RowImpl row = cr.getRowIterator().next();
 				// Align
-				data = PageImpl.padLeft(cr.getCellWidth(), row, context.getFcontext().getSpaceCharacter());
+				data = BorderManager.padLeft(cr.getCellWidth(), row, context.getFcontext().getSpaceCharacter());
 				markers.addAll(row.getMarkers());
 				anchors.addAll(row.getAnchors());
 			} else {
@@ -431,6 +430,7 @@ class Table extends Block {
 	}
 	
 	private static class Iterators {
+		@SuppressWarnings("unused")
 		private final int inner, outer;
 		Iterators(int outer, int inner) {
 			this.outer = outer;

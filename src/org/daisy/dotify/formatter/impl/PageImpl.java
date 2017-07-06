@@ -3,15 +3,11 @@ package org.daisy.dotify.formatter.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.regex.Pattern;
 
-import org.daisy.dotify.api.formatter.FormattingTypes;
 import org.daisy.dotify.api.formatter.Marker;
 import org.daisy.dotify.api.formatter.PageAreaProperties;
 import org.daisy.dotify.api.translator.BrailleTranslator;
-import org.daisy.dotify.api.translator.TextBorderStyle;
 import org.daisy.dotify.api.writer.Row;
-import org.daisy.dotify.common.text.StringTools;
 import org.daisy.dotify.formatter.impl.search.PageDetails;
 import org.daisy.dotify.writer.impl.Page;
 
@@ -23,7 +19,6 @@ import org.daisy.dotify.writer.impl.Page;
  * @author Joel Håkansson
  */
 public class PageImpl implements Page {
-	private static final Pattern trailingWs = Pattern.compile("\\s*\\z");
 	private final FieldResolver fieldResolver;
 	private final PageDetails details;
 	private final LayoutMaster master;
@@ -37,8 +32,6 @@ public class PageImpl implements Page {
 	private final int flowHeight;
 	private final PageTemplate template;
 	private final int pageMargin;
-	private final TextBorderStyle borderStyle;
-	private final TextBorder border;
 	private final PageTemplate pageTemplate;
 	private final BorderManager finalRows;
 
@@ -66,10 +59,8 @@ public class PageImpl implements Page {
 		this.keepPreviousSheets = 0;
 		this.volumeBreakAfterPriority = null;
 		this.pageMargin = ((pagenum % 2 == 0) ? master.getOuterMargin() : master.getInnerMargin());
-		this.borderStyle = master.getBorder()!=null?master.getBorder():TextBorderStyle.NONE;
-		this.border = buildBorder();
 		this.pageTemplate = master.getTemplate(pagenum);
-		this.finalRows = new BorderManager(master.getRowSpacing());
+		this.finalRows = new BorderManager(master, fcontext, pageMargin);
 		this.hasRows = false;
 		this.filter = fcontext.getDefaultTranslator();
 	}
@@ -88,8 +79,6 @@ public class PageImpl implements Page {
 		this.flowHeight = template.flowHeight;
 		this.template = template.template;
 		this.pageMargin = template.pageMargin;
-		this.borderStyle = template.borderStyle;
-		this.border = template.border;
 		this.pageTemplate = template.pageTemplate;
 		this.finalRows = new BorderManager(template.finalRows);
 
@@ -170,16 +159,6 @@ public class PageImpl implements Page {
 		return (int)Math.ceil(spaceNeeded()) + offs;
 	}
 	
-	private TextBorder buildBorder() {
-		int fsize = borderStyle.getLeftBorder().length() + borderStyle.getRightBorder().length();
-		int w = master.getFlowWidth() + fsize + pageMargin;
-		return new TextBorder.Builder(w, fcontext.getSpaceCharacter()+"")
-				.style(borderStyle)
-				.outerLeftMargin(pageMargin)
-				.padToSize(!TextBorderStyle.NONE.equals(borderStyle))
-				.build();
-	}
-	
 	private void addTopPageArea() {
         if (master.getPageArea()!=null && master.getPageArea().getAlignment()==PageAreaProperties.Alignment.TOP && !pageArea.isEmpty()) {
 			finalRows.addAll(before);
@@ -195,7 +174,7 @@ public class PageImpl implements Page {
 	@Override
 	public List<Row> getRows() {
 		try {
-			if (!finalRows.closed) {
+			if (!finalRows.isClosed()) {
 				if (!hasRows) { // the header hasn't been added yet 
 					//add the header
 			        finalRows.addAll(fieldResolver.renderFields(getDetails(), pageTemplate.getHeader(), filter));
@@ -203,7 +182,7 @@ public class PageImpl implements Page {
 					addTopPageArea();
 				}
 		        float headerHeight = pageTemplate.getHeaderHeight();
-		        if (!pageTemplate.getFooter().isEmpty() || borderStyle != TextBorderStyle.NONE || (master.getPageArea()!=null && master.getPageArea().getAlignment()==PageAreaProperties.Alignment.BOTTOM && !pageArea.isEmpty())) {
+		        if (!pageTemplate.getFooter().isEmpty() || finalRows.hasBorder() || (master.getPageArea()!=null && master.getPageArea().getAlignment()==PageAreaProperties.Alignment.BOTTOM && !pageArea.isEmpty())) {
 		            float areaSize = (master.getPageArea()!=null && master.getPageArea().getAlignment()==PageAreaProperties.Alignment.BOTTOM ? pageAreaSpaceNeeded() : 0);
 		            while (Math.ceil(finalRows.getOffsetHeight() + areaSize) < getFlowHeight() + headerHeight) {
 						finalRows.addRow(new RowImpl());
@@ -219,170 +198,6 @@ public class PageImpl implements Page {
 			return finalRows.getRows();
 		} catch (PaginatorException e) {
 			throw new RuntimeException("Pagination failed.", e);
-		}
-	}
-	
-	private class BorderManager {
-		private HeightCalculator hc;
-		private List<Row> ret2;
-		private DistributedRowSpacing rs = null;
-		private RowImpl lastRow = null;
-		private boolean closed;
-		//This variable is used to compensate for the fact that the top border was calculated outside of the main logic before
-        //and can be removed once the logic has been updated.
-		private final float offsetHeight;
-        
-        private BorderManager(float defRowSpacing) {
-        	this.hc = new HeightCalculator(defRowSpacing);
-        	this.ret2 = new ArrayList<>();
-        	this.closed = false;
-        	if (!TextBorderStyle.NONE.equals(borderStyle)) {
-        		addTopBorder();
-        	}
-        	this.offsetHeight = hc.getCurrentHeight();
-        }
-        
-        private BorderManager(BorderManager template) {
-        	this.hc = new HeightCalculator(template.hc);
-        	this.ret2 = new ArrayList<>(template.ret2);
-        	this.rs = template.rs;
-        	this.closed = template.closed;
-        	this.offsetHeight = template.offsetHeight;
-        }
-
-        //This method is used to compensate for the fact that the top border was calculated outside of the main logic before
-        //and can be removed once the logic has been updated.        
-        private float getOffsetHeight() {
-        	return hc.getCurrentHeight() - offsetHeight;
-        }
-
-		private void addTopBorder() {
-			DistributedRowSpacing rs = master.distributeRowSpacing(master.getRowSpacing(), true);
-			RowImpl r = new RowImpl.Builder(border.getTopBorder())
-					.rowSpacing(rs.spacing)
-					.build();
-			addRowInner(r);
-		}
-		
-		private void addAll(Collection<? extends RowImpl> rows) {
-			for (RowImpl r : rows) {
-				addRow(r);
-			}
-		}
-
-		private void addRow(RowImpl row) {
-			if (closed) {
-				throw new IllegalStateException("Cannot add rows when closed.");
-			}
-			//does the previously added row require additional processing?
-            if (rs!=null) {
-				RowImpl s = null;
-				for (int i = 0; i < rs.lines-1; i++) {
-					s = new RowImpl.Builder(border.addBorderToRow(lastRow.getLeftMargin().getContent(), lastRow.getRightMargin().getContent()))
-							.rowSpacing(rs.spacing)
-							.build();
-					addRowInner(s);
-				}
-			}
-
-			RowImpl.Builder r2Builder = addBorders(row);
-			Float rs2 = row.getRowSpacing();
-			if (!TextBorderStyle.NONE.equals(borderStyle)) {
-				//distribute row spacing
-				rs = master.distributeRowSpacing(rs2, true);
-				r2Builder.rowSpacing(rs.spacing);
-			} else {
-				r2Builder.rowSpacing(rs2);
-			}
-			lastRow = r2Builder.build();
-			addRowInner(lastRow);
-		}
-
-		private void close() {
-			if (closed) {
-				return;
-			}
-			closed = true;
-			if (!TextBorderStyle.NONE.equals(borderStyle)) {
-                addRowInner(new RowImpl(border.getBottomBorder()));
-			}
-			if (ret2.size()>0) {
-				int index = ret2.size()-1;
-				RowImpl last = (RowImpl)ret2.get(index);
-				// Create a builder copy for editing
-                RowImpl.Builder lastB = new RowImpl.Builder(last);
-				if (master.getRowSpacing()!=1) {
-					//set row spacing on the last row to 1.0
-					lastB.rowSpacing(1f);
-				} else if (last.getRowSpacing()!=null) {
-					//ignore row spacing on the last row if overall row spacing is 1.0
-					lastB.rowSpacing(null);
-				}
-				// Update the row
-				ret2.set(index, lastB.build());
-			}
-		}
-		
-		/**
-		 * Only use from inside this class!!
-		 * @param r the row to add
-		 */
-		private void addRowInner(Row r) {
-			ret2.add(r);
-			hc.addRow(r);
-		}
-
-		List<Row> getRows() {
-			if (!closed) {
-				close();
-			}
-			return ret2;
-		}
-
-	}
-	
-	private RowImpl.Builder addBorders(RowImpl row) {
-		String res = "";
-		if (row.getChars().length() > 0) {
-			// remove trailing whitespace
-			String chars = trailingWs.matcher(row.getChars()).replaceAll("");
-			res = border.addBorderToRow(
-					padLeft(master.getFlowWidth(), chars, row.getLeftMargin(), row.getRightMargin(), row.getAlignment(), fcontext.getSpaceCharacter()), 
-					"");
-		} else {
-			if (!TextBorderStyle.NONE.equals(borderStyle)) {
-				res = border.addBorderToRow(row.getLeftMargin().getContent(), row.getRightMargin().getContent());
-			} else {
-				if (!row.getLeftMargin().isSpaceOnly() || !row.getRightMargin().isSpaceOnly()) {
-					res = TextBorder.addBorderToRow(
-						master.getFlowWidth(), row.getLeftMargin().getContent(), "", row.getRightMargin().getContent(), fcontext.getSpaceCharacter()+"");
-				} else {
-					res = "";
-				}
-			}
-		}
-		int rowWidth = StringTools.length(res) + pageMargin;
-		if (rowWidth > master.getPageWidth()) {
-			throw new PaginatorException("Row is too long (" + rowWidth + "/" + master.getPageWidth() + ") '" + res + "'");
-		}
-		return new RowImpl.Builder(res);
-	}
-	
-	static String padLeft(int w, RowImpl row, char space) {
-		String chars = trailingWs.matcher(row.getChars()).replaceAll("");
-		return padLeft(w, chars, row.getLeftMargin(), row.getRightMargin(), row.getAlignment(), space);
-	}
-	
-	private static String padLeft(int w, String text, MarginProperties leftMargin, MarginProperties rightMargin, FormattingTypes.Alignment align, char space) {
-		if ("".equals(text) && leftMargin.isSpaceOnly() && rightMargin.isSpaceOnly()) {
-			return "";
-		} else {
-			String r = leftMargin.getContent() + StringTools.fill(space, align.getOffset(w - (leftMargin.getContent().length() + rightMargin.getContent().length() + text.length()))) + text;
-			if (rightMargin.isSpaceOnly()) {
-				return r;
-			} else {
-				return r + StringTools.fill(space, w - r.length() - rightMargin.getContent().length()) + rightMargin.getContent();
-			}
 		}
 	}
 
