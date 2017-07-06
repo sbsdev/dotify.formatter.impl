@@ -15,6 +15,7 @@ import org.daisy.dotify.api.translator.TranslationException;
 import org.daisy.dotify.common.text.StringTools;
 import org.daisy.dotify.formatter.impl.common.FormatterCoreContext;
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
+import org.daisy.dotify.formatter.impl.search.DefaultContext;
 import org.daisy.dotify.formatter.impl.segment.AnchorSegment;
 import org.daisy.dotify.formatter.impl.segment.Evaluate;
 import org.daisy.dotify.formatter.impl.segment.LeaderSegment;
@@ -39,7 +40,7 @@ public class BlockContentManager extends AbstractBlockContentManager {
 	private final List<RowImpl> rows;
 	private final CrossReferenceHandler refs;
 	private final int available;
-	private final Context context;
+	private Context context;
 	private final List<Segment> segments;
 	private final LeaderManager leaderManager;
 
@@ -101,6 +102,11 @@ public class BlockContentManager extends AbstractBlockContentManager {
 		rowIndex = 0;
     }
 	
+    @Override
+	public void setContext(DefaultContext context) {
+		this.context = context;
+	}
+
 	@Override
 	public AbstractBlockContentManager copy() {
 		return new BlockContentManager(this);

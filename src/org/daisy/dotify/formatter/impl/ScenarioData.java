@@ -70,7 +70,7 @@ class ScenarioData extends BlockProcessor {
 	void processBlock(LayoutMaster master, Block g, BlockContext bc) {
 		loadBlock(master, g, bc);
 		while (hasNextInBlock()) {
-			processNextRowGroup();
+			processNextRowGroup(bc.getContext());
 		}
 		dataGroups.peek().getBlocks().add(g);
 	}

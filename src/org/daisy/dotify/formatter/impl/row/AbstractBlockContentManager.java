@@ -7,6 +7,7 @@ import java.util.List;
 import org.daisy.dotify.api.formatter.Marker;
 import org.daisy.dotify.common.text.StringTools;
 import org.daisy.dotify.formatter.impl.common.FormatterCoreContext;
+import org.daisy.dotify.formatter.impl.search.DefaultContext;
 
 public abstract class AbstractBlockContentManager implements BlockStatistics {
 	//Immutable
@@ -97,6 +98,8 @@ public abstract class AbstractBlockContentManager implements BlockStatistics {
 	}
 	
 	public abstract AbstractBlockContentManager copy();
+	
+	public abstract void setContext(DefaultContext context);
     
     /**
      * Returns true if the manager has more rows.

@@ -9,6 +9,7 @@ import org.daisy.dotify.formatter.impl.row.AbstractBlockContentManager;
 import org.daisy.dotify.formatter.impl.row.BlockStatistics;
 import org.daisy.dotify.formatter.impl.row.RowImpl;
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
+import org.daisy.dotify.formatter.impl.search.DefaultContext;
 
 /**
  * Provides data about a single rendering scenario.
@@ -48,7 +49,8 @@ abstract class BlockProcessor {
 		rowGroupIterator = new InnerBlockProcessor(master, g, bcm, bc);
 	}
 	
-	void processNextRowGroup() {
+	void processNextRowGroup(DefaultContext context) {
+		rowGroupIterator.setContext(context);
 		if (hasNextInBlock()) {
 			addRowGroup(rowGroupIterator.next());
 		}
@@ -92,6 +94,7 @@ abstract class BlockProcessor {
 
 		private final OrphanWidowControl owc;
 		private final boolean otherData;
+		private DefaultContext context;
 		private int rowIndex;
 		private int phase;
 		
@@ -119,6 +122,13 @@ abstract class BlockProcessor {
 			this.otherData = !bc.getRefs().getGroupAnchors(g.getBlockAddress()).isEmpty()
 					|| !bc.getRefs().getGroupMarkers(g.getBlockAddress()).isEmpty() || !"".equals(g.getIdentifier())
 					|| g.getKeepWithNextSheets() > 0 || g.getKeepWithPreviousSheets() > 0;
+		}
+		
+		private void setContext(DefaultContext context) {
+			if (this.context==null || !this.context.equals(context)) {
+				this.context = g.contextWithMeta(context);
+				bcm.setContext(this.context);
+			}
 		}
 		
 		@Override

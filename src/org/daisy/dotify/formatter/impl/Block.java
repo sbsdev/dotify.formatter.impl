@@ -6,6 +6,7 @@ import org.daisy.dotify.api.formatter.RenderingScenario;
 import org.daisy.dotify.formatter.impl.row.AbstractBlockContentManager;
 import org.daisy.dotify.formatter.impl.row.RowDataProperties;
 import org.daisy.dotify.formatter.impl.search.BlockAddress;
+import org.daisy.dotify.formatter.impl.search.DefaultContext;
 import org.daisy.dotify.formatter.impl.segment.Segment;
 import org.daisy.dotify.formatter.impl.segment.Segment.SegmentType;
 import org.daisy.dotify.formatter.impl.segment.TextSegment;
@@ -223,6 +224,10 @@ public abstract class Block {
 
 	public void setMetaPage(Integer metaPage) {
 		this.metaPage = metaPage;
+	}
+	
+	DefaultContext contextWithMeta(DefaultContext dc) {
+		return DefaultContext.from(dc).metaVolume(metaVolume).metaPage(metaPage).build();
 	}
 	
 	RowDataProperties getRowDataProperties() {

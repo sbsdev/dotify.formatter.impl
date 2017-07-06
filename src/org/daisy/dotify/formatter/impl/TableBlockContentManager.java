@@ -6,6 +6,7 @@ import java.util.List;
 import org.daisy.dotify.formatter.impl.row.AbstractBlockContentManager;
 import org.daisy.dotify.formatter.impl.row.RowDataProperties;
 import org.daisy.dotify.formatter.impl.row.RowImpl;
+import org.daisy.dotify.formatter.impl.search.DefaultContext;
 
 class TableBlockContentManager extends AbstractBlockContentManager {
 	private final List<RowImpl> rows;
@@ -66,6 +67,11 @@ class TableBlockContentManager extends AbstractBlockContentManager {
 	@Override
 	public int getForceBreakCount() {
 		return forceCount;
+	}
+
+	@Override
+	public void setContext(DefaultContext context) {
+		// FIXME: Support setting context of tables. At the moment, there is no point in setting a context here, because the contents has already been rendered.
 	}
 
 }
