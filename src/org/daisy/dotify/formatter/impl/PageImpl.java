@@ -152,41 +152,7 @@ public class PageImpl implements Page {
 		c.addRows(rows);
 		return c.getCurrentHeight();
 	}
-	
-	private static class HeightCalculator {
-		private final float defSpacing;
-		private float ret;
-		private HeightCalculator(float defSpacing) {
-			this.defSpacing = defSpacing < 1 ? 1 : defSpacing;
-			this.ret = 0;
-		}
-		
-		private HeightCalculator(HeightCalculator template) {
-			this.defSpacing = template.defSpacing;
-			this.ret = template.ret;
-		}
-		
-		float getRowSpacing(Row r) {
-			if (r.getRowSpacing()!=null && r.getRowSpacing()>=1) {
-				return r.getRowSpacing();
-			} else {
-				return defSpacing;
-			}
-		}
-		
-		void addRow(Row r) {
-			ret += getRowSpacing(r);
-		}
-		
-		void addRows(Collection<? extends Row> rows) {
-			ret += rows.stream().mapToDouble(this::getRowSpacing).sum();
-		}
 
-		float getCurrentHeight() {
-			return ret;
-		}
-	}
-	
 	private float spaceNeeded() {
 		return 	pageAreaSpaceNeeded() +
 				finalRows.getOffsetHeight();
