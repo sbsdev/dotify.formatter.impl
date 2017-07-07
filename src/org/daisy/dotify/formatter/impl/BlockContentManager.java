@@ -5,13 +5,10 @@ import static java.lang.Math.min;
 import java.util.Collections;
 import java.util.List;
 import java.util.Stack;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 import org.daisy.dotify.api.formatter.Context;
 import org.daisy.dotify.api.formatter.FormattingTypes;
-import org.daisy.dotify.api.formatter.Leader;
 import org.daisy.dotify.api.translator.BrailleTranslatorResult;
 import org.daisy.dotify.api.translator.Translatable;
 import org.daisy.dotify.api.translator.TranslationException;
@@ -34,7 +31,6 @@ import org.daisy.dotify.formatter.impl.segment.TextSegment;
  * @author Joel Håkansson
  */
 class BlockContentManager extends AbstractBlockContentManager {
-	private static final Logger logger = Logger.getLogger(BlockContentManager.class.getCanonicalName());
 	private static final Pattern softHyphenPattern  = Pattern.compile("\u00ad");
 	private static final Pattern trailingWsBraillePattern = Pattern.compile("[\\s\u2800]+\\z");
 
@@ -43,9 +39,9 @@ class BlockContentManager extends AbstractBlockContentManager {
 	private final int available;
 	private final Context context;
 	private final List<Segment> segments;
+	private final LeaderManager leaderManager;
 
 	private RowImpl.Builder currentRow;
-	private Leader currentLeader;
 	private ListItem item;
 	private int forceCount;
 	private int minLeft;
@@ -64,6 +60,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 		this.context = context;
 		this.segments = Collections.unmodifiableList(segments);
 		this.rows = new Stack<>();
+		this.leaderManager = new LeaderManager();
 		initFields();
 	}
 	
@@ -78,7 +75,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 		this.context = template.context;
 		this.segments = template.segments;
 		this.currentRow = template.currentRow==null?null:new RowImpl.Builder(template.currentRow);
-		this.currentLeader = template.currentLeader;
+		this.leaderManager = new LeaderManager(template.leaderManager);
 		this.item = template.item;
 		this.forceCount = template.forceCount;
 		this.minLeft = template.minLeft;
@@ -91,7 +88,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 	}
 	
     private void initFields() {
-		currentLeader = null;
+		leaderManager.discardLeader();
 		currentRow = null;
 		item = rdp.getListItem();
 		minLeft = flowWidth;
@@ -198,10 +195,10 @@ class BlockContentManager extends AbstractBlockContentManager {
 	}
 	
 	private void layoutLeaderSegment(LeaderSegment ls) {
-		if (currentLeader!=null) {
+		if (leaderManager.hasLeader()) {
 			layoutLeader();
 		}
-		currentLeader = ls;
+		leaderManager.setLeader(ls);
 	}
 
 	private void layoutPageSegment(PageNumberReferenceSegment rs) {
@@ -262,7 +259,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 	}
 	
 	private void layoutAfterLeader(Translatable spec, String mode) {
-		if (currentLeader!=null) {
+		if (leaderManager.hasLeader()) {
 			if (layoutOrApplyAfterLeader == null) {
 				layoutOrApplyAfterLeader = new AggregatedBrailleTranslatorResult.Builder();
 				// use the mode of the first following segment to translate the leader pattern (or
@@ -283,7 +280,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 	}
 	
 	private void applyAfterLeader(MarkerSegment marker) {
-		if (currentLeader!=null) {
+		if (leaderManager.hasLeader()) {
 			if (layoutOrApplyAfterLeader == null) {
 				layoutOrApplyAfterLeader = new AggregatedBrailleTranslatorResult.Builder();
 			}
@@ -298,7 +295,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 	}
 	
 	private void applyAfterLeader(final AnchorSegment anchor) {
-		if (currentLeader!=null) {
+		if (leaderManager.hasLeader()) {
 			if (layoutOrApplyAfterLeader == null) {
 				layoutOrApplyAfterLeader = new AggregatedBrailleTranslatorResult.Builder();
 			}
@@ -313,7 +310,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 	}
 	
 	private void layoutLeader() {
-		if (currentLeader!=null) {
+		if (leaderManager.hasLeader()) {
 			// layout() sets currentLeader to null
 			if (layoutOrApplyAfterLeader == null) {
 				layout("", null, null);
@@ -420,10 +417,10 @@ class BlockContentManager extends AbstractBlockContentManager {
 		// [margin][preContent][preTabText][tab][postTabText] 
 		//      preContentPos ^
 		String tabSpace = "";
-		if (currentLeader!=null) {
-			int leaderPos = currentLeader.getPosition().makeAbsolute(available);
+		if (leaderManager.hasLeader()) {
+			int leaderPos = leaderManager.getLeaderPosition(available);
 			int offset = leaderPos-m.preTabPos;
-			int align = getLeaderAlign(currentLeader, btr.countRemaining());
+			int align = leaderManager.getLeaderAlign(btr.countRemaining());
 			
 			if (m.preTabPos>leaderPos || offset - align < 0) { // if tab position has been passed or if text does not fit within row, try on a new row
 				flushCurrentRow();
@@ -432,31 +429,14 @@ class BlockContentManager extends AbstractBlockContentManager {
 				//update offset
 				offset = leaderPos-m.preTabPos;
 			}
-			tabSpace = buildLeader(offset - align, mode);
+			try {
+				tabSpace = leaderManager.getLeaderPattern(fcontext.getTranslator(mode), offset - align);
+			} finally {
+				// always discard leader
+				leaderManager.discardLeader();
+			}
 		}
 		breakNextRow(m, btr, tabSpace);
-	}
-
-	private String buildLeader(int len, String mode) {
-		try {
-			if (len > 0) {
-				String leaderPattern;
-				try {
-					leaderPattern = fcontext.getTranslator(mode).translate(Translatable.text(currentLeader.getPattern()).build()).getTranslatedRemainder();
-				} catch (TranslationException e) {
-					throw new RuntimeException(e);
-				}
-				return StringTools.fill(leaderPattern, len);
-			} else {
-				if (logger.isLoggable(Level.FINE)) {
-					logger.fine("Leader position has been passed on an empty row or text does not fit on an empty row, ignoring...");
-				}
-				return "";
-			}
-		} finally {
-			// always discard leader
-			currentLeader = null;
-		}
 	}
 
 	private static void breakNextRow(RowInfo m, BrailleTranslatorResult btr, String tabSpace) {
@@ -476,18 +456,6 @@ class BlockContentManager extends AbstractBlockContentManager {
 			m.row.addAnchors(abtr.getAnchors());
 			abtr.clearPending();
 		}
-	}
-	
-	private static int getLeaderAlign(Leader leader, int length) {
-		switch (leader.getAlignment()) {
-			case LEFT:
-				return 0;
-			case RIGHT:
-				return length;
-			case CENTER:
-				return length/2;
-		}
-		return 0;
 	}
 
 	@Override
