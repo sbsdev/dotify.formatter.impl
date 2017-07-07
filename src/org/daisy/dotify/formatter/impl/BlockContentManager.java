@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Stack;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
@@ -34,6 +35,7 @@ import org.daisy.dotify.formatter.impl.segment.TextSegment;
  * @author Joel Håkansson
  */
 class BlockContentManager extends AbstractBlockContentManager {
+	private static final Logger logger = Logger.getLogger(BlockContentManager.class.getCanonicalName());
 	private static final Pattern softHyphenPattern  = Pattern.compile("\u00ad");
 	private static final Pattern trailingWsBraillePattern = Pattern.compile("[\\s\u2800]+\\z");
 
@@ -448,8 +450,9 @@ class BlockContentManager extends AbstractBlockContentManager {
 				}
 				return StringTools.fill(leaderPattern, len);
 			} else {
-				Logger.getLogger(this.getClass().getCanonicalName())
-					.fine("Leader position has been passed on an empty row or text does not fit on an empty row, ignoring...");
+				if (logger.isLoggable(Level.FINE)) {
+					logger.fine("Leader position has been passed on an empty row or text does not fit on an empty row, ignoring...");
+				}
 				return "";
 			}
 		} finally {
