@@ -385,7 +385,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 				newRow(btr, "", rdp.getFirstLineIndent(), rdp.getBlockIndent(), mode);
 			}
 		} else {
-			newRow(new RowInfo("", currentRow), btr, rdp.getBlockIndent(), mode);
+			newRow(new RowInfo("", currentRow, available), btr, rdp.getBlockIndent(), mode);
 		}
 		while (btr.hasNext()) { //LayoutTools.length(chars.toString())>0
 			newRow(btr, "", rdp.getTextIndent(), rdp.getBlockIndent(), mode);
@@ -398,7 +398,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 	private void newRow(BrailleTranslatorResult chars, String contentBefore, int indent, int blockIndent, String mode) {
 		flushCurrentRow();
 		currentRow = createAndConfigureEmptyNewRowBuilder(leftMargin);
-		newRow(new RowInfo(getPreText(contentBefore, indent, blockIndent), currentRow), chars, blockIndent, mode);
+		newRow(new RowInfo(getPreText(contentBefore, indent, blockIndent), currentRow, available), chars, blockIndent, mode);
 	}
 	
 	private String getPreText(String contentBefore, int indent, int blockIndent) {
@@ -424,7 +424,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 			if (m.preTabPos>leaderPos || offset - align < 0) { // if tab position has been passed or if text does not fit within row, try on a new row
 				flushCurrentRow();
 				currentRow = createAndConfigureEmptyNewRowBuilder(rows.peek().getLeftMargin());
-				m = new RowInfo(StringTools.fill(fcontext.getSpaceCharacter(), rdp.getTextIndent()+blockIndent), currentRow);
+				m = new RowInfo(StringTools.fill(fcontext.getSpaceCharacter(), rdp.getTextIndent()+blockIndent), currentRow, available);
 				//update offset
 				offset = leaderPos-m.preTabPos;
 			}
@@ -482,27 +482,6 @@ class BlockContentManager extends AbstractBlockContentManager {
 				return length/2;
 		}
 		return 0;
-	}
-	
-	private class RowInfo {
-		final String preTabText;
-		final int preTabTextLen;
-		final String preContent;
-		final int preTabPos;
-		final int maxLenText;
-		final RowImpl.Builder row;
-		private RowInfo(String preContent, RowImpl.Builder r) {
-			this.preTabText = r.getText();
-			this.row = r;
-			this.preContent = preContent;
-			int preContentPos = r.getLeftMargin().getContent().length()+StringTools.length(preContent);
-			this.preTabTextLen = StringTools.length(preTabText);
-			this.preTabPos = preContentPos+preTabTextLen;
-			this.maxLenText = available-(preContentPos);
-			if (this.maxLenText<1) {
-				throw new RuntimeException("Cannot continue layout: No space left for characters.");
-			}
-		}
 	}
 
 	@Override
