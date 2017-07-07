@@ -12,7 +12,6 @@ import java.util.regex.Pattern;
 import org.daisy.dotify.api.formatter.Context;
 import org.daisy.dotify.api.formatter.FormattingTypes;
 import org.daisy.dotify.api.formatter.Leader;
-import org.daisy.dotify.api.formatter.Marker;
 import org.daisy.dotify.api.translator.BrailleTranslatorResult;
 import org.daisy.dotify.api.translator.Translatable;
 import org.daisy.dotify.api.translator.TranslationException;
@@ -21,6 +20,7 @@ import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.segment.AnchorSegment;
 import org.daisy.dotify.formatter.impl.segment.Evaluate;
 import org.daisy.dotify.formatter.impl.segment.LeaderSegment;
+import org.daisy.dotify.formatter.impl.segment.MarkerSegment;
 import org.daisy.dotify.formatter.impl.segment.PageNumberReferenceSegment;
 import org.daisy.dotify.formatter.impl.segment.Segment;
 import org.daisy.dotify.formatter.impl.segment.TextSegment;
@@ -170,7 +170,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 				layoutEvaluate((Evaluate)s);
 				break;
 			case Marker:
-				applyAfterLeader((Marker)s);
+				applyAfterLeader((MarkerSegment)s);
 				break;
 			case Anchor:
 				applyAfterLeader((AnchorSegment)s);
@@ -282,7 +282,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 		}
 	}
 	
-	private void applyAfterLeader(final Marker marker) {
+	private void applyAfterLeader(MarkerSegment marker) {
 		if (currentLeader!=null) {
 			if (layoutOrApplyAfterLeader == null) {
 				layoutOrApplyAfterLeader = new AggregatedBrailleTranslatorResult.Builder();

@@ -8,6 +8,7 @@ import org.daisy.dotify.api.formatter.Marker;
 import org.daisy.dotify.api.translator.BrailleTranslatorResult;
 import org.daisy.dotify.api.translator.UnsupportedMetricException;
 import org.daisy.dotify.formatter.impl.segment.AnchorSegment;
+import org.daisy.dotify.formatter.impl.segment.MarkerSegment;
 
 /**
  * Provides an aggregated braille translator result.
@@ -37,7 +38,7 @@ class AggregatedBrailleTranslatorResult implements BrailleTranslatorResult {
 		 * Adds a marker to the aggregated result.
 		 * @param m the marker to add
 		 */
-		void add(Marker m) {
+		void add(MarkerSegment m) {
 			results.add(m);
 		}
 		
@@ -97,8 +98,8 @@ class AggregatedBrailleTranslatorResult implements BrailleTranslatorResult {
 				if (current.hasNext()) {
 					return current;
 				}
-			} else if (o instanceof Marker) {
-				pendingMarkers.add((Marker)o);
+			} else if (o instanceof MarkerSegment) {
+				pendingMarkers.add((MarkerSegment)o);
 			} else if (o instanceof AnchorSegment) {
 				pendingAnchors.add(((AnchorSegment)o).getReferenceID());
 			} else {
