@@ -20,6 +20,7 @@ import org.daisy.dotify.common.text.StringTools;
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.segment.AnchorSegment;
 import org.daisy.dotify.formatter.impl.segment.Evaluate;
+import org.daisy.dotify.formatter.impl.segment.LeaderSegment;
 import org.daisy.dotify.formatter.impl.segment.PageNumberReferenceSegment;
 import org.daisy.dotify.formatter.impl.segment.Segment;
 import org.daisy.dotify.formatter.impl.segment.TextSegment;
@@ -129,85 +130,8 @@ class BlockContentManager extends AbstractBlockContentManager {
 				return true;
 			}
 			Segment s = segments.get(segmentIndex);
+			layoutSegment(s);
 			segmentIndex++;
-			switch (s.getSegmentType()) {
-				case NewLine:
-				{
-					//flush
-					layoutLeader();
-					flushCurrentRow();
-					MarginProperties ret = new MarginProperties(leftMargin.getContent()+StringTools.fill(fcontext.getSpaceCharacter(), rdp.getTextIndent()), leftMargin.isSpaceOnly());
-					currentRow = rdp.configureNewEmptyRowBuilder(ret, rightMargin);
-					break;
-				}
-				case Text:
-				{
-					TextSegment ts = (TextSegment)s;
-					layoutAfterLeader(
-							Translatable.text(
-									fcontext.getConfiguration().isMarkingCapitalLetters()?
-									ts.getText():ts.getText().toLowerCase()
-									).
-							locale(ts.getTextProperties().getLocale()).
-							hyphenate(ts.getTextProperties().isHyphenating()).
-							attributes(ts.getTextAttribute()).build(),
-							ts.getTextProperties().getTranslationMode());
-					break;
-				}
-				case Leader:
-				{
-					if (currentLeader!=null) {
-						layoutLeader();
-					}
-					currentLeader= (Leader)s;
-					break;
-				}
-				case Reference:
-				{
-					PageNumberReferenceSegment rs = (PageNumberReferenceSegment)s;
-					Integer page = null;
-					if (refs!=null) {
-						page = refs.getPageNumber(rs.getRefId());
-					}
-					//TODO: translate references using custom language?
-					if (page==null) {
-						layoutAfterLeader(Translatable.text("??").locale(null).build(), null);
-					} else {
-						String txt = "" + rs.getNumeralStyle().format(page);
-						layoutAfterLeader(Translatable.text(
-								fcontext.getConfiguration().isMarkingCapitalLetters()?txt:txt.toLowerCase()
-								).locale(null).attributes(rs.getTextAttribute(txt.length())).build(), null);
-					}
-					break;
-				}
-				case Evaluate:
-				{
-					Evaluate e = (Evaluate)s;
-					String txt = e.getExpression().render(context);
-					if (!txt.isEmpty()) // Don't create a new row if the evaluated expression is empty
-					                    // Note: this could be handled more generally (also for regular text) in layout().
-						layoutAfterLeader(
-								Translatable.text(fcontext.getConfiguration().isMarkingCapitalLetters()?txt:txt.toLowerCase()).
-								locale(e.getTextProperties().getLocale()).
-								hyphenate(e.getTextProperties().isHyphenating()).
-								attributes(e.getTextAttribute(txt.length())).
-								build(), 
-								null);
-					break;
-				}
-				case Marker:
-				{
-					Marker m = (Marker)s;
-					applyAfterLeader(m);
-					break;
-				}
-				case Anchor:
-				{
-					AnchorSegment as = (AnchorSegment)s;
-					applyAfterLeader(as);
-					break;
-				}
-			}
 			if (!hasMoreData()) {
 				if (currentLeader!=null || item!=null) {
 					layoutLeader();
@@ -227,6 +151,88 @@ class BlockContentManager extends AbstractBlockContentManager {
 			}
 		}
 		return true;
+	}
+	
+	private void layoutSegment(Segment s) {
+		switch (s.getSegmentType()) {
+			case NewLine:
+				//flush
+				layoutNewLine();
+				break;
+			case Text:
+				layoutTextSegment((TextSegment)s);
+				break;
+			case Leader:
+				layoutLeaderSegment((LeaderSegment)s);
+				break;
+			case Reference:
+				layoutPageSegment((PageNumberReferenceSegment)s);
+				break;
+			case Evaluate:
+				layoutEvaluate((Evaluate)s);
+				break;
+			case Marker:
+				applyAfterLeader((Marker)s);
+				break;
+			case Anchor:
+				applyAfterLeader((AnchorSegment)s);
+				break;
+		}		
+	}
+
+	private void layoutNewLine() {
+		layoutLeader();
+		flushCurrentRow();
+		MarginProperties ret = new MarginProperties(leftMargin.getContent()+StringTools.fill(fcontext.getSpaceCharacter(), rdp.getTextIndent()), leftMargin.isSpaceOnly());
+		currentRow = rdp.configureNewEmptyRowBuilder(ret, rightMargin);
+	}
+	
+	private void layoutTextSegment(TextSegment ts) {
+		layoutAfterLeader(
+				Translatable.text(
+						fcontext.getConfiguration().isMarkingCapitalLetters()?
+						ts.getText():ts.getText().toLowerCase()
+						).
+				locale(ts.getTextProperties().getLocale()).
+				hyphenate(ts.getTextProperties().isHyphenating()).
+				attributes(ts.getTextAttribute()).build(),
+				ts.getTextProperties().getTranslationMode());
+	}
+	
+	private void layoutLeaderSegment(LeaderSegment ls) {
+		if (currentLeader!=null) {
+			layoutLeader();
+		}
+		currentLeader = ls;
+	}
+
+	private void layoutPageSegment(PageNumberReferenceSegment rs) {
+		Integer page = null;
+		if (refs!=null) {
+			page = refs.getPageNumber(rs.getRefId());
+		}
+		//TODO: translate references using custom language?
+		if (page==null) {
+			layoutAfterLeader(Translatable.text("??").locale(null).build(), null);
+		} else {
+			String txt = "" + rs.getNumeralStyle().format(page);
+			layoutAfterLeader(Translatable.text(
+					fcontext.getConfiguration().isMarkingCapitalLetters()?txt:txt.toLowerCase()
+					).locale(null).attributes(rs.getTextAttribute(txt.length())).build(), null);
+		}
+	}
+	
+	private void layoutEvaluate(Evaluate e) {
+		String txt = e.getExpression().render(context);
+		if (!txt.isEmpty()) // Don't create a new row if the evaluated expression is empty
+		                    // Note: this could be handled more generally (also for regular text) in layout().
+			layoutAfterLeader(
+					Translatable.text(fcontext.getConfiguration().isMarkingCapitalLetters()?txt:txt.toLowerCase()).
+					locale(e.getTextProperties().getLocale()).
+					hyphenate(e.getTextProperties().isHyphenating()).
+					attributes(e.getTextAttribute(txt.length())).
+					build(), 
+					null);
 	}
 	
 	private boolean hasMoreData() {
