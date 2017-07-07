@@ -133,9 +133,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 			layoutSegment(s);
 			segmentIndex++;
 			if (!hasMoreData()) {
-				if (currentLeader!=null || item!=null) {
-					layoutLeader();
-				}
+				layoutLeader();
 				flushCurrentRow();
 				if (rows.size()>0 && rdp.getUnderlineStyle() != null) {
 					if (minLeft < leftMargin.getContent().length() || minRight < rightMargin.getContent().length()) {
