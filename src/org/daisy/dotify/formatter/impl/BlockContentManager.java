@@ -2,7 +2,6 @@ package org.daisy.dotify.formatter.impl;
 
 import static java.lang.Math.min;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Stack;
@@ -53,7 +52,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 	private int minRight;
 	private int segmentIndex;
 
-	private AggregatedBrailleTranslatorResult layoutOrApplyAfterLeader;
+	private AggregatedBrailleTranslatorResult.Builder layoutOrApplyAfterLeader;
 	private String currentLeaderMode;
 	private boolean seenSegmentAfterLeader;
 	private int rowIndex;
@@ -85,7 +84,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 		this.minLeft = template.minLeft;
 		this.minRight = template.minRight;
 		this.segmentIndex = template.segmentIndex;
-		this.layoutOrApplyAfterLeader = template.layoutOrApplyAfterLeader==null?null:new AggregatedBrailleTranslatorResult(template.layoutOrApplyAfterLeader);
+		this.layoutOrApplyAfterLeader = template.layoutOrApplyAfterLeader==null?null:new AggregatedBrailleTranslatorResult.Builder(template.layoutOrApplyAfterLeader);
 		this.currentLeaderMode = template.currentLeaderMode;
 		this.seenSegmentAfterLeader = template.seenSegmentAfterLeader;
 		this.rowIndex = template.rowIndex;
@@ -265,7 +264,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 	private void layoutAfterLeader(Translatable spec, String mode) {
 		if (currentLeader!=null) {
 			if (layoutOrApplyAfterLeader == null) {
-				layoutOrApplyAfterLeader = new AggregatedBrailleTranslatorResult();
+				layoutOrApplyAfterLeader = new AggregatedBrailleTranslatorResult.Builder();
 				// use the mode of the first following segment to translate the leader pattern (or
 				// the mode of the first preceding segment)
 				if (!seenSegmentAfterLeader) {
@@ -286,7 +285,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 	private void applyAfterLeader(final Marker marker) {
 		if (currentLeader!=null) {
 			if (layoutOrApplyAfterLeader == null) {
-				layoutOrApplyAfterLeader = new AggregatedBrailleTranslatorResult();
+				layoutOrApplyAfterLeader = new AggregatedBrailleTranslatorResult.Builder();
 			}
 			layoutOrApplyAfterLeader.add(marker);
 		} else {
@@ -301,7 +300,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 	private void applyAfterLeader(final AnchorSegment anchor) {
 		if (currentLeader!=null) {
 			if (layoutOrApplyAfterLeader == null) {
-				layoutOrApplyAfterLeader = new AggregatedBrailleTranslatorResult();
+				layoutOrApplyAfterLeader = new AggregatedBrailleTranslatorResult.Builder();
 			}
 			layoutOrApplyAfterLeader.add(anchor);
 		} else {
@@ -319,7 +318,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 			if (layoutOrApplyAfterLeader == null) {
 				layout("", null, null);
 			} else {
-				layout(layoutOrApplyAfterLeader, currentLeaderMode);
+				layout(layoutOrApplyAfterLeader.build(), currentLeaderMode);
 				layoutOrApplyAfterLeader = null;
 				seenSegmentAfterLeader = false;
 			}

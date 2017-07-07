@@ -9,24 +9,70 @@ import org.daisy.dotify.api.translator.BrailleTranslatorResult;
 import org.daisy.dotify.api.translator.UnsupportedMetricException;
 import org.daisy.dotify.formatter.impl.segment.AnchorSegment;
 
+/**
+ * Provides an aggregated braille translator result.
+ * @author Bert Frees
+ * @author Joel Håkansson
+ */
 class AggregatedBrailleTranslatorResult implements BrailleTranslatorResult {
 	private final List<Object> results;
 	private int currentIndex;
 	private List<Marker> pendingMarkers;
 	private List<String> pendingAnchors;
 	
-	AggregatedBrailleTranslatorResult() {
-		this.results = new ArrayList<>();
+	/**
+	 * Provides a builder for an aggregated braille translator result.
+	 */
+	static class Builder {
+		private final List<Object> results;
+		Builder() {
+			this.results = new ArrayList<>();
+		}
+		
+		Builder(Builder template) {
+			this.results = new ArrayList<>(template.results);
+		}
+		
+		/**
+		 * Adds a marker to the aggregated result.
+		 * @param m the marker to add
+		 */
+		void add(Marker m) {
+			results.add(m);
+		}
+		
+		/**
+		 * Adds an anchor segment to the aggregated result.
+		 * @param as the anchor segement to add
+		 */
+		void add(AnchorSegment as) {
+			results.add(as);
+		}
+		
+		/**
+		 * Adds a braille translator result to the aggregated result.
+		 * @param bts the translator result to add
+		 */
+		void add(BrailleTranslatorResult bts) {
+			results.add(bts);
+		}
+		
+		/**
+		 * Builds an aggregated braille translator result based on the
+		 * state of this builder.
+		 * @return returns a new aggregated translator result
+		 */
+		AggregatedBrailleTranslatorResult build() {
+			return new AggregatedBrailleTranslatorResult(this);
+		}
+
+	}
+	
+	private AggregatedBrailleTranslatorResult(Builder builder) {
+		this.results = Collections.unmodifiableList(new ArrayList<>(builder.results));
 		this.currentIndex = 0;
 		this.pendingMarkers = new ArrayList<>();
 		this.pendingAnchors = new ArrayList<>();
-	}
-
-	AggregatedBrailleTranslatorResult(AggregatedBrailleTranslatorResult template) {
-		this.results = new ArrayList<>(template.results);
-		this.currentIndex = template.currentIndex;
-		this.pendingMarkers = new ArrayList<>(template.pendingMarkers);
-		this.pendingAnchors = new ArrayList<>(template.pendingAnchors);
 	}
 
 	@Override
@@ -90,18 +136,6 @@ class AggregatedBrailleTranslatorResult implements BrailleTranslatorResult {
 	@Override
 	public boolean hasNext() {
 		return computeNext() != null;
-	}
-	
-	void add(Marker m) {
-		results.add(m);
-	}
-	
-	void add(AnchorSegment as) {
-		results.add(as);
-	}
-	
-	void add(BrailleTranslatorResult bts) {
-		results.add(bts);
 	}
 	
 	List<Marker> getMarkers() {
