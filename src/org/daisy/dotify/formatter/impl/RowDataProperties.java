@@ -197,6 +197,13 @@ final class RowDataProperties {
 		this.underlineStyle = builder.underlineStyle;
 	}
 
+	RowImpl.Builder configureNewEmptyRowBuilder(MarginProperties left, MarginProperties right) {
+		return new RowImpl.Builder("").leftMargin(left).rightMargin(right)
+				.alignment(getAlignment())
+				.rowSpacing(getRowSpacing())
+				.adjustedForMargin(true);
+	}
+
 	public int getBlockIndent() {
 		return blockIndent;
 	}

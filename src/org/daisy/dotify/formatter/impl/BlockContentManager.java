@@ -137,7 +137,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 					layoutLeader();
 					flushCurrentRow();
 					MarginProperties ret = new MarginProperties(leftMargin.getContent()+StringTools.fill(fcontext.getSpaceCharacter(), rdp.getTextIndent()), leftMargin.isSpaceOnly());
-					currentRow = createAndConfigureEmptyNewRowBuilder(ret);
+					currentRow = rdp.configureNewEmptyRowBuilder(ret, rightMargin);
 					break;
 				}
 				case Text:
@@ -397,7 +397,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 	
 	private void newRow(BrailleTranslatorResult chars, String contentBefore, int indent, int blockIndent, String mode) {
 		flushCurrentRow();
-		currentRow = createAndConfigureEmptyNewRowBuilder(leftMargin);
+		currentRow = rdp.configureNewEmptyRowBuilder(leftMargin, rightMargin);
 		newRow(new RowInfo(getPreText(contentBefore, indent, blockIndent), currentRow, available), chars, blockIndent, mode);
 	}
 	
@@ -423,7 +423,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 			
 			if (m.preTabPos>leaderPos || offset - align < 0) { // if tab position has been passed or if text does not fit within row, try on a new row
 				flushCurrentRow();
-				currentRow = createAndConfigureEmptyNewRowBuilder(rows.peek().getLeftMargin());
+				currentRow = rdp.configureNewEmptyRowBuilder(rows.peek().getLeftMargin(), rightMargin);
 				m = new RowInfo(StringTools.fill(fcontext.getSpaceCharacter(), rdp.getTextIndent()+blockIndent), currentRow, available);
 				//update offset
 				offset = leaderPos-m.preTabPos;

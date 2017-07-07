@@ -50,27 +50,27 @@ abstract class AbstractBlockContentManager implements BlockStatistics {
 		if (rdp.getTrailingDecoration()==null) {
 			if (leftMargin.isSpaceOnly() && rightMargin.isSpaceOnly()) {
 				for (int i=0; i<rdp.getInnerSpaceAfter(); i++) {
-					skippablePostContentRowsBuilder.add(createAndConfigureEmptyNewRow(margin));
+					skippablePostContentRowsBuilder.add(rdp.configureNewEmptyRowBuilder(margin, rightMargin).build());
 				}
 			} else {
 				for (int i=0; i<rdp.getInnerSpaceAfter(); i++) {
-					postContentRowsBuilder.add(createAndConfigureEmptyNewRow(margin));
+					postContentRowsBuilder.add(rdp.configureNewEmptyRowBuilder(margin, rightMargin).build());
 				}
 			}
 		} else {
 			for (int i=0; i<rdp.getInnerSpaceAfter(); i++) {
-				postContentRowsBuilder.add(createAndConfigureEmptyNewRow(margin));
+				postContentRowsBuilder.add(rdp.configureNewEmptyRowBuilder(margin, rightMargin).build());
 			}
 			postContentRowsBuilder.add(makeDecorationRow(flowWidth, rdp.getTrailingDecoration(), leftParent, rightParent));
 		}
 		
 		if (leftParent.isSpaceOnly() && rightParent.isSpaceOnly()) {
 			for (int i=0; i<rdp.getOuterSpaceAfter();i++) {
-				skippablePostContentRowsBuilder.add(createAndConfigureNewEmptyRow(leftParent, rightParent));
+				skippablePostContentRowsBuilder.add(rdp.configureNewEmptyRowBuilder(leftParent, rightParent).build());
 			}
 		} else {
 			for (int i=0; i<rdp.getOuterSpaceAfter();i++) {
-				postContentRowsBuilder.add(createAndConfigureNewEmptyRow(leftParent, rightParent));
+				postContentRowsBuilder.add(rdp.configureNewEmptyRowBuilder(leftParent, rightParent).build());
 			}
 		}
 		this.postContentRows = Collections.unmodifiableList(postContentRowsBuilder);
@@ -143,7 +143,7 @@ abstract class AbstractBlockContentManager implements BlockStatistics {
 		}
 		for (int i=0; i<rdp.getInnerSpaceBefore(); i++) {
 			MarginProperties margin = new MarginProperties(leftMargin.getContent()+StringTools.fill(fcontext.getSpaceCharacter(), rdp.getTextIndent()), leftMargin.isSpaceOnly());
-			ret.add(createAndConfigureEmptyNewRow(margin));
+			ret.add(rdp.configureNewEmptyRowBuilder(margin, rightMargin).build());
 		}
 		return Collections.unmodifiableList(ret);
 	}
@@ -159,25 +159,6 @@ abstract class AbstractBlockContentManager implements BlockStatistics {
 				.adjustedForMargin(true)
 				.build();
 		return row;
-	}
-	
-	protected RowImpl createAndConfigureEmptyNewRow(MarginProperties left) {
-		return createAndConfigureEmptyNewRowBuilder(left).build();
-	}
-
-	protected RowImpl.Builder createAndConfigureEmptyNewRowBuilder(MarginProperties left) {
-		return createAndConfigureNewEmptyRowBuilder(left, rightMargin);
-	}
-
-	protected RowImpl createAndConfigureNewEmptyRow(MarginProperties left, MarginProperties right) {
-		return createAndConfigureNewEmptyRowBuilder(left, right).build();
-	}
-
-	protected RowImpl.Builder createAndConfigureNewEmptyRowBuilder(MarginProperties left, MarginProperties right) {
-		return new RowImpl.Builder("").leftMargin(left).rightMargin(right)
-				.alignment(rdp.getAlignment())
-				.rowSpacing(rdp.getRowSpacing())
-				.adjustedForMargin(true);
 	}
 
 	MarginProperties getLeftMarginParent() {
