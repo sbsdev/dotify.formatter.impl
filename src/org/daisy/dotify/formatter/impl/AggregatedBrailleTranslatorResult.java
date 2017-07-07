@@ -1,6 +1,7 @@
 package org.daisy.dotify.formatter.impl;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.daisy.dotify.api.formatter.Marker;
@@ -9,14 +10,16 @@ import org.daisy.dotify.api.translator.UnsupportedMetricException;
 import org.daisy.dotify.formatter.impl.segment.AnchorSegment;
 
 class AggregatedBrailleTranslatorResult implements BrailleTranslatorResult {
-	
 	private final List<Object> results;
 	private int currentIndex = 0;
+	private List<Marker> pendingMarkers = new ArrayList<>();
+	private List<String> pendingAnchors = new ArrayList<>();
 	
-	public AggregatedBrailleTranslatorResult(List<Object> results) {
+	AggregatedBrailleTranslatorResult(List<Object> results) {
 		this.results = results;
 	}
 
+	@Override
 	public String nextTranslatedRow(int limit, boolean force) {
 		String row = "";
 		BrailleTranslatorResult current = computeNext();
@@ -41,7 +44,7 @@ class AggregatedBrailleTranslatorResult implements BrailleTranslatorResult {
 			} else if (o instanceof Marker) {
 				pendingMarkers.add((Marker)o);
 			} else if (o instanceof AnchorSegment) {
-				pendingAnchors.add((AnchorSegment)o);
+				pendingAnchors.add(((AnchorSegment)o).getReferenceID());
 			} else {
 				throw new RuntimeException("coding error");
 			}
@@ -50,6 +53,7 @@ class AggregatedBrailleTranslatorResult implements BrailleTranslatorResult {
 		return null;
 	}
 
+	@Override
 	public String getTranslatedRemainder() {
 		String remainder = "";
 		for (int i = currentIndex; i < results.size(); i++) {
@@ -61,6 +65,7 @@ class AggregatedBrailleTranslatorResult implements BrailleTranslatorResult {
 		return remainder;
 	}
 
+	@Override
 	public int countRemaining() {
 		int remaining = 0;
 		for (int i = currentIndex; i < results.size(); i++) {
@@ -72,24 +77,25 @@ class AggregatedBrailleTranslatorResult implements BrailleTranslatorResult {
 		return remaining;
 	}
 
+	@Override
 	public boolean hasNext() {
 		return computeNext() != null;
 	}
 	
-	List<Marker> pendingMarkers = new ArrayList<Marker>();
-	void addMarkers(RowImpl.Builder row) {
-		row.addMarkers(pendingMarkers);
-		pendingMarkers.clear();
+	List<Marker> getMarkers() {
+		return Collections.unmodifiableList(pendingMarkers);
 	}
-
-	List<AnchorSegment> pendingAnchors = new ArrayList<AnchorSegment>();
-	void addAnchors(RowImpl.Builder row) {
-		for (AnchorSegment a : pendingAnchors) {
-			row.addAnchor(a.getReferenceID());
-		}
+	
+	List<String> getAnchors() {
+		return Collections.unmodifiableList(pendingAnchors);
+	}
+	
+	void clearPending() {
+		pendingMarkers.clear();
 		pendingAnchors.clear();
 	}
 
+	@Override
 	public boolean supportsMetric(String metric) {
 		// since we cannot assume that the individual results of any metric can be added, we only support the following known cases
 		if (METRIC_FORCED_BREAK.equals(metric) || METRIC_HYPHEN_COUNT.equals(metric)) {
@@ -107,6 +113,7 @@ class AggregatedBrailleTranslatorResult implements BrailleTranslatorResult {
 		}
 	}
 
+	@Override
 	public double getMetric(String metric) {
 		// since we cannot assume that the individual results of any metric can be added, we only support the following known cases
 		if (METRIC_FORCED_BREAK.equals(metric) || METRIC_HYPHEN_COUNT.equals(metric)) {

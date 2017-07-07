@@ -461,7 +461,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 		}
 	}
 
-	private void breakNextRow(RowInfo m, BrailleTranslatorResult btr, String tabSpace) {
+	private static void breakNextRow(RowInfo m, BrailleTranslatorResult btr, String tabSpace) {
 		int contentLen = StringTools.length(tabSpace) + m.preTabTextLen;
 		boolean force = contentLen == 0;
 		//don't know if soft hyphens need to be replaced, but we'll keep it for now
@@ -474,8 +474,9 @@ class BlockContentManager extends AbstractBlockContentManager {
 		}
 		if (btr instanceof AggregatedBrailleTranslatorResult) {
 			AggregatedBrailleTranslatorResult abtr = ((AggregatedBrailleTranslatorResult)btr);
-			abtr.addMarkers(m.row);
-			abtr.addAnchors(m.row);
+			m.row.addMarkers(abtr.getMarkers());
+			m.row.addAnchors(abtr.getAnchors());
+			abtr.clearPending();
 		}
 	}
 	
