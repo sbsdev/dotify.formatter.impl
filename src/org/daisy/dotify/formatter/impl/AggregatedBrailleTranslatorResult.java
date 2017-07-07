@@ -11,12 +11,22 @@ import org.daisy.dotify.formatter.impl.segment.AnchorSegment;
 
 class AggregatedBrailleTranslatorResult implements BrailleTranslatorResult {
 	private final List<Object> results;
-	private int currentIndex = 0;
-	private List<Marker> pendingMarkers = new ArrayList<>();
-	private List<String> pendingAnchors = new ArrayList<>();
+	private int currentIndex;
+	private List<Marker> pendingMarkers;
+	private List<String> pendingAnchors;
 	
-	AggregatedBrailleTranslatorResult(List<Object> results) {
-		this.results = results;
+	AggregatedBrailleTranslatorResult() {
+		this.results = new ArrayList<>();
+		this.currentIndex = 0;
+		this.pendingMarkers = new ArrayList<>();
+		this.pendingAnchors = new ArrayList<>();
+	}
+
+	AggregatedBrailleTranslatorResult(AggregatedBrailleTranslatorResult template) {
+		this.results = new ArrayList<>(template.results);
+		this.currentIndex = template.currentIndex;
+		this.pendingMarkers = new ArrayList<>(template.pendingMarkers);
+		this.pendingAnchors = new ArrayList<>(template.pendingAnchors);
 	}
 
 	@Override
@@ -80,6 +90,18 @@ class AggregatedBrailleTranslatorResult implements BrailleTranslatorResult {
 	@Override
 	public boolean hasNext() {
 		return computeNext() != null;
+	}
+	
+	void add(Marker m) {
+		results.add(m);
+	}
+	
+	void add(AnchorSegment as) {
+		results.add(as);
+	}
+	
+	void add(BrailleTranslatorResult bts) {
+		results.add(bts);
 	}
 	
 	List<Marker> getMarkers() {

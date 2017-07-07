@@ -53,8 +53,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 	private int minRight;
 	private int segmentIndex;
 
-	// List of BrailleTranslatorResult or Marker or AnchorSegment
-	private List<Object> layoutOrApplyAfterLeader;
+	private AggregatedBrailleTranslatorResult layoutOrApplyAfterLeader;
 	private String currentLeaderMode;
 	private boolean seenSegmentAfterLeader;
 	private int rowIndex;
@@ -86,7 +85,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 		this.minLeft = template.minLeft;
 		this.minRight = template.minRight;
 		this.segmentIndex = template.segmentIndex;
-		this.layoutOrApplyAfterLeader = template.layoutOrApplyAfterLeader==null?null:new ArrayList<>(template.layoutOrApplyAfterLeader);
+		this.layoutOrApplyAfterLeader = template.layoutOrApplyAfterLeader==null?null:new AggregatedBrailleTranslatorResult(template.layoutOrApplyAfterLeader);
 		this.currentLeaderMode = template.currentLeaderMode;
 		this.seenSegmentAfterLeader = template.seenSegmentAfterLeader;
 		this.rowIndex = template.rowIndex;
@@ -266,7 +265,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 	private void layoutAfterLeader(Translatable spec, String mode) {
 		if (currentLeader!=null) {
 			if (layoutOrApplyAfterLeader == null) {
-				layoutOrApplyAfterLeader = new ArrayList<Object>();
+				layoutOrApplyAfterLeader = new AggregatedBrailleTranslatorResult();
 				// use the mode of the first following segment to translate the leader pattern (or
 				// the mode of the first preceding segment)
 				if (!seenSegmentAfterLeader) {
@@ -287,7 +286,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 	private void applyAfterLeader(final Marker marker) {
 		if (currentLeader!=null) {
 			if (layoutOrApplyAfterLeader == null) {
-				layoutOrApplyAfterLeader = new ArrayList<Object>();
+				layoutOrApplyAfterLeader = new AggregatedBrailleTranslatorResult();
 			}
 			layoutOrApplyAfterLeader.add(marker);
 		} else {
@@ -302,7 +301,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 	private void applyAfterLeader(final AnchorSegment anchor) {
 		if (currentLeader!=null) {
 			if (layoutOrApplyAfterLeader == null) {
-				layoutOrApplyAfterLeader = new ArrayList<Object>();
+				layoutOrApplyAfterLeader = new AggregatedBrailleTranslatorResult();
 			}
 			layoutOrApplyAfterLeader.add(anchor);
 		} else {
@@ -320,7 +319,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 			if (layoutOrApplyAfterLeader == null) {
 				layout("", null, null);
 			} else {
-				layout(new AggregatedBrailleTranslatorResult(layoutOrApplyAfterLeader), currentLeaderMode);
+				layout(layoutOrApplyAfterLeader, currentLeaderMode);
 				layoutOrApplyAfterLeader = null;
 				seenSegmentAfterLeader = false;
 			}
