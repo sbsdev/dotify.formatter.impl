@@ -249,23 +249,34 @@ public class PageSequenceBuilder2 {
 	}
 	
 	private void addRows(List<RowGroup> head, PageImpl p) {
+		int i = head.size();
 		for (RowGroup rg : head) {
+			i--;
 			addProperties(p, rg);
-			for (RowImpl r : rg.getRows()) { 
-				if (r.shouldAdjustForMargin()) {
+			List<RowImpl> rows = rg.getRows();
+			int j = rows.size();
+			for (RowImpl r : rows) {
+				j--;
+				if (r.shouldAdjustForMargin() || (i == 0 && j == 0)) {
 					// clone the row as not to append the margins twice
 					RowImpl.Builder b = new RowImpl.Builder(r);
-					MarkerRef rf = r::hasMarkerWithName;
-					MarginProperties margin = r.getLeftMargin();
-					for (MarginRegion mr : p.getPageTemplate().getLeftMarginRegion()) {
-						margin = getMarginRegionValue(mr, rf, false).append(margin);
+					if (r.shouldAdjustForMargin()) {
+						MarkerRef rf = r::hasMarkerWithName;
+						MarginProperties margin = r.getLeftMargin();
+						for (MarginRegion mr : p.getPageTemplate().getLeftMarginRegion()) {
+							margin = getMarginRegionValue(mr, rf, false).append(margin);
+						}
+						b.leftMargin(margin);
+						margin = r.getRightMargin();
+						for (MarginRegion mr : p.getPageTemplate().getRightMarginRegion()) {
+							margin = margin.append(getMarginRegionValue(mr, rf, true));
+						}
+						b.rightMargin(margin);
 					}
-					b.leftMargin(margin);
-					margin = r.getRightMargin();
-					for (MarginRegion mr : p.getPageTemplate().getRightMarginRegion()) {
-						margin = margin.append(getMarginRegionValue(mr, rf, true));
+					if (i == 0 && j == 0) {
+						// this is the last row; set row spacing to 1 because this is how sph treated it
+						b.rowSpacing(null);
 					}
-					b.rightMargin(margin);
 					p.newRow(b.build());
 				} else {
 					p.newRow(r);
