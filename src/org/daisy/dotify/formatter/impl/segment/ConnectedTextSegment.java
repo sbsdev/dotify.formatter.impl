@@ -1,19 +1,18 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.segment;
 
 import org.daisy.dotify.api.formatter.TextProperties;
 import org.daisy.dotify.api.translator.DefaultTextAttribute;
 import org.daisy.dotify.api.translator.TextAttribute;
-import org.daisy.dotify.formatter.impl.segment.TextSegment;
 
 /**
  * Text segment that is "connected" with other segments through Style elements.
  */
-class ConnectedTextSegment extends TextSegment {		
+public class ConnectedTextSegment extends TextSegment {		
 	private final StyledSegmentGroup parentStyle;
 	private final int idx;
 	private final int width;
 	
-	ConnectedTextSegment(String chars, TextProperties tp, StyledSegmentGroup parentStyle) {
+	public ConnectedTextSegment(String chars, TextProperties tp, StyledSegmentGroup parentStyle) {
 		super(chars, tp);
 		this.parentStyle = parentStyle;
 		idx = parentStyle.add(this);
@@ -31,7 +30,7 @@ class ConnectedTextSegment extends TextSegment {
 		return b.build(width);
 	}
 	
-	TextSegment processAttributes() {
+	public TextSegment processAttributes() {
 		return parentStyle.processAttributes().getSegmentAt(idx);
 	}
 }

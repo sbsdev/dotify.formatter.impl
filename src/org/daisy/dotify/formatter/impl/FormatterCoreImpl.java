@@ -29,19 +29,21 @@ import org.daisy.dotify.api.translator.TextBorderStyle;
 import org.daisy.dotify.formatter.impl.common.FormatterCoreContext;
 import org.daisy.dotify.formatter.impl.row.ListItem;
 import org.daisy.dotify.formatter.impl.row.Margin;
+import org.daisy.dotify.formatter.impl.row.Margin.Type;
 import org.daisy.dotify.formatter.impl.row.MarginComponent;
 import org.daisy.dotify.formatter.impl.row.RowDataProperties;
 import org.daisy.dotify.formatter.impl.row.SingleLineDecoration;
-import org.daisy.dotify.formatter.impl.row.Margin.Type;
 import org.daisy.dotify.formatter.impl.search.BlockAddress;
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.search.DefaultContext;
 import org.daisy.dotify.formatter.impl.segment.AnchorSegment;
+import org.daisy.dotify.formatter.impl.segment.ConnectedTextSegment;
 import org.daisy.dotify.formatter.impl.segment.Evaluate;
 import org.daisy.dotify.formatter.impl.segment.LeaderSegment;
 import org.daisy.dotify.formatter.impl.segment.MarkerSegment;
 import org.daisy.dotify.formatter.impl.segment.NewLineSegment;
 import org.daisy.dotify.formatter.impl.segment.PageNumberReferenceSegment;
+import org.daisy.dotify.formatter.impl.segment.StyledSegmentGroup;
 import org.daisy.dotify.formatter.impl.segment.TextSegment;
 
 public class FormatterCoreImpl extends Stack<Block> implements FormatterCore, BlockGroup {

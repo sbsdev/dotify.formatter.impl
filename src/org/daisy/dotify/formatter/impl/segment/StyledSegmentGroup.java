@@ -1,4 +1,4 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.segment;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -10,12 +10,11 @@ import org.daisy.dotify.api.translator.MarkerProcessor;
 import org.daisy.dotify.api.translator.MarkerProcessorConfigurationException;
 import org.daisy.dotify.api.translator.TextAttribute;
 import org.daisy.dotify.formatter.impl.common.FormatterCoreContext;
-import org.daisy.dotify.formatter.impl.segment.TextSegment;
 
 /**
  * Associates a text style with a group of segments.
  */
-class StyledSegmentGroup extends SegmentGroup {
+public class StyledSegmentGroup extends SegmentGroup {
 	private final FormatterCoreContext fc;
 	private final StyledSegmentGroup parentStyle;
 	private final int idx;
@@ -23,11 +22,11 @@ class StyledSegmentGroup extends SegmentGroup {
 	private MarkerProcessor markerProcessorCache;
 	private SegmentGroup processAttributes;
 	
-	StyledSegmentGroup(String name, FormatterCoreContext fc) {
+	public StyledSegmentGroup(String name, FormatterCoreContext fc) {
 		this(name, null, fc);
 	}
 	
-	StyledSegmentGroup(String name, StyledSegmentGroup parentStyle, FormatterCoreContext fc) {
+	public StyledSegmentGroup(String name, StyledSegmentGroup parentStyle, FormatterCoreContext fc) {
 		super();
 		this.fc = fc;
 		this.parentStyle = parentStyle;
@@ -148,7 +147,7 @@ class StyledSegmentGroup extends SegmentGroup {
 		return processedGroup;
 	}
 
-	String getName() {
+	public String getName() {
 		return name;
 	}
 

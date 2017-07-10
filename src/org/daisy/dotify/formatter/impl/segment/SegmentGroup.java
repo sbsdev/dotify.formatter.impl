@@ -1,9 +1,7 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.segment;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import org.daisy.dotify.formatter.impl.segment.TextSegment;
 
 class SegmentGroup {		
 	protected final List<Object> segments;
