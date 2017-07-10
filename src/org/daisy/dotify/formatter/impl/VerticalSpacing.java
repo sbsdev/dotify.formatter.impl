@@ -3,6 +3,7 @@ package org.daisy.dotify.formatter.impl;
 import java.util.Objects;
 
 import org.daisy.dotify.api.formatter.BlockPosition;
+import org.daisy.dotify.formatter.impl.row.RowImpl;
 
 class VerticalSpacing {
 	private final BlockPosition pos;

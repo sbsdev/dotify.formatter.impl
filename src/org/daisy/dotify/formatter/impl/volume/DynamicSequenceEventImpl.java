@@ -12,8 +12,8 @@ import org.daisy.dotify.formatter.impl.Block;
 import org.daisy.dotify.formatter.impl.BlockGroup;
 import org.daisy.dotify.formatter.impl.BlockSequence;
 import org.daisy.dotify.formatter.impl.FormatterContext;
-import org.daisy.dotify.formatter.impl.FormatterCoreContext;
 import org.daisy.dotify.formatter.impl.FormatterCoreImpl;
+import org.daisy.dotify.formatter.impl.common.FormatterCoreContext;
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.search.DefaultContext;
 

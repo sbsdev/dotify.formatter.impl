@@ -1,10 +1,10 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.row;
 /**
  * Provides properties for a margin. {@link MarginProperties} are
  * immutable.
  * @author Joel Håkansson
  */
-final class MarginProperties {
+public final class MarginProperties {
 	static final MarginProperties EMPTY_MARGIN = new MarginProperties();
 	private final String margin;
 	private final boolean spaceOnly;
@@ -13,7 +13,7 @@ final class MarginProperties {
 		this("", true);
 	}
 	
-	MarginProperties(String margin, boolean spaceOnly) {
+	public MarginProperties(String margin, boolean spaceOnly) {
 		this.margin = margin;
 		this.spaceOnly = spaceOnly;
 	}

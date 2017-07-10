@@ -1,4 +1,4 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.row;
 
 /**
  * Provides a definition for a single line decoration.
@@ -6,7 +6,7 @@ package org.daisy.dotify.formatter.impl;
  * @author Joel Håkansson
  *
  */
-final class SingleLineDecoration {
+public final class SingleLineDecoration {
 	private final String leftCorner;
 	private final String rightCorner;
 	private final String linePattern;

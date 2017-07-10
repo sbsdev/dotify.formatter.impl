@@ -1,4 +1,4 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.row;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;

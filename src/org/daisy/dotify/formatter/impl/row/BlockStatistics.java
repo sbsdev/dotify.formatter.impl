@@ -1,6 +1,6 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.row;
 
-interface BlockStatistics {
+public interface BlockStatistics {
 	
 	/**
 	 * Gets the number of forced line breaks.

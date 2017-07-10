@@ -1,4 +1,4 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.row;
 
 import static java.lang.Math.min;
 
@@ -13,6 +13,7 @@ import org.daisy.dotify.api.translator.BrailleTranslatorResult;
 import org.daisy.dotify.api.translator.Translatable;
 import org.daisy.dotify.api.translator.TranslationException;
 import org.daisy.dotify.common.text.StringTools;
+import org.daisy.dotify.formatter.impl.common.FormatterCoreContext;
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.segment.AnchorSegment;
 import org.daisy.dotify.formatter.impl.segment.Evaluate;
@@ -30,7 +31,7 @@ import org.daisy.dotify.formatter.impl.segment.TextSegment;
  * 
  * @author Joel Håkansson
  */
-class BlockContentManager extends AbstractBlockContentManager {
+public class BlockContentManager extends AbstractBlockContentManager {
 	private static final Pattern softHyphenPattern  = Pattern.compile("\u00ad");
 	private static final Pattern trailingWsBraillePattern = Pattern.compile("[\\s\u2800]+\\z");
 
@@ -53,7 +54,7 @@ class BlockContentManager extends AbstractBlockContentManager {
 	private boolean seenSegmentAfterLeader;
 	private int rowIndex;
 	
-	BlockContentManager(int flowWidth, Stack<Segment> segments, RowDataProperties rdp, CrossReferenceHandler refs, Context context, FormatterContext fcontext) {
+	public BlockContentManager(int flowWidth, Stack<Segment> segments, RowDataProperties rdp, CrossReferenceHandler refs, Context context, FormatterCoreContext fcontext) {
 		super(flowWidth, rdp, fcontext);
 		this.refs = refs;
 		this.available = flowWidth - rightMargin.getContent().length();
@@ -101,7 +102,7 @@ class BlockContentManager extends AbstractBlockContentManager {
     }
 	
 	@Override
-	AbstractBlockContentManager copy() {
+	public AbstractBlockContentManager copy() {
 		return new BlockContentManager(this);
 	}
 	
@@ -329,24 +330,24 @@ class BlockContentManager extends AbstractBlockContentManager {
 	}
 	
 	@Override
-	boolean supportsVariableWidth() {
+	public boolean supportsVariableWidth() {
 		return true;
 	}
 	
     @Override
-    void reset() {
+	public void reset() {
     	super.reset();
     	rows.clear();
     	initFields();
     }
 
     @Override
-    boolean hasNext() {
+    public boolean hasNext() {
         return ensureBuffer(rowIndex+1, true);
     }
 
     @Override
-    RowImpl getNext() {
+    public RowImpl getNext() {
     	ensureBuffer(rowIndex+1);
         RowImpl ret = rows.get(rowIndex);
         rowIndex++;

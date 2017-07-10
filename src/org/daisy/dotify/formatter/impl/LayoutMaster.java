@@ -10,6 +10,7 @@ import org.daisy.dotify.api.formatter.PageAreaProperties;
 import org.daisy.dotify.api.formatter.PageTemplateBuilder;
 import org.daisy.dotify.api.translator.TextBorderStyle;
 import org.daisy.dotify.api.writer.SectionProperties;
+import org.daisy.dotify.formatter.impl.common.FormatterCoreContext;
 
 /**
  * Specifies the layout of a paged media.

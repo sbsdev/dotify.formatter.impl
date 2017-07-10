@@ -3,6 +3,10 @@ package org.daisy.dotify.formatter.impl;
 import java.util.Collections;
 import java.util.List;
 
+import org.daisy.dotify.formatter.impl.row.AbstractBlockContentManager;
+import org.daisy.dotify.formatter.impl.row.RowDataProperties;
+import org.daisy.dotify.formatter.impl.row.RowImpl;
+
 class TableBlockContentManager extends AbstractBlockContentManager {
 	private final List<RowImpl> rows;
 	private final int forceCount;
@@ -27,12 +31,12 @@ class TableBlockContentManager extends AbstractBlockContentManager {
     }
 	
 	@Override
-	AbstractBlockContentManager copy() {
+	public AbstractBlockContentManager copy() {
 		return new TableBlockContentManager(this);
 	}
 	
 	@Override
-	boolean supportsVariableWidth() {
+	public boolean supportsVariableWidth() {
 		return false;
 	}
 
@@ -42,20 +46,20 @@ class TableBlockContentManager extends AbstractBlockContentManager {
 	}
 
     @Override
-    void reset() {
+    public void reset() {
     	super.reset();
     	initFields();
     }
 	
     @Override
-    RowImpl getNext() {
+    public RowImpl getNext() {
     	RowImpl ret = rows.get(rowIndex);
     	rowIndex++;
         return ret;
     }
 
     @Override
-    boolean hasNext() {
+    public boolean hasNext() {
         return rowIndex<rows.size();
     }
 

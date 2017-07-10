@@ -9,6 +9,8 @@ import org.daisy.dotify.api.formatter.FormattingTypes;
 import org.daisy.dotify.api.translator.TextBorderStyle;
 import org.daisy.dotify.api.writer.Row;
 import org.daisy.dotify.common.text.StringTools;
+import org.daisy.dotify.formatter.impl.row.MarginProperties;
+import org.daisy.dotify.formatter.impl.row.RowImpl;
 
 class BorderManager {
 	private static final Pattern trailingWs = Pattern.compile("\\s*\\z");

@@ -2,6 +2,8 @@ package org.daisy.dotify.formatter.impl;
 
 import java.util.List;
 
+import org.daisy.dotify.formatter.impl.row.RowImpl;
+
 /**
  * Provides a cost function for table layout
  * @author Joel Håkansson

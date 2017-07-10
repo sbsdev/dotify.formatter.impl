@@ -2,6 +2,7 @@ package org.daisy.dotify.formatter.impl;
 
 import org.daisy.dotify.api.formatter.PageAreaBuilder;
 import org.daisy.dotify.api.formatter.PageAreaProperties;
+import org.daisy.dotify.formatter.impl.common.FormatterCoreContext;
 
 class PageAreaBuilderImpl implements PageAreaBuilder {
 	private final PageAreaProperties properties;

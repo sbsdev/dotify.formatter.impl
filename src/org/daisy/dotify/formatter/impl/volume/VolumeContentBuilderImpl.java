@@ -20,7 +20,7 @@ import org.daisy.dotify.api.formatter.TableProperties;
 import org.daisy.dotify.api.formatter.TextProperties;
 import org.daisy.dotify.api.formatter.TocProperties;
 import org.daisy.dotify.api.formatter.VolumeContentBuilder;
-import org.daisy.dotify.formatter.impl.FormatterCoreContext;
+import org.daisy.dotify.formatter.impl.common.FormatterCoreContext;
 
 class VolumeContentBuilderImpl extends Stack<VolumeSequence> implements VolumeContentBuilder {
 	/**

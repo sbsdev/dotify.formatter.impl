@@ -6,7 +6,7 @@ import org.daisy.dotify.api.formatter.Condition;
 import org.daisy.dotify.api.formatter.Context;
 import org.daisy.dotify.api.formatter.VolumeContentBuilder;
 import org.daisy.dotify.api.formatter.VolumeTemplateBuilder;
-import org.daisy.dotify.formatter.impl.FormatterCoreContext;
+import org.daisy.dotify.formatter.impl.common.FormatterCoreContext;
 
 
 public class VolumeTemplate implements VolumeTemplateBuilder {

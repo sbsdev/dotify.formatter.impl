@@ -1,10 +1,10 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.row;
 
 import java.util.Collections;
 
 import org.daisy.dotify.api.formatter.FormattingTypes;
 import org.daisy.dotify.api.formatter.FormattingTypes.Alignment;
-import org.daisy.dotify.formatter.impl.Margin.Type;
+import org.daisy.dotify.formatter.impl.row.Margin.Type;
 
 /**
  * Provides properties for a block. {@link RowDataProperties} are
@@ -12,7 +12,7 @@ import org.daisy.dotify.formatter.impl.Margin.Type;
  * @author Joel Håkansson
  *
  */
-final class RowDataProperties {
+public final class RowDataProperties {
 	private final int blockIndent, blockIndentParent;
 	private final Margin leftMargin;
 	private final Margin rightMargin;
@@ -31,7 +31,7 @@ final class RowDataProperties {
 	private final SingleLineDecoration trailingDecoration;
 	private final String underlineStyle;
 	
-	static class Builder {
+	public static class Builder {
 		private int blockIndent = 0;
 		private int blockIndentParent = 0;
 		private int textIndent = 0;

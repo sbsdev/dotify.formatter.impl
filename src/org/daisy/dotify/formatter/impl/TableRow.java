@@ -7,6 +7,7 @@ import java.util.Stack;
 import org.daisy.dotify.api.formatter.BlockProperties;
 import org.daisy.dotify.api.formatter.TableCellProperties;
 import org.daisy.dotify.api.formatter.TextBlockProperties;
+import org.daisy.dotify.formatter.impl.common.FormatterCoreContext;
 
 class TableRow implements Iterable<TableCell> {
 	private final Stack<TableCell> cells;

@@ -9,6 +9,7 @@ import java.util.Stack;
 
 import org.daisy.dotify.api.formatter.BlockProperties;
 import org.daisy.dotify.api.formatter.ContentCollection;
+import org.daisy.dotify.formatter.impl.common.FormatterCoreContext;
 
 
 /**

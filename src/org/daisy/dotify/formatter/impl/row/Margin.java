@@ -1,4 +1,4 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.row;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -10,8 +10,8 @@ import org.daisy.dotify.common.text.StringTools;
  * Provides a margin. Margins are immutable.
  * @author Joel Håkansson
  */
-final class Margin {
-	enum Type {
+public final class Margin {
+	public enum Type {
 		LEFT(false),
 		RIGHT(true)
 		;
@@ -25,12 +25,12 @@ final class Margin {
 	private final Type t;
 	private final List<MarginComponent> components;
 
-	Margin(Type t, List<MarginComponent> components) {
+	public Margin(Type t, List<MarginComponent> components) {
 		this.t = t;
 		this.components = Collections.unmodifiableList(new ArrayList<>(components));
 	}
 	
-	MarginProperties buildMargin(char spaceCharacter) {
+	public MarginProperties buildMargin(char spaceCharacter) {
 		return buildMarginProperties(spaceCharacter, false);
 	}
 	

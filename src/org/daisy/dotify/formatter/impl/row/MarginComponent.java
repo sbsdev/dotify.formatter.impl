@@ -1,11 +1,11 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.row;
 
-class MarginComponent {
+public class MarginComponent {
 	private final String border;
 	private final int outer;
 	private final int inner;
 
-	MarginComponent(String border, int outerOffset, int innerOffset) {
+	public MarginComponent(String border, int outerOffset, int innerOffset) {
 		this.border = border;
 		this.outer = outerOffset;
 		this.inner = innerOffset;

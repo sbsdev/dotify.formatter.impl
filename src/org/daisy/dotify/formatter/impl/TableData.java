@@ -8,6 +8,7 @@ import java.util.logging.Logger;
 
 import org.daisy.dotify.api.formatter.FormatterCore;
 import org.daisy.dotify.api.formatter.TableCellProperties;
+import org.daisy.dotify.formatter.impl.common.FormatterCoreContext;
 
 class TableData implements Iterable<TableRow> {
 	private static final Logger logger = Logger.getLogger(TableData.class.getCanonicalName());

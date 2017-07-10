@@ -1,4 +1,4 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.row;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -6,8 +6,9 @@ import java.util.List;
 
 import org.daisy.dotify.api.formatter.Marker;
 import org.daisy.dotify.common.text.StringTools;
+import org.daisy.dotify.formatter.impl.common.FormatterCoreContext;
 
-abstract class AbstractBlockContentManager implements BlockStatistics {
+public abstract class AbstractBlockContentManager implements BlockStatistics {
 	//Immutable
 	protected final int flowWidth;
 	protected final RowDataProperties rdp;
@@ -22,15 +23,15 @@ abstract class AbstractBlockContentManager implements BlockStatistics {
 	private final int minWidth;
 	
 	//Mutable
-	protected final FormatterContext fcontext;
+	protected final FormatterCoreContext fcontext;
 	protected final ArrayList<Marker> groupMarkers;
 	protected final ArrayList<String> groupAnchors;
 	
-	AbstractBlockContentManager(int flowWidth, RowDataProperties rdp, FormatterContext fcontext) {
+	AbstractBlockContentManager(int flowWidth, RowDataProperties rdp, FormatterCoreContext fcontext) {
 		this(flowWidth, rdp, fcontext, null);
 	}
 	
-	AbstractBlockContentManager(int flowWidth, RowDataProperties rdp, FormatterContext fcontext, Integer minWidth) {
+	protected AbstractBlockContentManager(int flowWidth, RowDataProperties rdp, FormatterCoreContext fcontext, Integer minWidth) {
 		this.flowWidth = flowWidth;
 		this.leftParent = rdp.getLeftMargin().buildMarginParent(fcontext.getSpaceCharacter());
 		this.rightParent = rdp.getRightMargin().buildMarginParent(fcontext.getSpaceCharacter());
@@ -77,7 +78,7 @@ abstract class AbstractBlockContentManager implements BlockStatistics {
 		this.skippablePostContentRows = Collections.unmodifiableList(skippablePostContentRowsBuilder);
 	}
 	
-	AbstractBlockContentManager(AbstractBlockContentManager template) {
+	protected AbstractBlockContentManager(AbstractBlockContentManager template) {
 		this.flowWidth = template.flowWidth;
 		this.rdp = template.rdp;
 		this.leftParent = template.leftParent;
@@ -95,31 +96,31 @@ abstract class AbstractBlockContentManager implements BlockStatistics {
 		this.groupMarkers = new ArrayList<>(template.groupMarkers);
 	}
 	
-	abstract AbstractBlockContentManager copy();
+	public abstract AbstractBlockContentManager copy();
     
     /**
      * Returns true if the manager has more rows.
      * @return returns true if there are more rows, false otherwise
      */
-    abstract boolean hasNext();
+    public abstract boolean hasNext();
     
     /**
      * Gets the next row from the manager with the specified width
      * @return returns the next row
      */
-    abstract RowImpl getNext();
+    public abstract RowImpl getNext();
 
 	/**
 	 * Returns true if this manager supports rows with variable maximum
 	 * width, false otherwise.
 	 * @return true if variable maximum width is supported, false otherwise
 	 */
-	abstract boolean supportsVariableWidth();
+	public abstract boolean supportsVariableWidth();
 
     /**
      * Resets the state of the content manager to the first row.
      */
-    void reset() {
+    public void reset() {
     	groupAnchors.clear();
     	groupMarkers.clear();
     }
@@ -161,43 +162,43 @@ abstract class AbstractBlockContentManager implements BlockStatistics {
 		return row;
 	}
 
-	MarginProperties getLeftMarginParent() {
+	public MarginProperties getLeftMarginParent() {
 		return leftParent;
 	}
 
-	MarginProperties getRightMarginParent() {
+	public MarginProperties getRightMarginParent() {
 		return rightParent;
 	}
 
-	List<RowImpl> getCollapsiblePreContentRows() {
+	public List<RowImpl> getCollapsiblePreContentRows() {
 		return collapsiblePreContentRows;
 	}
 	
-	boolean hasCollapsiblePreContentRows() {
+	public boolean hasCollapsiblePreContentRows() {
 		return !collapsiblePreContentRows.isEmpty();
 	}
 
-	List<RowImpl> getInnerPreContentRows() {
+	public List<RowImpl> getInnerPreContentRows() {
 		return innerPreContentRows;
 	}
 	
-	boolean hasInnerPreContentRows() {
+	public boolean hasInnerPreContentRows() {
 		return !innerPreContentRows.isEmpty();
 	}
 
-	List<RowImpl> getPostContentRows() {
+	public List<RowImpl> getPostContentRows() {
 		return postContentRows;
 	}
 	
-	boolean hasPostContentRows() {
+	public boolean hasPostContentRows() {
 		return !postContentRows.isEmpty();
 	}
 	
-	List<RowImpl> getSkippablePostContentRows() {
+	public List<RowImpl> getSkippablePostContentRows() {
 		return skippablePostContentRows;
 	}
 	
-	boolean hasSkippablePostContentRows() {
+	public boolean hasSkippablePostContentRows() {
 		return !skippablePostContentRows.isEmpty();
 	}
 	
@@ -210,11 +211,11 @@ abstract class AbstractBlockContentManager implements BlockStatistics {
 	 * Get markers that are not attached to a row, i.e. markers that proceeds any text contents
 	 * @return returns markers that proceeds this FlowGroups text contents
 	 */
-	ArrayList<Marker> getGroupMarkers() {
+	public ArrayList<Marker> getGroupMarkers() {
 		return groupMarkers;
 	}
 	
-	ArrayList<String> getGroupAnchors() {
+	public ArrayList<String> getGroupAnchors() {
 		return groupAnchors;
 	}
 	

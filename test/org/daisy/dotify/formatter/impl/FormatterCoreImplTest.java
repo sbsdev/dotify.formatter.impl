@@ -6,7 +6,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.daisy.dotify.api.formatter.BlockProperties;
-import org.daisy.dotify.formatter.impl.Margin.Type;
+import org.daisy.dotify.formatter.impl.row.Margin;
+import org.daisy.dotify.formatter.impl.row.MarginComponent;
+import org.daisy.dotify.formatter.impl.row.RowDataProperties;
+import org.daisy.dotify.formatter.impl.row.Margin.Type;
 import org.junit.Test;
 @SuppressWarnings("javadoc")
 public class FormatterCoreImplTest {

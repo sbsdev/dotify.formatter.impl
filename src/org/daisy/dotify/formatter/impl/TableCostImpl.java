@@ -2,6 +2,8 @@ package org.daisy.dotify.formatter.impl;
 
 import java.util.List;
 
+import org.daisy.dotify.formatter.impl.row.RowImpl;
+
 class TableCostImpl implements TableCost {
 	private final int spacePreferred;
 	private double cost;

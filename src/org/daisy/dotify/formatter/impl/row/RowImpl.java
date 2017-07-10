@@ -1,4 +1,4 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.row;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -12,7 +12,7 @@ import org.daisy.dotify.api.writer.Row;
  * Provides a single row of text. {@link RowImpl}s are immutable.
  * @author Joel Håkansson
  */
-final class RowImpl implements Row {
+public final class RowImpl implements Row {
 	private final String chars;
 	private final List<Marker> markers;
 	private final List<String> anchors;
@@ -24,7 +24,7 @@ final class RowImpl implements Row {
 	private final boolean allowsBreakAfter;
 	private final int leaderSpace;
 	
-	static class Builder {
+	public static class Builder {
 		private String chars;
 		private List<Marker> markers = new ArrayList<>();
 		private List<String> anchors = new ArrayList<>();
@@ -37,11 +37,11 @@ final class RowImpl implements Row {
 		private int leaderSpace = 0;
 		private boolean built = false;
 
-		Builder(String chars) {
+		public Builder(String chars) {
 			this.chars = chars;
 		}
 
-		Builder(RowImpl template) {
+		public Builder(RowImpl template) {
 			this.chars = template.chars;
 			this.markers = new ArrayList<>(template.markers);
 			this.anchors = new ArrayList<>(template.anchors);
@@ -77,7 +77,7 @@ final class RowImpl implements Row {
 			return chars;
 		}
 
-		Builder leftMargin(MarginProperties value) {
+		public Builder leftMargin(MarginProperties value) {
 			this.leftMargin = value;
 			return this;
 		}
@@ -87,7 +87,7 @@ final class RowImpl implements Row {
 			return leftMargin;
 		}
 
-		Builder rightMargin(MarginProperties value) {
+		public Builder rightMargin(MarginProperties value) {
 			this.rightMargin = value;
 			return this;
 		}
@@ -95,20 +95,20 @@ final class RowImpl implements Row {
 			this.alignment = value;
 			return this;
 		}
-		Builder rowSpacing(Float value) {
+		public Builder rowSpacing(Float value) {
 			this.rowSpacing = value;
 			return this;
 		}
-		Builder adjustedForMargin(boolean value) {
+		public Builder adjustedForMargin(boolean value) {
 			this.adjustedForMargin = value;
 			return this;
 		}
-		Builder allowsBreakAfter(boolean value) {
+		public Builder allowsBreakAfter(boolean value) {
 			this.allowsBreakAfter = value;
 			return this;
 		}
 
-		Builder addAnchors(List<String> refs) {
+		public Builder addAnchors(List<String> refs) {
 			assertNotBuilt();
 			anchors.addAll(refs);
 			return this;
@@ -143,7 +143,7 @@ final class RowImpl implements Row {
 		 * Add a collection of markers to the Row
 		 * @param list the list of markers
 		 */
-		Builder addMarkers(List<Marker> list) {
+		public Builder addMarkers(List<Marker> list) {
 			assertNotBuilt();
 			markers.addAll(list);
 			return this;
@@ -180,7 +180,7 @@ final class RowImpl implements Row {
 			}
 		}
 
-		RowImpl build() {
+		public RowImpl build() {
 			assertNotBuilt();
 			built = true;
 			return new RowImpl(this);
@@ -294,11 +294,11 @@ final class RowImpl implements Row {
 		return rowSpacing;
 	}
 
-	boolean shouldAdjustForMargin() {
+	public boolean shouldAdjustForMargin() {
 		return adjustedForMargin;
 	}
 
-	boolean allowsBreakAfter() {
+	public boolean allowsBreakAfter() {
 		return allowsBreakAfter;
 	}
 	

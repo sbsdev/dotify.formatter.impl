@@ -8,6 +8,7 @@ import java.util.List;
 import org.daisy.dotify.api.formatter.Marker;
 import org.daisy.dotify.api.writer.Row;
 import org.daisy.dotify.common.split.SplitPointUnit;
+import org.daisy.dotify.formatter.impl.row.RowImpl;
 
 class RowGroup implements SplitPointUnit {
 	private final List<RowImpl> rows;
