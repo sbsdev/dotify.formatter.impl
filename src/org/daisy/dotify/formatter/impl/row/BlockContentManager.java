@@ -2,9 +2,9 @@ package org.daisy.dotify.formatter.impl.row;
 
 import static java.lang.Math.min;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Stack;
 import java.util.regex.Pattern;
 
 import org.daisy.dotify.api.formatter.Context;
@@ -35,7 +35,7 @@ public class BlockContentManager extends AbstractBlockContentManager {
 	private static final Pattern softHyphenPattern  = Pattern.compile("\u00ad");
 	private static final Pattern trailingWsBraillePattern = Pattern.compile("[\\s\u2800]+\\z");
 
-	private final Stack<RowImpl> rows;
+	private final List<RowImpl> rows;
 	private final CrossReferenceHandler refs;
 	private final int available;
 	private final Context context;
@@ -54,21 +54,20 @@ public class BlockContentManager extends AbstractBlockContentManager {
 	private boolean seenSegmentAfterLeader;
 	private int rowIndex;
 	
-	public BlockContentManager(int flowWidth, Stack<Segment> segments, RowDataProperties rdp, CrossReferenceHandler refs, Context context, FormatterCoreContext fcontext) {
+	public BlockContentManager(int flowWidth, List<Segment> segments, RowDataProperties rdp, CrossReferenceHandler refs, Context context, FormatterCoreContext fcontext) {
 		super(flowWidth, rdp, fcontext);
 		this.refs = refs;
 		this.available = flowWidth - rightMargin.getContent().length();
 		this.context = context;
 		this.segments = Collections.unmodifiableList(segments);
-		this.rows = new Stack<>();
+		this.rows = new ArrayList<>();
 		this.leaderManager = new LeaderManager();
 		initFields();
 	}
 	
-	BlockContentManager(BlockContentManager template) {
+	private BlockContentManager(BlockContentManager template) {
 		super(template);
-		this.rows = new Stack<>();
-		this.rows.addAll(template.rows);
+		this.rows = new ArrayList<>(template.rows);
 		// Refs is mutable, but for now we assume that the same context should be used.
 		this.refs = template.refs;
 		this.available = template.available;
@@ -410,7 +409,7 @@ public class BlockContentManager extends AbstractBlockContentManager {
 				// In that case it is probably best to push the content instead of failing altogether.
 				indent + blockIndent - StringTools.length(contentBefore),
 				0);
-		return contentBefore + StringTools.fill(fcontext.getSpaceCharacter(), thisIndent).toString();
+		return contentBefore + StringTools.fill(fcontext.getSpaceCharacter(), thisIndent);
 	}
 
 	//TODO: check leader functionality
@@ -424,8 +423,9 @@ public class BlockContentManager extends AbstractBlockContentManager {
 			int align = leaderManager.getLeaderAlign(btr.countRemaining());
 			
 			if (m.preTabPos>leaderPos || offset - align < 0) { // if tab position has been passed or if text does not fit within row, try on a new row
+				MarginProperties _leftMargin = currentRow.getLeftMargin();
 				flushCurrentRow();
-				currentRow = rdp.configureNewEmptyRowBuilder(rows.peek().getLeftMargin(), rightMargin);
+				currentRow = rdp.configureNewEmptyRowBuilder(_leftMargin, rightMargin);
 				m = new RowInfo(StringTools.fill(fcontext.getSpaceCharacter(), rdp.getTextIndent()+blockIndent), currentRow, available);
 				//update offset
 				offset = leaderPos-m.preTabPos;
