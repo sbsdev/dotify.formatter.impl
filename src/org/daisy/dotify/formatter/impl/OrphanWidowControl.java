@@ -28,7 +28,7 @@ class OrphanWidowControl {
 	 * @throws IndexOutOfBounds if index is >= size or < 0
 	 */
 	boolean allowsBreakAfter(int index) {
-		if (index>=size || index < 0) {
+		if (index < 0) {
 			throw new IndexOutOfBoundsException();
 		}
 		if (index>=size-1) { // the last index always allows breaking after

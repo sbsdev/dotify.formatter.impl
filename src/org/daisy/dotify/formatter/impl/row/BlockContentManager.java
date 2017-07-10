@@ -21,6 +21,7 @@ import org.daisy.dotify.formatter.impl.segment.LeaderSegment;
 import org.daisy.dotify.formatter.impl.segment.MarkerSegment;
 import org.daisy.dotify.formatter.impl.segment.PageNumberReferenceSegment;
 import org.daisy.dotify.formatter.impl.segment.Segment;
+import org.daisy.dotify.formatter.impl.segment.Segment.SegmentType;
 import org.daisy.dotify.formatter.impl.segment.TextSegment;
 
 /**
@@ -123,10 +124,11 @@ public class BlockContentManager extends AbstractBlockContentManager {
 		while (index<0 || rows.size()<index) {
 			if (!hasMoreData()) {
 				return false;
-			} else if (testOnly) {
-				return true;
 			}
 			Segment s = segments.get(segmentIndex);
+			if (testOnly && s.getSegmentType()!=SegmentType.Marker && s.getSegmentType()!=SegmentType.Anchor) {
+				return true;
+			}
 			layoutSegment(s);
 			segmentIndex++;
 			if (!hasMoreData()) {

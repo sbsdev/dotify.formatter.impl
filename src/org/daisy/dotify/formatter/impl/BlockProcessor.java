@@ -8,6 +8,7 @@ import org.daisy.dotify.api.formatter.FormattingTypes.Keep;
 import org.daisy.dotify.formatter.impl.row.AbstractBlockContentManager;
 import org.daisy.dotify.formatter.impl.row.BlockStatistics;
 import org.daisy.dotify.formatter.impl.row.RowImpl;
+import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 
 /**
  * Provides data about a single rendering scenario.
@@ -44,7 +45,7 @@ abstract class BlockProcessor {
             );
 			keepWithNext = -1;
 		}
-		rowGroupIterator = new InnerBlockProcessor(master, g, bcm);
+		rowGroupIterator = new InnerBlockProcessor(master, g, bcm, bc);
 	}
 	
 	void processNextRowGroup() {
@@ -54,7 +55,17 @@ abstract class BlockProcessor {
 	}
 	
 	boolean hasNextInBlock() {
-		return rowGroupIterator!=null && rowGroupIterator.hasNext();
+		if (rowGroupIterator != null) {
+			if (rowGroupIterator.hasNext()) {
+				return true;
+			} else {
+				rowGroupIterator.bc.getRefs().setGroupAnchors(rowGroupIterator.g.getBlockAddress(),
+						rowGroupIterator.bcm.getGroupAnchors());
+				rowGroupIterator.bc.getRefs().setGroupMarkers(rowGroupIterator.g.getBlockAddress(),
+						rowGroupIterator.bcm.getGroupMarkers());
+			}
+		}
+		return false;
 	}
 	
 	private InnerBlockProcessor copyUnlessNull(InnerBlockProcessor template) {
@@ -77,7 +88,8 @@ abstract class BlockProcessor {
 		private final LayoutMaster master;
 		private final Block g;
 		private final AbstractBlockContentManager bcm;
-		
+		private final BlockContext bc;
+
 		private final OrphanWidowControl owc;
 		private final boolean otherData;
 		private int rowIndex;
@@ -87,24 +99,26 @@ abstract class BlockProcessor {
 			this.master = template.master;
 			this.g= template.g;
 			this.bcm = template.bcm==null?null:template.bcm.copy();
+			this.bc = template.bc;
 			this.owc = template.owc;
 			this.otherData = template.otherData;
 			this.rowIndex = template.rowIndex;
 			this.phase = template.phase;
 		}
 
-		private InnerBlockProcessor(LayoutMaster master, Block g, AbstractBlockContentManager bcm) {
+		private InnerBlockProcessor(LayoutMaster master, Block g, AbstractBlockContentManager bcm, BlockContext bc) {
 			this.master = master;
 			this.g = g;
 			this.bcm = bcm;
+			this.bc = bc;
 			this.phase = 0;
 			this.rowIndex = 0;
 			this.owc = new OrphanWidowControl(g.getRowDataProperties().getOrphans(),
 					g.getRowDataProperties().getWidows(), 
-					bcm.getRowCount());
-			this.otherData = (!bcm.getGroupAnchors().isEmpty() || !bcm.getGroupMarkers().isEmpty() || !"".equals(g.getIdentifier())
-					|| g.getKeepWithNextSheets()>0 || g.getKeepWithPreviousSheets()>0);
-
+					bc.getRefs().getRowCount(g.getBlockAddress()));
+			this.otherData = !bc.getRefs().getGroupAnchors(g.getBlockAddress()).isEmpty()
+					|| !bc.getRefs().getGroupMarkers(g.getBlockAddress()).isEmpty() || !"".equals(g.getIdentifier())
+					|| g.getKeepWithNextSheets() > 0 || g.getKeepWithPreviousSheets() > 0;
 		}
 		
 		@Override
@@ -157,7 +171,7 @@ abstract class BlockProcessor {
 				//TODO: Does this interfere with collapsing margins?
 				if (shouldAddGroupForEmptyContent()) {
 					RowGroup.Builder rgb = new RowGroup.Builder(master.getRowSpacing(), new ArrayList<RowImpl>());
-					setProperties(rgb, bcm, g);
+					setProperties(rgb, bc.getRefs(), g);
 					return rgb.build();
 				}
 			}
@@ -168,6 +182,7 @@ abstract class BlockProcessor {
 					if (!bcm.hasNext()) {
 						//we're at the last line, this should be kept with the next block's first line
 						keepWithNext = g.getKeepWithNext();
+						bc.getRefs().setRowCount(g.getBlockAddress(), bcm.getRowCount());
 					}
 					RowGroup.Builder rgb = new RowGroup.Builder(master.getRowSpacing()).add(r).
 							collapsible(false).skippable(false).breakable(
@@ -178,7 +193,7 @@ abstract class BlockProcessor {
 									(bcm.hasNext() || !bcm.hasPostContentRows())
 									);
 					if (rowIndex==1) { //First item
-						setProperties(rgb, bcm, g);
+						setProperties(rgb, bc.getRefs(), g);
 					}
 					keepWithNext = keepWithNext-1;
 					return rgb.build();
@@ -208,12 +223,12 @@ abstract class BlockProcessor {
 		}
 	}
 	
-	private static void setProperties(RowGroup.Builder rgb, AbstractBlockContentManager bcm, Block g) {
+	private static void setProperties(RowGroup.Builder rgb, CrossReferenceHandler crh, Block g) {
 		if (!"".equals(g.getIdentifier())) { 
 			rgb.identifier(g.getIdentifier());
 		}
-		rgb.markers(bcm.getGroupMarkers());
-		rgb.anchors(bcm.getGroupAnchors());
+		rgb.markers(crh.getGroupMarkers(g.getBlockAddress()));
+		rgb.anchors(crh.getGroupAnchors(g.getBlockAddress()));
 		rgb.keepWithNextSheets(g.getKeepWithNextSheets());
 		rgb.keepWithPreviousSheets(g.getKeepWithPreviousSheets());
 	}

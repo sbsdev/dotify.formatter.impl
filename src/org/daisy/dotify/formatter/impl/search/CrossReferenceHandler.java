@@ -1,10 +1,14 @@
 package org.daisy.dotify.formatter.impl.search;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.daisy.dotify.api.formatter.Marker;
 import org.daisy.dotify.api.formatter.MarkerReferenceField;
 
 public class CrossReferenceHandler {
@@ -14,6 +18,8 @@ public class CrossReferenceHandler {
 	private final LookupHandler<String, Integer> variables;
 	private final LookupHandler<SheetIdentity, Boolean> breakable;
 	private final LookupHandler<BlockAddress, Integer> rowCount;
+    private final LookupHandler<BlockAddress, List<String>> groupAnchors;
+    private final LookupHandler<BlockAddress, List<Marker>> groupMarkers;
 	private final Map<Integer, Overhead> volumeOverhead;
 	private final SearchInfo searchInfo;
 	private static final String VOLUMES_KEY = "volumes";
@@ -32,6 +38,8 @@ public class CrossReferenceHandler {
 		this.variables = new LookupHandler<>();
 		this.breakable = new LookupHandler<>();
 		this.rowCount = new LookupHandler<>();
+        this.groupAnchors = new LookupHandler<>();
+        this.groupMarkers = new LookupHandler<>();
 		this.volumeOverhead = new HashMap<>();
 		this.searchInfo = new SearchInfo();
         this.pageIds = new HashSet<>();
@@ -132,6 +140,20 @@ public class CrossReferenceHandler {
 		//FIXME: implement
 	}
 	
+	public void setGroupAnchors(BlockAddress blockId, List<String> anchors) {
+		if (readOnly) {
+			return;
+		}
+		groupAnchors.put(blockId, anchors.isEmpty() ? Collections.emptyList() : new ArrayList<>(anchors));
+	}
+
+	public void setGroupMarkers(BlockAddress blockId, List<Marker> markers) {
+		if (readOnly) {
+			return;
+		}
+		groupMarkers.put(blockId, markers.isEmpty() ? Collections.emptyList() : new ArrayList<>(markers));
+	}
+	
 	public Overhead getOverhead(int volumeNumber) {
 		if (volumeNumber<1) {
 			throw new IndexOutOfBoundsException("Volume must be greater than or equal to 1");
@@ -175,6 +197,14 @@ public class CrossReferenceHandler {
 	
 	public boolean getBreakable(SheetIdentity ident) {
 		return breakable.get(ident, true);
+	}
+
+	public List<String> getGroupAnchors(BlockAddress blockId) {
+		return groupAnchors.get(blockId, Collections.emptyList());
+	}
+
+	public List<Marker> getGroupMarkers(BlockAddress blockId) {
+		return groupMarkers.get(blockId, Collections.emptyList());
 	}
 	
 	public int getRowCount(BlockAddress blockId) {
@@ -238,7 +268,10 @@ public class CrossReferenceHandler {
 	 * @return true if some information has been changed, false otherwise
 	 */
 	public boolean isDirty() {
+		//TODO: fix dirty flag for anchors/markers
 		return pageRefs.isDirty() || volumeRefs.isDirty() || anchorRefs.isDirty() || variables.isDirty() || breakable.isDirty() || overheadDirty || searchInfo.isDirty();
+		 //|| groupAnchors.isDirty()
+		 //|| groupMarkers.isDirty() || rowCount.isDirty()
 	}
 	
 	/**
@@ -256,6 +289,10 @@ public class CrossReferenceHandler {
 		variables.setDirty(value);
 		breakable.setDirty(value);
 		searchInfo.setDirty(value);
+		//TODO: fix dirty flag for anchors/markers
+		//rowCount.setDirty(value);
+		//groupAnchors.setDirty(value);
+		//groupMarkers.setDirty(value);
 		overheadDirty = value;
 	}
 
