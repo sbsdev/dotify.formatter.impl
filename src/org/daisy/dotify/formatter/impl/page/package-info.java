@@ -8,4 +8,4 @@
  * </p>
  * @author Joel Håkansson
  */
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.page;

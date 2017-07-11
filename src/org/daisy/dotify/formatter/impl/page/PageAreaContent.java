@@ -1,4 +1,4 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.page;
 
 import java.util.ArrayList;
 import java.util.Collections;

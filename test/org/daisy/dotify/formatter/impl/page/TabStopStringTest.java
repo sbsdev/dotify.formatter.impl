@@ -1,10 +1,11 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.page;
 
 import static org.junit.Assert.assertEquals;
 
 import java.util.TreeSet;
 
-import org.daisy.dotify.formatter.impl.TabStopString.Alignment;
+import org.daisy.dotify.formatter.impl.page.TabStopString;
+import org.daisy.dotify.formatter.impl.page.TabStopString.Alignment;
 import org.junit.Test;
 
 @SuppressWarnings("javadoc")

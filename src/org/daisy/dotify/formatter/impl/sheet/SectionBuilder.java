@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Stack;
 
 import org.daisy.dotify.api.writer.SectionProperties;
-import org.daisy.dotify.formatter.impl.PageImpl;
+import org.daisy.dotify.formatter.impl.page.PageImpl;
 import org.daisy.dotify.writer.impl.Section;
 
 public class SectionBuilder {
