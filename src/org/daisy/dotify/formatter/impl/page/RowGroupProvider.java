@@ -13,7 +13,7 @@ import org.daisy.dotify.formatter.impl.row.RowImpl;
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.search.DefaultContext;
 
-class RowGroupProvider implements Iterator<RowGroup> {
+class RowGroupProvider {
 	private final LayoutMaster master;
 	private final Block g;
 	private final AbstractBlockContentManager bcm;
@@ -58,14 +58,6 @@ class RowGroupProvider implements Iterator<RowGroup> {
 		return keepWithNext;
 	}
 
-	void setContext(DefaultContext context) {
-		if (this.context==null || !this.context.equals(context)) {
-			this.context = g.contextWithMeta(context);
-			bcm.setContext(this.context);
-		}
-	}
-	
-	@Override
 	public boolean hasNext() {
 		// these conditions must match the ones in next()
 		return 
@@ -91,8 +83,11 @@ class RowGroupProvider implements Iterator<RowGroup> {
 		return bcm;
 	}
 	
-	@Override
-	public RowGroup next() {
+	public RowGroup next(DefaultContext context) {
+		if (this.context==null || !this.context.equals(context)) {
+			this.context = g.contextWithMeta(context);
+			bcm.setContext(this.context);
+		}
 		RowGroup b = nextInner();
 		if (!hasNext()) {
 			b.setAvoidVolumeBreakAfterPriority(g.getAvoidVolumeBreakAfterPriority());

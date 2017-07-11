@@ -45,9 +45,8 @@ abstract class BlockProcessor {
 	}
 	
 	protected void processNextRowGroup(DefaultContext context) {
-		rowGroupProvider.setContext(context);
 		if (hasNextInBlock()) {
-			addRowGroup(rowGroupProvider.next());
+			addRowGroup(rowGroupProvider.next(context));
 		}
 	}
 	
