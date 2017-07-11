@@ -84,13 +84,9 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 	}
 	
 	@Override
+	@Deprecated
 	public List<RowGroup> head(int n) {
-		if (n==0) {
-			return Collections.emptyList();
-		} else if (!ensureBuffer(n)) {
-			throw new IndexOutOfBoundsException();
-		}
-		return this.data.getList().subList(0, n);
+		throw new UnsupportedOperationException("Method is deprecated.");
 	}
 	
 	@Override
@@ -100,11 +96,9 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 	}
 
 	@Override
+	@Deprecated
 	public SplitPointDataSource<RowGroup> tail(int n) {
-		if (!ensureBuffer(n)) {
-			throw new IndexOutOfBoundsException("" + n);
-		}
-		return new RowGroupDataSource(master, bc, new RowGroupData(data, n), blocks, supplements, vs, blockIndex);
+		throw new UnsupportedOperationException("Method is deprecated.");
 	}
 
 	@Override
@@ -153,9 +147,16 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 
 	@Override
 	public SplitResult<RowGroup> split(int atIndex) {
-		SplitPointDataSource<RowGroup> tail = tail(atIndex);
-		List<RowGroup> head = head(atIndex);
-		return new SplitResult<RowGroup>(head, tail);
+		// TODO: rewrite this so that rendered tail data is discarded
+		if (!ensureBuffer(atIndex)) {
+			throw new IndexOutOfBoundsException("" + atIndex);
+		}
+		SplitPointDataSource<RowGroup> tail = new RowGroupDataSource(master, bc, new RowGroupData(data, atIndex), blocks, supplements, vs, blockIndex);
+		if (atIndex==0) {
+			return new SplitResult<RowGroup>(Collections.emptyList(), tail);
+		} else {
+			return new SplitResult<RowGroup>(this.data.getList().subList(0, atIndex), tail);
+		}
 	}
 
 }
