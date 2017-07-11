@@ -27,7 +27,7 @@ class RowGroupData extends BlockProcessor {
 	}
 
 	@Override
-	void newRowGroupSequence(VerticalSpacing vs) {
+	protected void newRowGroupSequence(VerticalSpacing vs) {
 		if (data!=null) {
 			throw new IllegalStateException();
 		} else {
@@ -36,23 +36,18 @@ class RowGroupData extends BlockProcessor {
 	}
 
 	@Override
-	boolean hasSequence() {
+	protected boolean hasSequence() {
 		return data!=null;
 	}
 
 	@Override
-	boolean hasResult() {
+	protected boolean hasResult() {
 		return hasSequence() && !data.isEmpty();
 	}
 
 	@Override
-	void addRowGroup(RowGroup rg) {
+	protected void addRowGroup(RowGroup rg) {
 		data.add(rg);
-	}
-
-	@Override
-	RowGroup peekResult() {
-		return data.isEmpty()?null:data.get(data.size()-1);
 	}
 	
 	List<RowGroup> getList() {

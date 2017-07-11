@@ -20,12 +20,10 @@ abstract class BlockProcessor {
 	private int keepWithNext = 0;
 	private InnerBlockProcessor rowGroupIterator;
 	
-	abstract void newRowGroupSequence(VerticalSpacing vs);
-	
-	abstract boolean hasSequence();
-	abstract boolean hasResult();
-	abstract void addRowGroup(RowGroup rg);
-	abstract RowGroup peekResult();
+	protected abstract void newRowGroupSequence(VerticalSpacing vs);
+	protected abstract boolean hasSequence();
+	protected abstract boolean hasResult();
+	protected abstract void addRowGroup(RowGroup rg);
 	
 	BlockProcessor() {
 		this.keepWithNext = 0;
@@ -36,7 +34,7 @@ abstract class BlockProcessor {
 		this.rowGroupIterator = copyUnlessNull(template.rowGroupIterator);
 	}
 	
-	void loadBlock(LayoutMaster master, Block g, BlockContext bc) {
+	protected void loadBlock(LayoutMaster master, Block g, BlockContext bc) {
 		AbstractBlockContentManager bcm = g.getBlockContentManager(bc);
 		if (!hasSequence() || ((g.getBreakBeforeType()==BreakBefore.PAGE  || g.getVerticalPosition()!=null) && hasResult())) {
             newRowGroupSequence(
@@ -49,14 +47,14 @@ abstract class BlockProcessor {
 		rowGroupIterator = new InnerBlockProcessor(master, g, bcm, bc);
 	}
 	
-	void processNextRowGroup(DefaultContext context) {
+	protected void processNextRowGroup(DefaultContext context) {
 		rowGroupIterator.setContext(context);
 		if (hasNextInBlock()) {
 			addRowGroup(rowGroupIterator.next());
 		}
 	}
 	
-	boolean hasNextInBlock() {
+	protected boolean hasNextInBlock() {
 		if (rowGroupIterator != null) {
 			if (rowGroupIterator.hasNext()) {
 				return true;
