@@ -1,4 +1,4 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.core;
 
 import org.daisy.dotify.api.formatter.BlockPosition;
 import org.daisy.dotify.api.formatter.FormattingTypes;
@@ -124,23 +124,23 @@ public abstract class Block {
 		return isVolatile;
 	}
 
-	FormattingTypes.BreakBefore getBreakBeforeType() {
+	public FormattingTypes.BreakBefore getBreakBeforeType() {
 		return breakBefore;
 	}
 	
-	FormattingTypes.Keep getKeepType() {
+	public FormattingTypes.Keep getKeepType() {
 		return keep;
 	}
 	
-	int getKeepWithNext() {
+	public int getKeepWithNext() {
 		return keepWithNext;
 	}
 	
-	int getKeepWithPreviousSheets() {
+	public int getKeepWithPreviousSheets() {
 		return keepWithPreviousSheets;
 	}
 	
-	int getKeepWithNextSheets() {
+	public int getKeepWithNextSheets() {
 		return keepWithNextSheets;
 	}
 	
@@ -152,11 +152,11 @@ public abstract class Block {
 		return avoidVolumeBreakAfterPriority;
 	}
 	
-	String getIdentifier() {
+	public String getIdentifier() {
 		return id;
 	}
 
-	BlockPosition getVerticalPosition() {
+	public BlockPosition getVerticalPosition() {
 		return verticalPosition;
 	}
 
@@ -204,7 +204,7 @@ public abstract class Block {
 		return blockId;
 	}
 	
-	AbstractBlockContentManager getBlockContentManager(BlockContext context) {
+	public AbstractBlockContentManager getBlockContentManager(BlockContext context) {
 		if (!context.equals(this.context)) {
 			//invalidate, if existing
 			rdm = null;
@@ -226,11 +226,11 @@ public abstract class Block {
 		this.metaPage = metaPage;
 	}
 	
-	DefaultContext contextWithMeta(DefaultContext dc) {
+	public DefaultContext contextWithMeta(DefaultContext dc) {
 		return DefaultContext.from(dc).metaVolume(metaVolume).metaPage(metaPage).build();
 	}
 	
-	RowDataProperties getRowDataProperties() {
+	public RowDataProperties getRowDataProperties() {
 		return rdp;
 	}
 	
@@ -238,11 +238,11 @@ public abstract class Block {
 		rdp = value;
 	}
 
-	RenderingScenario getRenderingScenario() {
+	public RenderingScenario getRenderingScenario() {
 		return rs;
 	}
 	
-	Integer getAvoidVolumeBreakAfterPriority() {
+	public Integer getAvoidVolumeBreakAfterPriority() {
 		return avoidVolumeBreakAfterPriority;
 	}
 	
@@ -250,7 +250,7 @@ public abstract class Block {
 		this.avoidVolumeBreakAfterPriority = value;
 	}
 	
-	Integer getAvoidVolumeBreakInsidePriority() {
+	public Integer getAvoidVolumeBreakInsidePriority() {
 		return avoidVolumeBreakInsidePriority;
 	}
 

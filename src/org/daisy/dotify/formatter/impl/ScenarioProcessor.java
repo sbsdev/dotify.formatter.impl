@@ -5,6 +5,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.daisy.dotify.api.formatter.RenderingScenario;
+import org.daisy.dotify.formatter.impl.core.Block;
+import org.daisy.dotify.formatter.impl.core.BlockContext;
+import org.daisy.dotify.formatter.impl.core.LayoutMaster;
 
 /**
  * Processes scenarios and selects the best one. The decision is based on the cost

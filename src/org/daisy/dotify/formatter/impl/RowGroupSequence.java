@@ -3,6 +3,8 @@ package org.daisy.dotify.formatter.impl;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.daisy.dotify.formatter.impl.core.Block;
+
 class RowGroupSequence {
 	private final List<Block> blocks;
 	private final List<RowGroup> group;

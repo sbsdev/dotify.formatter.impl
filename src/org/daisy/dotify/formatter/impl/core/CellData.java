@@ -1,4 +1,4 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.core;
 
 import java.util.Iterator;
 import java.util.List;

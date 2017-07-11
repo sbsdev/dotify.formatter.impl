@@ -1,4 +1,4 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.core;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -25,7 +25,7 @@ public class FormatterContext extends FormatterCoreContext {
 	private final Map<String, ContentCollectionImpl> collections;
 	
 
-	FormatterContext(BrailleTranslatorFactoryMakerService translatorFactory, TextBorderFactoryMakerService tbf, MarkerProcessorFactoryMakerService mpf, FormatterConfiguration config) {
+	public FormatterContext(BrailleTranslatorFactoryMakerService translatorFactory, TextBorderFactoryMakerService tbf, MarkerProcessorFactoryMakerService mpf, FormatterConfiguration config) {
 		super(translatorFactory, tbf, config, mpf);
 		this.masters = new HashMap<>();
 		this.collections = new HashMap<>();

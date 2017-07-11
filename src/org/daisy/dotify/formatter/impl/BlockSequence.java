@@ -4,6 +4,10 @@ import java.util.List;
 
 import org.daisy.dotify.api.formatter.FormatterSequence;
 import org.daisy.dotify.api.formatter.SequenceProperties;
+import org.daisy.dotify.formatter.impl.core.BlockContext;
+import org.daisy.dotify.formatter.impl.core.FormatterContext;
+import org.daisy.dotify.formatter.impl.core.FormatterCoreImpl;
+import org.daisy.dotify.formatter.impl.core.LayoutMaster;
 
 /**
  * Provides an interface for a sequence of block contents.

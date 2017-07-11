@@ -3,6 +3,10 @@ package org.daisy.dotify.formatter.impl;
 import java.util.List;
 import java.util.Stack;
 
+import org.daisy.dotify.formatter.impl.core.Block;
+import org.daisy.dotify.formatter.impl.core.BlockContext;
+import org.daisy.dotify.formatter.impl.core.LayoutMaster;
+
 /**
  * Provides data about a single rendering scenario.
  * 

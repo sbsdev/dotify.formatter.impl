@@ -6,6 +6,9 @@ import java.util.List;
 import org.daisy.dotify.common.split.SplitPointDataSource;
 import org.daisy.dotify.common.split.SplitResult;
 import org.daisy.dotify.common.split.Supplements;
+import org.daisy.dotify.formatter.impl.core.Block;
+import org.daisy.dotify.formatter.impl.core.BlockContext;
+import org.daisy.dotify.formatter.impl.core.LayoutMaster;
 
 class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 	private static final Supplements<RowGroup> EMPTY_SUPPLEMENTS = new Supplements<RowGroup>() {

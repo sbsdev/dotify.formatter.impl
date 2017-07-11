@@ -1,4 +1,4 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.core;
 
 import org.daisy.dotify.api.formatter.TableCellProperties;
 import org.daisy.dotify.api.translator.Border;

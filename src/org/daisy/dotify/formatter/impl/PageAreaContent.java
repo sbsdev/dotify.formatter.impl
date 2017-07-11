@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.daisy.dotify.formatter.impl.core.Block;
+import org.daisy.dotify.formatter.impl.core.BlockContext;
+import org.daisy.dotify.formatter.impl.core.PageAreaBuilderImpl;
 import org.daisy.dotify.formatter.impl.row.AbstractBlockContentManager;
 import org.daisy.dotify.formatter.impl.row.RowImpl;
 

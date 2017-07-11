@@ -1,4 +1,4 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.core;
 
 /**
  * Indicates a pagination problem.
@@ -15,7 +15,7 @@ public class PaginatorException extends RuntimeException {
 	PaginatorException() {
 	}
 
-	PaginatorException(String message) {
+	public PaginatorException(String message) {
 		super(message);
 	}
 
@@ -23,7 +23,7 @@ public class PaginatorException extends RuntimeException {
 		super(cause);
 	}
 
-	PaginatorException(String message, Throwable cause) {
+	public PaginatorException(String message, Throwable cause) {
 		super(message, cause);
 	}
 

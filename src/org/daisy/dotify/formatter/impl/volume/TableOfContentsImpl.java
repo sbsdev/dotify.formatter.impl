@@ -5,8 +5,8 @@ import java.util.Set;
 
 import org.daisy.dotify.api.formatter.BlockProperties;
 import org.daisy.dotify.api.formatter.TableOfContents;
-import org.daisy.dotify.formatter.impl.FormatterCoreImpl;
 import org.daisy.dotify.formatter.impl.common.FormatterCoreContext;
+import org.daisy.dotify.formatter.impl.core.FormatterCoreImpl;
 
 
 /**

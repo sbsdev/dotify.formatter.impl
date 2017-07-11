@@ -1,6 +1,9 @@
 package org.daisy.dotify.formatter.impl;
 
 import org.daisy.dotify.api.formatter.FormattingTypes.BreakBefore;
+import org.daisy.dotify.formatter.impl.core.Block;
+import org.daisy.dotify.formatter.impl.core.BlockContext;
+import org.daisy.dotify.formatter.impl.core.LayoutMaster;
 import org.daisy.dotify.formatter.impl.row.AbstractBlockContentManager;
 import org.daisy.dotify.formatter.impl.row.BlockStatistics;
 import org.daisy.dotify.formatter.impl.row.RowImpl;

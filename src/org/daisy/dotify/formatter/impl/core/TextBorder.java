@@ -1,4 +1,4 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.core;
 
 import org.daisy.dotify.api.translator.TextBorderStyle;
 import org.daisy.dotify.common.text.StringTools;

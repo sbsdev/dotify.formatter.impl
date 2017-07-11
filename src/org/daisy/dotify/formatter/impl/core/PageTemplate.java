@@ -1,4 +1,4 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.core;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -20,7 +20,7 @@ import org.daisy.dotify.formatter.impl.search.DefaultContext;
  * for the pages to which it applies.
  * @author Joel Håkansson
  */
-class PageTemplate implements PageTemplateBuilder {
+public class PageTemplate implements PageTemplateBuilder {
 	private final Condition condition;
 	private final List<FieldList> header;
 	private final List<FieldList> footer;
@@ -77,11 +77,11 @@ class PageTemplate implements PageTemplateBuilder {
 	 * resolved string, which could affect its length.
 	 * @return returns a List of FieldList
 	 */
-	List<FieldList> getHeader() {
+	public List<FieldList> getHeader() {
 		return header;
 	}
 	
-	float getHeaderHeight() {
+	public float getHeaderHeight() {
 		if (headerHeight==null) {
 			headerHeight = getHeight(header, defaultRowSpacing);
 		}
@@ -95,7 +95,7 @@ class PageTemplate implements PageTemplateBuilder {
 	 * resolved string, which could affect its length.
 	 * @return returns a List of FieldList
 	 */
-	List<FieldList> getFooter() {
+	public List<FieldList> getFooter() {
 		return footer;
 	}
 	
@@ -136,15 +136,15 @@ class PageTemplate implements PageTemplateBuilder {
 		rightMarginRegion.add(margin);
 	}
 
-	List<MarginRegion> getLeftMarginRegion() {
+	public List<MarginRegion> getLeftMarginRegion() {
 		return leftMarginRegion;
 	}
 
-	List<MarginRegion> getRightMarginRegion() {
+	public List<MarginRegion> getRightMarginRegion() {
 		return rightMarginRegion;
 	}
 	
-	int validateAndAnalyzeHeader() {
+	public int validateAndAnalyzeHeader() {
 		// do the analyzing lazily
 		if (flowIntoHeaderHeight==null) {
 			flowIntoHeaderHeight = validateAndAnalyzeHeaderFooter(true);
@@ -152,7 +152,7 @@ class PageTemplate implements PageTemplateBuilder {
 		return flowIntoHeaderHeight;
 	}
 	
-	int validateAndAnalyzeFooter() {
+	public int validateAndAnalyzeFooter() {
 		// do the analyzing lazily
 		if (flowIntoFooterHeight==null) {
 			flowIntoFooterHeight = validateAndAnalyzeHeaderFooter(false); 
@@ -217,7 +217,7 @@ class PageTemplate implements PageTemplateBuilder {
 		return (float)list.stream().mapToDouble(f -> f.getRowSpacing()!=null?f.getRowSpacing():def).sum();
 	}
 	
-	int getTotalMarginRegionWidth() {
+	public int getTotalMarginRegionWidth() {
 		if (totalMarginRegion==null) {
 			totalMarginRegion = getLeftMarginRegion().stream().mapToInt(mr -> mr.getWidth()).sum()
 							 + getRightMarginRegion().stream().mapToInt(mr -> mr.getWidth()).sum();

@@ -1,13 +1,13 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.core;
 
 import java.util.Collection;
 
 import org.daisy.dotify.api.writer.Row;
 
-class HeightCalculator {
+public class HeightCalculator {
 	private final float defSpacing;
 	private float ret;
-	HeightCalculator(float defSpacing) {
+	public HeightCalculator(float defSpacing) {
 		this.defSpacing = defSpacing < 1 ? 1 : defSpacing;
 		this.ret = 0;
 	}
@@ -29,11 +29,11 @@ class HeightCalculator {
 		ret += getRowSpacing(r);
 	}
 	
-	void addRows(Collection<? extends Row> rows) {
+	public void addRows(Collection<? extends Row> rows) {
 		ret += rows.stream().mapToDouble(this::getRowSpacing).sum();
 	}
 
-	float getCurrentHeight() {
+	public float getCurrentHeight() {
 		return ret;
 	}
 }

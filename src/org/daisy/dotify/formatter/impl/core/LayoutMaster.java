@@ -1,4 +1,4 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.core;
 
 import java.util.ArrayList;
 
@@ -88,7 +88,7 @@ public class LayoutMaster implements LayoutMasterBuilder, SectionProperties {
 		return (pageArea!=null?pageArea.getProperties():null);
 	}
 	
-	PageAreaBuilderImpl getPageAreaBuilder() {
+	public PageAreaBuilderImpl getPageAreaBuilder() {
 		return pageArea;
 	}
 
@@ -188,7 +188,7 @@ public class LayoutMaster implements LayoutMasterBuilder, SectionProperties {
 		}
 	}
 	
-	int getFlowHeight(PageTemplate template) {
+	public int getFlowHeight(PageTemplate template) {
 		return getPageHeight() - 
 				(int)Math.ceil(template.getHeaderHeight()) + template.validateAndAnalyzeHeader() -
 				(int)Math.ceil(template.getFooterHeight()) + template.validateAndAnalyzeFooter() -

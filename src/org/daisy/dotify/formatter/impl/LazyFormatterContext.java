@@ -4,6 +4,7 @@ import org.daisy.dotify.api.formatter.FormatterConfiguration;
 import org.daisy.dotify.api.translator.BrailleTranslatorFactoryMakerService;
 import org.daisy.dotify.api.translator.MarkerProcessorFactoryMakerService;
 import org.daisy.dotify.api.translator.TextBorderFactoryMakerService;
+import org.daisy.dotify.formatter.impl.core.FormatterContext;
 
 public class LazyFormatterContext {
 	private final BrailleTranslatorFactoryMakerService translatorFactory;

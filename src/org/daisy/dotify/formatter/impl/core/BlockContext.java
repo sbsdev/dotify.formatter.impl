@@ -1,9 +1,9 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.core;
 
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.search.DefaultContext;
 
-class BlockContext {
+public class BlockContext {
 	private final int flowWidth;
 	private final CrossReferenceHandler refs;
 	private final DefaultContext context;

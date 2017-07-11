@@ -1,4 +1,4 @@
-package org.daisy.dotify.formatter.impl;
+package org.daisy.dotify.formatter.impl.core;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -12,7 +12,7 @@ import org.daisy.dotify.common.text.StringTools;
 import org.daisy.dotify.formatter.impl.row.MarginProperties;
 import org.daisy.dotify.formatter.impl.row.RowImpl;
 
-class BorderManager {
+public class BorderManager {
 	private static final Pattern trailingWs = Pattern.compile("\\s*\\z");
 	private HeightCalculator hc;
 	private List<Row> ret2;
@@ -30,7 +30,7 @@ class BorderManager {
 	// and can be removed once the logic has been updated.
 	private final float offsetHeight;
 
-	BorderManager(LayoutMaster master, FormatterContext fcontext, int pageMargin) {
+	public BorderManager(LayoutMaster master, FormatterContext fcontext, int pageMargin) {
 		this.hc = new HeightCalculator(master.getRowSpacing());
 		this.ret2 = new ArrayList<>();
 		this.closed = false;
@@ -46,7 +46,7 @@ class BorderManager {
 		this.offsetHeight = hc.getCurrentHeight();
 	}
 
-	BorderManager(BorderManager template) {
+	public BorderManager(BorderManager template) {
 		this.hc = new HeightCalculator(template.hc);
 		this.ret2 = new ArrayList<>(template.ret2);
 		this.rs = template.rs;
@@ -75,6 +75,7 @@ class BorderManager {
 	 * @deprecated Update your code that depend on the height without the top border and then use {@link #getCurrentHeight()}
 	 */
 	@Deprecated
+	public
 	float getOffsetHeight() {
 		// This method is used to compensate for the fact that the top border was
 		// calculated outside of the main logic before
@@ -86,13 +87,13 @@ class BorderManager {
 		return hc.getCurrentHeight();
 	}
 
-	void addAll(Collection<? extends RowImpl> rows) {
+	public void addAll(Collection<? extends RowImpl> rows) {
 		for (RowImpl r : rows) {
 			addRow(r);
 		}
 	}
 
-	void addRow(RowImpl row) {
+	public void addRow(RowImpl row) {
 		if (closed) {
 			throw new IllegalStateException("Cannot add rows when closed.");
 		}
@@ -119,18 +120,18 @@ class BorderManager {
 		addRowInner(lastRow);
 	}
 
-	List<Row> getRows() {
+	public List<Row> getRows() {
 		if (!closed) {
 			close();
 		}
 		return ret2;
 	}
 
-	boolean isClosed() {
+	public boolean isClosed() {
 		return closed;
 	}
 
-	boolean hasBorder() {
+	public boolean hasBorder() {
 		return borderStyle != TextBorderStyle.NONE;
 	}
 

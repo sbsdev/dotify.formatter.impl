@@ -2,7 +2,7 @@ package org.daisy.dotify.formatter.impl.volume;
 
 import org.daisy.dotify.api.formatter.SequenceProperties;
 import org.daisy.dotify.formatter.impl.BlockSequence;
-import org.daisy.dotify.formatter.impl.FormatterContext;
+import org.daisy.dotify.formatter.impl.core.FormatterContext;
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.search.DefaultContext;
 
