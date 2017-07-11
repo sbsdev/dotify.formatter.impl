@@ -25,8 +25,6 @@ public abstract class AbstractBlockContentManager implements BlockStatistics {
 	
 	//Mutable
 	protected final FormatterCoreContext fcontext;
-	protected final ArrayList<Marker> groupMarkers;
-	protected final ArrayList<String> groupAnchors;
 	
 	AbstractBlockContentManager(int flowWidth, RowDataProperties rdp, FormatterCoreContext fcontext) {
 		this(flowWidth, rdp, fcontext, null);
@@ -40,8 +38,6 @@ public abstract class AbstractBlockContentManager implements BlockStatistics {
 		this.rightMargin = rdp.getRightMargin().buildMargin(fcontext.getSpaceCharacter());
 		this.fcontext = fcontext;
 		this.rdp = rdp;
-		this.groupMarkers = new ArrayList<>();
-		this.groupAnchors = new ArrayList<>();
 		this.collapsiblePreContentRows = makeCollapsiblePreContentRows(rdp, leftParent, rightParent);	
 		this.innerPreContentRows = makeInnerPreContentRows();
 		this.minWidth = minWidth==null ? flowWidth-leftMargin.getContent().length()-rightMargin.getContent().length() : minWidth;
@@ -93,8 +89,6 @@ public abstract class AbstractBlockContentManager implements BlockStatistics {
 		this.minWidth = template.minWidth;
 		// FIXME: fcontext is mutable, but mutating is related to DOM creation, and we assume for now that DOM creation is NOT going on when rendering has begun.
 		this.fcontext = template.fcontext;
-		this.groupAnchors = new ArrayList<>(template.groupAnchors);
-		this.groupMarkers = new ArrayList<>(template.groupMarkers);
 	}
 	
 	public abstract AbstractBlockContentManager copy();
@@ -123,10 +117,7 @@ public abstract class AbstractBlockContentManager implements BlockStatistics {
     /**
      * Resets the state of the content manager to the first row.
      */
-    public void reset() {
-    	groupAnchors.clear();
-    	groupMarkers.clear();
-    }
+    public abstract void reset();
 
 	private static List<RowImpl> makeCollapsiblePreContentRows(RowDataProperties rdp, MarginProperties leftParent, MarginProperties rightParent) {
 		List<RowImpl> ret = new ArrayList<>();
@@ -214,12 +205,8 @@ public abstract class AbstractBlockContentManager implements BlockStatistics {
 	 * Get markers that are not attached to a row, i.e. markers that proceeds any text contents
 	 * @return returns markers that proceeds this FlowGroups text contents
 	 */
-	public ArrayList<Marker> getGroupMarkers() {
-		return groupMarkers;
-	}
+	public abstract List<Marker> getGroupMarkers();
 	
-	public ArrayList<String> getGroupAnchors() {
-		return groupAnchors;
-	}
+	public abstract List<String> getGroupAnchors();
 	
 }

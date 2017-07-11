@@ -9,6 +9,7 @@ import java.util.regex.Pattern;
 
 import org.daisy.dotify.api.formatter.Context;
 import org.daisy.dotify.api.formatter.FormattingTypes;
+import org.daisy.dotify.api.formatter.Marker;
 import org.daisy.dotify.api.translator.BrailleTranslatorResult;
 import org.daisy.dotify.api.translator.Translatable;
 import org.daisy.dotify.api.translator.TranslationException;
@@ -55,9 +56,13 @@ public class BlockContentManager extends AbstractBlockContentManager {
 	private String currentLeaderMode;
 	private boolean seenSegmentAfterLeader;
 	private int rowIndex;
+	private final ArrayList<Marker> groupMarkers;
+	private final ArrayList<String> groupAnchors;
 	
 	public BlockContentManager(int flowWidth, List<Segment> segments, RowDataProperties rdp, CrossReferenceHandler refs, Context context, FormatterCoreContext fcontext) {
 		super(flowWidth, rdp, fcontext);
+		this.groupMarkers = new ArrayList<>();
+		this.groupAnchors = new ArrayList<>();
 		this.refs = refs;
 		this.available = flowWidth - rightMargin.getContent().length();
 		this.context = context;
@@ -69,6 +74,8 @@ public class BlockContentManager extends AbstractBlockContentManager {
 	
 	private BlockContentManager(BlockContentManager template) {
 		super(template);
+		this.groupAnchors = new ArrayList<>(template.groupAnchors);
+		this.groupMarkers = new ArrayList<>(template.groupMarkers);
 		this.rows = new ArrayList<>(template.rows);
 		// Refs is mutable, but for now we assume that the same context should be used.
 		this.refs = template.refs;
@@ -343,7 +350,8 @@ public class BlockContentManager extends AbstractBlockContentManager {
 	
     @Override
 	public void reset() {
-    	super.reset();
+    	groupAnchors.clear();
+    	groupMarkers.clear();
     	rows.clear();
     	initFields();
     }
@@ -471,6 +479,16 @@ public class BlockContentManager extends AbstractBlockContentManager {
 	public int getForceBreakCount() {
 		ensureBuffer(-1);
 		return forceCount;
+	}
+
+	@Override
+	public List<Marker> getGroupMarkers() {
+		return groupMarkers;
+	}
+	
+	@Override
+	public List<String> getGroupAnchors() {
+		return groupAnchors;
 	}
 
 }

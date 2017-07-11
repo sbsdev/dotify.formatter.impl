@@ -3,6 +3,7 @@ package org.daisy.dotify.formatter.impl.core;
 import java.util.Collections;
 import java.util.List;
 
+import org.daisy.dotify.api.formatter.Marker;
 import org.daisy.dotify.formatter.impl.row.AbstractBlockContentManager;
 import org.daisy.dotify.formatter.impl.row.RowDataProperties;
 import org.daisy.dotify.formatter.impl.row.RowImpl;
@@ -48,7 +49,6 @@ class TableBlockContentManager extends AbstractBlockContentManager {
 
     @Override
     public void reset() {
-    	super.reset();
     	initFields();
     }
 	
@@ -72,6 +72,16 @@ class TableBlockContentManager extends AbstractBlockContentManager {
 	@Override
 	public void setContext(DefaultContext context) {
 		// FIXME: Support setting context of tables. At the moment, there is no point in setting a context here, because the contents has already been rendered.
+	}
+	
+	@Override
+	public List<Marker> getGroupMarkers() {
+		return Collections.emptyList();
+	}
+	
+	@Override
+	public List<String> getGroupAnchors() {
+		return Collections.emptyList();
 	}
 
 }
