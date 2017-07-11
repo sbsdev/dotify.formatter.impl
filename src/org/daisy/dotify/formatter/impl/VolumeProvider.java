@@ -1,4 +1,4 @@
-package org.daisy.dotify.formatter.impl.volume;
+package org.daisy.dotify.formatter.impl;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -16,7 +16,6 @@ import org.daisy.dotify.common.split.SplitPointDataSource;
 import org.daisy.dotify.common.split.SplitPointHandler;
 import org.daisy.dotify.common.split.SplitPointSpecification;
 import org.daisy.dotify.common.split.StandardSplitOption;
-import org.daisy.dotify.formatter.impl.LazyFormatterContext;
 import org.daisy.dotify.formatter.impl.core.FormatterContext;
 import org.daisy.dotify.formatter.impl.core.PaginatorException;
 import org.daisy.dotify.formatter.impl.page.BlockSequence;
@@ -34,6 +33,8 @@ import org.daisy.dotify.formatter.impl.sheet.SheetGroup;
 import org.daisy.dotify.formatter.impl.sheet.SheetGroupManager;
 import org.daisy.dotify.formatter.impl.sheet.SplitterLimit;
 import org.daisy.dotify.formatter.impl.sheet.VolumeImpl;
+import org.daisy.dotify.formatter.impl.volume.VolumeSequence;
+import org.daisy.dotify.formatter.impl.volume.VolumeTemplate;
 
 /**
  * Provides contents in volumes.
@@ -66,7 +67,7 @@ public class VolumeProvider {
 	 * @param context the formatter context
 	 * @param crh the cross reference handler
 	 */
-	public VolumeProvider(List<BlockSequence> blocks, Stack<VolumeTemplate> volumeTemplates, LazyFormatterContext context, CrossReferenceHandler crh) {
+	VolumeProvider(List<BlockSequence> blocks, Stack<VolumeTemplate> volumeTemplates, LazyFormatterContext context, CrossReferenceHandler crh) {
 		this.blocks = blocks;
 		this.splitterLimit = volumeNumber -> {
             final DefaultContext c = new DefaultContext.Builder()
@@ -92,7 +93,7 @@ public class VolumeProvider {
 	 * Resets the volume provider to its initial state (with some information preserved). 
 	 * @throws RestartPaginationException
 	 */
-	public void prepare() {
+	void prepare() {
 		if (!init) {
 			groups = new SheetGroupManager(splitterLimit);
 			// make a preliminary calculation based on a contents only
@@ -124,7 +125,7 @@ public class VolumeProvider {
 	 * @return returns the next volume
 	 * @throws RestartPaginationException if pagination should be restarted
 	 */
-	public VolumeImpl nextVolume() {
+	VolumeImpl nextVolume() {
 		currentVolumeNumber++;
 		VolumeImpl volume = new VolumeImpl(crh.getOverhead(currentVolumeNumber));
 		ArrayList<AnchorData> ad = new ArrayList<>();
@@ -309,7 +310,7 @@ public class VolumeProvider {
 	 * <b>Note: only use after all volumes have been calculated.</b>
 	 * @return returns true if the volumes can be accepted, false otherwise  
 	 */
-	public boolean done() {
+	boolean done() {
 		groups.updateAll();
 		crh.commitBreakable();
 		crh.trimPageDetails();

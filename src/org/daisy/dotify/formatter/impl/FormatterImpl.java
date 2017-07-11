@@ -1,4 +1,4 @@
-package org.daisy.dotify.formatter.impl.base;
+package org.daisy.dotify.formatter.impl;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -21,13 +21,11 @@ import org.daisy.dotify.api.translator.BrailleTranslatorFactoryMakerService;
 import org.daisy.dotify.api.translator.MarkerProcessorFactoryMakerService;
 import org.daisy.dotify.api.translator.TextBorderFactoryMakerService;
 import org.daisy.dotify.api.writer.PagedMediaWriter;
-import org.daisy.dotify.formatter.impl.LazyFormatterContext;
 import org.daisy.dotify.formatter.impl.page.BlockSequence;
 import org.daisy.dotify.formatter.impl.page.RestartPaginationException;
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.sheet.VolumeImpl;
 import org.daisy.dotify.formatter.impl.volume.TableOfContentsImpl;
-import org.daisy.dotify.formatter.impl.volume.VolumeProvider;
 import org.daisy.dotify.formatter.impl.volume.VolumeTemplate;
 import org.daisy.dotify.writer.impl.Volume;
 import org.daisy.dotify.writer.impl.WriterHandler;

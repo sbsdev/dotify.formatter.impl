@@ -2,7 +2,6 @@ package org.daisy.dotify.formatter.impl;
 
 import static org.junit.Assert.assertNotNull;
 
-import org.daisy.dotify.formatter.impl.base.SPIHelper;
 import org.junit.Test;
 @SuppressWarnings("javadoc")
 public class SPIHelperTest {

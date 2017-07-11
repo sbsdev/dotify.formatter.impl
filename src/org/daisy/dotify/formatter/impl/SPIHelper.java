@@ -1,4 +1,4 @@
-package org.daisy.dotify.formatter.impl.base;
+package org.daisy.dotify.formatter.impl;
 
 import java.lang.reflect.Method;
 import java.util.ServiceLoader;
