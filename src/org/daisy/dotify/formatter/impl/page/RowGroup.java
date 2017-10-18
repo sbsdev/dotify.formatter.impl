@@ -27,7 +27,6 @@ class RowGroup implements SplitPointUnit {
 		private List<String> anchors;
 		private final float rowDefault;
 		private boolean breakable = false, skippable = false, collapsible = false;
-		private float overhead = 0;
 		private int keepWithNextSheets=0, keepWithPreviousSheets=0;
 		private String identifier=null;
 		private boolean lazyCollapse = true;
@@ -72,10 +71,7 @@ class RowGroup implements SplitPointUnit {
 			this.collapsible = value;
 			return this;
 		}
-		Builder overhead(float value) {
-			this.overhead = value;
-			return this;
-		}
+
 		Builder identifier(String value) {
 			this.identifier = value;
 			return this;
@@ -104,7 +100,7 @@ class RowGroup implements SplitPointUnit {
 		this.breakable = builder.breakable;
 		this.skippable = builder.skippable;
 		this.collapsible = builder.collapsible;
-		this.unitSize = calcUnitSize(builder.rowDefault, rows)+builder.overhead;
+		this.unitSize = calcUnitSize(builder.rowDefault, rows);
 		this.lastUnitSize = unitSize-(rows.isEmpty()?0:Math.max(0, getRowSpacing(builder.rowDefault, rows.get(rows.size()-1))-1));
 		this.ids = new ArrayList<>();
 		this.lazyCollapse = builder.lazyCollapse;

@@ -34,6 +34,8 @@ public class Sheet implements SplitPointUnit {
 		Builder(Builder template) {
 			this.sectionProperties = template.sectionProperties;
 			this.pages = new ArrayList<>(template.pages);
+			this.breakable = template.breakable;
+			this.avoidVolumeBreakAfterPriority = template.avoidVolumeBreakAfterPriority;
 		}
 		
 		static Builder copyUnlessNull(Builder template) {

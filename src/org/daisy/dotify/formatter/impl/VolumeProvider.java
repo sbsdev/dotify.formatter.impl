@@ -182,30 +182,30 @@ public class VolumeProvider {
 				return distancePenalty + priorityPenalty + unbreakablePenalty;
 			}};
 		SplitPoint<Sheet> sp;
-		boolean regressionPath = false;
-		if (regressionPath) {
-			crh.setReadOnly();
-			SplitPointDataSource<Sheet> copySource;
-			if (groups.currentGroup().getUnits() instanceof SheetDataSource) {
-				copySource = new SheetDataSource((SheetDataSource)groups.currentGroup().getUnits());
-			} else {
-				logger.info(""+groups.currentGroup().getUnits().getClass());
-				//assume empty
-				if (!groups.currentGroup().getUnits().isEmpty()) {
-					throw new RuntimeException("Error in code");
-				}
-				copySource = SplitPointDataList.emptyManager();
-			}
-			SplitPointSpecification spec = volSplitter.find(splitterMax-overhead, 
-					copySource, 
-					cost, StandardSplitOption.ALLOW_FORCE);
-			crh.setReadWrite();
-			sp = volSplitter.split(spec, groups.currentGroup().getUnits());
+
+		crh.setReadOnly();
+		SplitPointDataSource<Sheet> data = groups.currentGroup().getUnits();
+		SplitPointDataSource<Sheet> copySource;
+		if (data instanceof SheetDataSource) {
+			copySource = new SheetDataSource((SheetDataSource)data);
 		} else {
+			logger.info(""+data.getClass());
+			//assume empty
+			if (!data.isEmpty()) {
+				throw new RuntimeException("Error in code");
+			}
+			copySource = SplitPointDataList.emptyManager();
+		}
+		SplitPointSpecification spec = volSplitter.find(splitterMax-overhead, 
+				copySource, 
+				cost, StandardSplitOption.ALLOW_FORCE);
+		crh.setReadWrite();
+		sp = volSplitter.split(spec, groups.currentGroup().getUnits());
+		/*
 			sp = volSplitter.split(splitterMax-overhead, 
 					groups.currentGroup().getUnits(),
 					cost, StandardSplitOption.ALLOW_FORCE);
-		}
+		*/
 		groups.currentGroup().setUnits(sp.getTail());
 		List<Sheet> contents = sp.getHead();
 		int pageCount = Sheet.countPages(contents);

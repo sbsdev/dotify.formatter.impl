@@ -14,6 +14,7 @@ import org.daisy.dotify.api.formatter.RenameFallbackRule;
 import org.daisy.dotify.api.translator.Translatable;
 import org.daisy.dotify.api.translator.TranslationException;
 import org.daisy.dotify.common.split.SplitPoint;
+import org.daisy.dotify.common.split.SplitPointDataList;
 import org.daisy.dotify.common.split.SplitPointDataSource;
 import org.daisy.dotify.common.split.SplitPointHandler;
 import org.daisy.dotify.common.split.SplitPointSpecification;
@@ -103,7 +104,15 @@ public class PageSequenceBuilder2 {
 		this.seqId = template.seqId;
 		this.sph = template.sph;
 		this.force = template.force;
-		this.data = RowGroupDataSource.copyUnlessNull((RowGroupDataSource)data);
+		if (template.data instanceof RowGroupDataSource) {
+			this.data = RowGroupDataSource.copyUnlessNull((RowGroupDataSource)template.data);
+		} else if (template.data==null) { 
+			this.data = null;
+		} else if (template.data.isEmpty()) {
+			this.data = SplitPointDataList.emptyManager();
+		} else {
+			throw new RuntimeException("Error in code.");
+		}
 		this.current = PageImpl.copyUnlessNull(template.current);
 		this.keepNextSheets = template.keepNextSheets;
 		this.pageCount = template.pageCount;
@@ -397,44 +406,34 @@ public class PageSequenceBuilder2 {
 		}
 	}
 	
-	private class CollectionData implements Supplements<RowGroup> {
-		private PageImpl page;
+	class CollectionData implements Supplements<RowGroup> {
 		private final BlockContext c;
-		private final Map<String, RowGroup> map;
 		
 		private CollectionData(BlockContext c) {
 			this.c = c;
-			this.page = null;
-			this.map = new HashMap<>();
+		}
+		
+		@Override
+		public double getOverhead() {
+			return PageImpl.rowsNeeded(staticAreaContent.getBefore(), master.getRowSpacing()) 
+					+ PageImpl.rowsNeeded(staticAreaContent.getAfter(), master.getRowSpacing());
 		}
 
 		@Override
 		public RowGroup get(String id) {
 			if (collection!=null) {
-				if (page!=currentPage()) {
-					map.clear();
+				RowGroup.Builder b = new RowGroup.Builder(master.getRowSpacing());
+				for (Block g : collection.getBlocks(id)) {
+					AbstractBlockContentManager bcm = g.getBlockContentManager(c);
+					b.addAll(bcm.getCollapsiblePreContentRows());
+					b.addAll(bcm.getInnerPreContentRows());
+					while (bcm.hasNext()) {
+						b.add(bcm.getNext());
+					}
+					b.addAll(bcm.getPostContentRows());
+					b.addAll(bcm.getSkippablePostContentRows());
 				}
-				RowGroup ret = map.get(id);
-				if (ret==null) {
-					RowGroup.Builder b = new RowGroup.Builder(master.getRowSpacing());
-					for (Block g : collection.getBlocks(id)) {
-						AbstractBlockContentManager bcm = g.getBlockContentManager(c);
-						b.addAll(bcm.getCollapsiblePreContentRows());
-						b.addAll(bcm.getInnerPreContentRows());
-						while (bcm.hasNext()) {
-							b.add(bcm.getNext());
-						}
-						b.addAll(bcm.getPostContentRows());
-						b.addAll(bcm.getSkippablePostContentRows());
-					}
-					if (page==null || page!=currentPage()) {
-						page = currentPage();
-						b.overhead(page.staticAreaSpaceNeeded());
-					}
-					ret = b.build();
-					map.put(id, ret);
-				} 
-				return ret;
+				return b.build();
 			} else {
 				return null;
 			}

@@ -143,7 +143,7 @@ public class PageImpl implements Page {
 	 * @param defSpacing a value >= 1.0
 	 * @return returns the space, in rows
 	 */
-	private static float rowsNeeded(Collection<? extends Row> rows, float defSpacing) {
+	static float rowsNeeded(Collection<? extends Row> rows, float defSpacing) {
 		HeightCalculator c = new HeightCalculator(defSpacing);
 		c.addRows(rows);
 		return c.getCurrentHeight();
