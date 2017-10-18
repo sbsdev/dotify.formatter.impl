@@ -92,13 +92,9 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 	}
 
 	@Override
+	@Deprecated
 	public List<Sheet> head(int toIndex) throws RestartPaginationException {
-		if (toIndex==0) { 
-			return Collections.emptyList();
-		} else if (!ensureBuffer(toIndex-1)) {
-			throw new IndexOutOfBoundsException();
-		}
-		return sheetBuffer.subList(0, toIndex);
+		throw new UnsupportedOperationException("Method is deprecated.");
 	}
 
 	@Override
@@ -108,15 +104,9 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 	}
 
 	@Override
+	@Deprecated
 	public SplitPointDataSource<Sheet> tail(int fromIndex) throws RestartPaginationException {
-		List<Sheet> newBuffer;
-		if (!ensureBuffer(fromIndex)) {
-			newBuffer = new ArrayList<>();
-		} else {
-			newBuffer = new ArrayList<>(sheetBuffer.subList(fromIndex, sheetBuffer.size()));
-		}
-		return new SheetDataSource(struct, crh, context, rcontext, seqsIterator, newBuffer, volBreakAllowed, sheetsServed+fromIndex, seqsIndex, 
-				psb, sectionProperties, s, si, sheetIndex, pageIndex);
+		throw new UnsupportedOperationException("Method is deprecated.");
 	}
 
 	@Override
@@ -229,7 +219,17 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 
 	@Override
 	public SplitResult<Sheet> split(int atIndex) {
-		return new SplitResult<Sheet>(head(atIndex), tail(atIndex));
+		if (!ensureBuffer(atIndex)) {
+			throw new IndexOutOfBoundsException("" + atIndex);
+		}
+		SplitPointDataSource<Sheet> tail = new SheetDataSource(struct, crh, context, rcontext, seqsIterator, 
+				new ArrayList<>(sheetBuffer.subList(atIndex, sheetBuffer.size())), volBreakAllowed, sheetsServed+atIndex, seqsIndex, 
+				psb, sectionProperties, s, si, sheetIndex, pageIndex);
+		if (atIndex==0) {
+			return new SplitResult<Sheet>(Collections.emptyList(), tail);
+		} else {
+			return new SplitResult<Sheet>(sheetBuffer.subList(0, atIndex), tail);
+		}
 	}
 
 }

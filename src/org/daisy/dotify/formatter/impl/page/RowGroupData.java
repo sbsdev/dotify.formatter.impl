@@ -19,7 +19,7 @@ class RowGroupData extends BlockProcessor {
 		super(template);
 		if (template.data==null) {
 			this.data = null;
-		} else if (template.data.size()>0) {
+		} else if (template.data.size()>offset) {
 			this.data = new ArrayList<>(template.data.subList(offset, template.data.size()));
 		} else {
 			this.data = new ArrayList<>();
