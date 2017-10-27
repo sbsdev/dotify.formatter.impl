@@ -220,7 +220,7 @@ public class VolumeProvider {
 					crh.setVolumeNumber(id, currentVolumeNumber);
 				}
 				if (p.getAnchors().size()>0) {
-					ad.add(new AnchorData(p.getPageIndex(), p.getAnchors()));
+					ad.add(new AnchorData(p.getAnchors(), p.getPageNumber()));
 				}
 			}
 			sb.addSheet(sheet);
@@ -254,7 +254,7 @@ public class VolumeProvider {
 			for (Sheet ps : ret) {
 				for (PageImpl p : ps.getPages()) {
 					if (p.getAnchors().size()>0) {
-						ad.add(new AnchorData(p.getPageIndex(), p.getAnchors()));
+						ad.add(new AnchorData(p.getAnchors(), p.getPageNumber()));
 					}
 				}
 				sb.addSheet(ps);

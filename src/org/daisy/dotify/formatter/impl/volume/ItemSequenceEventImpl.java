@@ -100,7 +100,7 @@ class ItemSequenceEventImpl implements ReferenceListBuilder, BlockGroup {
 								Block bl = blk.copy();
 								currentBlockAddress = new BlockAddress(groupNumber, currentBlockAddress.getBlockNumber()+1);
 								bl.setBlockAddress(currentBlockAddress);
-								bl.setMetaPage(ad.getPageIndex()+1);
+								bl.setMetaPage(ad.getPageNumber());
 								bl.setMetaVolume(i+1);
 								b.add(bl);
 							}
@@ -115,7 +115,7 @@ class ItemSequenceEventImpl implements ReferenceListBuilder, BlockGroup {
 								Block bl = blk.copy();
 								currentBlockAddress = new BlockAddress(groupNumber, currentBlockAddress.getBlockNumber()+1);
 								bl.setBlockAddress(currentBlockAddress);
-								bl.setMetaPage(ad.getPageIndex()+1);
+								bl.setMetaPage(ad.getPageNumber());
 								bl.setMetaVolume(i+1);
 								b.add(bl);
 							}

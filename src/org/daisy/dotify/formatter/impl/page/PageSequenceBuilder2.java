@@ -182,7 +182,7 @@ public class PageSequenceBuilder2 {
 	}
 
 	private void insertIdentifier(String id) {
-		crh.setPageNumber(id, currentPage().getPageIndex() + 1);
+		crh.setPageNumber(id, currentPage().getPageNumber());
 		currentPage().addIdentifier(id);
 	}
 	

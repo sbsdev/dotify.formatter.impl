@@ -35,11 +35,9 @@ public class PageImpl implements Page {
     private final ArrayList<RowImpl> pageArea;
     private final ArrayList<String> anchors;
     private final ArrayList<String> identifiers;
-	private final int pagenum;
 	private final int flowHeight;
 	private final PageTemplate template;
 	private final int pageMargin;
-	private final PageTemplate pageTemplate;
 	private final BorderManager finalRows;
 
 	private boolean hasRows;
@@ -59,14 +57,12 @@ public class PageImpl implements Page {
 		this.pageArea = new ArrayList<>();
 		this.anchors = new ArrayList<>();
 		this.identifiers = new ArrayList<>();
-		this.pagenum = details.getPageNumberIndex() + 1;
-		this.template = master.getTemplate(pagenum);
+		this.template = master.getTemplate(details.getPageNumber());
         this.flowHeight = master.getFlowHeight(template);
 		this.isVolBreakAllowed = true;
 		this.keepPreviousSheets = 0;
 		this.volumeBreakAfterPriority = null;
-		this.pageMargin = ((pagenum % 2 == 0) ? master.getOuterMargin() : master.getInnerMargin());
-		this.pageTemplate = master.getTemplate(pagenum);
+		this.pageMargin = ((details.getPageId().getOrdinal() % 2 == 0) ? master.getInnerMargin() : master.getOuterMargin());
 		this.finalRows = new BorderManager(master, fcontext, pageMargin);
 		this.hasRows = false;
 		this.filter = fcontext.getDefaultTranslator();
@@ -82,11 +78,9 @@ public class PageImpl implements Page {
 	    this.pageArea = new ArrayList<>(template.pageArea);
 	    this.anchors = new ArrayList<>(template.anchors);
 	    this.identifiers = new ArrayList<>(template.identifiers);
-		this.pagenum = template.pagenum;
 		this.flowHeight = template.flowHeight;
 		this.template = template.template;
 		this.pageMargin = template.pageMargin;
-		this.pageTemplate = template.pageTemplate;
 		this.finalRows = new BorderManager(template.finalRows);
 
 		this.hasRows = template.hasRows;
@@ -110,7 +104,7 @@ public class PageImpl implements Page {
 	void newRow(RowImpl r) {
 		if (!hasRows) {
 			//add the header
-	        finalRows.addAll(fieldResolver.renderFields(getDetails(), pageTemplate.getHeader(), filter));
+	        finalRows.addAll(fieldResolver.renderFields(getDetails(), template.getHeader(), filter));
 	        //add the top page area
 			addTopPageArea();
 			getDetails().startsContentMarkers();
@@ -184,12 +178,12 @@ public class PageImpl implements Page {
 			if (!finalRows.isClosed()) {
 				if (!hasRows) { // the header hasn't been added yet 
 					//add the header
-			        finalRows.addAll(fieldResolver.renderFields(getDetails(), pageTemplate.getHeader(), filter));
+			        finalRows.addAll(fieldResolver.renderFields(getDetails(), template.getHeader(), filter));
 			      //add top page area
 					addTopPageArea();
 				}
-		        float headerHeight = pageTemplate.getHeaderHeight();
-		        if (!pageTemplate.getFooter().isEmpty() || finalRows.hasBorder() || (master.getPageArea()!=null && master.getPageArea().getAlignment()==PageAreaProperties.Alignment.BOTTOM && !pageArea.isEmpty())) {
+		        float headerHeight = template.getHeaderHeight();
+		        if (!template.getFooter().isEmpty() || finalRows.hasBorder() || (master.getPageArea()!=null && master.getPageArea().getAlignment()==PageAreaProperties.Alignment.BOTTOM && !pageArea.isEmpty())) {
 		            float areaSize = (master.getPageArea()!=null && master.getPageArea().getAlignment()==PageAreaProperties.Alignment.BOTTOM ? pageAreaSpaceNeeded() : 0);
 		            while (Math.ceil(finalRows.getOffsetHeight() + areaSize) < getFlowHeight() + headerHeight) {
 						finalRows.addRow(new RowImpl());
@@ -199,7 +193,7 @@ public class PageImpl implements Page {
 						finalRows.addAll(pageArea);
 						finalRows.addAll(after);
 					}
-		            finalRows.addAll(fieldResolver.renderFields(getDetails(), pageTemplate.getFooter(), filter));
+		            finalRows.addAll(fieldResolver.renderFields(getDetails(), template.getFooter(), filter));
 				}
 			}
 			return finalRows.getRows();
@@ -208,14 +202,14 @@ public class PageImpl implements Page {
 		}
 	}
 
+	
 	/**
-	 * Get the page index, offset included, zero based. Don't assume
-	 * getPageIndex() % 2 == getPageOrdinal() % 2
+	 * Get the page number, one based.
 	 * 
-	 * @return returns the page index in the sequence (zero based)
+	 * @return returns the page number
 	 */
-	public int getPageIndex() {
-		return details.getPageNumberIndex();
+	public int getPageNumber() {
+		return details.getPageNumber();
 	}
 
 	/**

@@ -113,7 +113,7 @@ class FieldResolver implements PageShape {
 	}
 	
 	private static String resolveCurrentPageField(CurrentPageField f, PageDetails p) {
-		int pagenum = p.getPageNumberIndex() + 1;
+		int pagenum = p.getPageNumber();
 		return f.getNumeralStyle().format(pagenum);
 	}
 

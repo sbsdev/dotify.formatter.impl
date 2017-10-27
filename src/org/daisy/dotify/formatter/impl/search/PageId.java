@@ -11,7 +11,7 @@ public final class PageId {
 		this.sequenceId = sequenceId;		
 	}
 	
-	int getOrdinal() {
+	public int getOrdinal() {
 		return ordinal;
 	}
 	
