@@ -175,7 +175,6 @@ public class PageSequenceBuilder2 {
 
 	private PageImpl nextPageInner() throws PaginatorException, RestartPaginationException // pagination must be restarted in PageStructBuilder.paginateInner
 	{
-		PageImpl p = current;
 		while (dataGroupsIndex<dataGroups.size() || (data!=null && !data.isEmpty())) {
 			if ((data==null || data.isEmpty()) && dataGroupsIndex<dataGroups.size()) {
 				//pick up next group
@@ -186,29 +185,26 @@ public class PageSequenceBuilder2 {
 					if (pageCount==0) {
 						current = newPage();
 					}
-					p = current;
 					float size = 0;
 					for (RowGroup g : data.getRemaining()) {
 						size += g.getUnitSize();
 					}
-					int pos = calculateVerticalSpace(p, vSpacing.getBlockPosition(), (int)Math.ceil(size));
+					int pos = calculateVerticalSpace(current, vSpacing.getBlockPosition(), (int)Math.ceil(size));
 					for (int i = 0; i < pos; i++) {
 						RowImpl ri = vSpacing.getEmptyRow();
-						newRow(p, new RowImpl(ri.getChars(), ri.getLeftMargin(), ri.getRightMargin()));
+						newRow(current, new RowImpl(ri.getChars(), ri.getLeftMargin(), ri.getRightMargin()));
 					}
 				} else {
-					p = current;
+					PageImpl p = current;
 					current = newPage();
 					if (p!=null) {
 						return p;
-					} else {
-						p = current;
 					}
 				}
 				force = false;
 			}
 			((RowGroupDataSource)data).setContext(((RowGroupDataSource)data).getContext().copyWithContext(
-					DefaultContext.from(blockContext.getContext()).currentPage(p.getDetails().getPageNumber()).build()));
+					DefaultContext.from(blockContext.getContext()).currentPage(current.getDetails().getPageNumber()).build()));
 			if (!data.isEmpty()) {
 				SplitPointDataSource<RowGroup> copy = new RowGroupDataSource((RowGroupDataSource)data);
 				// Using a copy to find the skippable data, so that only the required data is rendered
@@ -216,12 +212,12 @@ public class PageSequenceBuilder2 {
 				// Now apply the information to the live data
 				SplitPoint<RowGroup> sl = SplitPointHandler.skipLeading(data, index);
 				for (RowGroup rg : sl.getDiscarded()) {
-					addProperties(p, rg);
+					addProperties(current, rg);
 				}
 				data = sl.getTail();
 				// And on copy...
 				copy = SplitPointHandler.skipLeading(copy, index).getTail();
-				int flowHeight = p.getFlowHeight();
+				int flowHeight = current.getFlowHeight();
 				// Using copy to find the break point so that only the required data is rendered
 				SplitPointSpecification spec = sph.find(flowHeight, copy, force?StandardSplitOption.ALLOW_FORCE:null);
 				// Now apply the information to the live data
@@ -234,22 +230,22 @@ public class PageSequenceBuilder2 {
 					}
 				}
 				for (RowGroup rg : res.getSupplements()) {
-					p.addToPageArea(rg.getRows());
+					current.addToPageArea(rg.getRows());
 				}
 				force = res.getHead().size()==0;
 				data = res.getTail();
 				List<RowGroup> head = res.getHead();
-				addRows(head, p);
+				addRows(head, current);
 				Integer lastPriority = getLastPriority(head);
 				if (!res.getDiscarded().isEmpty()) {
 					//override if not empty
 					lastPriority = getLastPriority(res.getDiscarded());
 				}
-				p.setAvoidVolumeBreakAfter(lastPriority);
+				current.setAvoidVolumeBreakAfter(lastPriority);
 				for (RowGroup rg : res.getDiscarded()) {
-					addProperties(p, rg);
+					addProperties(current, rg);
 				}
-				if (hasPageAreaCollection() && p.pageAreaSpaceNeeded() > master.getPageArea().getMaxHeight()) {
+				if (hasPageAreaCollection() && current.pageAreaSpaceNeeded() > master.getPageArea().getMaxHeight()) {
 					reassignCollection();
 				}
 				if (!data.isEmpty()) {
