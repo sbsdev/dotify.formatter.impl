@@ -1,14 +1,13 @@
 package org.daisy.dotify.formatter.impl.page;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.daisy.dotify.api.formatter.BlockPosition;
 import org.daisy.dotify.api.formatter.FallbackRule;
 import org.daisy.dotify.api.formatter.MarginRegion;
 import org.daisy.dotify.api.formatter.MarkerIndicatorRegion;
+import org.daisy.dotify.api.formatter.PageAreaBuilder;
 import org.daisy.dotify.api.formatter.PageAreaProperties;
 import org.daisy.dotify.api.formatter.RenameFallbackRule;
 import org.daisy.dotify.api.translator.Translatable;
@@ -42,21 +41,21 @@ public class PageSequenceBuilder2 {
 	private final PageAreaContent staticAreaContent;
 	private final PageAreaProperties areaProps;
 
-	private ContentCollectionImpl collection;
+	private final ContentCollectionImpl collection;
 	private final BlockContext blockContext;
 	private final LayoutMaster master;
 	private final int pageNumberOffset;
 	private final List<RowGroupDataSource> dataGroups;
 	private final FieldResolver fieldResolver;
 	private final SequenceId seqId;
-	
-	private SplitPointHandler<RowGroup> sph = new SplitPointHandler<>();
+	private final SplitPointHandler<RowGroup> sph;
+
 	private boolean force;
 	private SplitPointDataSource<RowGroup> data;
 
-	PageImpl current;
-	int keepNextSheets;
-	int pageCount = 0;
+	private PageImpl current;
+	private int keepNextSheets;
+	private int pageCount = 0;
 	private int dataGroupsIndex;
 
 	//From view, temporary
@@ -71,18 +70,19 @@ public class PageSequenceBuilder2 {
 		this.pageNumberOffset = pageOffset;
 		this.context = context;
 		this.crh = crh;
-
-		this.collection = null;
+		this.sph = new SplitPointHandler<>();
 		this.areaProps = seq.getLayoutMaster().getPageArea();
 		if (this.areaProps!=null) {
 			this.collection = context.getCollections().get(areaProps.getCollectionId());
+		} else {
+			this.collection = null;
 		}
 		current = null;
 		keepNextSheets = 0;
 		
 		this.blockContext = new BlockContext(seq.getLayoutMaster().getFlowWidth(), crh, rcontext, context);
 		this.staticAreaContent = new PageAreaContent(seq.getLayoutMaster().getPageAreaBuilder(), blockContext);
-		this.dataGroups = prepareResult(master, seq, blockContext, new CollectionData(blockContext));
+		this.dataGroups = prepareResult(master, seq, blockContext, new CollectionData(staticAreaContent, blockContext, master, collection));
 		this.dataGroupsIndex = 0;
 		this.seqId = new SequenceId(sequenceId, new DocumentSpace(blockContext.getContext().getSpace(), blockContext.getContext().getCurrentVolume()));
 		PageDetails details = new PageDetails(master.duplex(), new PageId(pageCount, getGlobalStartIndex(), seqId), pageNumberOffset);
@@ -94,7 +94,7 @@ public class PageSequenceBuilder2 {
 		this.crh = template.crh;
 		this.staticAreaContent = template.staticAreaContent;
 		this.areaProps = template.areaProps;
-		this.collection = template.collection; // Probably this doesn't have to be copied...
+		this.collection = template.collection;
 		this.blockContext = template.blockContext;
 		this.master = template.master;
 		this.pageNumberOffset = template.pageNumberOffset;
@@ -124,7 +124,7 @@ public class PageSequenceBuilder2 {
 		return template==null?null:new PageSequenceBuilder2(template);
 	}
 
-	static List<RowGroupDataSource> prepareResult(LayoutMaster master, BlockSequence in, BlockContext blockContext, CollectionData cd) {
+	private static List<RowGroupDataSource> prepareResult(LayoutMaster master, BlockSequence in, BlockContext blockContext, CollectionData cd) {
 		//TODO: This assumes that all page templates have margin regions that are of the same width  
 		final BlockContext bc = new BlockContext(in.getLayoutMaster().getFlowWidth() - master.getTemplate(1).getTotalMarginRegionWidth(), blockContext.getRefs(), blockContext.getContext(), blockContext.getFcontext());
 		return in.selectScenario(master, bc, true)
@@ -149,39 +149,14 @@ public class PageSequenceBuilder2 {
 		return buffer;
 	}
 
-	private void setKeepWithPreviousSheets(PageImpl p, int value) {
-		p.setKeepWithPreviousSheets(value);
-	}
-
-	private void setKeepWithNextSheets(PageImpl p, int value) {
-		keepNextSheets = Math.max(value, keepNextSheets);
-		if (keepNextSheets>0) {
-			p.setAllowsVolumeBreak(false);
-		}
-	}
-
-	/**
-	 * Space used, in rows
-	 * 
-	 * @return
-	 */
-	private int spaceUsedOnPage(PageImpl p, int offs) {
-		return p.spaceUsedOnPage(offs);
-	}
-
 	private void newRow(PageImpl p, RowImpl row) {
-		if (spaceUsedOnPage(p, 1) > p.getFlowHeight()) {
+		if (p.spaceUsedOnPage(1) > p.getFlowHeight()) {
 			throw new RuntimeException("Error in code.");
 			//newPage();
 		}
 		p.newRow(row);
 	}
 
-	private void insertIdentifier(PageImpl p, String id) {
-		crh.setPageNumber(id, p.getPageNumber());
-		p.addIdentifier(id);
-	}
-	
 	public boolean hasNext() {
 		return dataGroupsIndex<dataGroups.size() || (data!=null && !data.isEmpty()) || current!=null;
 	}
@@ -256,7 +231,6 @@ public class PageSequenceBuilder2 {
 				if (res.getHead().size()==0 && force) {
 					if (firstUnitHasSupplements(data) && hasPageAreaCollection()) {
 						reassignCollection();
-						throw new RestartPaginationException();
 					} else {
 						throw new RuntimeException("A layout unit was too big for the page.");
 					}
@@ -301,7 +275,6 @@ public class PageSequenceBuilder2 {
 				}
 				if (hasPageAreaCollection() && p.pageAreaSpaceNeeded() > master.getPageArea().getMaxHeight()) {
 					reassignCollection();
-					throw new RestartPaginationException();
 				}
 				if (!data.isEmpty()) {
 					return newPage();
@@ -376,12 +349,16 @@ public class PageSequenceBuilder2 {
 	
 	private void addProperties(PageImpl p, RowGroup rg) {
 		if (rg.getIdentifier()!=null) {
-			insertIdentifier(p, rg.getIdentifier());
+			crh.setPageNumber(rg.getIdentifier(), p.getPageNumber());
+			p.addIdentifier(rg.getIdentifier());
 		}
 		p.addMarkers(rg.getMarkers());
 		//TODO: addGroupAnchors
-		setKeepWithNextSheets(p, rg.getKeepWithNextSheets());
-		setKeepWithPreviousSheets(p, rg.getKeepWithPreviousSheets());
+		keepNextSheets = Math.max(rg.getKeepWithNextSheets(), keepNextSheets);
+		if (keepNextSheets>0) {
+			p.setAllowsVolumeBreak(false);
+		}
+		p.setKeepWithPreviousSheets(rg.getKeepWithPreviousSheets());
 	}
 	
 	private void reassignCollection() throws PaginatorException {
@@ -391,8 +368,8 @@ public class PageSequenceBuilder2 {
 			for (FallbackRule r : areaProps.getFallbackRules()) {
 				i++;
 				if (r instanceof RenameFallbackRule) {
-					collection = context.getCollections().remove(r.applyToCollection());
-					if (context.getCollections().put(((RenameFallbackRule)r).getToCollection(), collection)!=null) {
+					ContentCollectionImpl reassigned = context.getCollections().remove(r.applyToCollection());
+					if (context.getCollections().put(((RenameFallbackRule)r).getToCollection(), reassigned)!=null) {
 						throw new PaginatorException("Fallback id already in use:" + ((RenameFallbackRule)r).getToCollection());
 					}							
 				} else {
@@ -403,13 +380,20 @@ public class PageSequenceBuilder2 {
 				throw new PaginatorException("Failed to fit collection '" + areaProps.getCollectionId() + "' within the page-area boundaries, and no fallback was defined.");
 			}
 		}
+		throw new RestartPaginationException();
 	}
 	
-	class CollectionData implements Supplements<RowGroup> {
+	static class CollectionData implements Supplements<RowGroup> {
 		private final BlockContext c;
+		private final PageAreaContent staticAreaContent;
+		private final LayoutMaster master;
+		private final ContentCollectionImpl collection;
 		
-		private CollectionData(BlockContext c) {
+		private CollectionData(PageAreaContent staticAreaContent, BlockContext c, LayoutMaster master, ContentCollectionImpl collection) {
 			this.c = c;
+			this.staticAreaContent = staticAreaContent;
+			this.master = master;
+			this.collection = collection;
 		}
 		
 		@Override
@@ -443,7 +427,7 @@ public class PageSequenceBuilder2 {
 	private int calculateVerticalSpace(PageImpl pa, BlockPosition p, int blockSpace) {
 		if (p != null) {
 			int pos = p.getPosition().makeAbsolute(pa.getFlowHeight());
-			int t = pos - spaceUsedOnPage(pa, 0);
+			int t = pos - pa.spaceUsedOnPage(0);
 			if (t > 0) {
 				int advance = 0;
 				switch (p.getAlignment()) {
