@@ -175,6 +175,7 @@ public class PageSequenceBuilder2 {
 
 	private PageImpl nextPageInner() throws PaginatorException, RestartPaginationException // pagination must be restarted in PageStructBuilder.paginateInner
 	{
+		current = newPage();
 		while (dataGroupsIndex<dataGroups.size() || (data!=null && !data.isEmpty())) {
 			if ((data==null || data.isEmpty()) && dataGroupsIndex<dataGroups.size()) {
 				//pick up next group
@@ -182,9 +183,6 @@ public class PageSequenceBuilder2 {
 				dataGroupsIndex++;
 				if (((RowGroupDataSource)data).getVerticalSpacing()!=null) {
 					VerticalSpacing vSpacing = ((RowGroupDataSource)data).getVerticalSpacing();
-					if (pageCount==0) {
-						current = newPage();
-					}
 					float size = 0;
 					for (RowGroup g : data.getRemaining()) {
 						size += g.getUnitSize();
@@ -193,12 +191,6 @@ public class PageSequenceBuilder2 {
 					for (int i = 0; i < pos; i++) {
 						RowImpl ri = vSpacing.getEmptyRow();
 						newRow(current, new RowImpl(ri.getChars(), ri.getLeftMargin(), ri.getRightMargin()));
-					}
-				} else {
-					PageImpl p = current;
-					current = newPage();
-					if (p!=null) {
-						return p;
 					}
 				}
 				force = false;
@@ -250,7 +242,11 @@ public class PageSequenceBuilder2 {
 				}
 				if (!data.isEmpty()) {
 					PageImpl ret = current;
-					current = newPage();
+					current = null;
+					return ret;
+				} else if (current!=null && dataGroupsIndex<dataGroups.size() && dataGroups.get(dataGroupsIndex).getVerticalSpacing()==null) { // data is also empty
+					PageImpl ret = current;
+					current = null;
 					return ret;
 				}
 			}
