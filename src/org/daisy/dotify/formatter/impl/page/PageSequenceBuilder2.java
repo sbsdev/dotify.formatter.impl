@@ -7,7 +7,6 @@ import org.daisy.dotify.api.formatter.BlockPosition;
 import org.daisy.dotify.api.formatter.FallbackRule;
 import org.daisy.dotify.api.formatter.MarginRegion;
 import org.daisy.dotify.api.formatter.MarkerIndicatorRegion;
-import org.daisy.dotify.api.formatter.PageAreaBuilder;
 import org.daisy.dotify.api.formatter.PageAreaProperties;
 import org.daisy.dotify.api.formatter.RenameFallbackRule;
 import org.daisy.dotify.api.translator.Translatable;
@@ -134,19 +133,18 @@ public class PageSequenceBuilder2 {
 	}
 
 	private PageImpl newPage() {
-		PageImpl buffer = current;
 		PageDetails details = new PageDetails(master.duplex(), new PageId(pageCount, getGlobalStartIndex(), seqId), pageNumberOffset);
-		current = new PageImpl(fieldResolver, details, master, context, staticAreaContent.getBefore(), staticAreaContent.getAfter());
+		PageImpl ret = new PageImpl(fieldResolver, details, master, context, staticAreaContent.getBefore(), staticAreaContent.getAfter());
 		pageCount ++;
 		if (keepNextSheets>0) {
-			current.setAllowsVolumeBreak(false);
+			ret.setAllowsVolumeBreak(false);
 		}
 		if (!master.duplex() || pageCount%2==0) {
 			if (keepNextSheets>0) {
 				keepNextSheets--;
 			}
 		}
-		return buffer;
+		return ret;
 	}
 
 	private void newRow(PageImpl p, RowImpl row) {
@@ -186,8 +184,7 @@ public class PageSequenceBuilder2 {
 				if (((RowGroupDataSource)data).getVerticalSpacing()!=null) {
 					VerticalSpacing vSpacing = ((RowGroupDataSource)data).getVerticalSpacing();
 					if (pageCount==0) {
-						// we know newPage returns null
-						newPage();
+						current = newPage();
 					}
 					p = current;
 					float size = 0;
@@ -200,7 +197,8 @@ public class PageSequenceBuilder2 {
 						newRow(p, new RowImpl(ri.getChars(), ri.getLeftMargin(), ri.getRightMargin()));
 					}
 				} else {
-					p = newPage();
+					p = current;
+					current = newPage();
 					if (p!=null) {
 						return p;
 					} else {
@@ -241,29 +239,7 @@ public class PageSequenceBuilder2 {
 				force = res.getHead().size()==0;
 				data = res.getTail();
 				List<RowGroup> head = res.getHead();
-				for (RowGroup rg : head) {
-					addProperties(p, rg);
-					for (RowImpl r : rg.getRows()) { 
-						if (r.shouldAdjustForMargin()) {
-							// clone the row as not to append the margins twice
-							RowImpl.Builder b = new RowImpl.Builder(r);
-							MarkerRef rf = r::hasMarkerWithName;
-							MarginProperties margin = r.getLeftMargin();
-							for (MarginRegion mr : p.getPageTemplate().getLeftMarginRegion()) {
-								margin = getMarginRegionValue(mr, rf, false).append(margin);
-							}
-							b.leftMargin(margin);
-							margin = r.getRightMargin();
-							for (MarginRegion mr : p.getPageTemplate().getRightMarginRegion()) {
-								margin = margin.append(getMarginRegionValue(mr, rf, true));
-							}
-							b.rightMargin(margin);
-							p.newRow(b.build());
-						} else {
-							p.newRow(r);
-						}
-					}
-				}
+				addRows(head, p);
 				Integer lastPriority = getLastPriority(head);
 				if (!res.getDiscarded().isEmpty()) {
 					//override if not empty
@@ -277,7 +253,9 @@ public class PageSequenceBuilder2 {
 					reassignCollection();
 				}
 				if (!data.isEmpty()) {
-					return newPage();
+					PageImpl ret = current;
+					current = newPage();
+					return ret;
 				}
 			}
 		}
@@ -285,6 +263,32 @@ public class PageSequenceBuilder2 {
 		PageImpl ret = current;
 		current = null;
 		return ret;
+	}
+	
+	private void addRows(List<RowGroup> head, PageImpl p) {
+		for (RowGroup rg : head) {
+			addProperties(p, rg);
+			for (RowImpl r : rg.getRows()) { 
+				if (r.shouldAdjustForMargin()) {
+					// clone the row as not to append the margins twice
+					RowImpl.Builder b = new RowImpl.Builder(r);
+					MarkerRef rf = r::hasMarkerWithName;
+					MarginProperties margin = r.getLeftMargin();
+					for (MarginRegion mr : p.getPageTemplate().getLeftMarginRegion()) {
+						margin = getMarginRegionValue(mr, rf, false).append(margin);
+					}
+					b.leftMargin(margin);
+					margin = r.getRightMargin();
+					for (MarginRegion mr : p.getPageTemplate().getRightMarginRegion()) {
+						margin = margin.append(getMarginRegionValue(mr, rf, true));
+					}
+					b.rightMargin(margin);
+					p.newRow(b.build());
+				} else {
+					p.newRow(r);
+				}
+			}
+		}
 	}
 	
 	private static Integer getLastPriority(List<RowGroup> list) {
