@@ -139,7 +139,7 @@ public class PageSequenceBuilder2 {
 		current = new PageImpl(fieldResolver, details, master, context, staticAreaContent.getBefore(), staticAreaContent.getAfter());
 		pageCount ++;
 		if (keepNextSheets>0) {
-			currentPage().setAllowsVolumeBreak(false);
+			current.setAllowsVolumeBreak(false);
 		}
 		if (!master.duplex() || pageCount%2==0) {
 			if (keepNextSheets>0) {
@@ -149,19 +149,15 @@ public class PageSequenceBuilder2 {
 		return buffer;
 	}
 
-	private void setKeepWithPreviousSheets(int value) {
-		currentPage().setKeepWithPreviousSheets(value);
+	private void setKeepWithPreviousSheets(PageImpl p, int value) {
+		p.setKeepWithPreviousSheets(value);
 	}
 
-	private void setKeepWithNextSheets(int value) {
+	private void setKeepWithNextSheets(PageImpl p, int value) {
 		keepNextSheets = Math.max(value, keepNextSheets);
 		if (keepNextSheets>0) {
-			currentPage().setAllowsVolumeBreak(false);
+			p.setAllowsVolumeBreak(false);
 		}
-	}
-	
-	private PageImpl currentPage() {
-		return current;
 	}
 
 	/**
@@ -169,21 +165,21 @@ public class PageSequenceBuilder2 {
 	 * 
 	 * @return
 	 */
-	private int spaceUsedOnPage(int offs) {
-		return currentPage().spaceUsedOnPage(offs);
+	private int spaceUsedOnPage(PageImpl p, int offs) {
+		return p.spaceUsedOnPage(offs);
 	}
 
-	private void newRow(RowImpl row) {
-		if (spaceUsedOnPage(1) > currentPage().getFlowHeight()) {
+	private void newRow(PageImpl p, RowImpl row) {
+		if (spaceUsedOnPage(p, 1) > p.getFlowHeight()) {
 			throw new RuntimeException("Error in code.");
 			//newPage();
 		}
-		currentPage().newRow(row);
+		p.newRow(row);
 	}
 
-	private void insertIdentifier(String id) {
-		crh.setPageNumber(id, currentPage().getPageNumber());
-		currentPage().addIdentifier(id);
+	private void insertIdentifier(PageImpl p, String id) {
+		crh.setPageNumber(id, p.getPageNumber());
+		p.addIdentifier(id);
 	}
 	
 	public boolean hasNext() {
@@ -206,6 +202,7 @@ public class PageSequenceBuilder2 {
 
 	private PageImpl nextPageInner() throws PaginatorException, RestartPaginationException // pagination must be restarted in PageStructBuilder.paginateInner
 	{
+		PageImpl p = current;
 		while (dataGroupsIndex<dataGroups.size() || (data!=null && !data.isEmpty())) {
 			if ((data==null || data.isEmpty()) && dataGroupsIndex<dataGroups.size()) {
 				//pick up next group
@@ -217,26 +214,28 @@ public class PageSequenceBuilder2 {
 						// we know newPage returns null
 						newPage();
 					}
+					p = current;
 					float size = 0;
 					for (RowGroup g : data.getRemaining()) {
 						size += g.getUnitSize();
 					}
-					int pos = calculateVerticalSpace(vSpacing.getBlockPosition(), (int)Math.ceil(size));
+					int pos = calculateVerticalSpace(p, vSpacing.getBlockPosition(), (int)Math.ceil(size));
 					for (int i = 0; i < pos; i++) {
 						RowImpl ri = vSpacing.getEmptyRow();
-						newRow(new RowImpl(ri.getChars(), ri.getLeftMargin(), ri.getRightMargin()));
+						newRow(p, new RowImpl(ri.getChars(), ri.getLeftMargin(), ri.getRightMargin()));
 					}
 				} else {
-					PageImpl p = newPage();
+					p = newPage();
 					if (p!=null) {
 						return p;
+					} else {
+						p = current;
 					}
 				}
 				force = false;
 			}
-			
 			((RowGroupDataSource)data).setContext(((RowGroupDataSource)data).getContext().copyWithContext(
-					DefaultContext.from(blockContext.getContext()).currentPage(currentPage().getDetails().getPageNumber()).build()));
+					DefaultContext.from(blockContext.getContext()).currentPage(p.getDetails().getPageNumber()).build()));
 			if (!data.isEmpty()) {
 				SplitPointDataSource<RowGroup> copy = new RowGroupDataSource((RowGroupDataSource)data);
 				// Using a copy to find the skippable data, so that only the required data is rendered
@@ -244,12 +243,12 @@ public class PageSequenceBuilder2 {
 				// Now apply the information to the live data
 				SplitPoint<RowGroup> sl = SplitPointHandler.skipLeading(data, index);
 				for (RowGroup rg : sl.getDiscarded()) {
-					addProperties(rg);
+					addProperties(p, rg);
 				}
 				data = sl.getTail();
 				// And on copy...
 				copy = SplitPointHandler.skipLeading(copy, index).getTail();
-				int flowHeight = currentPage().getFlowHeight();
+				int flowHeight = p.getFlowHeight();
 				// Using copy to find the break point so that only the required data is rendered
 				SplitPointSpecification spec = sph.find(flowHeight, copy, force?StandardSplitOption.ALLOW_FORCE:null);
 				// Now apply the information to the live data
@@ -263,31 +262,31 @@ public class PageSequenceBuilder2 {
 					}
 				}
 				for (RowGroup rg : res.getSupplements()) {
-					currentPage().addToPageArea(rg.getRows());
+					p.addToPageArea(rg.getRows());
 				}
 				force = res.getHead().size()==0;
 				data = res.getTail();
 				List<RowGroup> head = res.getHead();
 				for (RowGroup rg : head) {
-					addProperties(rg);
+					addProperties(p, rg);
 					for (RowImpl r : rg.getRows()) { 
 						if (r.shouldAdjustForMargin()) {
 							// clone the row as not to append the margins twice
 							RowImpl.Builder b = new RowImpl.Builder(r);
 							MarkerRef rf = r::hasMarkerWithName;
 							MarginProperties margin = r.getLeftMargin();
-							for (MarginRegion mr : currentPage().getPageTemplate().getLeftMarginRegion()) {
+							for (MarginRegion mr : p.getPageTemplate().getLeftMarginRegion()) {
 								margin = getMarginRegionValue(mr, rf, false).append(margin);
 							}
 							b.leftMargin(margin);
 							margin = r.getRightMargin();
-							for (MarginRegion mr : currentPage().getPageTemplate().getRightMarginRegion()) {
+							for (MarginRegion mr : p.getPageTemplate().getRightMarginRegion()) {
 								margin = margin.append(getMarginRegionValue(mr, rf, true));
 							}
 							b.rightMargin(margin);
-							currentPage().newRow(b.build());
+							p.newRow(b.build());
 						} else {
-							currentPage().newRow(r);
+							p.newRow(r);
 						}
 					}
 				}
@@ -296,11 +295,11 @@ public class PageSequenceBuilder2 {
 					//override if not empty
 					lastPriority = getLastPriority(res.getDiscarded());
 				}
-				currentPage().setAvoidVolumeBreakAfter(lastPriority);
+				p.setAvoidVolumeBreakAfter(lastPriority);
 				for (RowGroup rg : res.getDiscarded()) {
-					addProperties(rg);
+					addProperties(p, rg);
 				}
-				if (hasPageAreaCollection() && currentPage().pageAreaSpaceNeeded() > master.getPageArea().getMaxHeight()) {
+				if (hasPageAreaCollection() && p.pageAreaSpaceNeeded() > master.getPageArea().getMaxHeight()) {
 					reassignCollection();
 					throw new RestartPaginationException();
 				}
@@ -375,14 +374,14 @@ public class PageSequenceBuilder2 {
 				.findFirst().orElse("");
 	}
 	
-	private void addProperties(RowGroup rg) {
+	private void addProperties(PageImpl p, RowGroup rg) {
 		if (rg.getIdentifier()!=null) {
-			insertIdentifier(rg.getIdentifier());
+			insertIdentifier(p, rg.getIdentifier());
 		}
-		currentPage().addMarkers(rg.getMarkers());
+		p.addMarkers(rg.getMarkers());
 		//TODO: addGroupAnchors
-		setKeepWithNextSheets(rg.getKeepWithNextSheets());
-		setKeepWithPreviousSheets(rg.getKeepWithPreviousSheets());
+		setKeepWithNextSheets(p, rg.getKeepWithNextSheets());
+		setKeepWithPreviousSheets(p, rg.getKeepWithPreviousSheets());
 	}
 	
 	private void reassignCollection() throws PaginatorException {
@@ -441,10 +440,10 @@ public class PageSequenceBuilder2 {
 		
 	}
 	
-	private int calculateVerticalSpace(BlockPosition p, int blockSpace) {
+	private int calculateVerticalSpace(PageImpl pa, BlockPosition p, int blockSpace) {
 		if (p != null) {
-			int pos = p.getPosition().makeAbsolute(currentPage().getFlowHeight());
-			int t = pos - spaceUsedOnPage(0);
+			int pos = p.getPosition().makeAbsolute(pa.getFlowHeight());
+			int t = pos - spaceUsedOnPage(pa, 0);
 			if (t > 0) {
 				int advance = 0;
 				switch (p.getAlignment()) {
