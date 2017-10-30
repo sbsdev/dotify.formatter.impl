@@ -52,7 +52,6 @@ public class PageSequenceBuilder2 {
 	private boolean force;
 	private SplitPointDataSource<RowGroup> data;
 
-	private PageImpl current;
 	private int keepNextSheets;
 	private int pageCount = 0;
 	private int dataGroupsIndex;
@@ -76,7 +75,6 @@ public class PageSequenceBuilder2 {
 		} else {
 			this.collection = null;
 		}
-		current = null;
 		keepNextSheets = 0;
 		
 		this.blockContext = new BlockContext(seq.getLayoutMaster().getFlowWidth(), crh, rcontext, context);
@@ -112,7 +110,6 @@ public class PageSequenceBuilder2 {
 		} else {
 			throw new RuntimeException("Error in code.");
 		}
-		this.current = PageImpl.copyUnlessNull(template.current);
 		this.keepNextSheets = template.keepNextSheets;
 		this.pageCount = template.pageCount;
 		this.fromIndex = template.fromIndex;
@@ -156,7 +153,7 @@ public class PageSequenceBuilder2 {
 	}
 
 	public boolean hasNext() {
-		return dataGroupsIndex<dataGroups.size() || (data!=null && !data.isEmpty()) || current!=null;
+		return dataGroupsIndex<dataGroups.size() || (data!=null && !data.isEmpty());
 	}
 	
 	public PageImpl nextPage() throws PaginatorException, RestartPaginationException // pagination must be restarted in PageStructBuilder.paginateInner
@@ -175,7 +172,7 @@ public class PageSequenceBuilder2 {
 
 	private PageImpl nextPageInner() throws PaginatorException, RestartPaginationException // pagination must be restarted in PageStructBuilder.paginateInner
 	{
-		current = newPage();
+		PageImpl current = newPage();
 		while (dataGroupsIndex<dataGroups.size() || (data!=null && !data.isEmpty())) {
 			if ((data==null || data.isEmpty()) && dataGroupsIndex<dataGroups.size()) {
 				//pick up next group
@@ -240,21 +237,12 @@ public class PageSequenceBuilder2 {
 				if (hasPageAreaCollection() && current.pageAreaSpaceNeeded() > master.getPageArea().getMaxHeight()) {
 					reassignCollection();
 				}
-				if (!data.isEmpty()) {
-					PageImpl ret = current;
-					current = null;
-					return ret;
-				} else if (current!=null && dataGroupsIndex<dataGroups.size() && dataGroups.get(dataGroupsIndex).getVerticalSpacing()==null) { // data is also empty
-					PageImpl ret = current;
-					current = null;
-					return ret;
+				if (!data.isEmpty() || (current!=null && dataGroupsIndex<dataGroups.size() && dataGroups.get(dataGroupsIndex).getVerticalSpacing()==null)) {
+					return current;
 				}
 			}
 		}
-		//flush current page
-		PageImpl ret = current;
-		current = null;
-		return ret;
+		return current;
 	}
 	
 	private void addRows(List<RowGroup> head, PageImpl p) {
