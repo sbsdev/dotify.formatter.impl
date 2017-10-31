@@ -6,31 +6,48 @@ package org.daisy.dotify.formatter.impl.page;
  * @author Joel Håkansson
  */
 public class PageStruct {
-	private PageSequenceBuilder2 currentSeq;
+	private int pageOffset;
 	private int pageCount;
 
 	public PageStruct() {
-		currentSeq = null;
+		pageOffset = 0;
 		pageCount = 0;
 	}
 
 	public PageStruct(PageStruct template) {
-		this.currentSeq = template.currentSeq; //Copy not needed, since the only use for this is to check identity
+		this.pageOffset = template.pageOffset;
 		this.pageCount = template.pageCount;
 	}
-
-	public void setCurrentSequence(PageSequenceBuilder2 seq) {
-		currentSeq = seq;
+	
+	/**
+	 * Copies this object unless it is the same as the other object,
+	 * in which case no copy is created and the object is returned.
+	 * @param other
+	 * @return
+	 */
+	public PageStruct copyUnlessSameObject(PageStruct other) {
+		return this==other?this:new PageStruct(this); 
 	}
 
-	public int getCurrentPageOffset() {
-		return currentSeq!=null?currentSeq.getCurrentPageOffset():0;
+	public void setDefaultPageOffset(int value) {
+		pageOffset = value;
 	}
 
+	public int getDefaultPageOffset() {
+		return pageOffset;
+	}
+
+	/**
+	 * This is used for searching and MUST be continuous. Do not use for page numbers.
+	 * @return returns the page count
+	 */
 	public int getPageCount() {
 		return pageCount;
 	}
 	
+	/**
+	 * Advance to the next page.
+	 */
 	public void increasePageCount() {
 		pageCount++;
 	}

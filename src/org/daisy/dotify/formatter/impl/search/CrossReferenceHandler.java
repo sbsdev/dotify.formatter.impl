@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.daisy.dotify.api.formatter.Marker;
@@ -21,6 +22,7 @@ public class CrossReferenceHandler {
     private final LookupHandler<BlockAddress, List<String>> groupAnchors;
     private final LookupHandler<BlockAddress, List<Marker>> groupMarkers;
 	private final Map<Integer, Overhead> volumeOverhead;
+    private final Map<String, Integer> counters;
 	private final SearchInfo searchInfo;
 	private static final String VOLUMES_KEY = "volumes";
 	private static final String SHEETS_IN_VOLUME = "sheets-in-volume-";
@@ -41,6 +43,7 @@ public class CrossReferenceHandler {
         this.groupAnchors = new LookupHandler<>();
         this.groupMarkers = new LookupHandler<>();
 		this.volumeOverhead = new HashMap<>();
+		this.counters = new HashMap<>();
 		this.searchInfo = new SearchInfo();
         this.pageIds = new HashSet<>();
 	}
@@ -170,6 +173,15 @@ public class CrossReferenceHandler {
 		if (readOnly) { return; }
 		volumeOverhead.put(volumeNumber, overhead);
 	}
+	
+	public Integer getPageNumberOffset(String key) {
+		return counters.get(key);
+	}
+
+	public void setPageNumberOffset(String key, Integer value) {
+		if (readOnly) { return; }
+		counters.put(key, value);
+	}
 
 	/**
 	 * Gets the number of volumes.
@@ -294,6 +306,7 @@ public class CrossReferenceHandler {
 		//groupAnchors.setDirty(value);
 		//groupMarkers.setDirty(value);
 		overheadDirty = value;
+		counters.clear();
 	}
 
     public void resetUniqueChecks() {

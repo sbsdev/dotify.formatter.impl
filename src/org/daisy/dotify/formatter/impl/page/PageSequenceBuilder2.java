@@ -43,7 +43,6 @@ public class PageSequenceBuilder2 {
 	private final ContentCollectionImpl collection;
 	private final BlockContext blockContext;
 	private final LayoutMaster master;
-	private final int pageNumberOffset;
 	private final List<RowGroupDataSource> dataGroups;
 	private final FieldResolver fieldResolver;
 	private final SequenceId seqId;
@@ -65,7 +64,6 @@ public class PageSequenceBuilder2 {
 		this.fromIndex = fromIndex;
 		this.toIndex = fromIndex;
 		this.master = master;
-		this.pageNumberOffset = pageOffset;
 		this.context = context;
 		this.crh = crh;
 		this.sph = new SplitPointHandler<>();
@@ -82,7 +80,7 @@ public class PageSequenceBuilder2 {
 		this.dataGroups = prepareResult(master, seq, blockContext, new CollectionData(staticAreaContent, blockContext, master, collection));
 		this.dataGroupsIndex = 0;
 		this.seqId = new SequenceId(sequenceId, new DocumentSpace(blockContext.getContext().getSpace(), blockContext.getContext().getCurrentVolume()));
-		PageDetails details = new PageDetails(master.duplex(), new PageId(pageCount, getGlobalStartIndex(), seqId), pageNumberOffset);
+		PageDetails details = new PageDetails(master.duplex(), new PageId(pageCount, getGlobalStartIndex(), seqId), pageOffset);
 		this.fieldResolver = new FieldResolver(master, context, crh, details);
 	}
 
@@ -94,7 +92,6 @@ public class PageSequenceBuilder2 {
 		this.collection = template.collection;
 		this.blockContext = template.blockContext;
 		this.master = template.master;
-		this.pageNumberOffset = template.pageNumberOffset;
 		this.dataGroups = template.dataGroups;
 		this.dataGroupsIndex = template.dataGroupsIndex;
 		this.fieldResolver = template.fieldResolver;
@@ -129,7 +126,7 @@ public class PageSequenceBuilder2 {
 				.collect(Collectors.toList());
 	}
 
-	private PageImpl newPage() {
+	private PageImpl newPage(int pageNumberOffset) {
 		PageDetails details = new PageDetails(master.duplex(), new PageId(pageCount, getGlobalStartIndex(), seqId), pageNumberOffset);
 		PageImpl ret = new PageImpl(fieldResolver, details, master, context, staticAreaContent.getBefore(), staticAreaContent.getAfter());
 		pageCount ++;
@@ -156,9 +153,9 @@ public class PageSequenceBuilder2 {
 		return dataGroupsIndex<dataGroups.size() || (data!=null && !data.isEmpty());
 	}
 	
-	public PageImpl nextPage() throws PaginatorException, RestartPaginationException // pagination must be restarted in PageStructBuilder.paginateInner
+	public PageImpl nextPage(int pageNumberOffset) throws PaginatorException, RestartPaginationException // pagination must be restarted in PageStructBuilder.paginateInner
 	{
-		PageImpl ret = nextPageInner();
+		PageImpl ret = nextPageInner(pageNumberOffset);
 		crh.keepPageDetails(ret.getDetails());
 		//This is for pre/post volume contents, where the volume number is known
 		if (blockContext.getContext().getCurrentVolume()!=null) {
@@ -170,9 +167,9 @@ public class PageSequenceBuilder2 {
 		return ret;
 	}
 
-	private PageImpl nextPageInner() throws PaginatorException, RestartPaginationException // pagination must be restarted in PageStructBuilder.paginateInner
+	private PageImpl nextPageInner(int pageNumberOffset) throws PaginatorException, RestartPaginationException // pagination must be restarted in PageStructBuilder.paginateInner
 	{
-		PageImpl current = newPage();
+		PageImpl current = newPage(pageNumberOffset);
 		while (dataGroupsIndex<dataGroups.size() || (data!=null && !data.isEmpty())) {
 			if ((data==null || data.isEmpty()) && dataGroupsIndex<dataGroups.size()) {
 				//pick up next group
@@ -430,24 +427,16 @@ public class PageSequenceBuilder2 {
 		}
 		return 0;
 	}
-
-	/**
-	 * Gets the layout master for this sequence
-	 * @return returns the layout master for this sequence
-	 */
-	public LayoutMaster getLayoutMaster() {
-		return master;
-	}
-
-	int getCurrentPageOffset() {
-		if (getLayoutMaster().duplex() && (size() % 2)==1) {
-			return pageNumberOffset + size() + 1;
+	
+	public int getSizeLast() {
+		if (master.duplex() && (size() % 2)==1) {
+			return size() + 1;
 		} else {
-			return pageNumberOffset + size();
+			return size();
 		}
 	}
 	
-	private int size() {
+	public int size() {
 		return getToIndex()-fromIndex;
 	}
 

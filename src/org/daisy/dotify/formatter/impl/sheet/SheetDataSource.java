@@ -3,6 +3,7 @@ package org.daisy.dotify.formatter.impl.sheet;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.daisy.dotify.api.writer.SectionProperties;
 import org.daisy.dotify.common.split.SplitPointDataSource;
@@ -33,9 +34,12 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 	private SheetIdentity si;
 	private int sheetIndex;
 	private int pageIndex;
+	private String counter;
+	private int initialPageOffset;
 	
 	private List<Sheet> sheetBuffer;
 	private boolean volBreakAllowed;
+	private boolean updateCounter;
 
 	public SheetDataSource(PageStruct struct, CrossReferenceHandler crh, FormatterContext context, DefaultContext rcontext, List<BlockSequence> seqsIterator) {
 		this.struct = struct;
@@ -53,6 +57,9 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 		this.si = null;
 		this.sheetIndex = 0;
 		this.pageIndex = 0;
+		this.counter = null;
+		this.initialPageOffset = 0;
+		this.updateCounter = false;
 	}
 	
 	public SheetDataSource(SheetDataSource template) {
@@ -75,6 +82,9 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 		this.pageIndex = template.pageIndex;
 		this.sheetBuffer = new ArrayList<>(template.sheetBuffer);
 		this.volBreakAllowed = template.volBreakAllowed;
+		this.counter = template.counter;
+		this.initialPageOffset = template.initialPageOffset;
+		this.updateCounter = template.updateCounter;
 	}
 	
 	@Override
@@ -120,7 +130,7 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 
 	@Override
 	public boolean isEmpty() {
-		return seqsIndex>=seqsIterator.size() && sheetBuffer.size()<=offset && (psb==null || !psb.hasNext());
+		return seqsIndex>=seqsIterator.size() && sheetBuffer.size()<=offset && (psb==null || (!psb.hasNext() && s==null));
 	}
 
 	@Override
@@ -136,7 +146,21 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 	 */
 	private boolean ensureBuffer(int index) {
 		while (index<0 || sheetBuffer.size()-offset<index) {
+			if (updateCounter) { 
+				if(counter!=null) {
+					initialPageOffset = crh.getPageNumberOffset(counter) - psb.size();
+				} else {
+					initialPageOffset = struct.getDefaultPageOffset() - psb.size();
+				}
+				updateCounter = false;
+			}
 			if (psb==null || !psb.hasNext()) {
+				if (s!=null) {
+					//Last page in the sequence doesn't need volume keep priority
+					sheetBuffer.add(s.build());
+					s=null;
+					continue;
+				}
 				if (seqsIndex>=seqsIterator.size()) {
 					// cannot ensure buffer, return false
 					return false;
@@ -144,8 +168,15 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 				// init new sequence
 				BlockSequence bs = seqsIterator.get(seqsIndex);
 				seqsIndex++;
-				int offset = struct.getCurrentPageOffset();
-				psb = new PageSequenceBuilder2(struct.getPageCount(), bs.getLayoutMaster(), bs.getInitialPageNumber()!=null?bs.getInitialPageNumber() - 1:offset, crh, bs, context, rcontext, seqsIndex);
+				counter = bs.getSequenceProperties().getPageCounterName().orElse(null);
+				if (bs.getInitialPageNumber()!=null) {
+					 initialPageOffset = bs.getInitialPageNumber() - 1;
+				} else if (counter!=null) {
+					initialPageOffset = Optional.ofNullable(crh.getPageNumberOffset(counter)).orElse(0);
+				} else {
+					 initialPageOffset = struct.getDefaultPageOffset();
+				}
+				psb = new PageSequenceBuilder2(struct.getPageCount(), bs.getLayoutMaster(), initialPageOffset, crh, bs, context, rcontext, seqsIndex);
 				sectionProperties = bs.getLayoutMaster().newSectionProperties();
 				s = null;
 				si = null;
@@ -166,7 +197,7 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 					si = new SheetIdentity(rcontext.getSpace(), rcontext.getCurrentVolume(), sheetBuffer.size());
 					sheetIndex++;
 				}
-				PageImpl p = psb.nextPage();
+				PageImpl p = psb.nextPage(initialPageOffset);
 				struct.increasePageCount();
 				s.avoidVolumeBreakAfterPriority(p.getAvoidVolumeBreakAfter());
 				if (!psb.hasNext()) {
@@ -191,12 +222,12 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 				pageIndex++;
 			}
 			if (!psb.hasNext()) {
-				if (s!=null) {
-					//Last page in the sequence doesn't need volume keep priority
-					sheetBuffer.add(s.build());
-				}
 				crh.setSequenceScope(new DocumentSpace(rcontext.getSpace(), rcontext.getCurrentVolume()), seqsIndex, psb.getGlobalStartIndex(), psb.getToIndex());
-				struct.setCurrentSequence(psb);
+				if (counter!=null) {
+					crh.setPageNumberOffset(counter, initialPageOffset + psb.getSizeLast());
+				} else {
+					struct.setDefaultPageOffset(initialPageOffset + psb.getSizeLast());
+				}
 			}
 		}
 		return true;
@@ -213,11 +244,17 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 	}
 
 	@Override
-	public SplitResult<Sheet> split(int atIndex) { 
+	public SplitResult<Sheet> split(int atIndex) {
 		if (!ensureBuffer(atIndex)) {
 			throw new IndexOutOfBoundsException("" + atIndex);
 		}
-		SplitPointDataSource<Sheet> tail = new SheetDataSource(this, offset+atIndex);
+		if (counter!=null) {
+			crh.setPageNumberOffset(counter, initialPageOffset + psb.getSizeLast());
+		} else {
+			struct.setDefaultPageOffset(initialPageOffset + psb.getSizeLast());
+		}
+		SheetDataSource tail = new SheetDataSource(this, offset+atIndex);
+		tail.updateCounter = true;
 		if (atIndex==0) {
 			return new SplitResult<Sheet>(Collections.emptyList(), tail);
 		} else {

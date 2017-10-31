@@ -561,6 +561,10 @@ public class ObflParser extends XMLParserBase {
 		if (breakBefore!=null) {
 			builder.breakBefore(SequenceProperties.SequenceBreakBefore.valueOf(breakBefore.toUpperCase()));
 		}
+		String pageNumberCounter = getAttr(event, "page-number-counter");
+		if (pageNumberCounter!=null) {
+			builder.pageCounterName(pageNumberCounter);
+		}
 		FormatterCore seq = formatter.newSequence(builder.build());
 		while (input.hasNext()) {
 			event=input.nextEvent();
@@ -1375,6 +1379,10 @@ public class ObflParser extends XMLParserBase {
 		if (initialPageNumber!=null) {
 			builder.initialPageNumber(Integer.parseInt(initialPageNumber));
 		}
+		String pageNumberCounter = getAttr(event, "page-number-counter");
+		if (pageNumberCounter!=null) {
+			builder.pageCounterName(pageNumberCounter);
+		}
 		template.newSequence(builder.build());
 		while (input.hasNext()) {
 			event=input.nextEvent();
@@ -1402,7 +1410,10 @@ public class ObflParser extends XMLParserBase {
 		if (initialPageNumber!=null) {
 			builder.initialPageNumber(Integer.parseInt(initialPageNumber));
 		}
-
+		String pageNumberCounter = getAttr(event, "page-number-counter");
+		if (pageNumberCounter!=null) {
+			builder.pageCounterName(pageNumberCounter);
+		}
 		template.newTocSequence(builder.build());
 		while (input.hasNext()) {
 			event=input.nextEvent();
@@ -1435,7 +1446,10 @@ public class ObflParser extends XMLParserBase {
 		if (initialPageNumber!=null) {
 			builder.initialPageNumber(Integer.parseInt(initialPageNumber));
 		}
-
+		String pageNumberCounter = getAttr(event, "page-number-counter");
+		if (pageNumberCounter!=null) {
+			builder.pageCounterName(pageNumberCounter);
+		}
 		DynamicSequenceBuilder dsb = template.newDynamicSequence(builder.build());
 		FormatterCore context = null;
 		while (input.hasNext()) {
