@@ -18,16 +18,6 @@ public class PageStruct {
 		this.pageOffset = template.pageOffset;
 		this.pageCount = template.pageCount;
 	}
-	
-	/**
-	 * Copies this object unless it is the same as the other object,
-	 * in which case no copy is created and the object is returned.
-	 * @param other
-	 * @return
-	 */
-	public PageStruct copyUnlessSameObject(PageStruct other) {
-		return this==other?this:new PageStruct(this); 
-	}
 
 	public void setDefaultPageOffset(int value) {
 		pageOffset = value;
