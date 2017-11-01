@@ -142,6 +142,7 @@ public final class RowImpl implements Row {
 		/**
 		 * Add a collection of markers to the Row
 		 * @param list the list of markers
+		 * @return returns this builder
 		 */
 		public Builder addMarkers(List<Marker> list) {
 			assertNotBuilt();

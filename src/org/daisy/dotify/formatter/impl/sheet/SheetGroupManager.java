@@ -104,7 +104,7 @@ public class SheetGroupManager {
 
 	/**
 	 * Gets the number of sheets in the current volume, according the the group's splitter.
-	 * @return
+	 * @return returns the number of sheets in the current volume
 	 */
 	public int sheetsInCurrentVolume() {
 		return currentGroup().getSplitter().sheetsInVolume(1+indexInGroup);
