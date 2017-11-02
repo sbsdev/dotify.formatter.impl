@@ -5,9 +5,9 @@ public class SheetIdentity {
 	private final int volumeIndex;
 	private final int sheetIndex;
 
-	public SheetIdentity(Space s, int volumeIndex, int sheetIndex) {
+	public SheetIdentity(Space s, Integer volumeIndex, int sheetIndex) {
 		this.space = s;
-		this.volumeIndex = volumeIndex;
+		this.volumeIndex = (volumeIndex==null||s==Space.BODY)?0:volumeIndex;
 		this.sheetIndex = sheetIndex;
 	}
 
