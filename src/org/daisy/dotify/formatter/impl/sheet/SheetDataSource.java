@@ -26,7 +26,7 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 	private final FormatterContext context;
 	private final DefaultContext rcontext;
 	private final List<BlockSequence> seqsIterator;
-	private final int offset;
+	private final int sheetOffset;
 	private int seqsIndex;
 	private PageSequenceBuilder2 psb;
 	private SectionProperties sectionProperties;
@@ -49,7 +49,7 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 		this.seqsIterator = seqsIterator;
 		this.sheetBuffer = new ArrayList<>();
 		this.volBreakAllowed = true;
-		this.offset = 0;
+		this.sheetOffset = 0;
 		this.seqsIndex = 0;
 		this.psb = null;
 		this.sectionProperties = null;
@@ -63,10 +63,10 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 	}
 	
 	public SheetDataSource(SheetDataSource template) {
-		this(template, template.offset);
+		this(template, 0);
 	}
 	
-	public SheetDataSource(SheetDataSource template, int offset) {
+	private SheetDataSource(SheetDataSource template, int offset) {
 		this.struct = new PageStruct(template.struct);
 		this.crh = template.crh;
 		this.context = template.context;
@@ -76,11 +76,15 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 		this.psb = PageSequenceBuilder2.copyUnlessNull(template.psb);
 		this.sectionProperties = template.sectionProperties;
 		this.s = Sheet.Builder.copyUnlessNull(template.s);
-		this.si = template.si;
-		this.offset = offset;
+		this.si = template.si; 
+		this.sheetOffset = template.sheetOffset+offset;
 		this.sheetIndex = template.sheetIndex;
 		this.pageIndex = template.pageIndex;
-		this.sheetBuffer = new ArrayList<>(template.sheetBuffer);
+		if (template.sheetBuffer.size()>offset) {
+			this.sheetBuffer = new ArrayList<>(template.sheetBuffer.subList(offset, template.sheetBuffer.size()));
+		} else {
+			this.sheetBuffer = new ArrayList<>();
+		}
 		this.volBreakAllowed = template.volBreakAllowed;
 		this.counter = template.counter;
 		this.initialPageOffset = template.initialPageOffset;
@@ -92,7 +96,7 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 		if (!ensureBuffer(index+1)) {
 			throw new IndexOutOfBoundsException("" + index);
 		}
-		return sheetBuffer.get(index+offset);
+		return sheetBuffer.get(index);
 	}
 
 	@Override
@@ -104,7 +108,7 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 	@Override
 	public List<Sheet> getRemaining() throws RestartPaginationException {
 		ensureBuffer(-1);
-		return sheetBuffer.subList(offset, sheetBuffer.size());
+		return sheetBuffer;
 	}
 
 	@Override
@@ -122,7 +126,7 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 	public int getSize(int limit)  throws RestartPaginationException {
 		if (!ensureBuffer(limit-1))  {
 			//we have buffered all elements
-			return sheetBuffer.size()-offset;
+			return sheetBuffer.size();
 		} else {
 			return limit;
 		}
@@ -130,7 +134,7 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 
 	@Override
 	public boolean isEmpty() {
-		return seqsIndex>=seqsIterator.size() && sheetBuffer.size()<=offset && (psb==null || (!psb.hasNext() && s==null));
+		return seqsIndex>=seqsIterator.size() && sheetBuffer.isEmpty() && (psb==null || (!psb.hasNext() && s==null));
 	}
 
 	@Override
@@ -145,7 +149,7 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 	 * @return returns true if the index element was available, false otherwise
 	 */
 	private boolean ensureBuffer(int index) {
-		while (index<0 || sheetBuffer.size()-offset<index) {
+		while (index<0 || sheetBuffer.size()<index) {
 			if (updateCounter) { 
 				if(counter!=null) {
 					initialPageOffset = crh.getPageNumberOffset(counter) - psb.size();
@@ -194,7 +198,7 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 					}
 					volBreakAllowed = true;
 					s = new Sheet.Builder(sectionProperties);
-					si = new SheetIdentity(rcontext.getSpace(), rcontext.getCurrentVolume(), sheetBuffer.size());
+					si = new SheetIdentity(rcontext.getSpace(), rcontext.getCurrentVolume(), sheetBuffer.size()+sheetOffset);
 					sheetIndex++;
 				}
 				PageImpl p = psb.nextPage(initialPageOffset);
@@ -253,12 +257,12 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 		} else {
 			struct.setDefaultPageOffset(initialPageOffset + psb.getSizeLast());
 		}
-		SheetDataSource tail = new SheetDataSource(this, offset+atIndex);
+		SheetDataSource tail = new SheetDataSource(this, atIndex);
 		tail.updateCounter = true;
 		if (atIndex==0) {
 			return new SplitResult<Sheet>(Collections.emptyList(), tail);
 		} else {
-			return new SplitResult<Sheet>(sheetBuffer.subList(offset, offset+atIndex), tail);
+			return new SplitResult<Sheet>(sheetBuffer.subList(0, atIndex), tail);
 		}
 	}
 
