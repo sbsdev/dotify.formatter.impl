@@ -128,7 +128,7 @@ public class PageSequenceBuilder2 {
 
 	private PageImpl newPage(int pageNumberOffset) {
 		PageDetails details = new PageDetails(master.duplex(), new PageId(pageCount, getGlobalStartIndex(), seqId), pageNumberOffset);
-		PageImpl ret = new PageImpl(fieldResolver, details, master, context, staticAreaContent.getBefore(), staticAreaContent.getAfter());
+		PageImpl ret = new PageImpl(fieldResolver, details, master, context, staticAreaContent);
 		pageCount ++;
 		if (keepNextSheets>0) {
 			ret.setAllowsVolumeBreak(false);

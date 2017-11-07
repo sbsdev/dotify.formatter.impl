@@ -30,8 +30,7 @@ public class PageImpl implements Page {
 	private final PageDetails details;
 	private final LayoutMaster master;
 	private final FormatterContext fcontext;
-	private final List<RowImpl> before;
-	private final List<RowImpl> after;
+	private final PageAreaContent pageAreaTemplate;
     private final ArrayList<RowImpl> pageArea;
     private final ArrayList<String> anchors;
     private final ArrayList<String> identifiers;
@@ -46,13 +45,12 @@ public class PageImpl implements Page {
 	private Integer volumeBreakAfterPriority;
 	private final BrailleTranslator filter;
 	
-	public PageImpl(FieldResolver fieldResolver, PageDetails details, LayoutMaster master, FormatterContext fcontext, List<RowImpl> before, List<RowImpl> after) {
+	public PageImpl(FieldResolver fieldResolver, PageDetails details, LayoutMaster master, FormatterContext fcontext, PageAreaContent pageAreaTemplate) {
 		this.fieldResolver = fieldResolver;
 		this.details = details;
 		this.master = master;
 		this.fcontext = fcontext;
-		this.before = before;
-		this.after = after;
+		this.pageAreaTemplate = pageAreaTemplate;
 
 		this.pageArea = new ArrayList<>();
 		this.anchors = new ArrayList<>();
@@ -73,8 +71,7 @@ public class PageImpl implements Page {
 		this.details = template.details;
 		this.master = template.master;
 		this.fcontext = template.fcontext;
-		this.before = new ArrayList<>(template.before);
-		this.after = new ArrayList<>(template.after);
+		this.pageAreaTemplate = template.pageAreaTemplate;
 	    this.pageArea = new ArrayList<>(template.pageArea);
 	    this.anchors = new ArrayList<>(template.anchors);
 	    this.identifiers = new ArrayList<>(template.identifiers);
@@ -149,7 +146,7 @@ public class PageImpl implements Page {
 	}
 	
 	float staticAreaSpaceNeeded() {
-		return rowsNeeded(before, master.getRowSpacing()) + rowsNeeded(after, master.getRowSpacing());
+		return rowsNeeded(pageAreaTemplate.getBefore(), master.getRowSpacing()) + rowsNeeded(pageAreaTemplate.getAfter(), master.getRowSpacing());
 	}
 	
 	float pageAreaSpaceNeeded() {
@@ -162,9 +159,9 @@ public class PageImpl implements Page {
 	
 	private void addTopPageArea() {
         if (master.getPageArea()!=null && master.getPageArea().getAlignment()==PageAreaProperties.Alignment.TOP && !pageArea.isEmpty()) {
-			finalRows.addAll(before);
+			finalRows.addAll(pageAreaTemplate.getBefore());
 			finalRows.addAll(pageArea);
-			finalRows.addAll(after);
+			finalRows.addAll(pageAreaTemplate.getAfter());
 		}
 	}
 
@@ -189,9 +186,9 @@ public class PageImpl implements Page {
 						finalRows.addRow(new RowImpl());
 					}
 					if (master.getPageArea()!=null && master.getPageArea().getAlignment()==PageAreaProperties.Alignment.BOTTOM && !pageArea.isEmpty()) {
-						finalRows.addAll(before);
+						finalRows.addAll(pageAreaTemplate.getBefore());
 						finalRows.addAll(pageArea);
-						finalRows.addAll(after);
+						finalRows.addAll(pageAreaTemplate.getAfter());
 					}
 		            finalRows.addAll(fieldResolver.renderFields(getDetails(), template.getFooter(), filter));
 				}
