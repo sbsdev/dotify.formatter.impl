@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.regex.Pattern;
 
 import org.daisy.dotify.api.formatter.Context;
@@ -139,7 +140,7 @@ public class BlockContentManager extends AbstractBlockContentManager {
 				return false;
 			}
 			Segment s = segments.get(segmentIndex);
-			if (testOnly && s.getSegmentType()!=SegmentType.Marker && s.getSegmentType()!=SegmentType.Anchor) {
+			if (testOnly && couldTriggerNewRow(s)) {
 				return true;
 			}
 			layoutSegment(s);
@@ -161,6 +162,20 @@ public class BlockContentManager extends AbstractBlockContentManager {
 			}
 		}
 		return true;
+	}
+	
+	private boolean couldTriggerNewRow(Segment s) {
+		switch (s.getSegmentType()) {
+			case Marker:
+			case Anchor:
+				return false;
+			case Evaluate:
+				return !((Evaluate)s).getExpression().render(context).isEmpty();
+			case Text:
+				return !((TextSegment)s).getText().isEmpty();
+			default:
+				return true;
+		}
 	}
 	
 	private void layoutSegment(Segment s) {
@@ -361,13 +376,13 @@ public class BlockContentManager extends AbstractBlockContentManager {
         return ensureBuffer(rowIndex+1, true);
     }
 
-    @Override
-    public RowImpl getNext() {
-    	ensureBuffer(rowIndex+1);
-        RowImpl ret = rows.get(rowIndex);
-        rowIndex++;
-        return ret;
-    }
+	@Override
+	public RowImpl getNext() {
+		ensureBuffer(rowIndex+1);
+		RowImpl ret = rows.get(rowIndex);
+		rowIndex++;
+		return ret;
+	}
 
 	private void layout(String c, String locale, String mode) {
 		layout(Translatable.text(fcontext.getConfiguration().isMarkingCapitalLetters()?c:c.toLowerCase()).locale(locale).build(), mode);
