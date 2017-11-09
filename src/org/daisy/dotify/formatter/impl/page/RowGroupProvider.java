@@ -1,7 +1,6 @@
 package org.daisy.dotify.formatter.impl.page;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 
 import org.daisy.dotify.api.formatter.FormattingTypes.Keep;
 import org.daisy.dotify.formatter.impl.core.Block;

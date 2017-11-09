@@ -3,7 +3,6 @@ package org.daisy.dotify.formatter.impl.core;
 import static org.junit.Assert.assertEquals;
 
 import org.daisy.dotify.api.formatter.TableCellProperties;
-import org.daisy.dotify.formatter.impl.core.TableData;
 import org.junit.Test;
 
 @SuppressWarnings("javadoc")

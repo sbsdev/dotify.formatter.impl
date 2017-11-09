@@ -3,7 +3,6 @@ package org.daisy.dotify.formatter.impl.page;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import org.daisy.dotify.formatter.impl.page.OrphanWidowControl;
 import org.junit.Ignore;
 import org.junit.Test;
 

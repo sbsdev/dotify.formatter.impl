@@ -1,13 +1,13 @@
 package org.daisy.dotify.formatter.impl.core;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.Arrays;
 
 import org.daisy.dotify.api.formatter.FieldList;
 import org.daisy.dotify.api.formatter.NoField;
 import org.daisy.dotify.api.formatter.StringField;
-import org.daisy.dotify.formatter.impl.core.PageTemplate;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 @SuppressWarnings("javadoc")
 public class PageTemplateTest {

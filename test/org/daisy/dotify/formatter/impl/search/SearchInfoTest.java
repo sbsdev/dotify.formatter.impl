@@ -7,12 +7,6 @@ import java.util.Collections;
 import java.util.Map;
 
 import org.daisy.dotify.api.formatter.Marker;
-import org.daisy.dotify.formatter.impl.search.DocumentSpace;
-import org.daisy.dotify.formatter.impl.search.PageDetails;
-import org.daisy.dotify.formatter.impl.search.SearchInfo;
-import org.daisy.dotify.formatter.impl.search.SequenceId;
-import org.daisy.dotify.formatter.impl.search.Space;
-import org.daisy.dotify.formatter.impl.search.View;
 import org.junit.Test;
 
 @SuppressWarnings("javadoc")
