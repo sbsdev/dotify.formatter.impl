@@ -30,8 +30,6 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 	private int seqsIndex;
 	private PageSequenceBuilder2 psb;
 	private SectionProperties sectionProperties;
-	private Sheet.Builder s;
-	private SheetIdentity si;
 	private int sheetIndex;
 	private int pageIndex;
 	private String counter;
@@ -53,8 +51,6 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 		this.seqsIndex = 0;
 		this.psb = null;
 		this.sectionProperties = null;
-		this.s = null;
-		this.si = null;
 		this.sheetIndex = 0;
 		this.pageIndex = 0;
 		this.counter = null;
@@ -75,8 +71,6 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 		this.seqsIndex = template.seqsIndex;
 		this.psb = PageSequenceBuilder2.copyUnlessNull(template.psb);
 		this.sectionProperties = template.sectionProperties;
-		this.s = Sheet.Builder.copyUnlessNull(template.s);
-		this.si = template.si; 
 		this.sheetOffset = template.sheetOffset+offset;
 		this.sheetIndex = template.sheetIndex;
 		this.pageIndex = template.pageIndex;
@@ -134,7 +128,7 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 
 	@Override
 	public boolean isEmpty() {
-		return seqsIndex>=seqsIterator.size() && sheetBuffer.isEmpty() && (psb==null || (!psb.hasNext() && s==null));
+		return seqsIndex>=seqsIterator.size() && sheetBuffer.isEmpty() && (psb==null || !psb.hasNext());
 	}
 
 	@Override
@@ -149,6 +143,8 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 	 * @return returns true if the index element was available, false otherwise
 	 */
 	private boolean ensureBuffer(int index) {
+		Sheet.Builder s = null;
+		SheetIdentity si = null;
 		while (index<0 || sheetBuffer.size()<index) {
 			if (updateCounter) { 
 				if(counter!=null) {
