@@ -1,7 +1,6 @@
 package org.daisy.dotify.formatter.impl.page;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.daisy.dotify.api.formatter.BlockPosition;
 import org.daisy.dotify.api.formatter.FallbackRule;
@@ -42,8 +41,10 @@ public class PageSequenceBuilder2 {
 
 	private final ContentCollectionImpl collection;
 	private final BlockContext blockContext;
+	private final BlockContext bc;
+	private final CollectionData cd;
 	private final LayoutMaster master;
-	private final List<RowGroupDataSource> dataGroups;
+	private final List<RowGroupSequence> dataGroups;
 	private final FieldResolver fieldResolver;
 	private final SequenceId seqId;
 	private final SplitPointHandler<RowGroup> sph;
@@ -77,7 +78,10 @@ public class PageSequenceBuilder2 {
 		
 		this.blockContext = new BlockContext(seq.getLayoutMaster().getFlowWidth(), crh, rcontext, context);
 		this.staticAreaContent = new PageAreaContent(seq.getLayoutMaster().getPageAreaBuilder(), blockContext);
-		this.dataGroups = prepareResult(master, seq, blockContext, new CollectionData(staticAreaContent, blockContext, master, collection));
+		//TODO: This assumes that all page templates have margin regions that are of the same width  
+		this.bc = new BlockContext(master.getFlowWidth() - master.getTemplate(1).getTotalMarginRegionWidth(), crh, rcontext, context);
+		this.dataGroups = seq.selectScenario(master, bc, true);
+		this.cd = new CollectionData(staticAreaContent, blockContext, master, collection);
 		this.dataGroupsIndex = 0;
 		this.seqId = new SequenceId(sequenceId, new DocumentSpace(blockContext.getContext().getSpace(), blockContext.getContext().getCurrentVolume()));
 		PageDetails details = new PageDetails(master.duplex(), new PageId(pageCount, getGlobalStartIndex(), seqId), pageOffset);
@@ -92,7 +96,9 @@ public class PageSequenceBuilder2 {
 		this.collection = template.collection;
 		this.blockContext = template.blockContext;
 		this.master = template.master;
+		this.bc = template.bc;
 		this.dataGroups = template.dataGroups;
+		this.cd = template.cd;
 		this.dataGroupsIndex = template.dataGroupsIndex;
 		this.fieldResolver = template.fieldResolver;
 		this.seqId = template.seqId;
@@ -115,15 +121,6 @@ public class PageSequenceBuilder2 {
 	
 	public static PageSequenceBuilder2 copyUnlessNull(PageSequenceBuilder2 template) {
 		return template==null?null:new PageSequenceBuilder2(template);
-	}
-
-	private static List<RowGroupDataSource> prepareResult(LayoutMaster master, BlockSequence in, BlockContext blockContext, CollectionData cd) {
-		//TODO: This assumes that all page templates have margin regions that are of the same width  
-		final BlockContext bc = new BlockContext(in.getLayoutMaster().getFlowWidth() - master.getTemplate(1).getTotalMarginRegionWidth(), blockContext.getRefs(), blockContext.getContext(), blockContext.getFcontext());
-		return in.selectScenario(master, bc, true)
-				.stream()
-				.map(rgs -> new RowGroupDataSource(master, bc, rgs.getBlocks(), rgs.getVerticalSpacing(), cd))
-				.collect(Collectors.toList());
 	}
 
 	private PageImpl newPage(int pageNumberOffset) {
@@ -173,7 +170,8 @@ public class PageSequenceBuilder2 {
 		while (dataGroupsIndex<dataGroups.size() || (data!=null && !data.isEmpty())) {
 			if ((data==null || data.isEmpty()) && dataGroupsIndex<dataGroups.size()) {
 				//pick up next group
-				data = dataGroups.get(dataGroupsIndex);
+				RowGroupSequence rgs = dataGroups.get(dataGroupsIndex);
+				data = new RowGroupDataSource(master, bc, rgs.getBlocks(), rgs.getVerticalSpacing(), cd);
 				dataGroupsIndex++;
 				if (((RowGroupDataSource)data).getVerticalSpacing()!=null) {
 					VerticalSpacing vSpacing = ((RowGroupDataSource)data).getVerticalSpacing();
