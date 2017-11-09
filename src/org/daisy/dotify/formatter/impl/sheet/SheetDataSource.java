@@ -20,13 +20,22 @@ import org.daisy.dotify.formatter.impl.search.DefaultContext;
 import org.daisy.dotify.formatter.impl.search.DocumentSpace;
 import org.daisy.dotify.formatter.impl.search.SheetIdentity;
 
+/**
+ * Provides a data source for sheets. Given a list of 
+ * BlockSequences, sheets are produced one by one.
+ * 
+ * @author Joel Håkansson
+ */
 public class SheetDataSource implements SplitPointDataSource<Sheet> {
+	//Global state
 	private final PageStruct struct;
 	private final CrossReferenceHandler crh;
 	private final FormatterContext context;
+	//Input data
 	private final DefaultContext rcontext;
 	private final List<BlockSequence> seqsIterator;
 	private final int sheetOffset;
+	//Local state
 	private int seqsIndex;
 	private PageSequenceBuilder2 psb;
 	private SectionProperties sectionProperties;
@@ -34,10 +43,11 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 	private int pageIndex;
 	private String counter;
 	private int initialPageOffset;
-	
-	private List<Sheet> sheetBuffer;
 	private boolean volBreakAllowed;
 	private boolean updateCounter;
+	//Output buffer
+	private List<Sheet> sheetBuffer;
+
 
 	public SheetDataSource(PageStruct struct, CrossReferenceHandler crh, FormatterContext context, DefaultContext rcontext, List<BlockSequence> seqsIterator) {
 		this.struct = struct;

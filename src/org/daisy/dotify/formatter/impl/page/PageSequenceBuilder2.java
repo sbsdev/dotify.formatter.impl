@@ -41,7 +41,6 @@ public class PageSequenceBuilder2 {
 
 	private final ContentCollectionImpl collection;
 	private final BlockContext blockContext;
-	private final BlockContext bc;
 	private final CollectionData cd;
 	private final LayoutMaster master;
 	private final List<RowGroupSequence> dataGroups;
@@ -76,14 +75,20 @@ public class PageSequenceBuilder2 {
 		}
 		keepNextSheets = 0;
 		
-		this.blockContext = new BlockContext(seq.getLayoutMaster().getFlowWidth(), crh, rcontext, context);
+		this.blockContext = BlockContext.from(rcontext)
+				.flowWidth(seq.getLayoutMaster().getFlowWidth())
+				.formatterContext(context)
+				.build();
 		this.staticAreaContent = new PageAreaContent(seq.getLayoutMaster().getPageAreaBuilder(), blockContext);
-		//TODO: This assumes that all page templates have margin regions that are of the same width  
-		this.bc = new BlockContext(master.getFlowWidth() - master.getTemplate(1).getTotalMarginRegionWidth(), crh, rcontext, context);
+		//For the scenario processing, it is assumed that all page templates have margin regions that are of the same width.
+		//However, it is unlikely to have a big impact on the selection.
+		BlockContext bc = BlockContext.from(blockContext)
+				.flowWidth(master.getFlowWidth() - master.getTemplate(1).getTotalMarginRegionWidth())
+				.build();
 		this.dataGroups = seq.selectScenario(master, bc, true);
 		this.cd = new CollectionData(staticAreaContent, blockContext, master, collection);
 		this.dataGroupsIndex = 0;
-		this.seqId = new SequenceId(sequenceId, new DocumentSpace(blockContext.getContext().getSpace(), blockContext.getContext().getCurrentVolume()));
+		this.seqId = new SequenceId(sequenceId, new DocumentSpace(blockContext.getSpace(), blockContext.getCurrentVolume()));
 		PageDetails details = new PageDetails(master.duplex(), new PageId(pageCount, getGlobalStartIndex(), seqId), pageOffset);
 		this.fieldResolver = new FieldResolver(master, context, crh, details);
 	}
@@ -96,7 +101,6 @@ public class PageSequenceBuilder2 {
 		this.collection = template.collection;
 		this.blockContext = template.blockContext;
 		this.master = template.master;
-		this.bc = template.bc;
 		this.dataGroups = template.dataGroups;
 		this.cd = template.cd;
 		this.dataGroupsIndex = template.dataGroupsIndex;
@@ -155,9 +159,9 @@ public class PageSequenceBuilder2 {
 		PageImpl ret = nextPageInner(pageNumberOffset);
 		crh.keepPageDetails(ret.getDetails());
 		//This is for pre/post volume contents, where the volume number is known
-		if (blockContext.getContext().getCurrentVolume()!=null) {
+		if (blockContext.getCurrentVolume()!=null) {
 			for (String id : ret.getIdentifiers()) {
-				crh.setVolumeNumber(id, blockContext.getContext().getCurrentVolume());
+				crh.setVolumeNumber(id, blockContext.getCurrentVolume());
 			}
 		}
 		toIndex++;
@@ -171,6 +175,10 @@ public class PageSequenceBuilder2 {
 			if ((data==null || data.isEmpty()) && dataGroupsIndex<dataGroups.size()) {
 				//pick up next group
 				RowGroupSequence rgs = dataGroups.get(dataGroupsIndex);
+				//TODO: This assumes that all page templates have margin regions that are of the same width
+				BlockContext bc = BlockContext.from(blockContext)
+						.flowWidth(master.getFlowWidth() - master.getTemplate(1).getTotalMarginRegionWidth())
+						.build();
 				data = new RowGroupDataSource(master, bc, rgs.getBlocks(), rgs.getVerticalSpacing(), cd);
 				dataGroupsIndex++;
 				if (((RowGroupDataSource)data).getVerticalSpacing()!=null) {
@@ -188,7 +196,7 @@ public class PageSequenceBuilder2 {
 				force = false;
 			}
 			((RowGroupDataSource)data).setContext(((RowGroupDataSource)data).getContext().copyWithContext(
-					DefaultContext.from(blockContext.getContext()).currentPage(current.getDetails().getPageNumber()).build()));
+					DefaultContext.from(blockContext).currentPage(current.getDetails().getPageNumber()).build()));
 			if (!data.isEmpty()) {
 				SplitPointDataSource<RowGroup> copy = new RowGroupDataSource((RowGroupDataSource)data);
 				// Using a copy to find the skippable data, so that only the required data is rendered

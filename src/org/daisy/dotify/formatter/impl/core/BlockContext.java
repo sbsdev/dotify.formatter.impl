@@ -3,21 +3,55 @@ package org.daisy.dotify.formatter.impl.core;
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.search.DefaultContext;
 
-public class BlockContext {
+public class BlockContext extends DefaultContext {
 	private final int flowWidth;
-	private final CrossReferenceHandler refs;
-	private final DefaultContext context;
 	private final FormatterContext fcontext;
+	
+	public static class Builder extends DefaultContext.Builder {
+		private int flowWidth = 0;
+		private FormatterContext fcontext = null;
+		
+		public Builder(BlockContext base) {
+			super(base);
+			this.flowWidth = base.flowWidth;
+			this.fcontext = base.fcontext;
+		}
 
-	public BlockContext(int flowWidth, CrossReferenceHandler refs, DefaultContext context, FormatterContext fcontext) {
-		this.flowWidth = flowWidth;
-		this.refs = refs;
-		this.context = context;
-		this.fcontext = fcontext;
+		protected Builder(DefaultContext base) {
+			super(base);
+		}
+
+		public Builder flowWidth(int value) {
+			this.flowWidth = value;
+			return this;
+		}
+		
+		public Builder formatterContext(FormatterContext value) {
+			this.fcontext = value;
+			return this;
+		}
+
+		public BlockContext build() {
+			return new BlockContext(this);
+		}
+	}
+	
+	protected BlockContext(Builder builder) {
+		super(builder);
+		this.flowWidth = builder.flowWidth;
+		this.fcontext = builder.fcontext;
 	}
 	
 	public BlockContext copyWithContext(DefaultContext dc) {
-		return new BlockContext(flowWidth, refs, dc, fcontext);
+		return new Builder(dc).flowWidth(flowWidth).formatterContext(fcontext).build();
+	}
+	
+	public static BlockContext.Builder from(DefaultContext base) {
+		return new BlockContext.Builder(base);
+	}
+
+	public static BlockContext.Builder from(BlockContext base) {
+		return new BlockContext.Builder(base);
 	}
 
 	public int getFlowWidth() {
@@ -25,11 +59,7 @@ public class BlockContext {
 	}
 
 	public CrossReferenceHandler getRefs() {
-		return refs;
-	}
-
-	public DefaultContext getContext() {
-		return context;
+		return crh;
 	}
 
 	public FormatterContext getFcontext() {
@@ -39,53 +69,29 @@ public class BlockContext {
 	@Override
 	public int hashCode() {
 		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((context == null) ? 0 : context.hashCode());
+		int result = super.hashCode();
 		result = prime * result + ((fcontext == null) ? 0 : fcontext.hashCode());
 		result = prime * result + flowWidth;
-		result = prime * result + ((refs == null) ? 0 : refs.hashCode());
 		return result;
 	}
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj) {
+		if (this == obj)
 			return true;
-		}
-		if (obj == null) {
+		if (!super.equals(obj))
 			return false;
-		}
-		if (getClass() != obj.getClass()) {
+		if (getClass() != obj.getClass())
 			return false;
-		}
 		BlockContext other = (BlockContext) obj;
-		if (context == null) {
-			if (other.context != null) {
-				return false;
-			}
-		} else if (!context.equals(other.context)) {
-			return false;
-		}
 		if (fcontext == null) {
-			if (other.fcontext != null) {
+			if (other.fcontext != null)
 				return false;
-			}
-		} else if (!fcontext.equals(other.fcontext)) {
+		} else if (!fcontext.equals(other.fcontext))
 			return false;
-		}
-		if (flowWidth != other.flowWidth) {
+		if (flowWidth != other.flowWidth)
 			return false;
-		}
-		if (refs == null) {
-			if (other.refs != null) {
-				return false;
-			}
-		} else if (!refs.equals(other.refs)) {
-			return false;
-		}
 		return true;
 	}
-	
-	//this.flowWidth!=flowWidth || this.refs != refs || !context.equals(this.context) || this.fcontext != fcontext
 
 }
