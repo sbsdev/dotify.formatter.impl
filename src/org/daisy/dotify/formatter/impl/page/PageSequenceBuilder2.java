@@ -35,7 +35,6 @@ import org.daisy.dotify.formatter.impl.search.SequenceId;
 
 public class PageSequenceBuilder2 {
 	private final FormatterContext context;
-	private final CrossReferenceHandler crh;
 	private final PageAreaContent staticAreaContent;
 	private final PageAreaProperties areaProps;
 
@@ -59,13 +58,11 @@ public class PageSequenceBuilder2 {
 	private final int fromIndex;
 	private int toIndex;
 	
-	public PageSequenceBuilder2(int fromIndex, LayoutMaster master, int pageOffset, CrossReferenceHandler crh,
-	                     BlockSequence seq, FormatterContext context, DefaultContext rcontext, int sequenceId) {
+	public PageSequenceBuilder2(int fromIndex, LayoutMaster master, int pageOffset, BlockSequence seq, FormatterContext context, DefaultContext rcontext, int sequenceId) {
 		this.fromIndex = fromIndex;
 		this.toIndex = fromIndex;
 		this.master = master;
 		this.context = context;
-		this.crh = crh;
 		this.sph = new SplitPointHandler<>();
 		this.areaProps = seq.getLayoutMaster().getPageArea();
 		if (this.areaProps!=null) {
@@ -90,12 +87,11 @@ public class PageSequenceBuilder2 {
 		this.dataGroupsIndex = 0;
 		this.seqId = new SequenceId(sequenceId, new DocumentSpace(blockContext.getSpace(), blockContext.getCurrentVolume()));
 		PageDetails details = new PageDetails(master.duplex(), new PageId(pageCount, getGlobalStartIndex(), seqId), pageOffset);
-		this.fieldResolver = new FieldResolver(master, context, crh, details);
+		this.fieldResolver = new FieldResolver(master, context, rcontext.getRefs(), details);
 	}
 
 	public PageSequenceBuilder2(PageSequenceBuilder2 template) {
 		this.context = template.context;
-		this.crh = template.crh;
 		this.staticAreaContent = template.staticAreaContent;
 		this.areaProps = template.areaProps;
 		this.collection = template.collection;
@@ -157,11 +153,11 @@ public class PageSequenceBuilder2 {
 	public PageImpl nextPage(int pageNumberOffset) throws PaginatorException, RestartPaginationException // pagination must be restarted in PageStructBuilder.paginateInner
 	{
 		PageImpl ret = nextPageInner(pageNumberOffset);
-		crh.keepPageDetails(ret.getDetails());
+		blockContext.getRefs().keepPageDetails(ret.getDetails());
 		//This is for pre/post volume contents, where the volume number is known
 		if (blockContext.getCurrentVolume()!=null) {
 			for (String id : ret.getIdentifiers()) {
-				crh.setVolumeNumber(id, blockContext.getCurrentVolume());
+				blockContext.getRefs().setVolumeNumber(id, blockContext.getCurrentVolume());
 			}
 		}
 		toIndex++;
@@ -195,6 +191,7 @@ public class PageSequenceBuilder2 {
 				}
 				force = false;
 			}
+			//TODO: this seems too complicated now..
 			((RowGroupDataSource)data).setContext(((RowGroupDataSource)data).getContext().copyWithContext(
 					DefaultContext.from(blockContext).currentPage(current.getDetails().getPageNumber()).build()));
 			if (!data.isEmpty()) {
@@ -336,7 +333,7 @@ public class PageSequenceBuilder2 {
 	
 	private void addProperties(PageImpl p, RowGroup rg) {
 		if (rg.getIdentifier()!=null) {
-			crh.setPageNumber(rg.getIdentifier(), p.getPageNumber());
+			blockContext.getRefs().setPageNumber(rg.getIdentifier(), p.getPageNumber());
 			p.addIdentifier(rg.getIdentifier());
 		}
 		p.addMarkers(rg.getMarkers());

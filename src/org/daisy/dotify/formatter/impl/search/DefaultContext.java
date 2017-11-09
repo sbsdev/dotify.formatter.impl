@@ -116,6 +116,10 @@ public class DefaultContext implements Context {
 	public Integer getSheetsInDocument() {
 		return (crh==null?null:crh.getSheetsInDocument());
 	}
+
+	public CrossReferenceHandler getRefs() {
+		return crh;
+	}
 	
 	public Space getSpace() {
 		return space;

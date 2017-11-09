@@ -58,10 +58,6 @@ public class BlockContext extends DefaultContext {
 		return flowWidth;
 	}
 
-	public CrossReferenceHandler getRefs() {
-		return crh;
-	}
-
 	public FormatterContext getFcontext() {
 		return fcontext;
 	}

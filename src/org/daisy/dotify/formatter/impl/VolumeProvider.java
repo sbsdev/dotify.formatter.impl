@@ -300,7 +300,7 @@ public class VolumeProvider {
 	}
 	
 	private SplitPointDataSource<Sheet> prepareToPaginate(PageStruct struct, DefaultContext rcontext, List<BlockSequence> seqs) throws PaginatorException {
-		return new SheetDataSource(struct, crh, fcontext, rcontext, seqs);
+		return new SheetDataSource(struct, fcontext, rcontext, seqs);
 	}
 	
 	/**
