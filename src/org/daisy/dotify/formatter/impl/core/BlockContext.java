@@ -1,7 +1,7 @@
 package org.daisy.dotify.formatter.impl.core;
 
-import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.search.DefaultContext;
+import org.daisy.dotify.formatter.impl.search.Space;
 
 public class BlockContext extends DefaultContext {
 	private final int flowWidth;
@@ -31,6 +31,36 @@ public class BlockContext extends DefaultContext {
 			return this;
 		}
 
+		@Override
+		public Builder currentVolume(Integer value) {
+			super.currentVolume(value);
+			return this;
+		}
+
+		@Override
+		public Builder currentPage(Integer value) {
+			super.currentPage(value);
+			return this;
+		}
+
+		@Override
+		public Builder metaVolume(Integer value) {
+			super.metaVolume(value);
+			return this;
+		}
+
+		@Override
+		public Builder metaPage(Integer value) {
+			super.metaPage(value);
+			return this;
+		}
+
+		@Override
+		public Builder space(Space value) {
+			super.space(value);
+			return this;
+		}
+
 		public BlockContext build() {
 			return new BlockContext(this);
 		}
@@ -41,11 +71,7 @@ public class BlockContext extends DefaultContext {
 		this.flowWidth = builder.flowWidth;
 		this.fcontext = builder.fcontext;
 	}
-	
-	public BlockContext copyWithContext(DefaultContext dc) {
-		return new Builder(dc).flowWidth(flowWidth).formatterContext(fcontext).build();
-	}
-	
+
 	public static BlockContext.Builder from(DefaultContext base) {
 		return new BlockContext.Builder(base);
 	}

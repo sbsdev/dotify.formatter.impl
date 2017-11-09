@@ -173,7 +173,7 @@ public class PageSequenceBuilder2 {
 				RowGroupSequence rgs = dataGroups.get(dataGroupsIndex);
 				//TODO: This assumes that all page templates have margin regions that are of the same width
 				BlockContext bc = BlockContext.from(blockContext)
-						.flowWidth(master.getFlowWidth() - master.getTemplate(1).getTotalMarginRegionWidth())
+						.flowWidth(master.getFlowWidth() - master.getTemplate(current.getPageNumber()).getTotalMarginRegionWidth())
 						.build();
 				data = new RowGroupDataSource(master, bc, rgs.getBlocks(), rgs.getVerticalSpacing(), cd);
 				dataGroupsIndex++;
@@ -191,9 +191,12 @@ public class PageSequenceBuilder2 {
 				}
 				force = false;
 			}
-			//TODO: this seems too complicated now..
-			((RowGroupDataSource)data).setContext(((RowGroupDataSource)data).getContext().copyWithContext(
-					DefaultContext.from(blockContext).currentPage(current.getDetails().getPageNumber()).build()));
+			((RowGroupDataSource)data).setContext(
+							BlockContext.from(((RowGroupDataSource)data).getContext())
+							.currentPage(current.getDetails().getPageNumber())
+							.flowWidth(master.getFlowWidth() - master.getTemplate(current.getPageNumber()).getTotalMarginRegionWidth())
+							.build()
+					);
 			if (!data.isEmpty()) {
 				SplitPointDataSource<RowGroup> copy = new RowGroupDataSource((RowGroupDataSource)data);
 				// Using a copy to find the skippable data, so that only the required data is rendered
