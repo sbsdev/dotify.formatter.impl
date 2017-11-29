@@ -93,7 +93,11 @@ class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<
 	@Override
 	public List<RowGroup> getRemaining() {
 		ensureBuffer(-1);
-		return this.groups.subList(0, groupSize());
+		if (this.groups==null) {
+			return Collections.emptyList();
+		} else {
+			return this.groups.subList(0, groupSize());
+		}
 	}
 
 	@Override

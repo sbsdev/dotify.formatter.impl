@@ -40,6 +40,8 @@ interface ObflQName {
 	 static final QName VOLUME_TEMPLATE = new QName(OBFL_NS, "volume-template");
 	 static final QName PRE_CONTENT = new QName(OBFL_NS, "pre-content");
 	 static final QName POST_CONTENT = new QName(OBFL_NS, "post-content");
+	 
+	 static final QName VOLUME_TRANSITION = new QName(OBFL_NS, "volume-transition");
 
 	 static final QName TOC_SEQUENCE = new QName(OBFL_NS, "toc-sequence");
 	 static final QName ON_TOC_START = new QName(OBFL_NS, "on-toc-start");
@@ -54,6 +56,11 @@ interface ObflQName {
 	 static final QName ON_PAGE_START = new QName(OBFL_NS, "on-page-start");
 	 static final QName ON_PAGE_END = new QName(OBFL_NS, "on-page-end");
 	 static final QName ON_COLLECTION_END = new QName(OBFL_NS, "on-collection-end");
+	 
+	 static final QName BLOCK_INTERRUPTED = new QName(OBFL_NS, "block-interrupted");
+	 static final QName BLOCK_RESUMED = new QName(OBFL_NS, "block-resumed");
+	 static final QName SEQUENCE_INTERRUPTED = new QName(OBFL_NS, "sequence-interrupted");
+	 static final QName SEQUENCE_RESUMED = new QName(OBFL_NS, "sequence-resumed");
 	
 	 static final QName TABLE_OF_CONTENTS = new QName(OBFL_NS, "table-of-contents");
 	 

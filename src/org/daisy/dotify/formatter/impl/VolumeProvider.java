@@ -15,7 +15,6 @@ import org.daisy.dotify.common.splitter.SplitPointDataSource;
 import org.daisy.dotify.common.splitter.SplitPointHandler;
 import org.daisy.dotify.common.splitter.SplitPointSpecification;
 import org.daisy.dotify.common.splitter.StandardSplitOption;
-import org.daisy.dotify.formatter.impl.core.FormatterContext;
 import org.daisy.dotify.formatter.impl.core.PaginatorException;
 import org.daisy.dotify.formatter.impl.page.BlockSequence;
 import org.daisy.dotify.formatter.impl.page.PageImpl;
@@ -45,7 +44,6 @@ public class VolumeProvider {
 	private static final Logger logger = Logger.getLogger(VolumeProvider.class.getCanonicalName());
 	private static final int DEFAULT_SPLITTER_MAX = 50;
 	private final List<BlockSequence> blocks;
-	private final FormatterContext fcontext;
 	private final CrossReferenceHandler crh;
 	private SheetGroupManager groups;
 	private final SplitPointHandler<Sheet, SheetDataSource> volSplitter;
@@ -81,7 +79,6 @@ public class VolumeProvider {
             }
         };
 		this.volumeTemplates = volumeTemplates;
-		this.fcontext = context.getFormatterContext();
 		this.context = context;
 		this.crh = crh;
 		this.volSplitter = new SplitPointHandler<>();
@@ -290,7 +287,7 @@ public class VolumeProvider {
 	}
 	
 	private SheetDataSource prepareToPaginate(PageStruct struct, DefaultContext rcontext, Integer volumeGroup, List<BlockSequence> seqs) throws PaginatorException {
-		return new SheetDataSource(struct, fcontext, rcontext, volumeGroup, seqs);
+		return new SheetDataSource(struct, context.getFormatterContext(), rcontext, volumeGroup, seqs);
 	}
 	
 	/**

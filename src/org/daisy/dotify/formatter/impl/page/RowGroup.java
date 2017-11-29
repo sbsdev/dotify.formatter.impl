@@ -19,7 +19,8 @@ class RowGroup implements SplitPointUnit {
 	private final List<String> ids;
 	private final String identifier;
 	private final int keepWithNextSheets, keepWithPreviousSheets;
-	private Integer avoidVolumeBreakAfterPriority = null;
+	private final Integer avoidVolumeBreakAfterPriority;
+	private final boolean lastInBlock;
 	
 	static class Builder {
 		private final List<RowImpl> rows;
@@ -30,6 +31,8 @@ class RowGroup implements SplitPointUnit {
 		private int keepWithNextSheets=0, keepWithPreviousSheets=0;
 		private String identifier=null;
 		private boolean lazyCollapse = true;
+		private Integer avoidVolumeBreakAfterPriority = null;
+		private boolean lastInBlock = false;
 		Builder(float rowDefault, RowImpl ... rows) {
 			this(rowDefault, Arrays.asList(rows));
 		}
@@ -88,6 +91,18 @@ class RowGroup implements SplitPointUnit {
 			this.keepWithPreviousSheets = value;
 			return this;
 		}
+		Builder avoidVolumeBreakAfterPriority(Integer value) {
+			this.avoidVolumeBreakAfterPriority = value;
+			return this;
+		}
+		/**
+		 * Sets the last in a block indicator.
+		 * @param value the value
+		 */
+		Builder lastRowGroupInBlock(boolean value) {
+			this.lastInBlock = value;
+			return this;
+		}
 		RowGroup build() {
 			return new RowGroup(this);
 		}
@@ -110,6 +125,8 @@ class RowGroup implements SplitPointUnit {
 		this.identifier = builder.identifier;
 		this.keepWithNextSheets = builder.keepWithNextSheets;
 		this.keepWithPreviousSheets = builder.keepWithPreviousSheets;
+		this.avoidVolumeBreakAfterPriority = builder.avoidVolumeBreakAfterPriority;
+		this.lastInBlock = builder.lastInBlock;
 	}
 	
 	/**
@@ -131,6 +148,7 @@ class RowGroup implements SplitPointUnit {
 		this.keepWithNextSheets = template.keepWithNextSheets;
 		this.keepWithPreviousSheets = template.keepWithPreviousSheets;
 		this.avoidVolumeBreakAfterPriority = template.avoidVolumeBreakAfterPriority;
+		this.lastInBlock = template.lastInBlock;
 	}
 	
 	private static float getRowSpacing(float rowDefault, RowImpl r) {
@@ -248,9 +266,13 @@ class RowGroup implements SplitPointUnit {
 	public Integer getAvoidVolumeBreakAfterPriority() {
 		return avoidVolumeBreakAfterPriority;
 	}
-	
-	void setAvoidVolumeBreakAfterPriority(Integer value) {
-		this.avoidVolumeBreakAfterPriority = value;
+
+	/**
+	 * Returns true if this {@link RowGroup} is the last one in a block.
+	 * @return true if this row group ends a block, false otherwise
+	 */
+	public boolean isLastRowGroupInBlock() {
+		return lastInBlock;
 	}
 	
 }

@@ -1,5 +1,7 @@
 package org.daisy.dotify.formatter.impl.page;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -9,9 +11,11 @@ import org.daisy.dotify.api.formatter.MarginRegion;
 import org.daisy.dotify.api.formatter.MarkerIndicatorRegion;
 import org.daisy.dotify.api.formatter.PageAreaProperties;
 import org.daisy.dotify.api.formatter.RenameFallbackRule;
+import org.daisy.dotify.api.formatter.TransitionBuilderProperties.ApplicationRange;
 import org.daisy.dotify.api.translator.Translatable;
 import org.daisy.dotify.api.translator.TranslationException;
 import org.daisy.dotify.common.splitter.SplitPoint;
+import org.daisy.dotify.common.splitter.SplitPointCost;
 import org.daisy.dotify.common.splitter.SplitPointDataSource;
 import org.daisy.dotify.common.splitter.SplitPointHandler;
 import org.daisy.dotify.common.splitter.SplitPointSpecification;
@@ -23,6 +27,8 @@ import org.daisy.dotify.formatter.impl.core.ContentCollectionImpl;
 import org.daisy.dotify.formatter.impl.core.FormatterContext;
 import org.daisy.dotify.formatter.impl.core.LayoutMaster;
 import org.daisy.dotify.formatter.impl.core.PaginatorException;
+import org.daisy.dotify.formatter.impl.core.TransitionContent;
+import org.daisy.dotify.formatter.impl.core.TransitionContent.Type;
 import org.daisy.dotify.formatter.impl.row.AbstractBlockContentManager;
 import org.daisy.dotify.formatter.impl.row.MarginProperties;
 import org.daisy.dotify.formatter.impl.row.RowImpl;
@@ -141,9 +147,9 @@ public class PageSequenceBuilder2 {
 		return dataGroupsIndex<dataGroups.size() || (data!=null && !data.isEmpty());
 	}
 	
-	public PageImpl nextPage(int pageNumberOffset, boolean hyphenateLastLine) throws PaginatorException, RestartPaginationException // pagination must be restarted in PageStructBuilder.paginateInner
+	public PageImpl nextPage(int pageNumberOffset, boolean hyphenateLastLine, Optional<TransitionContent> transitionContent) throws PaginatorException, RestartPaginationException // pagination must be restarted in PageStructBuilder.paginateInner
 	{
-		PageImpl ret = nextPageInner(pageNumberOffset, hyphenateLastLine);
+		PageImpl ret = nextPageInner(pageNumberOffset, hyphenateLastLine, transitionContent);
 		blockContext.getRefs().keepPageDetails(ret.getDetails());
 		//This is for pre/post volume contents, where the volume number is known
 		if (blockContext.getCurrentVolume()!=null) {
@@ -155,7 +161,7 @@ public class PageSequenceBuilder2 {
 		return ret;
 	}
 
-	private PageImpl nextPageInner(int pageNumberOffset, boolean hyphenateLastLine) throws PaginatorException, RestartPaginationException // pagination must be restarted in PageStructBuilder.paginateInner
+	private PageImpl nextPageInner(int pageNumberOffset, boolean hyphenateLastLine, Optional<TransitionContent> transitionContent) throws PaginatorException, RestartPaginationException // pagination must be restarted in PageStructBuilder.paginateInner
 	{
 		PageImpl current = newPage(pageNumberOffset);
 		while (dataGroupsIndex<dataGroups.size() || (data!=null && !data.isEmpty())) {
@@ -182,12 +188,11 @@ public class PageSequenceBuilder2 {
 				}
 				force = false;
 			}
-			data.setContext(
-							BlockContext.from(data.getContext())
-							.currentPage(current.getDetails().getPageNumber())
-							.flowWidth(master.getFlowWidth() - master.getTemplate(current.getPageNumber()).getTotalMarginRegionWidth())
-							.build()
-					);
+			BlockContext bc = BlockContext.from(data.getContext())
+					.currentPage(current.getDetails().getPageNumber())
+					.flowWidth(master.getFlowWidth() - master.getTemplate(current.getPageNumber()).getTotalMarginRegionWidth())
+					.build();
+			data.setContext(bc);
 			if (!data.isEmpty()) {
 				RowGroupDataSource copy = new RowGroupDataSource(data);
 				// Using a copy to find the skippable data, so that only the required data is rendered
@@ -201,8 +206,48 @@ public class PageSequenceBuilder2 {
 				// And on copy...
 				copy = SplitPointHandler.skipLeading(copy, index).getTail();
 				int flowHeight = current.getFlowHeight();
+				List<RowGroup> transitionText = Collections.emptyList();
+				int fh = copy.getSize(flowHeight+1);
+				if (fh<=flowHeight) {
+					transitionContent=Optional.empty();
+				}
+				if (transitionContent.isPresent()) {
+					// Get the announcement text
+					transitionText = new RowGroupDataSource(master, bc, transitionContent.get().getInSequence(), null, cd).getRemaining();
+					// Subtract the height of the transition text from the available height
+					for (RowGroup r : transitionText) {
+						flowHeight-=r.getUnitSize();
+					}
+				}
 				// Using copy to find the break point so that only the required data is rendered
-				SplitPointSpecification spec = sph.find(flowHeight, copy, force?StandardSplitOption.ALLOW_FORCE:null);
+				SplitPointSpecification spec;
+				boolean addTransition = true;
+				if (transitionContent.isPresent() && transitionContent.get().getType()==Type.INTERRUPT) {
+					SplitPointCost<RowGroup> cost = (SplitPointDataSource<RowGroup, ?> units, int in, int limit)->{
+						Integer volumeBreakPriority = // 1-9 or null: 
+								data.get(in).getAvoidVolumeBreakAfterPriority();
+						int volBreakCost = // 0-9:
+								10-(volumeBreakPriority!=null?volumeBreakPriority:10);
+						// not breakable gets "series" 21
+						// breakable, but not last gets "series" 11-20
+						// breakable and last gets "series" 1-10
+						return (data.get(in).isBreakable()?
+									//prefer new block, then lower volume priority cost
+								(data.get(in).isLastRowGroupInBlock()?1:11) + volBreakCost 
+									:21 // because 11 + 9 = 20
+								)*limit-in;
+					};
+					spec = sph.find(current.getFlowHeight(), copy, cost, force?StandardSplitOption.ALLOW_FORCE:null);
+					if (sph.split(spec, copy).getHead().stream().limit(flowHeight).filter(r->r.isLastRowGroupInBlock()).findFirst().isPresent()) {
+						// reset and retry with the new limit
+						copy = new RowGroupDataSource(data);
+						spec = sph.find(flowHeight, copy, cost, force?StandardSplitOption.ALLOW_FORCE:null);
+					} else {
+						addTransition = false;
+					}
+				} else {
+					spec = sph.find(flowHeight, copy, force?StandardSplitOption.ALLOW_FORCE:null);
+				}
 				// Now apply the information to the live data
 				data.setHyphenateLastLine(hyphenateLastLine);
 				SplitPoint<RowGroup, RowGroupDataSource> res = sph.split(spec, data);
@@ -219,14 +264,24 @@ public class PageSequenceBuilder2 {
 				}
 				force = res.getHead().size()==0;
 				data = res.getTail();
-				List<RowGroup> head = res.getHead();
-				addRows(head, current);
-				Integer lastPriority = getLastPriority(head);
-				if (!res.getDiscarded().isEmpty()) {
-					//override if not empty
-					lastPriority = getLastPriority(res.getDiscarded());
+				List<RowGroup> head;
+				if (addTransition && transitionContent.isPresent()) {
+					if (transitionContent.get().getType()==TransitionContent.Type.INTERRUPT) {
+						head = new ArrayList<>(res.getHead());
+						head.addAll(transitionText);
+					} else if (transitionContent.get().getType()==TransitionContent.Type.RESUME) {
+						head = new ArrayList<>(transitionText);
+						head.addAll(res.getHead());
+					} else {
+						head = res.getHead();
+					}
+				} else {
+					head = res.getHead();
 				}
-				current.setAvoidVolumeBreakAfter(lastPriority);
+				addRows(head, current);
+				current.setAvoidVolumeBreakAfter(
+					getVolumeKeepPriority(res.getDiscarded(), getVolumeKeepPriority(res.getHead(), null))
+				);
 				for (RowGroup rg : res.getDiscarded()) {
 					addProperties(current, rg);
 				}
@@ -278,11 +333,18 @@ public class PageSequenceBuilder2 {
 		}
 	}
 	
-	private static Integer getLastPriority(List<RowGroup> list) {
+	private Integer getVolumeKeepPriority(List<RowGroup> list, Integer def) {		
 		if (!list.isEmpty()) {
-			return list.get(list.size()-1).getAvoidVolumeBreakAfterPriority();
+			if (context.getTransitionBuilder().getProperties().getApplicationRange()==ApplicationRange.NONE) {
+				return list.get(list.size()-1).getAvoidVolumeBreakAfterPriority();
+			} else {
+				// we want the highest value (lowest priority) to maximize the chance that this page is used
+				// when finding the break point
+				return list.stream().map(v->v.getAvoidVolumeBreakAfterPriority())
+						.map(v->v==null?100:v).max(Integer::compare).map(v->v==100?null:v).orElse(null);				
+			}
 		} else {
-			return null;
+			return def;
 		}
 	}
 	

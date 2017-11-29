@@ -33,6 +33,8 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 
+import org.daisy.dotify.api.formatter.BlockBuilder;
+import org.daisy.dotify.api.formatter.BlockContentBuilder;
 import org.daisy.dotify.api.formatter.BlockPosition.VerticalAlignment;
 import org.daisy.dotify.api.formatter.BlockProperties;
 import org.daisy.dotify.api.formatter.CompoundField;
@@ -55,6 +57,7 @@ import org.daisy.dotify.api.formatter.MarkerIndicatorRegion;
 import org.daisy.dotify.api.formatter.MarkerReferenceField;
 import org.daisy.dotify.api.formatter.MarkerReferenceField.MarkerSearchDirection;
 import org.daisy.dotify.api.formatter.MarkerReferenceField.MarkerSearchScope;
+import org.daisy.dotify.api.formatter.TransitionBuilderProperties.ApplicationRange;
 import org.daisy.dotify.api.formatter.NoField;
 import org.daisy.dotify.api.formatter.NumeralStyle;
 import org.daisy.dotify.api.formatter.PageAreaBuilder;
@@ -71,6 +74,8 @@ import org.daisy.dotify.api.formatter.TableOfContents;
 import org.daisy.dotify.api.formatter.TableProperties;
 import org.daisy.dotify.api.formatter.TextProperties;
 import org.daisy.dotify.api.formatter.TocProperties;
+import org.daisy.dotify.api.formatter.TransitionBuilder;
+import org.daisy.dotify.api.formatter.TransitionBuilderProperties;
 import org.daisy.dotify.api.formatter.VolumeContentBuilder;
 import org.daisy.dotify.api.formatter.VolumeTemplateBuilder;
 import org.daisy.dotify.api.formatter.VolumeTemplateProperties;
@@ -148,6 +153,8 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
 					parseTableOfContents(event, input, tp);
 				} else if (equalsStart(event, ObflQName.VOLUME_TEMPLATE)) {
 					parseVolumeTemplate(event, input, tp);
+				} else if (equalsStart(event, ObflQName.VOLUME_TRANSITION)) {
+					parseVolumeTransition(event, input, tp);
 				} else if (equalsStart(event, ObflQName.COLLECTION)) {
 					parseCollection(event, input, tp);
 				} else if (equalsStart(event, ObflQName.FILE_REFERENCE)) {
@@ -772,7 +779,28 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
 		}
 	}
 	
-	private void parseSpan(XMLEvent event, XMLEventReader input, FormatterCore fc, TextProperties tp) throws XMLStreamException {
+	void parseBlock(XMLEvent event, XMLEventReader input, BlockBuilder fc, TextProperties tp) throws XMLStreamException {
+		tp = getTextProperties(event, tp);
+		fc.startBlock(blockBuilder(event.asStartElement()));
+		while (input.hasNext()) {
+			event=input.nextEvent();
+			if (event.isCharacters()) {
+				fc.addChars(event.asCharacters().getData(), tp);
+			} else if (equalsStart(event, ObflQName.BLOCK)) {
+				parseBlock(event, input, fc, tp);
+			} else if (processAsBlockContents(fc, event, input, tp)) {
+				//done
+			}
+			else if (equalsEnd(event, ObflQName.BLOCK)) {
+				fc.endBlock();
+				break;
+			} else {
+				report(event);
+			}
+		}
+	}
+	
+	private void parseSpan(XMLEvent event, XMLEventReader input, BlockContentBuilder fc, TextProperties tp) throws XMLStreamException {
 		tp = getTextProperties(event, tp);
 		while (input.hasNext()) {
 			event=input.nextEvent();
@@ -798,7 +826,7 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
 		}
 	}
 
-	private void parseStyle(XMLEvent event, XMLEventReader input, FormatterCore fc, TextProperties tp) throws XMLStreamException {
+	private void parseStyle(XMLEvent event, XMLEventReader input, BlockContentBuilder fc, TextProperties tp) throws XMLStreamException {
 		String name = getAttr(event, "name");
 		boolean ignore = formatter.getConfiguration().getIgnoredStyles().contains(name);
 		if (!ignore) {
@@ -971,7 +999,7 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
 	}
 	
 	
-	private void parseLeader(FormatterCore fc, XMLEvent event, XMLEventReader input) throws XMLStreamException {
+	private void parseLeader(BlockContentBuilder fc, XMLEvent event, XMLEventReader input) throws XMLStreamException {
 		Leader.Builder builder = new Leader.Builder();
 		@SuppressWarnings("unchecked")
 		Iterator<Attribute> atts = event.asStartElement().getAttributes();
@@ -992,7 +1020,7 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
 		fc.insertLeader(builder.build());
 	}
 
-	private static void parseMarker(FormatterCore fc, XMLEvent event) throws XMLStreamException {
+	private static void parseMarker(BlockContentBuilder fc, XMLEvent event) throws XMLStreamException {
 		String markerName = getAttr(event, "class");
 		String markerValue = getAttr(event, "value");
 		fc.insertMarker(new Marker(markerName, markerValue));
@@ -1181,7 +1209,7 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
 		}
 	}
 
-	boolean processAsBlockContents(FormatterCore fc, XMLEvent event, XMLEventReader input, TextProperties tp) throws XMLStreamException {
+	boolean processAsBlockContents(BlockContentBuilder fc, XMLEvent event, XMLEventReader input, TextProperties tp) throws XMLStreamException {
 		if (equalsStart(event, ObflQName.LEADER)) {
 			parseLeader(fc, event, input);
 			return true;
@@ -1303,14 +1331,14 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
 		return (sb.length()>0?" (at "+sb.toString()+")":"");
 	}
 	
-	private void parsePageNumber(FormatterCore fc, XMLEvent event, XMLEventReader input) throws XMLStreamException {
+	private void parsePageNumber(BlockContentBuilder fc, XMLEvent event, XMLEventReader input) throws XMLStreamException {
 		String refId = getAttr(event, "ref-id");
 		NumeralStyle style = getNumeralStyle(event);
 		scanEmptyElement(input, ObflQName.PAGE_NUMBER);
 		fc.insertReference(refId, style);
 	}
 	
-	private void parseEvaluate(FormatterCore fc, XMLEvent event, XMLEventReader input, TextProperties tp) throws XMLStreamException {
+	private void parseEvaluate(BlockContentBuilder fc, XMLEvent event, XMLEventReader input, TextProperties tp) throws XMLStreamException {
 		String expr = getAttr(event, "expression");
 		scanEmptyElement(input, ObflQName.EVALUATE);
 		OBFLDynamicContent dynamic = new OBFLDynamicContent(expr, fm.getExpressionFactory(), true);
@@ -1358,6 +1386,66 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
 		}
 	}
 	
+	private void parseVolumeTransition(XMLEvent event, XMLEventReader input, TextProperties tp) throws XMLStreamException {
+		TransitionBuilder template = formatter.getTransitionBuilder();
+		TransitionBuilderProperties.Builder propsBuilder = new TransitionBuilderProperties.Builder();
+		String rangeStr = getAttr(event, "range");
+		if (rangeStr!=null) {
+			ApplicationRange range = ApplicationRange.parse(rangeStr);
+			if (range==ApplicationRange.SHEET) {
+				throw new RuntimeException(String.format("@range=\"sheet\" is not implemented."));
+			}
+			propsBuilder.applicationRange(range);
+		} else {
+			propsBuilder.applicationRange(ApplicationRange.PAGE);
+		}
+		template.setProperties(propsBuilder.build());
+		while (input.hasNext()) {
+			event=input.nextEvent();
+			if (equalsStart(event, ObflQName.BLOCK_INTERRUPTED)) {
+				throw new RuntimeException(String.format("%s is not supported.", ObflQName.BLOCK_INTERRUPTED));
+				//parseTransitionBlock(event, input, template.getBlockInterruptedBuilder(), tp);
+			} else if (equalsStart(event, ObflQName.BLOCK_RESUMED)) {
+				throw new RuntimeException(String.format("%s is not supported.", ObflQName.BLOCK_RESUMED));
+				//parseTransitionBlock(event, input, template.getBlockResumedBuilder(), tp);
+			} else if (equalsStart(event, ObflQName.SEQUENCE_INTERRUPTED)) {
+				parseTransitionSequence(event, input, template.getSequenceInterruptedBuilder(), tp);
+			} else if (equalsStart(event, ObflQName.SEQUENCE_RESUMED)) {
+				parseTransitionSequence(event, input, template.getSequenceResumedBuilder(), tp);
+			} else if (equalsEnd(event, ObflQName.VOLUME_TRANSITION)) {
+				break;
+			} else {
+				report(event);
+			}
+		}
+	}
+	/*
+	private void parseTransitionBlock(XMLEvent event, XMLEventReader input, BlockContentBuilder builder, TextProperties tp) throws XMLStreamException {
+		while (input.hasNext()) {
+			event=input.nextEvent();
+			if (processAsBlockContents(builder, event, input, tp)) {
+				// we're done with this event
+			} else if (equalsEnd(event, ObflQName.BLOCK_INTERRUPTED, ObflQName.BLOCK_RESUMED)) {
+				break;
+			} else {
+				report(event);
+			}
+		}
+	}*/
+
+	private void parseTransitionSequence(XMLEvent event, XMLEventReader input, BlockBuilder builder, TextProperties tp) throws XMLStreamException {
+		while (input.hasNext()) {
+			event=input.nextEvent();
+			if (equalsStart(event, ObflQName.BLOCK)) {
+				parseBlock(event, input, builder, tp);
+			} else if (equalsEnd(event, ObflQName.SEQUENCE_INTERRUPTED, ObflQName.SEQUENCE_RESUMED)) {
+				break;
+			} else {
+				report(event);
+			}
+		}
+	}
+
 	private void parsePostVolumeContent(XMLEvent event, XMLEventReader input, VolumeContentBuilder template, TextProperties tp) throws XMLStreamException {
 		while (input.hasNext()) {
 			event=input.nextEvent();

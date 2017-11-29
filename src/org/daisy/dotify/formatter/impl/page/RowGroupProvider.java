@@ -89,11 +89,6 @@ class RowGroupProvider {
 			bcm.setContext(this.context);
 		}
 		RowGroup b = nextInner(wholeWordsOnly);
-		if (!hasNext()) {
-			b.setAvoidVolumeBreakAfterPriority(g.getAvoidVolumeBreakAfterPriority());
-		} else {
-			b.setAvoidVolumeBreakAfterPriority(g.getAvoidVolumeBreakInsidePriority());
-		}
 		return b;
 	}
 
@@ -102,25 +97,28 @@ class RowGroupProvider {
 			phase++;
 			//if there is a row group, return it (otherwise, try next phase)
 			if (bcm.hasCollapsiblePreContentRows()) {
-				return new RowGroup.Builder(master.getRowSpacing(), bcm.getCollapsiblePreContentRows()).
-										collapsible(true).skippable(false).breakable(false).build();
+				return setPropertiesThatDependOnHasNext(new RowGroup.Builder(master.getRowSpacing(), bcm.getCollapsiblePreContentRows()).
+										collapsible(true).skippable(false).breakable(false), hasNext(), g).build();
 			}
 		}
 		if (phase==1) {
 			phase++;
 			//if there is a row group, return it (otherwise, try next phase)
 			if (bcm.hasInnerPreContentRows()) {
-				return new RowGroup.Builder(master.getRowSpacing(), bcm.getInnerPreContentRows()).
-										collapsible(false).skippable(false).breakable(false).build();
+				return setPropertiesThatDependOnHasNext(new RowGroup.Builder(master.getRowSpacing(), bcm.getInnerPreContentRows()).
+										collapsible(false).skippable(false).breakable(false), hasNext(), g).build();
 			}
 		}
 		if (phase==2) {
 			phase++;
 			//TODO: Does this interfere with collapsing margins?
 			if (shouldAddGroupForEmptyContent()) {
-				RowGroup.Builder rgb = new RowGroup.Builder(master.getRowSpacing(), new ArrayList<RowImpl>());
-				setProperties(rgb, bc.getRefs(), g);
-				return rgb.build();
+				RowGroup.Builder rgb = setPropertiesForFirstContentRowGroup(
+					new RowGroup.Builder(master.getRowSpacing(), new ArrayList<RowImpl>()), 
+					bc.getRefs(),
+					g
+				);
+				return setPropertiesThatDependOnHasNext(rgb, hasNext(), g).build();
 			}
 		}
 		if (phase==3) {
@@ -143,10 +141,10 @@ class RowGroupProvider {
 								(hasNext || !bcm.hasPostContentRows())
 								);
 				if (rowIndex==1) { //First item
-					setProperties(rgb, bc.getRefs(), g);
+					setPropertiesForFirstContentRowGroup(rgb, bc.getRefs(), g);
 				}
 				keepWithNext = keepWithNext-1;
-				return rgb.build();
+				return setPropertiesThatDependOnHasNext(rgb, hasNext(), g).build();
 			} else {
 				phase++;
 			}
@@ -154,15 +152,15 @@ class RowGroupProvider {
 		if (phase==4) {
 			phase++;
 			if (bcm.hasPostContentRows()) {
-				return new RowGroup.Builder(master.getRowSpacing(), bcm.getPostContentRows()).
-					collapsible(false).skippable(false).breakable(keepWithNext<0).build();
+				return setPropertiesThatDependOnHasNext(new RowGroup.Builder(master.getRowSpacing(), bcm.getPostContentRows()).
+					collapsible(false).skippable(false).breakable(keepWithNext<0), hasNext(), g).build();
 			}
 		}
 		if (phase==5) {
 			phase++;
 			if (bcm.hasSkippablePostContentRows()) {
-				return new RowGroup.Builder(master.getRowSpacing(), bcm.getSkippablePostContentRows()).
-					collapsible(true).skippable(true).breakable(keepWithNext<0).build();
+				return setPropertiesThatDependOnHasNext(new RowGroup.Builder(master.getRowSpacing(), bcm.getSkippablePostContentRows()).
+					collapsible(true).skippable(true).breakable(keepWithNext<0), hasNext(), g).build();
 			}
 		}
 		return null;
@@ -172,13 +170,23 @@ class RowGroupProvider {
 		return !bcm.hasSignificantContent() && otherData;
 	}
 	
-	private static void setProperties(RowGroup.Builder rgb, CrossReferenceHandler crh, Block g) {
+	private static RowGroup.Builder setPropertiesForFirstContentRowGroup(RowGroup.Builder rgb, CrossReferenceHandler crh, Block g) {
 		if (!"".equals(g.getIdentifier())) { 
 			rgb.identifier(g.getIdentifier());
 		}
-		rgb.markers(crh.getGroupMarkers(g.getBlockAddress()));
-		rgb.anchors(crh.getGroupAnchors(g.getBlockAddress()));
-		rgb.keepWithNextSheets(g.getKeepWithNextSheets());
-		rgb.keepWithPreviousSheets(g.getKeepWithPreviousSheets());
+		return rgb.markers(crh.getGroupMarkers(g.getBlockAddress()))
+			.anchors(crh.getGroupAnchors(g.getBlockAddress()))
+			.keepWithNextSheets(g.getKeepWithNextSheets())
+			.keepWithPreviousSheets(g.getKeepWithPreviousSheets());
+	}
+	
+	private static RowGroup.Builder setPropertiesThatDependOnHasNext(RowGroup.Builder rgb, boolean hasNext, Block g) {
+		if (hasNext) {
+			return rgb.avoidVolumeBreakAfterPriority(g.getAvoidVolumeBreakInsidePriority())
+					.lastRowGroupInBlock(false);
+		} else {
+			return rgb.avoidVolumeBreakAfterPriority(g.getAvoidVolumeBreakAfterPriority())
+					.lastRowGroupInBlock(true);
+		}
 	}
 }
