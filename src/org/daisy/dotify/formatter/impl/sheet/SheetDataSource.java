@@ -68,11 +68,20 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 	}
 	
 	public SheetDataSource(SheetDataSource template) {
-		this(template, 0);
+		this(template, 0, false);
 	}
-	
-	private SheetDataSource(SheetDataSource template, int offset) {
-		this.struct = new PageStruct(template.struct);
+
+	/**
+	 * Creates a new instance with the specified data source as template
+	 * @param template the template
+	 * @param offset the sheetBuffer offset (items before the offset are discarded)
+	 * @param tail true if the purpose of this instance is to become the template's
+	 * 		tail. This information is required because the page number counter
+	 * 		must be the same instance in this case. The reverse is true in other
+	 * 		cases.
+	 */
+	private SheetDataSource(SheetDataSource template, int offset, boolean tail) {
+		this.struct = tail?template.struct:new PageStruct(template.struct);
 		this.context = template.context;
 		this.rcontext = template.rcontext;
 		this.volumeGroup = template.volumeGroup;
@@ -262,7 +271,7 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 		} else {
 			struct.setDefaultPageOffset(initialPageOffset + psb.getSizeLast());
 		}
-		SheetDataSource tail = new SheetDataSource(this, atIndex);
+		SheetDataSource tail = new SheetDataSource(this, atIndex, true);
 		tail.updateCounter = true;
 		if (atIndex==0) {
 			return new SplitResult<Sheet>(Collections.emptyList(), tail);
