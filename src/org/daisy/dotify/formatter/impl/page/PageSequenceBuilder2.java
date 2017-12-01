@@ -10,13 +10,12 @@ import org.daisy.dotify.api.formatter.PageAreaProperties;
 import org.daisy.dotify.api.formatter.RenameFallbackRule;
 import org.daisy.dotify.api.translator.Translatable;
 import org.daisy.dotify.api.translator.TranslationException;
-import org.daisy.dotify.common.split.SplitPoint;
-import org.daisy.dotify.common.split.SplitPointDataList;
-import org.daisy.dotify.common.split.SplitPointDataSource;
-import org.daisy.dotify.common.split.SplitPointHandler;
-import org.daisy.dotify.common.split.SplitPointSpecification;
-import org.daisy.dotify.common.split.StandardSplitOption;
-import org.daisy.dotify.common.split.Supplements;
+import org.daisy.dotify.common.splitter.SplitPoint;
+import org.daisy.dotify.common.splitter.SplitPointDataSource;
+import org.daisy.dotify.common.splitter.SplitPointHandler;
+import org.daisy.dotify.common.splitter.SplitPointSpecification;
+import org.daisy.dotify.common.splitter.StandardSplitOption;
+import org.daisy.dotify.common.splitter.Supplements;
 import org.daisy.dotify.formatter.impl.core.Block;
 import org.daisy.dotify.formatter.impl.core.BlockContext;
 import org.daisy.dotify.formatter.impl.core.ContentCollectionImpl;
@@ -26,7 +25,6 @@ import org.daisy.dotify.formatter.impl.core.PaginatorException;
 import org.daisy.dotify.formatter.impl.row.AbstractBlockContentManager;
 import org.daisy.dotify.formatter.impl.row.MarginProperties;
 import org.daisy.dotify.formatter.impl.row.RowImpl;
-import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.search.DefaultContext;
 import org.daisy.dotify.formatter.impl.search.DocumentSpace;
 import org.daisy.dotify.formatter.impl.search.PageDetails;
@@ -45,10 +43,10 @@ public class PageSequenceBuilder2 {
 	private final List<RowGroupSequence> dataGroups;
 	private final FieldResolver fieldResolver;
 	private final SequenceId seqId;
-	private final SplitPointHandler<RowGroup> sph;
+	private final SplitPointHandler<RowGroup, RowGroupDataSource> sph;
 
 	private boolean force;
-	private SplitPointDataSource<RowGroup> data;
+	private RowGroupDataSource data;
 
 	private int keepNextSheets;
 	private int pageCount = 0;
@@ -104,15 +102,7 @@ public class PageSequenceBuilder2 {
 		this.seqId = template.seqId;
 		this.sph = template.sph;
 		this.force = template.force;
-		if (template.data instanceof RowGroupDataSource) {
-			this.data = RowGroupDataSource.copyUnlessNull((RowGroupDataSource)template.data);
-		} else if (template.data==null) { 
-			this.data = null;
-		} else if (template.data.isEmpty()) {
-			this.data = SplitPointDataList.emptyManager();
-		} else {
-			throw new RuntimeException("Error in code.");
-		}
+		this.data = RowGroupDataSource.copyUnlessNull(template.data);
 		this.keepNextSheets = template.keepNextSheets;
 		this.pageCount = template.pageCount;
 		this.fromIndex = template.fromIndex;
@@ -191,18 +181,18 @@ public class PageSequenceBuilder2 {
 				}
 				force = false;
 			}
-			((RowGroupDataSource)data).setContext(
-							BlockContext.from(((RowGroupDataSource)data).getContext())
+			data.setContext(
+							BlockContext.from(data.getContext())
 							.currentPage(current.getDetails().getPageNumber())
 							.flowWidth(master.getFlowWidth() - master.getTemplate(current.getPageNumber()).getTotalMarginRegionWidth())
 							.build()
 					);
 			if (!data.isEmpty()) {
-				SplitPointDataSource<RowGroup> copy = new RowGroupDataSource((RowGroupDataSource)data);
+				RowGroupDataSource copy = new RowGroupDataSource(data);
 				// Using a copy to find the skippable data, so that only the required data is rendered
 				int index = SplitPointHandler.findLeading(copy);
 				// Now apply the information to the live data
-				SplitPoint<RowGroup> sl = SplitPointHandler.skipLeading(data, index);
+				SplitPoint<RowGroup, RowGroupDataSource> sl = SplitPointHandler.skipLeading(data, index);
 				for (RowGroup rg : sl.getDiscarded()) {
 					addProperties(current, rg);
 				}
@@ -213,7 +203,7 @@ public class PageSequenceBuilder2 {
 				// Using copy to find the break point so that only the required data is rendered
 				SplitPointSpecification spec = sph.find(flowHeight, copy, force?StandardSplitOption.ALLOW_FORCE:null);
 				// Now apply the information to the live data
-				SplitPoint<RowGroup> res = sph.split(spec, data);
+				SplitPoint<RowGroup, RowGroupDataSource> res = sph.split(spec, data);
 				if (res.getHead().size()==0 && force) {
 					if (firstUnitHasSupplements(data) && hasPageAreaCollection()) {
 						reassignCollection();
@@ -293,7 +283,7 @@ public class PageSequenceBuilder2 {
 		}
 	}
 	
-	private boolean firstUnitHasSupplements(SplitPointDataSource<RowGroup> spd) {
+	private boolean firstUnitHasSupplements(SplitPointDataSource<?, ?> spd) {
 		return !spd.isEmpty() && !spd.get(0).getSupplementaryIDs().isEmpty();
 	}
 	

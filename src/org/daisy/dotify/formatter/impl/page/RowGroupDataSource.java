@@ -3,14 +3,15 @@ package org.daisy.dotify.formatter.impl.page;
 import java.util.Collections;
 import java.util.List;
 
-import org.daisy.dotify.common.split.SplitPointDataSource;
-import org.daisy.dotify.common.split.SplitResult;
-import org.daisy.dotify.common.split.Supplements;
+import org.daisy.dotify.common.splitter.DefaultSplitResult;
+import org.daisy.dotify.common.splitter.SplitPointDataSource;
+import org.daisy.dotify.common.splitter.SplitResult;
+import org.daisy.dotify.common.splitter.Supplements;
 import org.daisy.dotify.formatter.impl.core.Block;
 import org.daisy.dotify.formatter.impl.core.BlockContext;
 import org.daisy.dotify.formatter.impl.core.LayoutMaster;
 
-class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
+class RowGroupDataSource implements SplitPointDataSource<RowGroup, RowGroupDataSource> {
 	private static final Supplements<RowGroup> EMPTY_SUPPLEMENTS = new Supplements<RowGroup>() {
 		@Override
 		public RowGroup get(String id) {
@@ -85,23 +86,11 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 		}
 		return this.data.getList().get(n);
 	}
-	
-	@Override
-	@Deprecated
-	public List<RowGroup> head(int n) {
-		throw new UnsupportedOperationException("Method is deprecated.");
-	}
-	
+
 	@Override
 	public List<RowGroup> getRemaining() {
 		ensureBuffer(-1);
 		return this.data.getList().subList(0, data.size());
-	}
-
-	@Override
-	@Deprecated
-	public SplitPointDataSource<RowGroup> tail(int n) {
-		throw new UnsupportedOperationException("Method is deprecated.");
 	}
 
 	@Override
@@ -149,17 +138,27 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup> {
 	}
 
 	@Override
-	public SplitResult<RowGroup> split(int atIndex) {
+	public SplitResult<RowGroup, RowGroupDataSource> splitInRange(int atIndex) {
 		// TODO: rewrite this so that rendered tail data is discarded
 		if (!ensureBuffer(atIndex)) {
 			throw new IndexOutOfBoundsException("" + atIndex);
 		}
-		SplitPointDataSource<RowGroup> tail = new RowGroupDataSource(master, bc, new RowGroupData(data, atIndex), blocks, supplements, vs, blockIndex);
+		RowGroupDataSource tail = new RowGroupDataSource(master, bc, new RowGroupData(data, atIndex), blocks, supplements, vs, blockIndex);
 		if (atIndex==0) {
-			return new SplitResult<RowGroup>(Collections.emptyList(), tail);
+			return new DefaultSplitResult<RowGroup, RowGroupDataSource>(Collections.emptyList(), tail);
 		} else {
-			return new SplitResult<RowGroup>(this.data.getList().subList(0, atIndex), tail);
+			return new DefaultSplitResult<RowGroup, RowGroupDataSource>(this.data.getList().subList(0, atIndex), tail);
 		}
+	}
+
+	@Override
+	public RowGroupDataSource createEmpty() {
+		return new RowGroupDataSource(master, bc, Collections.emptyList(), vs, EMPTY_SUPPLEMENTS);
+	}
+
+	@Override
+	public RowGroupDataSource getDataSource() {
+		return this;
 	}
 
 }

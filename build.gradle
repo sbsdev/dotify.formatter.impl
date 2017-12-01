@@ -31,15 +31,15 @@ javadoc {
 
 repositories {
     mavenCentral()
-    maven { url "https://oss.sonatype.org/content/groups/staging" }
     //mavenLocal()
+    maven { url "https://oss.sonatype.org/content/groups/staging" }
     //maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
 }
 
 dependencies {
     compileOnly group: "biz.aQute.bnd", name: "annotation", version: "2.3.0"
     compile "org.daisy.dotify:dotify.api:3.2.0"
-    compile "org.daisy.dotify:dotify.common:3.6.0"
+    compile "org.daisy.dotify:dotify.common:3.9.0"
     compile (group: 'org.daisy.libs', name: 'saxon-he', version: '9.5.1.5') {
 		exclude module: 'Saxon-HE'
 	}
