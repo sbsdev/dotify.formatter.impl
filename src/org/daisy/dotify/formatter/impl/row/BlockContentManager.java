@@ -476,9 +476,9 @@ public class BlockContentManager extends AbstractBlockContentManager {
 		//don't know if soft hyphens need to be replaced, but we'll keep it for now
 		String next = softHyphenPattern.matcher(btr.nextTranslatedRow(m1.getMaxLength(row) - contentLen, force)).replaceAll("");
 		if ("".equals(next) && "".equals(tabSpace)) {
-			row.text(m1.preContent + trailingWsBraillePattern.matcher(row.getText()).replaceAll(""));
+			row.text(m1.getPreContent() + trailingWsBraillePattern.matcher(row.getText()).replaceAll(""));
 		} else {
-			row.text(m1.preContent + row.getText() + tabSpace + next);
+			row.text(m1.getPreContent() + row.getText() + tabSpace + next);
 			row.leaderSpace(row.getLeaderSpace()+tabSpace.length());
 		}
 		if (btr instanceof AggregatedBrailleTranslatorResult) {
