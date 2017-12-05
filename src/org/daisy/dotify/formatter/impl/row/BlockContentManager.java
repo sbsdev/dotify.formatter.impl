@@ -48,7 +48,7 @@ public class BlockContentManager extends AbstractBlockContentManager {
 		super(flowWidth, rdp, fcontext);
 		this.segments = Collections.unmodifiableList(segments);
 		this.rows = new ArrayList<>();
-		this.sp = new SegmentProcessor(refs, context, flowWidth - rightMargin.getContent().length());
+		this.sp = new SegmentProcessor(refs, context, flowWidth - margins.getRightMargin().getContent().length());
 		initFields();
 	}
 	
@@ -245,13 +245,13 @@ public class BlockContentManager extends AbstractBlockContentManager {
 			layoutLeader();
 			flushCurrentRow();
 			if (rows.size()>0 && rdp.getUnderlineStyle() != null) {
-				if (minLeft < leftMargin.getContent().length() || minRight < rightMargin.getContent().length()) {
+				if (minLeft < margins.getLeftMargin().getContent().length() || minRight < margins.getRightMargin().getContent().length()) {
 					throw new RuntimeException("coding error");
 				}
-				rows.add(new RowImpl.Builder(StringTools.fill(fcontext.getSpaceCharacter(), minLeft - leftMargin.getContent().length())
+				rows.add(new RowImpl.Builder(StringTools.fill(fcontext.getSpaceCharacter(), minLeft - margins.getLeftMargin().getContent().length())
 				                     + StringTools.fill(rdp.getUnderlineStyle(), flowWidth - minLeft - minRight))
-							.leftMargin(leftMargin)
-							.rightMargin(rightMargin)
+							.leftMargin(margins.getLeftMargin())
+							.rightMargin(margins.getRightMargin())
 							.adjustedForMargin(true)
 							.build());
 			}
@@ -284,8 +284,8 @@ public class BlockContentManager extends AbstractBlockContentManager {
 		private void layoutNewLine() {
 			layoutLeader();
 			flushCurrentRow();
-			MarginProperties ret = new MarginProperties(leftMargin.getContent()+StringTools.fill(fcontext.getSpaceCharacter(), rdp.getTextIndent()), leftMargin.isSpaceOnly());
-			currentRow = rdp.configureNewEmptyRowBuilder(ret, rightMargin);
+			MarginProperties ret = new MarginProperties(margins.getLeftMargin().getContent()+StringTools.fill(fcontext.getSpaceCharacter(), rdp.getTextIndent()), margins.getLeftMargin().isSpaceOnly());
+			currentRow = rdp.configureNewEmptyRowBuilder(ret, margins.getRightMargin());
 		}
 		
 		private void layoutTextSegment(TextSegment ts) {
@@ -445,7 +445,7 @@ public class BlockContentManager extends AbstractBlockContentManager {
 		
 		private void newRow(BrailleTranslatorResult chars, String contentBefore, int indent, int blockIndent, String mode) {
 			flushCurrentRow();
-			currentRow = rdp.configureNewEmptyRowBuilder(leftMargin, rightMargin);
+			currentRow = rdp.configureNewEmptyRowBuilder(margins.getLeftMargin(), margins.getRightMargin());
 			continueRow(new RowInfo(getPreText(contentBefore, indent, blockIndent), available), chars, blockIndent, mode);
 		}
 		
@@ -473,7 +473,7 @@ public class BlockContentManager extends AbstractBlockContentManager {
 				if (preTabPos>leaderPos || offset - align < 0) { // if tab position has been passed or if text does not fit within row, try on a new row
 					MarginProperties _leftMargin = currentRow.getLeftMargin();
 					flushCurrentRow();
-					currentRow = rdp.configureNewEmptyRowBuilder(_leftMargin, rightMargin);
+					currentRow = rdp.configureNewEmptyRowBuilder(_leftMargin, margins.getRightMargin());
 					m1 = new RowInfo(StringTools.fill(fcontext.getSpaceCharacter(), rdp.getTextIndent()+blockIndent), available);
 					//update offset
 					offset = leaderPos-m1.getPreTabPosition(currentRow);
