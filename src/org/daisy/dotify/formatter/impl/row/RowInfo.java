@@ -8,10 +8,8 @@ class RowInfo {
 	final String preContent;
 	final int preTabPos;
 	final int maxLenText;
-	final RowImpl.Builder row;
 	RowInfo(String preContent, RowImpl.Builder r, int available) {
 		this.preTabText = r.getText();
-		this.row = r;
 		this.preContent = preContent;
 		int preContentPos = r.getLeftMargin().getContent().length()+StringTools.length(preContent);
 		this.preTabTextLen = StringTools.length(preTabText);

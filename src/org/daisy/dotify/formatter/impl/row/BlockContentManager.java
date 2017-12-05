@@ -5,7 +5,6 @@ import static java.lang.Math.min;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.regex.Pattern;
 
 import org.daisy.dotify.api.formatter.Context;
@@ -24,7 +23,6 @@ import org.daisy.dotify.formatter.impl.segment.LeaderSegment;
 import org.daisy.dotify.formatter.impl.segment.MarkerSegment;
 import org.daisy.dotify.formatter.impl.segment.PageNumberReferenceSegment;
 import org.daisy.dotify.formatter.impl.segment.Segment;
-import org.daisy.dotify.formatter.impl.segment.Segment.SegmentType;
 import org.daisy.dotify.formatter.impl.segment.TextSegment;
 
 /**
@@ -417,7 +415,7 @@ public class BlockContentManager extends AbstractBlockContentManager {
 				newRow(btr, "", rdp.getFirstLineIndent(), rdp.getBlockIndent(), mode);
 			}
 		} else {
-			newRow(new RowInfo("", currentRow, available), btr, rdp.getBlockIndent(), mode);
+			continueRow(new RowInfo("", currentRow, available), btr, rdp.getBlockIndent(), mode);
 		}
 		while (btr.hasNext()) { //LayoutTools.length(chars.toString())>0
 			newRow(btr, "", rdp.getTextIndent(), rdp.getBlockIndent(), mode);
@@ -430,7 +428,7 @@ public class BlockContentManager extends AbstractBlockContentManager {
 	private void newRow(BrailleTranslatorResult chars, String contentBefore, int indent, int blockIndent, String mode) {
 		flushCurrentRow();
 		currentRow = rdp.configureNewEmptyRowBuilder(leftMargin, rightMargin);
-		newRow(new RowInfo(getPreText(contentBefore, indent, blockIndent), currentRow, available), chars, blockIndent, mode);
+		continueRow(new RowInfo(getPreText(contentBefore, indent, blockIndent), currentRow, available), chars, blockIndent, mode);
 	}
 	
 	private String getPreText(String contentBefore, int indent, int blockIndent) {
@@ -444,7 +442,7 @@ public class BlockContentManager extends AbstractBlockContentManager {
 	}
 
 	//TODO: check leader functionality
-	private void newRow(RowInfo m, BrailleTranslatorResult btr, int blockIndent, String mode) {
+	private void continueRow(RowInfo m, BrailleTranslatorResult btr, int blockIndent, String mode) {
 		// [margin][preContent][preTabText][tab][postTabText] 
 		//      preContentPos ^
 		String tabSpace = "";
@@ -468,24 +466,24 @@ public class BlockContentManager extends AbstractBlockContentManager {
 				leaderManager.discardLeader();
 			}
 		}
-		breakNextRow(m, btr, tabSpace);
+		breakNextRow(m, currentRow, btr, tabSpace);
 	}
 
-	private static void breakNextRow(RowInfo m, BrailleTranslatorResult btr, String tabSpace) {
+	private static void breakNextRow(RowInfo m, RowImpl.Builder row, BrailleTranslatorResult btr, String tabSpace) {
 		int contentLen = StringTools.length(tabSpace) + m.preTabTextLen;
 		boolean force = contentLen == 0;
 		//don't know if soft hyphens need to be replaced, but we'll keep it for now
 		String next = softHyphenPattern.matcher(btr.nextTranslatedRow(m.maxLenText - contentLen, force)).replaceAll("");
 		if ("".equals(next) && "".equals(tabSpace)) {
-			m.row.text(m.preContent + trailingWsBraillePattern.matcher(m.preTabText).replaceAll(""));
+			row.text(m.preContent + trailingWsBraillePattern.matcher(m.preTabText).replaceAll(""));
 		} else {
-			m.row.text(m.preContent + m.preTabText + tabSpace + next);
-			m.row.leaderSpace(m.row.getLeaderSpace()+tabSpace.length());
+			row.text(m.preContent + m.preTabText + tabSpace + next);
+			row.leaderSpace(row.getLeaderSpace()+tabSpace.length());
 		}
 		if (btr instanceof AggregatedBrailleTranslatorResult) {
 			AggregatedBrailleTranslatorResult abtr = ((AggregatedBrailleTranslatorResult)btr);
-			m.row.addMarkers(abtr.getMarkers());
-			m.row.addAnchors(abtr.getAnchors());
+			row.addMarkers(abtr.getMarkers());
+			row.addAnchors(abtr.getAnchors());
 			abtr.clearPending();
 		}
 	}
