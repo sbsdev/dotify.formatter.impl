@@ -42,16 +42,9 @@ public class BlockContentManager extends AbstractBlockContentManager {
 	private final int available;
 	private Context context;
 	private final List<Segment> segments;
-	private final LeaderManager leaderManager;
 	private final SegmentProcessor sp;
 
-	private ListItem item;
-	private int forceCount;
-	private int minLeft;
-	private int minRight;
 	private int segmentIndex;
-
-
 	private int rowIndex;
 	
 	public BlockContentManager(int flowWidth, List<Segment> segments, RowDataProperties rdp, CrossReferenceHandler refs, Context context, FormatterCoreContext fcontext) {
@@ -61,7 +54,6 @@ public class BlockContentManager extends AbstractBlockContentManager {
 		this.context = context;
 		this.segments = Collections.unmodifiableList(segments);
 		this.rows = new ArrayList<>();
-		this.leaderManager = new LeaderManager();
 		this.sp = new SegmentProcessor();
 		initFields();
 	}
@@ -75,21 +67,12 @@ public class BlockContentManager extends AbstractBlockContentManager {
 		// Context is mutable, but for now we assume that the same context should be used.
 		this.context = template.context;
 		this.segments = template.segments;
-		this.leaderManager = new LeaderManager(template.leaderManager);
 		this.sp = new SegmentProcessor(template.sp);
-		this.item = template.item;
-		this.forceCount = template.forceCount;
-		this.minLeft = template.minLeft;
-		this.minRight = template.minRight;
 		this.segmentIndex = template.segmentIndex;
 		this.rowIndex = template.rowIndex;
 	}
 	
     private void initFields() {
-		leaderManager.discardLeader();
-		item = rdp.getListItem();
-		minLeft = flowWidth;
-		minRight = flowWidth;
 		segmentIndex = 0;
 		rowIndex = 0;
     }
@@ -130,19 +113,7 @@ public class BlockContentManager extends AbstractBlockContentManager {
 			sp.layoutSegment(s);
 			segmentIndex++;
 			if (!hasMoreData()) {
-				sp.layoutLeader();
-				sp.flushCurrentRow();
-				if (rows.size()>0 && rdp.getUnderlineStyle() != null) {
-					if (minLeft < leftMargin.getContent().length() || minRight < rightMargin.getContent().length()) {
-						throw new RuntimeException("coding error");
-					}
-					rows.add(new RowImpl.Builder(StringTools.fill(fcontext.getSpaceCharacter(), minLeft - leftMargin.getContent().length())
-					                     + StringTools.fill(rdp.getUnderlineStyle(), flowWidth - minLeft - minRight))
-								.leftMargin(leftMargin)
-								.rightMargin(rightMargin)
-								.adjustedForMargin(true)
-								.build());
-				}
+				sp.close();
 			}
 		}
 		return true;
@@ -190,29 +161,45 @@ public class BlockContentManager extends AbstractBlockContentManager {
 		private AggregatedBrailleTranslatorResult.Builder layoutOrApplyAfterLeader;
 		private String currentLeaderMode;
 		private boolean seenSegmentAfterLeader;
+		private final LeaderManager leaderManager;
+		private ListItem item;
+		private int forceCount;
+		private int minLeft;
+		private int minRight;
 
 		SegmentProcessor() {
 			this.groupMarkers = new ArrayList<>();
 			this.groupAnchors = new ArrayList<>();
+			this.leaderManager = new LeaderManager();
+			initFields();
 		}
 		
 		SegmentProcessor(SegmentProcessor template) {
 			this.currentRow = template.currentRow==null?null:new RowImpl.Builder(template.currentRow);
 			this.groupAnchors = new ArrayList<>(template.groupAnchors);
 			this.groupMarkers = new ArrayList<>(template.groupMarkers);
+			this.leaderManager = new LeaderManager(template.leaderManager);
 			this.layoutOrApplyAfterLeader = template.layoutOrApplyAfterLeader==null?null:new AggregatedBrailleTranslatorResult.Builder(template.layoutOrApplyAfterLeader);
 			this.currentLeaderMode = template.currentLeaderMode;
 			this.seenSegmentAfterLeader = template.seenSegmentAfterLeader;
+			this.item = template.item;
+			this.forceCount = template.forceCount;
+			this.minLeft = template.minLeft;
+			this.minRight = template.minRight;
 		}
 
 		private void initFields() {
 			currentRow = null;
+			leaderManager.discardLeader();
 			layoutOrApplyAfterLeader = null;
 			currentLeaderMode = null;
 			seenSegmentAfterLeader = false;
+			item = rdp.getListItem();
+			minLeft = flowWidth;
+			minRight = flowWidth;
 		}
 
-		private boolean couldTriggerNewRow(Segment s) {
+		boolean couldTriggerNewRow(Segment s) {
 			switch (s.getSegmentType()) {
 				case Marker:
 				case Anchor:
@@ -251,6 +238,22 @@ public class BlockContentManager extends AbstractBlockContentManager {
 					applyAfterLeader((AnchorSegment)s);
 					break;
 			}		
+		}
+		
+		void close() {
+			layoutLeader();
+			flushCurrentRow();
+			if (rows.size()>0 && rdp.getUnderlineStyle() != null) {
+				if (minLeft < leftMargin.getContent().length() || minRight < rightMargin.getContent().length()) {
+					throw new RuntimeException("coding error");
+				}
+				rows.add(new RowImpl.Builder(StringTools.fill(fcontext.getSpaceCharacter(), minLeft - leftMargin.getContent().length())
+				                     + StringTools.fill(rdp.getUnderlineStyle(), flowWidth - minLeft - minRight))
+							.leftMargin(leftMargin)
+							.rightMargin(rightMargin)
+							.adjustedForMargin(true)
+							.build());
+			}
 		}
 
 		private void flushCurrentRow() {
@@ -521,7 +524,7 @@ public class BlockContentManager extends AbstractBlockContentManager {
 	@Override
 	public int getForceBreakCount() {
 		ensureBuffer(-1);
-		return forceCount;
+		return sp.forceCount;
 	}
 
 	@Override
