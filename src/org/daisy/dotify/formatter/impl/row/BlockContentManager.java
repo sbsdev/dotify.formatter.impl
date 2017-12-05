@@ -45,7 +45,6 @@ public class BlockContentManager extends AbstractBlockContentManager {
 	private final LeaderManager leaderManager;
 	private final SegmentProcessor sp;
 
-	private RowImpl.Builder currentRow;
 	private ListItem item;
 	private int forceCount;
 	private int minLeft;
@@ -78,7 +77,6 @@ public class BlockContentManager extends AbstractBlockContentManager {
 		// Context is mutable, but for now we assume that the same context should be used.
 		this.context = template.context;
 		this.segments = template.segments;
-		this.currentRow = template.currentRow==null?null:new RowImpl.Builder(template.currentRow);
 		this.leaderManager = new LeaderManager(template.leaderManager);
 		this.sp = new SegmentProcessor(template.sp);
 		this.item = template.item;
@@ -94,7 +92,6 @@ public class BlockContentManager extends AbstractBlockContentManager {
 	
     private void initFields() {
 		leaderManager.discardLeader();
-		currentRow = null;
 		item = rdp.getListItem();
 		minLeft = flowWidth;
 		minRight = flowWidth;
@@ -195,6 +192,7 @@ public class BlockContentManager extends AbstractBlockContentManager {
 	}
 	
 	private class SegmentProcessor {
+		private RowImpl.Builder currentRow;
 		private final ArrayList<Marker> groupMarkers;
 		private final ArrayList<String> groupAnchors;
 
@@ -204,9 +202,15 @@ public class BlockContentManager extends AbstractBlockContentManager {
 		}
 		
 		SegmentProcessor(SegmentProcessor template) {
+			this.currentRow = template.currentRow==null?null:new RowImpl.Builder(template.currentRow);
 			this.groupAnchors = new ArrayList<>(template.groupAnchors);
 			this.groupMarkers = new ArrayList<>(template.groupMarkers);			
 		}
+
+		private void initFields() {
+			currentRow = null;
+		}
+
 		private boolean couldTriggerNewRow(Segment s) {
 			switch (s.getSegmentType()) {
 				case Marker:
@@ -501,6 +505,7 @@ public class BlockContentManager extends AbstractBlockContentManager {
 		void reset() {
 			groupAnchors.clear();
 			groupMarkers.clear();
+			initFields();
 		}
 		
 		List<Marker> getGroupMarkers() {
