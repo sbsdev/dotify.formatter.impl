@@ -51,9 +51,7 @@ public class BlockContentManager extends AbstractBlockContentManager {
 	private int minRight;
 	private int segmentIndex;
 
-	private AggregatedBrailleTranslatorResult.Builder layoutOrApplyAfterLeader;
-	private String currentLeaderMode;
-	private boolean seenSegmentAfterLeader;
+
 	private int rowIndex;
 	
 	public BlockContentManager(int flowWidth, List<Segment> segments, RowDataProperties rdp, CrossReferenceHandler refs, Context context, FormatterCoreContext fcontext) {
@@ -84,9 +82,6 @@ public class BlockContentManager extends AbstractBlockContentManager {
 		this.minLeft = template.minLeft;
 		this.minRight = template.minRight;
 		this.segmentIndex = template.segmentIndex;
-		this.layoutOrApplyAfterLeader = template.layoutOrApplyAfterLeader==null?null:new AggregatedBrailleTranslatorResult.Builder(template.layoutOrApplyAfterLeader);
-		this.currentLeaderMode = template.currentLeaderMode;
-		this.seenSegmentAfterLeader = template.seenSegmentAfterLeader;
 		this.rowIndex = template.rowIndex;
 	}
 	
@@ -96,9 +91,6 @@ public class BlockContentManager extends AbstractBlockContentManager {
 		minLeft = flowWidth;
 		minRight = flowWidth;
 		segmentIndex = 0;
-		layoutOrApplyAfterLeader = null;
-		currentLeaderMode = null;
-		seenSegmentAfterLeader = false;
 		rowIndex = 0;
     }
 	
@@ -195,6 +187,9 @@ public class BlockContentManager extends AbstractBlockContentManager {
 		private RowImpl.Builder currentRow;
 		private final ArrayList<Marker> groupMarkers;
 		private final ArrayList<String> groupAnchors;
+		private AggregatedBrailleTranslatorResult.Builder layoutOrApplyAfterLeader;
+		private String currentLeaderMode;
+		private boolean seenSegmentAfterLeader;
 
 		SegmentProcessor() {
 			this.groupMarkers = new ArrayList<>();
@@ -204,11 +199,17 @@ public class BlockContentManager extends AbstractBlockContentManager {
 		SegmentProcessor(SegmentProcessor template) {
 			this.currentRow = template.currentRow==null?null:new RowImpl.Builder(template.currentRow);
 			this.groupAnchors = new ArrayList<>(template.groupAnchors);
-			this.groupMarkers = new ArrayList<>(template.groupMarkers);			
+			this.groupMarkers = new ArrayList<>(template.groupMarkers);
+			this.layoutOrApplyAfterLeader = template.layoutOrApplyAfterLeader==null?null:new AggregatedBrailleTranslatorResult.Builder(template.layoutOrApplyAfterLeader);
+			this.currentLeaderMode = template.currentLeaderMode;
+			this.seenSegmentAfterLeader = template.seenSegmentAfterLeader;
 		}
 
 		private void initFields() {
 			currentRow = null;
+			layoutOrApplyAfterLeader = null;
+			currentLeaderMode = null;
+			seenSegmentAfterLeader = false;
 		}
 
 		private boolean couldTriggerNewRow(Segment s) {
