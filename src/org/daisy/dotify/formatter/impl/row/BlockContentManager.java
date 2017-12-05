@@ -149,7 +149,7 @@ public class BlockContentManager extends AbstractBlockContentManager {
 			segmentIndex++;
 			if (!hasMoreData()) {
 				sp.layoutLeader();
-				flushCurrentRow();
+				sp.flushCurrentRow();
 				if (rows.size()>0 && rdp.getUnderlineStyle() != null) {
 					if (minLeft < leftMargin.getContent().length() || minRight < rightMargin.getContent().length()) {
 						throw new RuntimeException("coding error");
@@ -168,30 +168,6 @@ public class BlockContentManager extends AbstractBlockContentManager {
 	
 	private boolean hasMoreData() {
 		return segmentIndex<segments.size();
-	}
-
-	private void flushCurrentRow() {
-		if (currentRow!=null) {
-			if (rows.isEmpty()) {
-				// Clear group anchors and markers (since we have content, we don't need them)
-				currentRow.addAnchors(0, groupAnchors);
-				groupAnchors.clear();
-				currentRow.addMarkers(0, groupMarkers);
-				groupMarkers.clear();
-			}
-			RowImpl r = currentRow.build();
-			rows.add(r);
-			//Make calculations for underlining
-			int width = r.getChars().length();
-			int left = r.getLeftMargin().getContent().length();
-			int right = r.getRightMargin().getContent().length();
-			int space = flowWidth - width - left - right;
-			left += r.getAlignment().getOffset(space);
-			right = flowWidth - width - left;
-			minLeft = min(minLeft, left);
-			minRight = min(minRight, right);
-			currentRow = null;
-		}
 	}
 	
 	@Override
@@ -273,6 +249,30 @@ public class BlockContentManager extends AbstractBlockContentManager {
 					applyAfterLeader((AnchorSegment)s);
 					break;
 			}		
+		}
+
+		private void flushCurrentRow() {
+			if (currentRow!=null) {
+				if (rows.isEmpty()) {
+					// Clear group anchors and markers (since we have content, we don't need them)
+					currentRow.addAnchors(0, groupAnchors);
+					groupAnchors.clear();
+					currentRow.addMarkers(0, groupMarkers);
+					groupMarkers.clear();
+				}
+				RowImpl r = currentRow.build();
+				rows.add(r);
+				//Make calculations for underlining
+				int width = r.getChars().length();
+				int left = r.getLeftMargin().getContent().length();
+				int right = r.getRightMargin().getContent().length();
+				int space = flowWidth - width - left - right;
+				left += r.getAlignment().getOffset(space);
+				right = flowWidth - width - left;
+				minLeft = min(minLeft, left);
+				minRight = min(minRight, right);
+				currentRow = null;
+			}
 		}
 
 		private void layoutNewLine() {
