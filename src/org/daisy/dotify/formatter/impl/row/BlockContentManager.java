@@ -38,9 +38,6 @@ public class BlockContentManager extends AbstractBlockContentManager {
 	private static final Pattern trailingWsBraillePattern = Pattern.compile("[\\s\u2800]+\\z");
 
 	private final List<RowImpl> rows;
-	private final CrossReferenceHandler refs;
-	private final int available;
-	private Context context;
 	private final List<Segment> segments;
 	private final SegmentProcessor sp;
 
@@ -49,23 +46,15 @@ public class BlockContentManager extends AbstractBlockContentManager {
 	
 	public BlockContentManager(int flowWidth, List<Segment> segments, RowDataProperties rdp, CrossReferenceHandler refs, Context context, FormatterCoreContext fcontext) {
 		super(flowWidth, rdp, fcontext);
-		this.refs = refs;
-		this.available = flowWidth - rightMargin.getContent().length();
-		this.context = context;
 		this.segments = Collections.unmodifiableList(segments);
 		this.rows = new ArrayList<>();
-		this.sp = new SegmentProcessor();
+		this.sp = new SegmentProcessor(refs, context, flowWidth - rightMargin.getContent().length());
 		initFields();
 	}
 	
 	private BlockContentManager(BlockContentManager template) {
 		super(template);
 		this.rows = new ArrayList<>(template.rows);
-		// Refs is mutable, but for now we assume that the same context should be used.
-		this.refs = template.refs;
-		this.available = template.available;
-		// Context is mutable, but for now we assume that the same context should be used.
-		this.context = template.context;
 		this.segments = template.segments;
 		this.sp = new SegmentProcessor(template.sp);
 		this.segmentIndex = template.segmentIndex;
@@ -79,7 +68,7 @@ public class BlockContentManager extends AbstractBlockContentManager {
 	
     @Override
 	public void setContext(DefaultContext context) {
-		this.context = context;
+		this.sp.setContext(context);
 	}
 
 	@Override
@@ -155,6 +144,10 @@ public class BlockContentManager extends AbstractBlockContentManager {
 	}
 	
 	private class SegmentProcessor {
+		private final CrossReferenceHandler refs;
+		private final int available;
+		private Context context;
+
 		private RowImpl.Builder currentRow;
 		private final ArrayList<Marker> groupMarkers;
 		private final ArrayList<String> groupAnchors;
@@ -167,7 +160,10 @@ public class BlockContentManager extends AbstractBlockContentManager {
 		private int minLeft;
 		private int minRight;
 
-		SegmentProcessor() {
+		SegmentProcessor(CrossReferenceHandler refs, Context context, int available) {
+			this.refs = refs;
+			this.context = context;
+			this.available = available;
 			this.groupMarkers = new ArrayList<>();
 			this.groupAnchors = new ArrayList<>();
 			this.leaderManager = new LeaderManager();
@@ -175,6 +171,11 @@ public class BlockContentManager extends AbstractBlockContentManager {
 		}
 		
 		SegmentProcessor(SegmentProcessor template) {
+			// Refs is mutable, but for now we assume that the same context should be used.
+			this.refs = template.refs;
+			this.available = template.available;
+			// Context is mutable, but for now we assume that the same context should be used.
+			this.context = template.context;
 			this.currentRow = template.currentRow==null?null:new RowImpl.Builder(template.currentRow);
 			this.groupAnchors = new ArrayList<>(template.groupAnchors);
 			this.groupMarkers = new ArrayList<>(template.groupMarkers);
@@ -518,6 +519,10 @@ public class BlockContentManager extends AbstractBlockContentManager {
 		
 		List<String> getGroupAnchors() {
 			return groupAnchors;
+		}
+		
+		void setContext(DefaultContext context) {
+			this.context = context;
 		}
 	}
 
