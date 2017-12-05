@@ -56,13 +56,9 @@ public class BlockContentManager extends AbstractBlockContentManager {
 	private String currentLeaderMode;
 	private boolean seenSegmentAfterLeader;
 	private int rowIndex;
-	private final ArrayList<Marker> groupMarkers;
-	private final ArrayList<String> groupAnchors;
 	
 	public BlockContentManager(int flowWidth, List<Segment> segments, RowDataProperties rdp, CrossReferenceHandler refs, Context context, FormatterCoreContext fcontext) {
 		super(flowWidth, rdp, fcontext);
-		this.groupMarkers = new ArrayList<>();
-		this.groupAnchors = new ArrayList<>();
 		this.refs = refs;
 		this.available = flowWidth - rightMargin.getContent().length();
 		this.context = context;
@@ -75,8 +71,6 @@ public class BlockContentManager extends AbstractBlockContentManager {
 	
 	private BlockContentManager(BlockContentManager template) {
 		super(template);
-		this.groupAnchors = new ArrayList<>(template.groupAnchors);
-		this.groupMarkers = new ArrayList<>(template.groupMarkers);
 		this.rows = new ArrayList<>(template.rows);
 		// Refs is mutable, but for now we assume that the same context should be used.
 		this.refs = template.refs;
@@ -86,7 +80,6 @@ public class BlockContentManager extends AbstractBlockContentManager {
 		this.segments = template.segments;
 		this.currentRow = template.currentRow==null?null:new RowImpl.Builder(template.currentRow);
 		this.leaderManager = new LeaderManager(template.leaderManager);
-		//FIXME:
 		this.sp = new SegmentProcessor(template.sp);
 		this.item = template.item;
 		this.forceCount = template.forceCount;
@@ -183,8 +176,7 @@ public class BlockContentManager extends AbstractBlockContentManager {
 	
     @Override
 	public void reset() {
-    	groupAnchors.clear();
-    	groupMarkers.clear();
+    	sp.reset();
     	rows.clear();
     	initFields();
     }
@@ -203,12 +195,17 @@ public class BlockContentManager extends AbstractBlockContentManager {
 	}
 	
 	private class SegmentProcessor {
+		private final ArrayList<Marker> groupMarkers;
+		private final ArrayList<String> groupAnchors;
+
 		SegmentProcessor() {
-			
+			this.groupMarkers = new ArrayList<>();
+			this.groupAnchors = new ArrayList<>();
 		}
 		
 		SegmentProcessor(SegmentProcessor template) {
-			
+			this.groupAnchors = new ArrayList<>(template.groupAnchors);
+			this.groupMarkers = new ArrayList<>(template.groupMarkers);			
 		}
 		private boolean couldTriggerNewRow(Segment s) {
 			switch (s.getSegmentType()) {
@@ -500,6 +497,19 @@ public class BlockContentManager extends AbstractBlockContentManager {
 				abtr.clearPending();
 			}
 		}
+		
+		void reset() {
+			groupAnchors.clear();
+			groupMarkers.clear();
+		}
+		
+		List<Marker> getGroupMarkers() {
+			return groupMarkers;
+		}
+		
+		List<String> getGroupAnchors() {
+			return groupAnchors;
+		}
 	}
 
 	@Override
@@ -510,12 +520,12 @@ public class BlockContentManager extends AbstractBlockContentManager {
 
 	@Override
 	public List<Marker> getGroupMarkers() {
-		return groupMarkers;
+		return sp.getGroupMarkers();
 	}
 	
 	@Override
 	public List<String> getGroupAnchors() {
-		return groupAnchors;
+		return sp.getGroupAnchors();
 	}
 
 }
