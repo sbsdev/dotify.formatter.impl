@@ -415,7 +415,7 @@ public class BlockContentManager extends AbstractBlockContentManager {
 				newRow(btr, "", rdp.getFirstLineIndent(), rdp.getBlockIndent(), mode);
 			}
 		} else {
-			continueRow(new RowInfo("", currentRow, available), btr, rdp.getBlockIndent(), mode);
+			continueRow(new RowInfo("", available), btr, rdp.getBlockIndent(), mode);
 		}
 		while (btr.hasNext()) { //LayoutTools.length(chars.toString())>0
 			newRow(btr, "", rdp.getTextIndent(), rdp.getBlockIndent(), mode);
@@ -428,7 +428,7 @@ public class BlockContentManager extends AbstractBlockContentManager {
 	private void newRow(BrailleTranslatorResult chars, String contentBefore, int indent, int blockIndent, String mode) {
 		flushCurrentRow();
 		currentRow = rdp.configureNewEmptyRowBuilder(leftMargin, rightMargin);
-		continueRow(new RowInfo(getPreText(contentBefore, indent, blockIndent), currentRow, available), chars, blockIndent, mode);
+		continueRow(new RowInfo(getPreText(contentBefore, indent, blockIndent), available), chars, blockIndent, mode);
 	}
 	
 	private String getPreText(String contentBefore, int indent, int blockIndent) {
@@ -442,22 +442,23 @@ public class BlockContentManager extends AbstractBlockContentManager {
 	}
 
 	//TODO: check leader functionality
-	private void continueRow(RowInfo m, BrailleTranslatorResult btr, int blockIndent, String mode) {
+	private void continueRow(RowInfo m1, BrailleTranslatorResult btr, int blockIndent, String mode) {
 		// [margin][preContent][preTabText][tab][postTabText] 
 		//      preContentPos ^
 		String tabSpace = "";
 		if (leaderManager.hasLeader()) {
+			int preTabPos = m1.getPreTabPosition(currentRow);
 			int leaderPos = leaderManager.getLeaderPosition(available);
-			int offset = leaderPos-m.preTabPos;
+			int offset = leaderPos-preTabPos;
 			int align = leaderManager.getLeaderAlign(btr.countRemaining());
 			
-			if (m.preTabPos>leaderPos || offset - align < 0) { // if tab position has been passed or if text does not fit within row, try on a new row
+			if (preTabPos>leaderPos || offset - align < 0) { // if tab position has been passed or if text does not fit within row, try on a new row
 				MarginProperties _leftMargin = currentRow.getLeftMargin();
 				flushCurrentRow();
 				currentRow = rdp.configureNewEmptyRowBuilder(_leftMargin, rightMargin);
-				m = new RowInfo(StringTools.fill(fcontext.getSpaceCharacter(), rdp.getTextIndent()+blockIndent), currentRow, available);
+				m1 = new RowInfo(StringTools.fill(fcontext.getSpaceCharacter(), rdp.getTextIndent()+blockIndent), available);
 				//update offset
-				offset = leaderPos-m.preTabPos;
+				offset = leaderPos-m1.getPreTabPosition(currentRow);
 			}
 			try {
 				tabSpace = leaderManager.getLeaderPattern(fcontext.getTranslator(mode), offset - align);
@@ -466,18 +467,18 @@ public class BlockContentManager extends AbstractBlockContentManager {
 				leaderManager.discardLeader();
 			}
 		}
-		breakNextRow(m, currentRow, btr, tabSpace);
+		breakNextRow(m1, currentRow, btr, tabSpace);
 	}
 
-	private static void breakNextRow(RowInfo m, RowImpl.Builder row, BrailleTranslatorResult btr, String tabSpace) {
-		int contentLen = StringTools.length(tabSpace) + m.preTabTextLen;
+	private static void breakNextRow(RowInfo m1, RowImpl.Builder row, BrailleTranslatorResult btr, String tabSpace) {
+		int contentLen = StringTools.length(tabSpace) + StringTools.length(row.getText());
 		boolean force = contentLen == 0;
 		//don't know if soft hyphens need to be replaced, but we'll keep it for now
-		String next = softHyphenPattern.matcher(btr.nextTranslatedRow(m.maxLenText - contentLen, force)).replaceAll("");
+		String next = softHyphenPattern.matcher(btr.nextTranslatedRow(m1.getMaxLength(row) - contentLen, force)).replaceAll("");
 		if ("".equals(next) && "".equals(tabSpace)) {
-			row.text(m.preContent + trailingWsBraillePattern.matcher(m.preTabText).replaceAll(""));
+			row.text(m1.preContent + trailingWsBraillePattern.matcher(row.getText()).replaceAll(""));
 		} else {
-			row.text(m.preContent + m.preTabText + tabSpace + next);
+			row.text(m1.preContent + row.getText() + tabSpace + next);
 			row.leaderSpace(row.getLeaderSpace()+tabSpace.length());
 		}
 		if (btr instanceof AggregatedBrailleTranslatorResult) {
