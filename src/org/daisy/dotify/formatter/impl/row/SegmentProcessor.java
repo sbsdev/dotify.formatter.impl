@@ -165,7 +165,9 @@ class SegmentProcessor {
 	List<RowImpl> close() {
 		List<RowImpl> rows = new ArrayList<>();
 		rows.addAll(layoutLeader());
-		rows.addAll(flushCurrentRow());
+		if (currentRow!=null) {
+			rows.add(flushCurrentRow());
+		}
 		if (!empty && rdp.getUnderlineStyle() != null) {
 			if (minLeft < margins.getLeftMargin().getContent().length() || minRight < margins.getRightMargin().getContent().length()) {
 				throw new RuntimeException("coding error");
@@ -180,37 +182,35 @@ class SegmentProcessor {
 		return rows;
 	}
 
-	private List<RowImpl> flushCurrentRow() {
-		List<RowImpl> rows = new ArrayList<>();
-		if (currentRow!=null) {
-			if (empty) {
-				// Clear group anchors and markers (since we have content, we don't need them)
-				currentRow.addAnchors(0, groupAnchors);
-				groupAnchors.clear();
-				currentRow.addMarkers(0, groupMarkers);
-				groupMarkers.clear();
-			}
-			RowImpl r = currentRow.build();
-			empty = false;
-			rows.add(r);
-			//Make calculations for underlining
-			int width = r.getChars().length();
-			int left = r.getLeftMargin().getContent().length();
-			int right = r.getRightMargin().getContent().length();
-			int space = flowWidth - width - left - right;
-			left += r.getAlignment().getOffset(space);
-			right = flowWidth - width - left;
-			minLeft = Math.min(minLeft, left);
-			minRight = Math.min(minRight, right);
-			currentRow = null;
+	private RowImpl flushCurrentRow() {
+		if (empty) {
+			// Clear group anchors and markers (since we have content, we don't need them)
+			currentRow.addAnchors(0, groupAnchors);
+			groupAnchors.clear();
+			currentRow.addMarkers(0, groupMarkers);
+			groupMarkers.clear();
 		}
-		return rows;
+		RowImpl r = currentRow.build();
+		empty = false;
+		//Make calculations for underlining
+		int width = r.getChars().length();
+		int left = r.getLeftMargin().getContent().length();
+		int right = r.getRightMargin().getContent().length();
+		int space = flowWidth - width - left - right;
+		left += r.getAlignment().getOffset(space);
+		right = flowWidth - width - left;
+		minLeft = Math.min(minLeft, left);
+		minRight = Math.min(minRight, right);
+		currentRow = null;
+		return r;
 	}
 
 	private List<RowImpl> layoutNewLine() {
 		List<RowImpl> rows = new ArrayList<>();
 		rows.addAll(layoutLeader());
-		rows.addAll(flushCurrentRow());
+		if (currentRow!=null) {
+			rows.add(flushCurrentRow());
+		}
 		MarginProperties ret = new MarginProperties(margins.getLeftMargin().getContent()+StringTools.fill(fcontext.getSpaceCharacter(), rdp.getTextIndent()), margins.getLeftMargin().isSpaceOnly());
 		currentRow = rdp.configureNewEmptyRowBuilder(ret, margins.getRightMargin());
 		return rows;
@@ -406,7 +406,9 @@ class SegmentProcessor {
 	
 	private List<RowImpl> newRow(BrailleTranslatorResult chars, String contentBefore, int indent, int blockIndent, String mode) {
 		List<RowImpl> rows = new ArrayList<>();
-		rows.addAll(flushCurrentRow());
+		if (currentRow!=null) {
+			rows.add(flushCurrentRow());
+		}
 		currentRow = rdp.configureNewEmptyRowBuilder(margins.getLeftMargin(), margins.getRightMargin());
 		rows.addAll(
 		continueRow(new RowInfo(getPreText(contentBefore, indent, blockIndent), available), chars, blockIndent, mode));
@@ -437,7 +439,9 @@ class SegmentProcessor {
 			
 			if (preTabPos>leaderPos || offset - align < 0) { // if tab position has been passed or if text does not fit within row, try on a new row
 				MarginProperties _leftMargin = currentRow.getLeftMargin();
-				rows.addAll(flushCurrentRow());
+				if (currentRow!=null) {
+					rows.add(flushCurrentRow());
+				}
 				currentRow = rdp.configureNewEmptyRowBuilder(_leftMargin, margins.getRightMargin());
 				m1 = new RowInfo(StringTools.fill(fcontext.getSpaceCharacter(), rdp.getTextIndent()+blockIndent), available);
 				//update offset
