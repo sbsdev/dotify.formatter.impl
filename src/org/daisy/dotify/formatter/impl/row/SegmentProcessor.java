@@ -3,6 +3,7 @@ package org.daisy.dotify.formatter.impl.row;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 import org.daisy.dotify.api.formatter.Context;
@@ -391,8 +392,7 @@ class SegmentProcessor {
 				newRow(btr, "", rdp.getFirstLineIndent(), rdp.getBlockIndent(), mode));
 			}
 		} else {
-			rows.addAll(
-			continueRow(new RowInfo("", available), btr, rdp.getBlockIndent(), mode));
+			continueRow(new RowInfo("", available), btr, rdp.getBlockIndent(), mode).ifPresent(v->rows.add(v));
 		}
 		while (btr.hasNext()) { //LayoutTools.length(chars.toString())>0
 			rows.addAll(
@@ -410,8 +410,7 @@ class SegmentProcessor {
 			rows.add(flushCurrentRow());
 		}
 		currentRow = rdp.configureNewEmptyRowBuilder(margins.getLeftMargin(), margins.getRightMargin());
-		rows.addAll(
-		continueRow(new RowInfo(getPreText(contentBefore, indent, blockIndent), available), chars, blockIndent, mode));
+		continueRow(new RowInfo(getPreText(contentBefore, indent, blockIndent), available), chars, blockIndent, mode).ifPresent(v->rows.add(v));
 		return rows;
 	}
 	
@@ -426,8 +425,8 @@ class SegmentProcessor {
 	}
 
 	//TODO: check leader functionality
-	private List<RowImpl> continueRow(RowInfo m1, BrailleTranslatorResult btr, int blockIndent, String mode) {
-		List<RowImpl> rows = new ArrayList<>();
+	private Optional<RowImpl> continueRow(RowInfo m1, BrailleTranslatorResult btr, int blockIndent, String mode) {
+		RowImpl ret = null;
 		// [margin][preContent][preTabText][tab][postTabText] 
 		//      preContentPos ^
 		String tabSpace = "";
@@ -440,7 +439,7 @@ class SegmentProcessor {
 			if (preTabPos>leaderPos || offset - align < 0) { // if tab position has been passed or if text does not fit within row, try on a new row
 				MarginProperties _leftMargin = currentRow.getLeftMargin();
 				if (currentRow!=null) {
-					rows.add(flushCurrentRow());
+					ret = flushCurrentRow();
 				}
 				currentRow = rdp.configureNewEmptyRowBuilder(_leftMargin, margins.getRightMargin());
 				m1 = new RowInfo(StringTools.fill(fcontext.getSpaceCharacter(), rdp.getTextIndent()+blockIndent), available);
@@ -455,7 +454,7 @@ class SegmentProcessor {
 			}
 		}
 		breakNextRow(m1, currentRow, btr, tabSpace);
-		return rows;
+		return Optional.ofNullable(ret);
 	}
 
 	private void breakNextRow(RowInfo m1, RowImpl.Builder row, BrailleTranslatorResult btr, String tabSpace) {
