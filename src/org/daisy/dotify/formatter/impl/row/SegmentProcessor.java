@@ -407,15 +407,15 @@ class SegmentProcessor {
 			throw new RuntimeException("Error in code.");
 		}
 		currentRow = rdp.configureNewEmptyRowBuilder(margins.getLeftMargin(), margins.getRightMargin());
-		return continueRow(new RowInfo(getPreText(contentBefore, indent, blockIndent), available), chars, blockIndent, mode);
+		return continueRow(new RowInfo(getPreText(contentBefore, indent+blockIndent), available), chars, blockIndent, mode);
 	}
 	
-	private String getPreText(String contentBefore, int indent, int blockIndent) {
+	private String getPreText(String contentBefore, int totalIndent) {
 		int thisIndent = Math.max(
 				// There is one known cause for this calculation to become < 0. That is when an ordered list is so long
 				// that the number takes up more space than the indent reserved for it.
 				// In that case it is probably best to push the content instead of failing altogether.
-				indent + blockIndent - StringTools.length(contentBefore),
+				totalIndent - StringTools.length(contentBefore),
 				0);
 		return contentBefore + StringTools.fill(fcontext.getSpaceCharacter(), thisIndent);
 	}
@@ -438,7 +438,7 @@ class SegmentProcessor {
 					ret = flushCurrentRow();
 				}
 				currentRow = rdp.configureNewEmptyRowBuilder(_leftMargin, margins.getRightMargin());
-				m1 = new RowInfo(StringTools.fill(fcontext.getSpaceCharacter(), rdp.getTextIndent()+blockIndent), available);
+				m1 = new RowInfo(getPreText("", rdp.getTextIndent()+blockIndent), available);
 				//update offset
 				offset = leaderPos-m1.getPreTabPosition(currentRow);
 			}
