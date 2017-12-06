@@ -123,39 +123,41 @@ class SegmentProcessor {
 		return segmentIndex<segments.size();
 	}
 
-	List<RowImpl> layoutSegment() {
-		Segment s = segments.get(segmentIndex);
-		segmentIndex++;
+	List<RowImpl> getNextRows() {
 		List<RowImpl> rows = new ArrayList<>();
-		switch (s.getSegmentType()) {
-			case NewLine:
-				//flush
-				rows.addAll(layoutNewLine());
-				break;
-			case Text:
-				rows.addAll(layoutTextSegment((TextSegment)s));
-				break;
-			case Leader:
-				rows.addAll(
-					layoutLeaderSegment((LeaderSegment)s)
-				);
-				break;
-			case Reference:
-				rows.addAll(
-						layoutPageSegment((PageNumberReferenceSegment)s)
-				);
-				break;
-			case Evaluate:
-				rows.addAll(
-						layoutEvaluate((Evaluate)s)
-				);
-				break;
-			case Marker:
-				applyAfterLeader((MarkerSegment)s);
-				break;
-			case Anchor:
-				applyAfterLeader((AnchorSegment)s);
-				break;
+		while (rows.isEmpty() && hasMoreData()) {
+			Segment s = segments.get(segmentIndex);
+			segmentIndex++;
+			switch (s.getSegmentType()) {
+				case NewLine:
+					//flush
+					rows.addAll(layoutNewLine());
+					break;
+				case Text:
+					rows.addAll(layoutTextSegment((TextSegment)s));
+					break;
+				case Leader:
+					rows.addAll(
+						layoutLeaderSegment((LeaderSegment)s)
+					);
+					break;
+				case Reference:
+					rows.addAll(
+							layoutPageSegment((PageNumberReferenceSegment)s)
+					);
+					break;
+				case Evaluate:
+					rows.addAll(
+							layoutEvaluate((Evaluate)s)
+					);
+					break;
+				case Marker:
+					applyAfterLeader((MarkerSegment)s);
+					break;
+				case Anchor:
+					applyAfterLeader((AnchorSegment)s);
+					break;
+			}
 		}
 		return rows;
 	}

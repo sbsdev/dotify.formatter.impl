@@ -74,7 +74,7 @@ public class BlockContentManager extends AbstractBlockContentManager {
 			if (testOnly && sp.couldTriggerNewRow()) {
 				return true;
 			}
-			rows.addAll(sp.layoutSegment());
+			rows.addAll(sp.getNextRows());
 			if (!hasMoreData()) {
 				rows.addAll(sp.close());
 			}
