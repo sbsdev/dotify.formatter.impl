@@ -259,23 +259,19 @@ class SegmentProcessor {
 			page = refs.getPageNumber(rs.getRefId());
 		}
 		//TODO: translate references using custom language?
+		Translatable spec;
 		if (page==null) {
-			Translatable spec = Translatable.text("??").locale(null).build();
-			if (leaderManager.hasLeader()) {
-				layoutAfterLeader(spec, null);
-			} else {
-				rows.addAll(layout(spec, null));
-			}
+			spec = Translatable.text("??").locale(null).build();
 		} else {
 			String txt = "" + rs.getNumeralStyle().format(page);
-			Translatable spec = Translatable.text(
+			spec = Translatable.text(
 					fcontext.getConfiguration().isMarkingCapitalLetters()?txt:txt.toLowerCase()
 					).locale(null).attributes(rs.getTextAttribute(txt.length())).build();
-			if (leaderManager.hasLeader()) {
-				layoutAfterLeader(spec, null);
-			} else {
-				rows.addAll(layout(spec, null));
-			}
+		}
+		if (leaderManager.hasLeader()) {
+			layoutAfterLeader(spec, null);
+		} else {
+			rows.addAll(layout(spec, null));
 		}
 		return rows;
 	}
@@ -317,7 +313,6 @@ class SegmentProcessor {
 			}
 		} else {
 			throw new RuntimeException("Error in code.");
-			//rows.addAll(layout(spec, mode));
 		}
 	}
 	
