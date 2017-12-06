@@ -225,17 +225,19 @@ class SegmentProcessor {
 	
 	private List<RowImpl> layoutTextSegment(TextSegment ts) {
 		List<RowImpl> rows = new ArrayList<>();
-		rows.addAll(
-		layoutAfterLeader(
-				Translatable.text(
+		Translatable spec = Translatable.text(
 						fcontext.getConfiguration().isMarkingCapitalLetters()?
 						ts.getText():ts.getText().toLowerCase()
-						).
-				locale(ts.getTextProperties().getLocale()).
-				hyphenate(ts.getTextProperties().isHyphenating()).
-				attributes(ts.getTextAttribute()).build(),
-				ts.getTextProperties().getTranslationMode())
-		);
+				)
+				.locale(ts.getTextProperties().getLocale())
+				.hyphenate(ts.getTextProperties().isHyphenating())
+				.attributes(ts.getTextAttribute()).build();
+		String mode = ts.getTextProperties().getTranslationMode();
+		if (leaderManager.hasLeader()) {
+			layoutAfterLeader(spec, mode);
+		} else {
+			rows.addAll(layout(spec, mode));
+		}
 		return rows;
 	}
 	
@@ -258,16 +260,22 @@ class SegmentProcessor {
 		}
 		//TODO: translate references using custom language?
 		if (page==null) {
-			rows.addAll(
-					layoutAfterLeader(Translatable.text("??").locale(null).build(), null)
-			);
+			Translatable spec = Translatable.text("??").locale(null).build();
+			if (leaderManager.hasLeader()) {
+				layoutAfterLeader(spec, null);
+			} else {
+				rows.addAll(layout(spec, null));
+			}
 		} else {
 			String txt = "" + rs.getNumeralStyle().format(page);
-			rows.addAll(
-					layoutAfterLeader(Translatable.text(
+			Translatable spec = Translatable.text(
 					fcontext.getConfiguration().isMarkingCapitalLetters()?txt:txt.toLowerCase()
-					).locale(null).attributes(rs.getTextAttribute(txt.length())).build(), null)
-			);
+					).locale(null).attributes(rs.getTextAttribute(txt.length())).build();
+			if (leaderManager.hasLeader()) {
+				layoutAfterLeader(spec, null);
+			} else {
+				rows.addAll(layout(spec, null));
+			}
 		}
 		return rows;
 	}
@@ -277,21 +285,21 @@ class SegmentProcessor {
 		String txt = e.getExpression().render(context);
 		if (!txt.isEmpty()) { // Don't create a new row if the evaluated expression is empty
 		                    // Note: this could be handled more generally (also for regular text) in layout().
-			rows.addAll(
-			layoutAfterLeader(
-					Translatable.text(fcontext.getConfiguration().isMarkingCapitalLetters()?txt:txt.toLowerCase()).
+			Translatable spec = Translatable.text(fcontext.getConfiguration().isMarkingCapitalLetters()?txt:txt.toLowerCase()).
 					locale(e.getTextProperties().getLocale()).
 					hyphenate(e.getTextProperties().isHyphenating()).
 					attributes(e.getTextAttribute(txt.length())).
-					build(), 
-					null)
-			);
+					build();
+			if (leaderManager.hasLeader()) {
+				layoutAfterLeader(spec, null);
+			} else {
+				rows.addAll(layout(spec, null));
+			}
 		}
 		return rows; 
 	}
 
-	private List<RowImpl> layoutAfterLeader(Translatable spec, String mode) {
-		List<RowImpl> rows = new ArrayList<>();
+	private void layoutAfterLeader(Translatable spec, String mode) {
 		if (leaderManager.hasLeader()) {
 			if (layoutOrApplyAfterLeader == null) {
 				layoutOrApplyAfterLeader = new AggregatedBrailleTranslatorResult.Builder();
@@ -308,9 +316,9 @@ class SegmentProcessor {
 				throw new RuntimeException(e);
 			}
 		} else {
-			rows.addAll(layout(spec, mode));
+			throw new RuntimeException("Error in code.");
+			//rows.addAll(layout(spec, mode));
 		}
-		return rows;
 	}
 	
 	private void applyAfterLeader(MarkerSegment marker) {
@@ -385,13 +393,13 @@ class SegmentProcessor {
 					throw new RuntimeException(e);
 				}
 				if (item.getType()==FormattingTypes.ListStyle.PL) {
-					newRow(btr, listLabel, 0, rdp.getBlockIndentParent(), mode).ifPresent(v->rows.add(v));
+					startNewRow(btr, listLabel, 0, rdp.getBlockIndentParent(), mode).ifPresent(v->rows.add(v));
 				} else {
-					newRow(btr, listLabel, rdp.getFirstLineIndent(), rdp.getBlockIndent(), mode).ifPresent(v->rows.add(v));
+					startNewRow(btr, listLabel, rdp.getFirstLineIndent(), rdp.getBlockIndent(), mode).ifPresent(v->rows.add(v));
 				}
 				item = null;
 			} else {
-				newRow(btr, "", rdp.getFirstLineIndent(), rdp.getBlockIndent(), mode).ifPresent(v->rows.add(v));
+				startNewRow(btr, "", rdp.getFirstLineIndent(), rdp.getBlockIndent(), mode).ifPresent(v->rows.add(v));
 			}
 		} else {
 			continueRow(new RowInfo("", available), btr, rdp.getBlockIndent(), mode).ifPresent(v->rows.add(v));
@@ -400,7 +408,7 @@ class SegmentProcessor {
 			if (currentRow!=null) {
 				rows.add(flushCurrentRow());
 			}
-			newRow(btr, "", rdp.getTextIndent(), rdp.getBlockIndent(), mode).ifPresent(v->rows.add(v));
+			startNewRow(btr, "", rdp.getTextIndent(), rdp.getBlockIndent(), mode).ifPresent(v->rows.add(v));
 		}
 		if (btr.supportsMetric(BrailleTranslatorResult.METRIC_FORCED_BREAK)) {
 			forceCount += btr.getMetric(BrailleTranslatorResult.METRIC_FORCED_BREAK);
@@ -408,7 +416,7 @@ class SegmentProcessor {
 		return rows;
 	}
 	
-	private Optional<RowImpl> newRow(BrailleTranslatorResult chars, String contentBefore, int indent, int blockIndent, String mode) {
+	private Optional<RowImpl> startNewRow(BrailleTranslatorResult chars, String contentBefore, int indent, int blockIndent, String mode) {
 		if (currentRow!=null) {
 			throw new RuntimeException("Error in code.");
 		}
