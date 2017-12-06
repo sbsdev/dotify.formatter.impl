@@ -125,6 +125,9 @@ class SegmentProcessor {
 	}
 
 	List<RowImpl> getNextRows() {
+		if (!hasMoreData()) {
+			throw new IllegalStateException();
+		}
 		List<RowImpl> rows = new ArrayList<>();
 		while (rows.isEmpty() && hasMoreData()) {
 			Segment s = segments.get(segmentIndex);
@@ -159,6 +162,9 @@ class SegmentProcessor {
 					applyAfterLeader((AnchorSegment)s);
 					break;
 			}
+		}
+		if (!hasMoreData()) {
+			rows.addAll(close());
 		}
 		return rows;
 	}

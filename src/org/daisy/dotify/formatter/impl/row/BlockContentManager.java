@@ -68,22 +68,15 @@ public class BlockContentManager extends AbstractBlockContentManager {
 	 */
 	private boolean ensureBuffer(int index, boolean testOnly) {
 		while (index<0 || rows.size()<index) {
-			if (!hasMoreData()) {
+			if (!sp.hasMoreData()) {
 				return false;
 			}
 			if (testOnly && sp.couldTriggerNewRow()) {
 				return true;
 			}
 			rows.addAll(sp.getNextRows());
-			if (!hasMoreData()) {
-				rows.addAll(sp.close());
-			}
 		}
 		return true;
-	}
-	
-	private boolean hasMoreData() {
-		return sp.hasMoreData();
 	}
 	
 	@Override
