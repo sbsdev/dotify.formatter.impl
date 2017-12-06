@@ -379,24 +379,22 @@ class SegmentProcessor {
 					throw new RuntimeException(e);
 				}
 				if (item.getType()==FormattingTypes.ListStyle.PL) {
-					rows.addAll(
-							newRow(btr, listLabel, 0, rdp.getBlockIndentParent(), mode)
-					);
+					newRow(btr, listLabel, 0, rdp.getBlockIndentParent(), mode).ifPresent(v->rows.add(v));
 				} else {
-					rows.addAll(
-					newRow(btr, listLabel, rdp.getFirstLineIndent(), rdp.getBlockIndent(), mode));
+					newRow(btr, listLabel, rdp.getFirstLineIndent(), rdp.getBlockIndent(), mode).ifPresent(v->rows.add(v));
 				}
 				item = null;
 			} else {
-				rows.addAll(
-				newRow(btr, "", rdp.getFirstLineIndent(), rdp.getBlockIndent(), mode));
+				newRow(btr, "", rdp.getFirstLineIndent(), rdp.getBlockIndent(), mode).ifPresent(v->rows.add(v));
 			}
 		} else {
 			continueRow(new RowInfo("", available), btr, rdp.getBlockIndent(), mode).ifPresent(v->rows.add(v));
 		}
 		while (btr.hasNext()) { //LayoutTools.length(chars.toString())>0
-			rows.addAll(
-			newRow(btr, "", rdp.getTextIndent(), rdp.getBlockIndent(), mode));
+			if (currentRow!=null) {
+				rows.add(flushCurrentRow());
+			}
+			newRow(btr, "", rdp.getTextIndent(), rdp.getBlockIndent(), mode).ifPresent(v->rows.add(v));
 		}
 		if (btr.supportsMetric(BrailleTranslatorResult.METRIC_FORCED_BREAK)) {
 			forceCount += btr.getMetric(BrailleTranslatorResult.METRIC_FORCED_BREAK);
@@ -404,14 +402,12 @@ class SegmentProcessor {
 		return rows;
 	}
 	
-	private List<RowImpl> newRow(BrailleTranslatorResult chars, String contentBefore, int indent, int blockIndent, String mode) {
-		List<RowImpl> rows = new ArrayList<>();
+	private Optional<RowImpl> newRow(BrailleTranslatorResult chars, String contentBefore, int indent, int blockIndent, String mode) {
 		if (currentRow!=null) {
-			rows.add(flushCurrentRow());
+			throw new RuntimeException("Error in code.");
 		}
 		currentRow = rdp.configureNewEmptyRowBuilder(margins.getLeftMargin(), margins.getRightMargin());
-		continueRow(new RowInfo(getPreText(contentBefore, indent, blockIndent), available), chars, blockIndent, mode).ifPresent(v->rows.add(v));
-		return rows;
+		return continueRow(new RowInfo(getPreText(contentBefore, indent, blockIndent), available), chars, blockIndent, mode);
 	}
 	
 	private String getPreText(String contentBefore, int indent, int blockIndent) {
