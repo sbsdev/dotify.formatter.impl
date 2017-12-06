@@ -21,31 +21,24 @@ import org.daisy.dotify.formatter.impl.segment.Segment;
  */
 public class BlockContentManager extends AbstractBlockContentManager {
 	private final List<RowImpl> rows;
-	private final List<Segment> segments;
 	private final SegmentProcessor sp;
-
-	private int segmentIndex;
 	private int rowIndex;
 	
 	public BlockContentManager(int flowWidth, List<Segment> segments, RowDataProperties rdp, CrossReferenceHandler refs, Context context, FormatterCoreContext fcontext) {
 		super(flowWidth, rdp, fcontext);
-		this.segments = Collections.unmodifiableList(segments);
 		this.rows = new ArrayList<>();
-		this.sp = new SegmentProcessor(flowWidth, refs, context, flowWidth - margins.getRightMargin().getContent().length(), margins, fcontext, rdp);
+		this.sp = new SegmentProcessor(segments, flowWidth, refs, context, flowWidth - margins.getRightMargin().getContent().length(), margins, fcontext, rdp);
 		initFields();
 	}
 	
 	private BlockContentManager(BlockContentManager template) {
 		super(template);
 		this.rows = new ArrayList<>(template.rows);
-		this.segments = template.segments;
 		this.sp = new SegmentProcessor(template.sp);
-		this.segmentIndex = template.segmentIndex;
 		this.rowIndex = template.rowIndex;
 	}
 	
     private void initFields() {
-		segmentIndex = 0;
 		rowIndex = 0;
     }
 	
@@ -78,21 +71,19 @@ public class BlockContentManager extends AbstractBlockContentManager {
 			if (!hasMoreData()) {
 				return false;
 			}
-			Segment s = segments.get(segmentIndex);
-			if (testOnly && sp.couldTriggerNewRow(s)) {
+			if (testOnly && sp.couldTriggerNewRow()) {
 				return true;
 			}
-			sp.layoutSegment(s);
-			segmentIndex++;
+			rows.addAll(sp.layoutSegment());
 			if (!hasMoreData()) {
-				sp.close();
+				rows.addAll(sp.close());
 			}
 		}
 		return true;
 	}
 	
 	private boolean hasMoreData() {
-		return segmentIndex<segments.size();
+		return sp.hasMoreData();
 	}
 	
 	@Override

@@ -1,6 +1,7 @@
 package org.daisy.dotify.formatter.impl.row;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -25,6 +26,7 @@ import org.daisy.dotify.formatter.impl.segment.TextSegment;
 class SegmentProcessor {
 	private static final Pattern softHyphenPattern  = Pattern.compile("\u00ad");
 	private static final Pattern trailingWsBraillePattern = Pattern.compile("[\\s\u2800]+\\z");
+	private final List<Segment> segments;
 	private final int flowWidth;
 	private final CrossReferenceHandler refs;
 	private final int available;
@@ -33,6 +35,7 @@ class SegmentProcessor {
 	private final RowDataProperties rdp;
 	private Context context;
 
+	private int segmentIndex;
 	private RowImpl.Builder currentRow;
 	private final ArrayList<Marker> groupMarkers;
 	private final ArrayList<String> groupAnchors;
@@ -44,8 +47,10 @@ class SegmentProcessor {
 	private int forceCount;
 	private int minLeft;
 	private int minRight;
+	private boolean empty;
 
-	SegmentProcessor(int flowWidth, CrossReferenceHandler refs, Context context, int available, BlockMargin margins, FormatterCoreContext fcontext, RowDataProperties rdp) {
+	SegmentProcessor(List<Segment> segments, int flowWidth, CrossReferenceHandler refs, Context context, int available, BlockMargin margins, FormatterCoreContext fcontext, RowDataProperties rdp) {
+		this.segments = Collections.unmodifiableList(segments);
 		this.flowWidth = flowWidth;
 		this.refs = refs;
 		this.context = context;
@@ -81,9 +86,13 @@ class SegmentProcessor {
 		this.forceCount = template.forceCount;
 		this.minLeft = template.minLeft;
 		this.minRight = template.minRight;
+		this.empty  = template.empty;
+		this.segments = template.segments;
+		this.segmentIndex = template.segmentIndex;
 	}
 
 	private void initFields() {
+		segmentIndex = 0;
 		currentRow = null;
 		leaderManager.discardLeader();
 		layoutOrApplyAfterLeader = null;
@@ -92,9 +101,11 @@ class SegmentProcessor {
 		item = rdp.getListItem();
 		minLeft = flowWidth;
 		minRight = flowWidth;
+		empty = true;
 	}
 
-	boolean couldTriggerNewRow(Segment s) {
+	boolean couldTriggerNewRow() {
+		Segment s = segments.get(segmentIndex);
 		switch (s.getSegmentType()) {
 			case Marker:
 			case Anchor:
@@ -107,8 +118,15 @@ class SegmentProcessor {
 				return true;
 		}
 	}
+
+	boolean hasMoreData() {
+		return segmentIndex<segments.size();
+	}
 	
-	void layoutSegment(Segment s) {
+	private List<RowImpl> rows;
+	List<RowImpl> layoutSegment() {
+		Segment s = segments.get(segmentIndex);
+		rows = new ArrayList<>();
 		switch (s.getSegmentType()) {
 			case NewLine:
 				//flush
@@ -132,13 +150,16 @@ class SegmentProcessor {
 			case Anchor:
 				applyAfterLeader((AnchorSegment)s);
 				break;
-		}		
+		}
+		segmentIndex++;
+		return rows;
 	}
 	
-	void close() {
+	List<RowImpl> close() {
+		rows = new ArrayList<>();
 		layoutLeader();
 		flushCurrentRow();
-		if (rows.size()>0 && rdp.getUnderlineStyle() != null) {
+		if (!empty && rdp.getUnderlineStyle() != null) {
 			if (minLeft < margins.getLeftMargin().getContent().length() || minRight < margins.getRightMargin().getContent().length()) {
 				throw new RuntimeException("coding error");
 			}
@@ -149,11 +170,12 @@ class SegmentProcessor {
 						.adjustedForMargin(true)
 						.build());
 		}
+		return rows;
 	}
 
 	private void flushCurrentRow() {
 		if (currentRow!=null) {
-			if (rows.isEmpty()) {
+			if (empty) {
 				// Clear group anchors and markers (since we have content, we don't need them)
 				currentRow.addAnchors(0, groupAnchors);
 				groupAnchors.clear();
@@ -161,6 +183,7 @@ class SegmentProcessor {
 				groupMarkers.clear();
 			}
 			RowImpl r = currentRow.build();
+			empty = false;
 			rows.add(r);
 			//Make calculations for underlining
 			int width = r.getChars().length();
