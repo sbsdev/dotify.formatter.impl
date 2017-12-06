@@ -122,27 +122,33 @@ class SegmentProcessor {
 	boolean hasMoreData() {
 		return segmentIndex<segments.size();
 	}
-	
-	private List<RowImpl> rows;
+
 	List<RowImpl> layoutSegment() {
 		Segment s = segments.get(segmentIndex);
-		rows = new ArrayList<>();
+		segmentIndex++;
+		List<RowImpl> rows = new ArrayList<>();
 		switch (s.getSegmentType()) {
 			case NewLine:
 				//flush
-				layoutNewLine();
+				rows.addAll(layoutNewLine());
 				break;
 			case Text:
-				layoutTextSegment((TextSegment)s);
+				rows.addAll(layoutTextSegment((TextSegment)s));
 				break;
 			case Leader:
-				layoutLeaderSegment((LeaderSegment)s);
+				rows.addAll(
+					layoutLeaderSegment((LeaderSegment)s)
+				);
 				break;
 			case Reference:
-				layoutPageSegment((PageNumberReferenceSegment)s);
+				rows.addAll(
+						layoutPageSegment((PageNumberReferenceSegment)s)
+				);
 				break;
 			case Evaluate:
-				layoutEvaluate((Evaluate)s);
+				rows.addAll(
+						layoutEvaluate((Evaluate)s)
+				);
 				break;
 			case Marker:
 				applyAfterLeader((MarkerSegment)s);
@@ -151,14 +157,13 @@ class SegmentProcessor {
 				applyAfterLeader((AnchorSegment)s);
 				break;
 		}
-		segmentIndex++;
 		return rows;
 	}
 	
 	List<RowImpl> close() {
-		rows = new ArrayList<>();
-		layoutLeader();
-		flushCurrentRow();
+		List<RowImpl> rows = new ArrayList<>();
+		rows.addAll(layoutLeader());
+		rows.addAll(flushCurrentRow());
 		if (!empty && rdp.getUnderlineStyle() != null) {
 			if (minLeft < margins.getLeftMargin().getContent().length() || minRight < margins.getRightMargin().getContent().length()) {
 				throw new RuntimeException("coding error");
@@ -173,7 +178,8 @@ class SegmentProcessor {
 		return rows;
 	}
 
-	private void flushCurrentRow() {
+	private List<RowImpl> flushCurrentRow() {
+		List<RowImpl> rows = new ArrayList<>();
 		if (currentRow!=null) {
 			if (empty) {
 				// Clear group anchors and markers (since we have content, we don't need them)
@@ -196,16 +202,21 @@ class SegmentProcessor {
 			minRight = Math.min(minRight, right);
 			currentRow = null;
 		}
+		return rows;
 	}
 
-	private void layoutNewLine() {
-		layoutLeader();
-		flushCurrentRow();
+	private List<RowImpl> layoutNewLine() {
+		List<RowImpl> rows = new ArrayList<>();
+		rows.addAll(layoutLeader());
+		rows.addAll(flushCurrentRow());
 		MarginProperties ret = new MarginProperties(margins.getLeftMargin().getContent()+StringTools.fill(fcontext.getSpaceCharacter(), rdp.getTextIndent()), margins.getLeftMargin().isSpaceOnly());
 		currentRow = rdp.configureNewEmptyRowBuilder(ret, margins.getRightMargin());
+		return rows;
 	}
 	
-	private void layoutTextSegment(TextSegment ts) {
+	private List<RowImpl> layoutTextSegment(TextSegment ts) {
+		List<RowImpl> rows = new ArrayList<>();
+		rows.addAll(
 		layoutAfterLeader(
 				Translatable.text(
 						fcontext.getConfiguration().isMarkingCapitalLetters()?
@@ -214,46 +225,64 @@ class SegmentProcessor {
 				locale(ts.getTextProperties().getLocale()).
 				hyphenate(ts.getTextProperties().isHyphenating()).
 				attributes(ts.getTextAttribute()).build(),
-				ts.getTextProperties().getTranslationMode());
+				ts.getTextProperties().getTranslationMode())
+		);
+		return rows;
 	}
 	
-	private void layoutLeaderSegment(LeaderSegment ls) {
+	private List<RowImpl> layoutLeaderSegment(LeaderSegment ls) {
+		List<RowImpl> rows = new ArrayList<>();
 		if (leaderManager.hasLeader()) {
-			layoutLeader();
+			rows.addAll(
+					layoutLeader()
+			);
 		}
 		leaderManager.setLeader(ls);
+		return rows;
 	}
 
-	private void layoutPageSegment(PageNumberReferenceSegment rs) {
+	private List<RowImpl> layoutPageSegment(PageNumberReferenceSegment rs) {
+		List<RowImpl> rows = new ArrayList<>();
 		Integer page = null;
 		if (refs!=null) {
 			page = refs.getPageNumber(rs.getRefId());
 		}
 		//TODO: translate references using custom language?
 		if (page==null) {
-			layoutAfterLeader(Translatable.text("??").locale(null).build(), null);
+			rows.addAll(
+					layoutAfterLeader(Translatable.text("??").locale(null).build(), null)
+			);
 		} else {
 			String txt = "" + rs.getNumeralStyle().format(page);
-			layoutAfterLeader(Translatable.text(
+			rows.addAll(
+					layoutAfterLeader(Translatable.text(
 					fcontext.getConfiguration().isMarkingCapitalLetters()?txt:txt.toLowerCase()
-					).locale(null).attributes(rs.getTextAttribute(txt.length())).build(), null);
+					).locale(null).attributes(rs.getTextAttribute(txt.length())).build(), null)
+			);
 		}
+		return rows;
 	}
 	
-	private void layoutEvaluate(Evaluate e) {
+	private List<RowImpl> layoutEvaluate(Evaluate e) {
+		List<RowImpl> rows = new ArrayList<>();
 		String txt = e.getExpression().render(context);
-		if (!txt.isEmpty()) // Don't create a new row if the evaluated expression is empty
+		if (!txt.isEmpty()) { // Don't create a new row if the evaluated expression is empty
 		                    // Note: this could be handled more generally (also for regular text) in layout().
+			rows.addAll(
 			layoutAfterLeader(
 					Translatable.text(fcontext.getConfiguration().isMarkingCapitalLetters()?txt:txt.toLowerCase()).
 					locale(e.getTextProperties().getLocale()).
 					hyphenate(e.getTextProperties().isHyphenating()).
 					attributes(e.getTextAttribute(txt.length())).
 					build(), 
-					null);
+					null)
+			);
+		}
+		return rows; 
 	}
 
-	private void layoutAfterLeader(Translatable spec, String mode) {
+	private List<RowImpl> layoutAfterLeader(Translatable spec, String mode) {
+		List<RowImpl> rows = new ArrayList<>();
 		if (leaderManager.hasLeader()) {
 			if (layoutOrApplyAfterLeader == null) {
 				layoutOrApplyAfterLeader = new AggregatedBrailleTranslatorResult.Builder();
@@ -270,8 +299,9 @@ class SegmentProcessor {
 				throw new RuntimeException(e);
 			}
 		} else {
-			layout(spec, mode);
+			rows.addAll(layout(spec, mode));
 		}
+		return rows;
 	}
 	
 	private void applyAfterLeader(MarkerSegment marker) {
@@ -304,32 +334,37 @@ class SegmentProcessor {
 		}
 	}
 	
-	private void layoutLeader() {
+	private List<RowImpl> layoutLeader() {
+		List<RowImpl> rows = new ArrayList<>();
 		if (leaderManager.hasLeader()) {
 			// layout() sets currentLeader to null
 			if (layoutOrApplyAfterLeader == null) {
-				layout("", null, null);
+				rows.addAll(layout("", null, null));
 			} else {
-				layout(layoutOrApplyAfterLeader.build(), currentLeaderMode);
+				rows.addAll(
+						layout(layoutOrApplyAfterLeader.build(), currentLeaderMode)
+				);
 				layoutOrApplyAfterLeader = null;
 				seenSegmentAfterLeader = false;
 			}
 		}
+		return rows;
 	}
 
-	private void layout(String c, String locale, String mode) {
-		layout(Translatable.text(fcontext.getConfiguration().isMarkingCapitalLetters()?c:c.toLowerCase()).locale(locale).build(), mode);
+	private List<RowImpl> layout(String c, String locale, String mode) {
+		return layout(Translatable.text(fcontext.getConfiguration().isMarkingCapitalLetters()?c:c.toLowerCase()).locale(locale).build(), mode);
 	}
 	
-	private void layout(Translatable spec, String mode) {
+	private List<RowImpl> layout(Translatable spec, String mode) {
 		try {
-			layout(fcontext.getTranslator(mode).translate(spec), mode);
+			return layout(fcontext.getTranslator(mode).translate(spec), mode);
 		} catch (TranslationException e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	private void layout(BrailleTranslatorResult btr, String mode) {
+	private List<RowImpl> layout(BrailleTranslatorResult btr, String mode) {
+		List<RowImpl> rows = new ArrayList<>();
 		// process first row, is it a new block or should we continue the current row?
 		if (currentRow==null) {
 			// add to left margin
@@ -341,29 +376,39 @@ class SegmentProcessor {
 					throw new RuntimeException(e);
 				}
 				if (item.getType()==FormattingTypes.ListStyle.PL) {
-					newRow(btr, listLabel, 0, rdp.getBlockIndentParent(), mode);
+					rows.addAll(
+							newRow(btr, listLabel, 0, rdp.getBlockIndentParent(), mode)
+					);
 				} else {
-					newRow(btr, listLabel, rdp.getFirstLineIndent(), rdp.getBlockIndent(), mode);
+					rows.addAll(
+					newRow(btr, listLabel, rdp.getFirstLineIndent(), rdp.getBlockIndent(), mode));
 				}
 				item = null;
 			} else {
-				newRow(btr, "", rdp.getFirstLineIndent(), rdp.getBlockIndent(), mode);
+				rows.addAll(
+				newRow(btr, "", rdp.getFirstLineIndent(), rdp.getBlockIndent(), mode));
 			}
 		} else {
-			continueRow(new RowInfo("", available), btr, rdp.getBlockIndent(), mode);
+			rows.addAll(
+			continueRow(new RowInfo("", available), btr, rdp.getBlockIndent(), mode));
 		}
 		while (btr.hasNext()) { //LayoutTools.length(chars.toString())>0
-			newRow(btr, "", rdp.getTextIndent(), rdp.getBlockIndent(), mode);
+			rows.addAll(
+			newRow(btr, "", rdp.getTextIndent(), rdp.getBlockIndent(), mode));
 		}
 		if (btr.supportsMetric(BrailleTranslatorResult.METRIC_FORCED_BREAK)) {
 			forceCount += btr.getMetric(BrailleTranslatorResult.METRIC_FORCED_BREAK);
 		}
+		return rows;
 	}
 	
-	private void newRow(BrailleTranslatorResult chars, String contentBefore, int indent, int blockIndent, String mode) {
-		flushCurrentRow();
+	private List<RowImpl> newRow(BrailleTranslatorResult chars, String contentBefore, int indent, int blockIndent, String mode) {
+		List<RowImpl> rows = new ArrayList<>();
+		rows.addAll(flushCurrentRow());
 		currentRow = rdp.configureNewEmptyRowBuilder(margins.getLeftMargin(), margins.getRightMargin());
-		continueRow(new RowInfo(getPreText(contentBefore, indent, blockIndent), available), chars, blockIndent, mode);
+		rows.addAll(
+		continueRow(new RowInfo(getPreText(contentBefore, indent, blockIndent), available), chars, blockIndent, mode));
+		return rows;
 	}
 	
 	private String getPreText(String contentBefore, int indent, int blockIndent) {
@@ -377,7 +422,8 @@ class SegmentProcessor {
 	}
 
 	//TODO: check leader functionality
-	private void continueRow(RowInfo m1, BrailleTranslatorResult btr, int blockIndent, String mode) {
+	private List<RowImpl> continueRow(RowInfo m1, BrailleTranslatorResult btr, int blockIndent, String mode) {
+		List<RowImpl> rows = new ArrayList<>();
 		// [margin][preContent][preTabText][tab][postTabText] 
 		//      preContentPos ^
 		String tabSpace = "";
@@ -389,7 +435,7 @@ class SegmentProcessor {
 			
 			if (preTabPos>leaderPos || offset - align < 0) { // if tab position has been passed or if text does not fit within row, try on a new row
 				MarginProperties _leftMargin = currentRow.getLeftMargin();
-				flushCurrentRow();
+				rows.addAll(flushCurrentRow());
 				currentRow = rdp.configureNewEmptyRowBuilder(_leftMargin, margins.getRightMargin());
 				m1 = new RowInfo(StringTools.fill(fcontext.getSpaceCharacter(), rdp.getTextIndent()+blockIndent), available);
 				//update offset
@@ -403,6 +449,7 @@ class SegmentProcessor {
 			}
 		}
 		breakNextRow(m1, currentRow, btr, tabSpace);
+		return rows;
 	}
 
 	private void breakNextRow(RowInfo m1, RowImpl.Builder row, BrailleTranslatorResult btr, String tabSpace) {
