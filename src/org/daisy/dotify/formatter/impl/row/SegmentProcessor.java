@@ -179,33 +179,49 @@ class SegmentProcessor {
 			}
 		}
 		if (!hasMoreData()) {
-			rows.addAll(close());
+			CurrentResult cr = close();
+			while (cr.hasNext()) {
+				cr.process().ifPresent(v->rows.add(v));
+			}
 		}
 		return rows;
 	}
 	
-	List<RowImpl> close() {
-		List<RowImpl> rows = new ArrayList<>();
-		layoutLeader().ifPresent(cr->{
-			while (cr.hasNext()) {
-				cr.process().ifPresent(v->rows.add(v));
+	CurrentResult close() {
+		return new CurrentResult() {
+			private Optional<CurrentResult> cr = layoutLeader();
+			private boolean doFlush = true;
+			private boolean doUnderline = rdp.getUnderlineStyle()!=null;
+
+			@Override
+			public boolean hasNext() {
+				return cr.isPresent() && cr.get().hasNext() || doFlush || (!empty && doUnderline);
 			}
-		});
-		if (currentRow!=null) {
-			rows.add(flushCurrentRow());
-		}
-		if (!empty && rdp.getUnderlineStyle() != null) {
-			if (minLeft < margins.getLeftMargin().getContent().length() || minRight < margins.getRightMargin().getContent().length()) {
-				throw new RuntimeException("coding error");
+
+			@Override
+			public Optional<RowImpl> process() {
+				if (cr.isPresent() && cr.get().hasNext()) {
+					return cr.get().process();
+				} else if (doFlush) {
+					doFlush = false;
+					if (currentRow!=null) {
+						return Optional.of(flushCurrentRow());
+					}
+				} else if (!empty && doUnderline) {
+					doUnderline = false;
+					if (minLeft < margins.getLeftMargin().getContent().length() || minRight < margins.getRightMargin().getContent().length()) {
+						throw new RuntimeException("coding error");
+					}
+					return Optional.of(new RowImpl.Builder(StringTools.fill(fcontext.getSpaceCharacter(), minLeft - margins.getLeftMargin().getContent().length())
+								+ StringTools.fill(rdp.getUnderlineStyle(), flowWidth - minLeft - minRight))
+								.leftMargin(margins.getLeftMargin())
+								.rightMargin(margins.getRightMargin())
+								.adjustedForMargin(true)
+								.build());
+				}
+				return Optional.empty();
 			}
-			rows.add(new RowImpl.Builder(StringTools.fill(fcontext.getSpaceCharacter(), minLeft - margins.getLeftMargin().getContent().length())
-			                     + StringTools.fill(rdp.getUnderlineStyle(), flowWidth - minLeft - minRight))
-						.leftMargin(margins.getLeftMargin())
-						.rightMargin(margins.getRightMargin())
-						.adjustedForMargin(true)
-						.build());
-		}
-		return rows;
+		};
 	}
 
 	private RowImpl flushCurrentRow() {
