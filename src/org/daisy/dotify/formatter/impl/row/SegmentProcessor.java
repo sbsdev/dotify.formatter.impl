@@ -238,7 +238,6 @@ class SegmentProcessor {
 		} else {
 			BrailleTranslatorResult btr = toResult(spec, mode);
 			CurrentResult cr = new CurrentResult(btr, mode);
-			cr.layout().ifPresent(v->rows.add(v));
 			while (cr.hasNext()) {
 				cr.process().ifPresent(v->rows.add(v));
 			}
@@ -279,7 +278,6 @@ class SegmentProcessor {
 			String mode = null;
 			BrailleTranslatorResult btr = toResult(spec, null);
 			CurrentResult cr = new CurrentResult(btr, mode);
-			cr.layout().ifPresent(v->rows.add(v));
 			while (cr.hasNext()) {
 				cr.process().ifPresent(v->rows.add(v));
 			}
@@ -303,7 +301,6 @@ class SegmentProcessor {
 				String mode = null;
 				BrailleTranslatorResult btr = toResult(spec, mode);
 				CurrentResult cr = new CurrentResult(btr, mode);
-				cr.layout().ifPresent(v->rows.add(v));
 				while (cr.hasNext()) {
 					cr.process().ifPresent(v->rows.add(v));
 				}
@@ -380,7 +377,6 @@ class SegmentProcessor {
 				seenSegmentAfterLeader = false;
 			}
 			CurrentResult cr = new CurrentResult(btr, mode);
-			cr.layout().ifPresent(v->rows.add(v));
 			while (cr.hasNext()) {
 				cr.process().ifPresent(v->rows.add(v));
 			}
@@ -403,17 +399,23 @@ class SegmentProcessor {
 	private class CurrentResult {
 		private final BrailleTranslatorResult btr;
 		private final String mode;
+		private boolean first;
 		
 		CurrentResult(BrailleTranslatorResult btr, String mode) {
 			this.btr = btr;
 			this.mode = mode;
+			this.first = true;
 		}
 
 		private boolean hasNext() {
-			return btr.hasNext();
+			return first || btr.hasNext();
 		}
 
 		private Optional<RowImpl> process() {
+			if (first) {
+				first = false;
+				return processFirst();
+			}
 			try {
 				if (btr.hasNext()) { //LayoutTools.length(chars.toString())>0
 					if (currentRow!=null) {
@@ -429,7 +431,7 @@ class SegmentProcessor {
 			return Optional.empty();
 		}
 	
-		private Optional<RowImpl> layout() {
+		private Optional<RowImpl> processFirst() {
 			// process first row, is it a new block or should we continue the current row?
 			if (currentRow==null) {
 				// add to left margin
