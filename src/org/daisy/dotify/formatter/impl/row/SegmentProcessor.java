@@ -95,7 +95,7 @@ class SegmentProcessor {
 	private void initFields() {
 		segmentIndex = 0;
 		currentRow = null;
-		leaderManager.discardLeader();
+		leaderManager.discardAllLeaders();
 		layoutOrApplyAfterLeader = null;
 		currentLeaderMode = null;
 		seenSegmentAfterLeader = false;
@@ -267,7 +267,7 @@ class SegmentProcessor {
 				}
 			});
 		}
-		leaderManager.setLeader(ls);
+		leaderManager.addLeader(ls);
 		return rows;
 	}
 
@@ -509,7 +509,7 @@ class SegmentProcessor {
 					tabSpace = leaderManager.getLeaderPattern(fcontext.getTranslator(mode), offset - align);
 				} finally {
 					// always discard leader
-					leaderManager.discardLeader();
+					leaderManager.removeLeader();
 				}
 			}
 			breakNextRow(m1, currentRow, btr, tabSpace);
