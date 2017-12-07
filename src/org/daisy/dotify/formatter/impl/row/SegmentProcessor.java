@@ -179,7 +179,11 @@ class SegmentProcessor {
 	
 	List<RowImpl> close() {
 		List<RowImpl> rows = new ArrayList<>();
-		rows.addAll(layoutLeader());
+		layoutLeader().ifPresent(cr->{
+			while (cr.hasNext()) {
+				cr.process().ifPresent(v->rows.add(v));
+			}
+		});
 		if (currentRow!=null) {
 			rows.add(flushCurrentRow());
 		}
@@ -222,7 +226,11 @@ class SegmentProcessor {
 
 	private List<RowImpl> layoutNewLine() {
 		List<RowImpl> rows = new ArrayList<>();
-		rows.addAll(layoutLeader());
+		layoutLeader().ifPresent(cr->{
+			while (cr.hasNext()) {
+				cr.process().ifPresent(v->rows.add(v));
+			}
+		});
 		if (currentRow!=null) {
 			rows.add(flushCurrentRow());
 		}
@@ -253,9 +261,11 @@ class SegmentProcessor {
 	private List<RowImpl> layoutLeaderSegment(LeaderSegment ls) {
 		List<RowImpl> rows = new ArrayList<>();
 		if (leaderManager.hasLeader()) {
-			rows.addAll(
-					layoutLeader()
-			);
+			layoutLeader().ifPresent(cr->{
+				while (cr.hasNext()) {
+					cr.process().ifPresent(v->rows.add(v));
+				}
+			});
 		}
 		leaderManager.setLeader(ls);
 		return rows;
@@ -359,8 +369,7 @@ class SegmentProcessor {
 		}
 	}
 	
-	private List<RowImpl> layoutLeader() {
-		List<RowImpl> rows = new ArrayList<>();
+	private Optional<CurrentResult> layoutLeader() {
 		if (leaderManager.hasLeader()) {
 			// layout() sets currentLeader to null
 			BrailleTranslatorResult btr;
@@ -376,11 +385,9 @@ class SegmentProcessor {
 				seenSegmentAfterLeader = false;
 			}
 			CurrentResult cr = new CurrentResult(btr, mode);
-			while (cr.hasNext()) {
-				cr.process().ifPresent(v->rows.add(v));
-			}
+			return Optional.of(cr);
 		}
-		return rows;
+		return Optional.empty();
 	}
 
 	private BrailleTranslatorResult toResult(String c) {
