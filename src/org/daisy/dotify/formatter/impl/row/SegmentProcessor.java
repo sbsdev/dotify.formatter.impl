@@ -237,7 +237,7 @@ class SegmentProcessor {
 			layoutAfterLeader(spec, mode);
 		} else {
 			BrailleTranslatorResult btr = toResult(spec, mode);
-			rows.addAll(layout(btr, mode));
+			layout(btr, mode).ifPresent(v->rows.add(v));
 			rows.addAll(process(btr, mode));
 		}
 		return rows;
@@ -275,7 +275,7 @@ class SegmentProcessor {
 		} else {
 			String mode = null;
 			BrailleTranslatorResult btr = toResult(spec, null);
-			rows.addAll(layout(btr, mode));
+			layout(btr, mode).ifPresent(v->rows.add(v));
 			rows.addAll(process(btr, mode));
 		}
 		return rows;
@@ -296,7 +296,7 @@ class SegmentProcessor {
 			} else {
 				String mode = null;
 				BrailleTranslatorResult btr = toResult(spec, mode);
-				rows.addAll(layout(btr, mode));
+				layout(btr, mode).ifPresent(v->rows.add(v));
 				rows.addAll(process(btr, mode));
 			}
 		}
@@ -363,13 +363,11 @@ class SegmentProcessor {
 			if (layoutOrApplyAfterLeader == null) {
 				btr = toResult("");
 				mode = null;
-				rows.addAll(layout(btr, mode));
+				layout(btr, mode).ifPresent(v->rows.add(v));
 			} else {
 				btr = layoutOrApplyAfterLeader.build();
 				mode = currentLeaderMode;
-				rows.addAll(
-						layout(btr, mode)
-				);
+				layout(btr, mode).ifPresent(v->rows.add(v));
 				layoutOrApplyAfterLeader = null;
 				seenSegmentAfterLeader = false;
 			}
@@ -404,8 +402,7 @@ class SegmentProcessor {
 		}		
 	}
 
-	private List<RowImpl> layout(BrailleTranslatorResult btr, String mode) {
-		List<RowImpl> rows = new ArrayList<>();
+	private Optional<RowImpl> layout(BrailleTranslatorResult btr, String mode) {
 		// process first row, is it a new block or should we continue the current row?
 		if (currentRow==null) {
 			// add to left margin
@@ -416,19 +413,21 @@ class SegmentProcessor {
 				} catch (TranslationException e) {
 					throw new RuntimeException(e);
 				}
-				if (item.getType()==FormattingTypes.ListStyle.PL) {
-					startNewRow(btr, listLabel, 0, rdp.getBlockIndentParent(), mode).ifPresent(v->rows.add(v));
-				} else {
-					startNewRow(btr, listLabel, rdp.getFirstLineIndent(), rdp.getBlockIndent(), mode).ifPresent(v->rows.add(v));
+				try {
+					if (item.getType()==FormattingTypes.ListStyle.PL) {
+						return startNewRow(btr, listLabel, 0, rdp.getBlockIndentParent(), mode);
+					} else {
+						return startNewRow(btr, listLabel, rdp.getFirstLineIndent(), rdp.getBlockIndent(), mode);
+					}
+				} finally {
+					item = null;
 				}
-				item = null;
 			} else {
-				startNewRow(btr, "", rdp.getFirstLineIndent(), rdp.getBlockIndent(), mode).ifPresent(v->rows.add(v));
+				return startNewRow(btr, "", rdp.getFirstLineIndent(), rdp.getBlockIndent(), mode);
 			}
 		} else {
-			continueRow(new RowInfo("", available), btr, rdp.getBlockIndent(), mode).ifPresent(v->rows.add(v));
+			return continueRow(new RowInfo("", available), btr, rdp.getBlockIndent(), mode);
 		}
-		return rows;
 	}
 	
 	private Optional<RowImpl> startNewRow(BrailleTranslatorResult chars, String contentBefore, int indent, int blockIndent, String mode) {
