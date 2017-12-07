@@ -236,7 +236,9 @@ class SegmentProcessor {
 		if (leaderManager.hasLeader()) {
 			layoutAfterLeader(spec, mode);
 		} else {
-			rows.addAll(layout(toResult(spec, mode), mode));
+			BrailleTranslatorResult btr = toResult(spec, mode);
+			rows.addAll(layout(btr, mode));
+			rows.addAll(process(btr, mode));
 		}
 		return rows;
 	}
@@ -271,7 +273,10 @@ class SegmentProcessor {
 		if (leaderManager.hasLeader()) {
 			layoutAfterLeader(spec, null);
 		} else {
-			rows.addAll(layout(toResult(spec, null), null));
+			String mode = null;
+			BrailleTranslatorResult btr = toResult(spec, null);
+			rows.addAll(layout(btr, mode));
+			rows.addAll(process(btr, mode));
 		}
 		return rows;
 	}
@@ -289,7 +294,10 @@ class SegmentProcessor {
 			if (leaderManager.hasLeader()) {
 				layoutAfterLeader(spec, null);
 			} else {
-				rows.addAll(layout(toResult(spec, null), null));
+				String mode = null;
+				BrailleTranslatorResult btr = toResult(spec, mode);
+				rows.addAll(layout(btr, mode));
+				rows.addAll(process(btr, mode));
 			}
 		}
 		return rows; 
@@ -350,15 +358,36 @@ class SegmentProcessor {
 		List<RowImpl> rows = new ArrayList<>();
 		if (leaderManager.hasLeader()) {
 			// layout() sets currentLeader to null
+			BrailleTranslatorResult btr;
+			String mode;
 			if (layoutOrApplyAfterLeader == null) {
-				rows.addAll(layout(toResult(""), null));
+				btr = toResult("");
+				mode = null;
+				rows.addAll(layout(btr, mode));
 			} else {
+				btr = layoutOrApplyAfterLeader.build();
+				mode = currentLeaderMode;
 				rows.addAll(
-						layout(layoutOrApplyAfterLeader.build(), currentLeaderMode)
+						layout(btr, mode)
 				);
 				layoutOrApplyAfterLeader = null;
 				seenSegmentAfterLeader = false;
 			}
+			rows.addAll(process(btr, mode));
+		}
+		return rows;
+	}
+	
+	private List<RowImpl> process(BrailleTranslatorResult btr, String mode) {
+		List<RowImpl> rows = new ArrayList<>();
+		while (btr.hasNext()) { //LayoutTools.length(chars.toString())>0
+			if (currentRow!=null) {
+				rows.add(flushCurrentRow());
+			}
+			startNewRow(btr, "", rdp.getTextIndent(), rdp.getBlockIndent(), mode).ifPresent(v->rows.add(v));
+		}
+		if (btr.supportsMetric(BrailleTranslatorResult.METRIC_FORCED_BREAK)) {
+			forceCount += btr.getMetric(BrailleTranslatorResult.METRIC_FORCED_BREAK);
 		}
 		return rows;
 	}
@@ -398,15 +427,6 @@ class SegmentProcessor {
 			}
 		} else {
 			continueRow(new RowInfo("", available), btr, rdp.getBlockIndent(), mode).ifPresent(v->rows.add(v));
-		}
-		while (btr.hasNext()) { //LayoutTools.length(chars.toString())>0
-			if (currentRow!=null) {
-				rows.add(flushCurrentRow());
-			}
-			startNewRow(btr, "", rdp.getTextIndent(), rdp.getBlockIndent(), mode).ifPresent(v->rows.add(v));
-		}
-		if (btr.supportsMetric(BrailleTranslatorResult.METRIC_FORCED_BREAK)) {
-			forceCount += btr.getMetric(BrailleTranslatorResult.METRIC_FORCED_BREAK);
 		}
 		return rows;
 	}
