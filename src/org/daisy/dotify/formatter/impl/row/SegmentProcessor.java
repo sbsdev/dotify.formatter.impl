@@ -138,7 +138,11 @@ class SegmentProcessor {
 					rows.addAll(layoutNewLine());
 					break;
 				case Text:
-					rows.addAll(layoutTextSegment((TextSegment)s));
+					layoutTextSegment((TextSegment)s).ifPresent(cr->{
+						while (cr.hasNext()) {
+							cr.process().ifPresent(v->rows.add(v));
+						}
+					});
 					break;
 				case Leader:
 					rows.addAll(
@@ -146,14 +150,18 @@ class SegmentProcessor {
 					);
 					break;
 				case Reference:
-					rows.addAll(
-							layoutPageSegment((PageNumberReferenceSegment)s)
-					);
+					layoutPageSegment((PageNumberReferenceSegment)s).ifPresent(cr->{
+						while (cr.hasNext()) {
+							cr.process().ifPresent(v->rows.add(v));
+						}
+					});
 					break;
 				case Evaluate:
-					rows.addAll(
-							layoutEvaluate((Evaluate)s)
-					);
+					layoutEvaluate((Evaluate)s).ifPresent(cr->{
+						while (cr.hasNext()) {
+							cr.process().ifPresent(v->rows.add(v));
+						}
+					});
 					break;
 				case Marker:
 					applyAfterLeader((MarkerSegment)s);
@@ -223,8 +231,7 @@ class SegmentProcessor {
 		return rows;
 	}
 	
-	private List<RowImpl> layoutTextSegment(TextSegment ts) {
-		List<RowImpl> rows = new ArrayList<>();
+	private Optional<CurrentResult> layoutTextSegment(TextSegment ts) {
 		Translatable spec = Translatable.text(
 						fcontext.getConfiguration().isMarkingCapitalLetters()?
 						ts.getText():ts.getText().toLowerCase()
@@ -238,11 +245,9 @@ class SegmentProcessor {
 		} else {
 			BrailleTranslatorResult btr = toResult(spec, mode);
 			CurrentResult cr = new CurrentResult(btr, mode);
-			while (cr.hasNext()) {
-				cr.process().ifPresent(v->rows.add(v));
-			}
+			return Optional.of(cr);
 		}
-		return rows;
+		return Optional.empty();
 	}
 	
 	private List<RowImpl> layoutLeaderSegment(LeaderSegment ls) {
@@ -256,8 +261,7 @@ class SegmentProcessor {
 		return rows;
 	}
 
-	private List<RowImpl> layoutPageSegment(PageNumberReferenceSegment rs) {
-		List<RowImpl> rows = new ArrayList<>();
+	private Optional<CurrentResult> layoutPageSegment(PageNumberReferenceSegment rs) {
 		Integer page = null;
 		if (refs!=null) {
 			page = refs.getPageNumber(rs.getRefId());
@@ -278,15 +282,12 @@ class SegmentProcessor {
 			String mode = null;
 			BrailleTranslatorResult btr = toResult(spec, null);
 			CurrentResult cr = new CurrentResult(btr, mode);
-			while (cr.hasNext()) {
-				cr.process().ifPresent(v->rows.add(v));
-			}
+			return Optional.of(cr);
 		}
-		return rows;
+		return Optional.empty();
 	}
 	
-	private List<RowImpl> layoutEvaluate(Evaluate e) {
-		List<RowImpl> rows = new ArrayList<>();
+	private Optional<CurrentResult> layoutEvaluate(Evaluate e) {
 		String txt = e.getExpression().render(context);
 		if (!txt.isEmpty()) { // Don't create a new row if the evaluated expression is empty
 		                    // Note: this could be handled more generally (also for regular text) in layout().
@@ -301,12 +302,10 @@ class SegmentProcessor {
 				String mode = null;
 				BrailleTranslatorResult btr = toResult(spec, mode);
 				CurrentResult cr = new CurrentResult(btr, mode);
-				while (cr.hasNext()) {
-					cr.process().ifPresent(v->rows.add(v));
-				}
+				return Optional.of(cr);
 			}
 		}
-		return rows; 
+		return Optional.empty(); 
 	}
 
 	private void layoutAfterLeader(Translatable spec, String mode) {
