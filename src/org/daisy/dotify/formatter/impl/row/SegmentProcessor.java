@@ -236,7 +236,7 @@ class SegmentProcessor {
 		if (leaderManager.hasLeader()) {
 			layoutAfterLeader(spec, mode);
 		} else {
-			rows.addAll(layout(spec, mode));
+			rows.addAll(layout(toResult(spec, mode), mode));
 		}
 		return rows;
 	}
@@ -271,7 +271,7 @@ class SegmentProcessor {
 		if (leaderManager.hasLeader()) {
 			layoutAfterLeader(spec, null);
 		} else {
-			rows.addAll(layout(spec, null));
+			rows.addAll(layout(toResult(spec, null), null));
 		}
 		return rows;
 	}
@@ -289,7 +289,7 @@ class SegmentProcessor {
 			if (leaderManager.hasLeader()) {
 				layoutAfterLeader(spec, null);
 			} else {
-				rows.addAll(layout(spec, null));
+				rows.addAll(layout(toResult(spec, null), null));
 			}
 		}
 		return rows; 
@@ -351,7 +351,7 @@ class SegmentProcessor {
 		if (leaderManager.hasLeader()) {
 			// layout() sets currentLeader to null
 			if (layoutOrApplyAfterLeader == null) {
-				rows.addAll(layout("", null, null));
+				rows.addAll(layout(toResult(""), null));
 			} else {
 				rows.addAll(
 						layout(layoutOrApplyAfterLeader.build(), currentLeaderMode)
@@ -362,17 +362,17 @@ class SegmentProcessor {
 		}
 		return rows;
 	}
-
-	private List<RowImpl> layout(String c, String locale, String mode) {
-		return layout(Translatable.text(fcontext.getConfiguration().isMarkingCapitalLetters()?c:c.toLowerCase()).locale(locale).build(), mode);
+	
+	private BrailleTranslatorResult toResult(String c) {
+		return toResult(Translatable.text(fcontext.getConfiguration().isMarkingCapitalLetters()?c:c.toLowerCase()).build(), null);
 	}
 	
-	private List<RowImpl> layout(Translatable spec, String mode) {
+	private BrailleTranslatorResult toResult(Translatable spec, String mode) {
 		try {
-			return layout(fcontext.getTranslator(mode).translate(spec), mode);
+			return fcontext.getTranslator(mode).translate(spec);
 		} catch (TranslationException e) {
 			throw new RuntimeException(e);
-		}
+		}		
 	}
 
 	private List<RowImpl> layout(BrailleTranslatorResult btr, String mode) {
