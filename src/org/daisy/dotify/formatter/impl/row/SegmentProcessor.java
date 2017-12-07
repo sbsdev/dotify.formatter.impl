@@ -239,7 +239,9 @@ class SegmentProcessor {
 			BrailleTranslatorResult btr = toResult(spec, mode);
 			CurrentResult cr = new CurrentResult(btr, mode);
 			cr.layout().ifPresent(v->rows.add(v));
-			rows.addAll(cr.process());
+			while (cr.hasNext()) {
+				cr.process().ifPresent(v->rows.add(v));
+			}
 		}
 		return rows;
 	}
@@ -278,7 +280,9 @@ class SegmentProcessor {
 			BrailleTranslatorResult btr = toResult(spec, null);
 			CurrentResult cr = new CurrentResult(btr, mode);
 			cr.layout().ifPresent(v->rows.add(v));
-			rows.addAll(cr.process());
+			while (cr.hasNext()) {
+				cr.process().ifPresent(v->rows.add(v));
+			}
 		}
 		return rows;
 	}
@@ -300,7 +304,9 @@ class SegmentProcessor {
 				BrailleTranslatorResult btr = toResult(spec, mode);
 				CurrentResult cr = new CurrentResult(btr, mode);
 				cr.layout().ifPresent(v->rows.add(v));
-				rows.addAll(cr.process());
+				while (cr.hasNext()) {
+					cr.process().ifPresent(v->rows.add(v));
+				}
 			}
 		}
 		return rows; 
@@ -375,7 +381,9 @@ class SegmentProcessor {
 			}
 			CurrentResult cr = new CurrentResult(btr, mode);
 			cr.layout().ifPresent(v->rows.add(v));
-			rows.addAll(cr.process());
+			while (cr.hasNext()) {
+				cr.process().ifPresent(v->rows.add(v));
+			}
 		}
 		return rows;
 	}
@@ -400,19 +408,25 @@ class SegmentProcessor {
 			this.btr = btr;
 			this.mode = mode;
 		}
-	
-		private List<RowImpl> process() {
-			List<RowImpl> rows = new ArrayList<>();
-			while (btr.hasNext()) { //LayoutTools.length(chars.toString())>0
-				if (currentRow!=null) {
-					rows.add(flushCurrentRow());
+
+		private boolean hasNext() {
+			return btr.hasNext();
+		}
+
+		private Optional<RowImpl> process() {
+			try {
+				if (btr.hasNext()) { //LayoutTools.length(chars.toString())>0
+					if (currentRow!=null) {
+						return Optional.of(flushCurrentRow());
+					}
+					return startNewRow(btr, "", rdp.getTextIndent(), rdp.getBlockIndent(), mode);
 				}
-				startNewRow(btr, "", rdp.getTextIndent(), rdp.getBlockIndent(), mode).ifPresent(v->rows.add(v));
+			} finally {
+				if (!btr.hasNext() && btr.supportsMetric(BrailleTranslatorResult.METRIC_FORCED_BREAK)) {
+					forceCount += btr.getMetric(BrailleTranslatorResult.METRIC_FORCED_BREAK);
+				}
 			}
-			if (btr.supportsMetric(BrailleTranslatorResult.METRIC_FORCED_BREAK)) {
-				forceCount += btr.getMetric(BrailleTranslatorResult.METRIC_FORCED_BREAK);
-			}
-			return rows;
+			return Optional.empty();
 		}
 	
 		private Optional<RowImpl> layout() {
