@@ -237,8 +237,9 @@ class SegmentProcessor {
 			layoutAfterLeader(spec, mode);
 		} else {
 			BrailleTranslatorResult btr = toResult(spec, mode);
-			layout(btr, mode).ifPresent(v->rows.add(v));
-			rows.addAll(process(btr, mode));
+			CurrentResult cr = new CurrentResult(btr, mode);
+			cr.layout().ifPresent(v->rows.add(v));
+			rows.addAll(cr.process());
 		}
 		return rows;
 	}
@@ -275,8 +276,9 @@ class SegmentProcessor {
 		} else {
 			String mode = null;
 			BrailleTranslatorResult btr = toResult(spec, null);
-			layout(btr, mode).ifPresent(v->rows.add(v));
-			rows.addAll(process(btr, mode));
+			CurrentResult cr = new CurrentResult(btr, mode);
+			cr.layout().ifPresent(v->rows.add(v));
+			rows.addAll(cr.process());
 		}
 		return rows;
 	}
@@ -296,8 +298,9 @@ class SegmentProcessor {
 			} else {
 				String mode = null;
 				BrailleTranslatorResult btr = toResult(spec, mode);
-				layout(btr, mode).ifPresent(v->rows.add(v));
-				rows.addAll(process(btr, mode));
+				CurrentResult cr = new CurrentResult(btr, mode);
+				cr.layout().ifPresent(v->rows.add(v));
+				rows.addAll(cr.process());
 			}
 		}
 		return rows; 
@@ -363,33 +366,20 @@ class SegmentProcessor {
 			if (layoutOrApplyAfterLeader == null) {
 				btr = toResult("");
 				mode = null;
-				layout(btr, mode).ifPresent(v->rows.add(v));
 			} else {
 				btr = layoutOrApplyAfterLeader.build();
 				mode = currentLeaderMode;
-				layout(btr, mode).ifPresent(v->rows.add(v));
+				
 				layoutOrApplyAfterLeader = null;
 				seenSegmentAfterLeader = false;
 			}
-			rows.addAll(process(btr, mode));
+			CurrentResult cr = new CurrentResult(btr, mode);
+			cr.layout().ifPresent(v->rows.add(v));
+			rows.addAll(cr.process());
 		}
 		return rows;
 	}
-	
-	private List<RowImpl> process(BrailleTranslatorResult btr, String mode) {
-		List<RowImpl> rows = new ArrayList<>();
-		while (btr.hasNext()) { //LayoutTools.length(chars.toString())>0
-			if (currentRow!=null) {
-				rows.add(flushCurrentRow());
-			}
-			startNewRow(btr, "", rdp.getTextIndent(), rdp.getBlockIndent(), mode).ifPresent(v->rows.add(v));
-		}
-		if (btr.supportsMetric(BrailleTranslatorResult.METRIC_FORCED_BREAK)) {
-			forceCount += btr.getMetric(BrailleTranslatorResult.METRIC_FORCED_BREAK);
-		}
-		return rows;
-	}
-	
+
 	private BrailleTranslatorResult toResult(String c) {
 		return toResult(Translatable.text(fcontext.getConfiguration().isMarkingCapitalLetters()?c:c.toLowerCase()).build(), null);
 	}
@@ -401,102 +391,126 @@ class SegmentProcessor {
 			throw new RuntimeException(e);
 		}		
 	}
-
-	private Optional<RowImpl> layout(BrailleTranslatorResult btr, String mode) {
-		// process first row, is it a new block or should we continue the current row?
-		if (currentRow==null) {
-			// add to left margin
-			if (item!=null) { //currentListType!=BlockProperties.ListType.NONE) {
-				String listLabel;
-				try {
-					listLabel = fcontext.getTranslator(mode).translate(Translatable.text(fcontext.getConfiguration().isMarkingCapitalLetters()?item.getLabel():item.getLabel().toLowerCase()).build()).getTranslatedRemainder();
-				} catch (TranslationException e) {
-					throw new RuntimeException(e);
+	
+	private class CurrentResult {
+		private final BrailleTranslatorResult btr;
+		private final String mode;
+		
+		CurrentResult(BrailleTranslatorResult btr, String mode) {
+			this.btr = btr;
+			this.mode = mode;
+		}
+	
+		private List<RowImpl> process() {
+			List<RowImpl> rows = new ArrayList<>();
+			while (btr.hasNext()) { //LayoutTools.length(chars.toString())>0
+				if (currentRow!=null) {
+					rows.add(flushCurrentRow());
 				}
-				try {
-					if (item.getType()==FormattingTypes.ListStyle.PL) {
-						return startNewRow(btr, listLabel, 0, rdp.getBlockIndentParent(), mode);
-					} else {
-						return startNewRow(btr, listLabel, rdp.getFirstLineIndent(), rdp.getBlockIndent(), mode);
+				startNewRow(btr, "", rdp.getTextIndent(), rdp.getBlockIndent(), mode).ifPresent(v->rows.add(v));
+			}
+			if (btr.supportsMetric(BrailleTranslatorResult.METRIC_FORCED_BREAK)) {
+				forceCount += btr.getMetric(BrailleTranslatorResult.METRIC_FORCED_BREAK);
+			}
+			return rows;
+		}
+	
+		private Optional<RowImpl> layout() {
+			// process first row, is it a new block or should we continue the current row?
+			if (currentRow==null) {
+				// add to left margin
+				if (item!=null) { //currentListType!=BlockProperties.ListType.NONE) {
+					String listLabel;
+					try {
+						listLabel = fcontext.getTranslator(mode).translate(Translatable.text(fcontext.getConfiguration().isMarkingCapitalLetters()?item.getLabel():item.getLabel().toLowerCase()).build()).getTranslatedRemainder();
+					} catch (TranslationException e) {
+						throw new RuntimeException(e);
 					}
-				} finally {
-					item = null;
+					try {
+						if (item.getType()==FormattingTypes.ListStyle.PL) {
+							return startNewRow(btr, listLabel, 0, rdp.getBlockIndentParent(), mode);
+						} else {
+							return startNewRow(btr, listLabel, rdp.getFirstLineIndent(), rdp.getBlockIndent(), mode);
+						}
+					} finally {
+						item = null;
+					}
+				} else {
+					return startNewRow(btr, "", rdp.getFirstLineIndent(), rdp.getBlockIndent(), mode);
 				}
 			} else {
-				return startNewRow(btr, "", rdp.getFirstLineIndent(), rdp.getBlockIndent(), mode);
+				return continueRow(new RowInfo("", available), btr, rdp.getBlockIndent(), mode);
 			}
-		} else {
-			return continueRow(new RowInfo("", available), btr, rdp.getBlockIndent(), mode);
 		}
-	}
-	
-	private Optional<RowImpl> startNewRow(BrailleTranslatorResult chars, String contentBefore, int indent, int blockIndent, String mode) {
-		if (currentRow!=null) {
-			throw new RuntimeException("Error in code.");
+		
+		private Optional<RowImpl> startNewRow(BrailleTranslatorResult chars, String contentBefore, int indent, int blockIndent, String mode) {
+			if (currentRow!=null) {
+				throw new RuntimeException("Error in code.");
+			}
+			currentRow = rdp.configureNewEmptyRowBuilder(margins.getLeftMargin(), margins.getRightMargin());
+			return continueRow(new RowInfo(getPreText(contentBefore, indent+blockIndent), available), chars, blockIndent, mode);
 		}
-		currentRow = rdp.configureNewEmptyRowBuilder(margins.getLeftMargin(), margins.getRightMargin());
-		return continueRow(new RowInfo(getPreText(contentBefore, indent+blockIndent), available), chars, blockIndent, mode);
-	}
+		
+		private String getPreText(String contentBefore, int totalIndent) {
+			int thisIndent = Math.max(
+					// There is one known cause for this calculation to become < 0. That is when an ordered list is so long
+					// that the number takes up more space than the indent reserved for it.
+					// In that case it is probably best to push the content instead of failing altogether.
+					totalIndent - StringTools.length(contentBefore),
+					0);
+			return contentBefore + StringTools.fill(fcontext.getSpaceCharacter(), thisIndent);
+		}
 	
-	private String getPreText(String contentBefore, int totalIndent) {
-		int thisIndent = Math.max(
-				// There is one known cause for this calculation to become < 0. That is when an ordered list is so long
-				// that the number takes up more space than the indent reserved for it.
-				// In that case it is probably best to push the content instead of failing altogether.
-				totalIndent - StringTools.length(contentBefore),
-				0);
-		return contentBefore + StringTools.fill(fcontext.getSpaceCharacter(), thisIndent);
-	}
-
-	//TODO: check leader functionality
-	private Optional<RowImpl> continueRow(RowInfo m1, BrailleTranslatorResult btr, int blockIndent, String mode) {
-		RowImpl ret = null;
-		// [margin][preContent][preTabText][tab][postTabText] 
-		//      preContentPos ^
-		String tabSpace = "";
-		if (leaderManager.hasLeader()) {
-			int preTabPos = m1.getPreTabPosition(currentRow);
-			int leaderPos = leaderManager.getLeaderPosition(available);
-			int offset = leaderPos-preTabPos;
-			int align = leaderManager.getLeaderAlign(btr.countRemaining());
-			
-			if (preTabPos>leaderPos || offset - align < 0) { // if tab position has been passed or if text does not fit within row, try on a new row
-				MarginProperties _leftMargin = currentRow.getLeftMargin();
-				if (currentRow!=null) {
-					ret = flushCurrentRow();
+		//TODO: check leader functionality
+		private Optional<RowImpl> continueRow(RowInfo m1, BrailleTranslatorResult btr, int blockIndent, String mode) {
+			RowImpl ret = null;
+			// [margin][preContent][preTabText][tab][postTabText] 
+			//      preContentPos ^
+			String tabSpace = "";
+			if (leaderManager.hasLeader()) {
+				int preTabPos = m1.getPreTabPosition(currentRow);
+				int leaderPos = leaderManager.getLeaderPosition(available);
+				int offset = leaderPos-preTabPos;
+				int align = leaderManager.getLeaderAlign(btr.countRemaining());
+				
+				if (preTabPos>leaderPos || offset - align < 0) { // if tab position has been passed or if text does not fit within row, try on a new row
+					MarginProperties _leftMargin = currentRow.getLeftMargin();
+					if (currentRow!=null) {
+						ret = flushCurrentRow();
+					}
+					currentRow = rdp.configureNewEmptyRowBuilder(_leftMargin, margins.getRightMargin());
+					m1 = new RowInfo(getPreText("", rdp.getTextIndent()+blockIndent), available);
+					//update offset
+					offset = leaderPos-m1.getPreTabPosition(currentRow);
 				}
-				currentRow = rdp.configureNewEmptyRowBuilder(_leftMargin, margins.getRightMargin());
-				m1 = new RowInfo(getPreText("", rdp.getTextIndent()+blockIndent), available);
-				//update offset
-				offset = leaderPos-m1.getPreTabPosition(currentRow);
+				try {
+					tabSpace = leaderManager.getLeaderPattern(fcontext.getTranslator(mode), offset - align);
+				} finally {
+					// always discard leader
+					leaderManager.discardLeader();
+				}
 			}
-			try {
-				tabSpace = leaderManager.getLeaderPattern(fcontext.getTranslator(mode), offset - align);
-			} finally {
-				// always discard leader
-				leaderManager.discardLeader();
+			breakNextRow(m1, currentRow, btr, tabSpace);
+			return Optional.ofNullable(ret);
+		}
+	
+		private void breakNextRow(RowInfo m1, RowImpl.Builder row, BrailleTranslatorResult btr, String tabSpace) {
+			int contentLen = StringTools.length(tabSpace) + StringTools.length(row.getText());
+			boolean force = contentLen == 0;
+			//don't know if soft hyphens need to be replaced, but we'll keep it for now
+			String next = softHyphenPattern.matcher(btr.nextTranslatedRow(m1.getMaxLength(row) - contentLen, force)).replaceAll("");
+			if ("".equals(next) && "".equals(tabSpace)) {
+				row.text(m1.getPreContent() + trailingWsBraillePattern.matcher(row.getText()).replaceAll(""));
+			} else {
+				row.text(m1.getPreContent() + row.getText() + tabSpace + next);
+				row.leaderSpace(row.getLeaderSpace()+tabSpace.length());
 			}
-		}
-		breakNextRow(m1, currentRow, btr, tabSpace);
-		return Optional.ofNullable(ret);
-	}
-
-	private void breakNextRow(RowInfo m1, RowImpl.Builder row, BrailleTranslatorResult btr, String tabSpace) {
-		int contentLen = StringTools.length(tabSpace) + StringTools.length(row.getText());
-		boolean force = contentLen == 0;
-		//don't know if soft hyphens need to be replaced, but we'll keep it for now
-		String next = softHyphenPattern.matcher(btr.nextTranslatedRow(m1.getMaxLength(row) - contentLen, force)).replaceAll("");
-		if ("".equals(next) && "".equals(tabSpace)) {
-			row.text(m1.getPreContent() + trailingWsBraillePattern.matcher(row.getText()).replaceAll(""));
-		} else {
-			row.text(m1.getPreContent() + row.getText() + tabSpace + next);
-			row.leaderSpace(row.getLeaderSpace()+tabSpace.length());
-		}
-		if (btr instanceof AggregatedBrailleTranslatorResult) {
-			AggregatedBrailleTranslatorResult abtr = ((AggregatedBrailleTranslatorResult)btr);
-			row.addMarkers(abtr.getMarkers());
-			row.addAnchors(abtr.getAnchors());
-			abtr.clearPending();
+			if (btr instanceof AggregatedBrailleTranslatorResult) {
+				AggregatedBrailleTranslatorResult abtr = ((AggregatedBrailleTranslatorResult)btr);
+				row.addMarkers(abtr.getMarkers());
+				row.addAnchors(abtr.getAnchors());
+				abtr.clearPending();
+			}
 		}
 	}
 	
