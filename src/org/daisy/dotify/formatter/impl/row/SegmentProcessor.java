@@ -254,7 +254,7 @@ class SegmentProcessor {
 			layoutAfterLeader(spec, mode);
 		} else {
 			BrailleTranslatorResult btr = toResult(spec, mode);
-			CurrentResult cr = new CurrentResult(btr, mode);
+			CurrentResult cr = new CurrentResultImpl(btr, mode);
 			return Optional.of(cr);
 		}
 		return Optional.empty();
@@ -291,7 +291,7 @@ class SegmentProcessor {
 		} else {
 			String mode = null;
 			BrailleTranslatorResult btr = toResult(spec, null);
-			CurrentResult cr = new CurrentResult(btr, mode);
+			CurrentResult cr = new CurrentResultImpl(btr, mode);
 			return Optional.of(cr);
 		}
 		return Optional.empty();
@@ -311,7 +311,7 @@ class SegmentProcessor {
 			} else {
 				String mode = null;
 				BrailleTranslatorResult btr = toResult(spec, mode);
-				CurrentResult cr = new CurrentResult(btr, mode);
+				CurrentResult cr = new CurrentResultImpl(btr, mode);
 				return Optional.of(cr);
 			}
 		}
@@ -384,7 +384,7 @@ class SegmentProcessor {
 				layoutOrApplyAfterLeader = null;
 				seenSegmentAfterLeader = false;
 			}
-			CurrentResult cr = new CurrentResult(btr, mode);
+			CurrentResult cr = new CurrentResultImpl(btr, mode);
 			return Optional.of(cr);
 		}
 		return Optional.empty();
@@ -402,22 +402,27 @@ class SegmentProcessor {
 		}		
 	}
 	
-	private class CurrentResult {
+	private interface CurrentResult {
+		boolean hasNext();
+		Optional<RowImpl> process();
+	}
+	
+	private class CurrentResultImpl implements CurrentResult {
 		private final BrailleTranslatorResult btr;
 		private final String mode;
 		private boolean first;
 		
-		CurrentResult(BrailleTranslatorResult btr, String mode) {
+		CurrentResultImpl(BrailleTranslatorResult btr, String mode) {
 			this.btr = btr;
 			this.mode = mode;
 			this.first = true;
 		}
 
-		private boolean hasNext() {
+		public boolean hasNext() {
 			return first || btr.hasNext();
 		}
 
-		private Optional<RowImpl> process() {
+		public Optional<RowImpl> process() {
 			if (first) {
 				first = false;
 				return processFirst();
