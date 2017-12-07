@@ -145,9 +145,11 @@ class SegmentProcessor {
 					});
 					break;
 				case Leader:
-					rows.addAll(
-						layoutLeaderSegment((LeaderSegment)s)
-					);
+					layoutLeaderSegment((LeaderSegment)s).ifPresent(cr->{
+						while (cr.hasNext()) {
+							cr.process().ifPresent(v->rows.add(v));
+						}
+					});
 					break;
 				case Reference:
 					layoutPageSegment((PageNumberReferenceSegment)s).ifPresent(cr->{
@@ -258,17 +260,15 @@ class SegmentProcessor {
 		return Optional.empty();
 	}
 	
-	private List<RowImpl> layoutLeaderSegment(LeaderSegment ls) {
-		List<RowImpl> rows = new ArrayList<>();
-		if (leaderManager.hasLeader()) {
-			layoutLeader().ifPresent(cr->{
-				while (cr.hasNext()) {
-					cr.process().ifPresent(v->rows.add(v));
-				}
-			});
+	private Optional<CurrentResult> layoutLeaderSegment(LeaderSegment ls) {
+		try {
+			if (leaderManager.hasLeader()) {
+				return layoutLeader();
+			}
+			return Optional.empty();
+		} finally {
+			leaderManager.addLeader(ls);
 		}
-		leaderManager.addLeader(ls);
-		return rows;
 	}
 
 	private Optional<CurrentResult> layoutPageSegment(PageNumberReferenceSegment rs) {
