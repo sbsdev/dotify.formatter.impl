@@ -129,99 +129,105 @@ class SegmentProcessor {
 			throw new IllegalStateException();
 		}
 		List<RowImpl> rows = new ArrayList<>();
+		Optional<CurrentResult> cr;
 		while (rows.isEmpty() && hasMoreData()) {
 			Segment s = segments.get(segmentIndex);
 			segmentIndex++;
 			switch (s.getSegmentType()) {
 				case NewLine:
-					{
-						//flush
-						CurrentResult cr = layoutNewLine();
-						while (cr.hasNext()) {
-							cr.process().ifPresent(v->rows.add(v));
-						}
-					}
+					//flush
+					cr = Optional.of(new NewLineResult(layoutLeader()));
 					break;
 				case Text:
-					layoutTextSegment((TextSegment)s).ifPresent(cr->{
-						while (cr.hasNext()) {
-							cr.process().ifPresent(v->rows.add(v));
-						}
-					});
+					cr = layoutTextSegment((TextSegment)s);
 					break;
 				case Leader:
-					layoutLeaderSegment((LeaderSegment)s).ifPresent(cr->{
-						while (cr.hasNext()) {
-							cr.process().ifPresent(v->rows.add(v));
-						}
-					});
+					cr = layoutLeaderSegment((LeaderSegment)s);
 					break;
 				case Reference:
-					layoutPageSegment((PageNumberReferenceSegment)s).ifPresent(cr->{
-						while (cr.hasNext()) {
-							cr.process().ifPresent(v->rows.add(v));
-						}
-					});
+					cr = layoutPageSegment((PageNumberReferenceSegment)s);
 					break;
 				case Evaluate:
-					layoutEvaluate((Evaluate)s).ifPresent(cr->{
-						while (cr.hasNext()) {
-							cr.process().ifPresent(v->rows.add(v));
-						}
-					});
+					cr = layoutEvaluate((Evaluate)s);
 					break;
 				case Marker:
 					applyAfterLeader((MarkerSegment)s);
+					cr = Optional.empty();
 					break;
 				case Anchor:
 					applyAfterLeader((AnchorSegment)s);
+					cr = Optional.empty();
 					break;
+				default:
+					cr = Optional.empty();
 			}
+			cr.ifPresent(cr2->{
+				while (cr2.hasNext()) {
+					cr2.process().ifPresent(v->rows.add(v));
+				}
+			});
 		}
 		if (!hasMoreData()) {
-			CurrentResult cr = close();
-			while (cr.hasNext()) {
-				cr.process().ifPresent(v->rows.add(v));
+			CurrentResult crx = new CloseResult(layoutLeader());
+			while (crx.hasNext()) {
+				crx.process().ifPresent(v->rows.add(v));
 			}
 		}
 		return rows;
 	}
 	
-	CurrentResult close() {
-		return new CurrentResult() {
-			private Optional<CurrentResult> cr = layoutLeader();
-			private boolean doFlush = true;
-			private boolean doUnderline = rdp.getUnderlineStyle()!=null;
-
-			@Override
-			public boolean hasNext() {
-				return cr.isPresent() && cr.get().hasNext() || doFlush || (!empty && doUnderline);
+	private class CloseResult implements CurrentResult {
+		private Optional<CurrentResult> cr;
+		private boolean doFlush;
+		private boolean doUnderline;
+		
+		private CloseResult(Optional<CurrentResult> cr) {
+			this.cr = cr;
+			this.doFlush = true;
+			this.doUnderline = rdp.getUnderlineStyle()!=null;
+		}
+		
+		private CloseResult(CloseResult template) {
+			if (template.cr.isPresent()) {
+				this.cr = Optional.of(template.cr.get().copy());
 			}
+			this.doFlush = template.doFlush;
+			this.doUnderline = template.doUnderline;
+		}
 
-			@Override
-			public Optional<RowImpl> process() {
-				if (cr.isPresent() && cr.get().hasNext()) {
-					return cr.get().process();
-				} else if (doFlush) {
-					doFlush = false;
-					if (currentRow!=null) {
-						return Optional.of(flushCurrentRow());
-					}
-				} else if (!empty && doUnderline) {
-					doUnderline = false;
-					if (minLeft < margins.getLeftMargin().getContent().length() || minRight < margins.getRightMargin().getContent().length()) {
-						throw new RuntimeException("coding error");
-					}
-					return Optional.of(new RowImpl.Builder(StringTools.fill(fcontext.getSpaceCharacter(), minLeft - margins.getLeftMargin().getContent().length())
-								+ StringTools.fill(rdp.getUnderlineStyle(), flowWidth - minLeft - minRight))
-								.leftMargin(margins.getLeftMargin())
-								.rightMargin(margins.getRightMargin())
-								.adjustedForMargin(true)
-								.build());
+		@Override
+		public boolean hasNext() {
+			return cr.isPresent() && cr.get().hasNext() || doFlush || (!empty && doUnderline);
+		}
+
+		@Override
+		public Optional<RowImpl> process() {
+			if (cr.isPresent() && cr.get().hasNext()) {
+				return cr.get().process();
+			} else if (doFlush) {
+				doFlush = false;
+				if (currentRow!=null) {
+					return Optional.of(flushCurrentRow());
 				}
-				return Optional.empty();
+			} else if (!empty && doUnderline) {
+				doUnderline = false;
+				if (minLeft < margins.getLeftMargin().getContent().length() || minRight < margins.getRightMargin().getContent().length()) {
+					throw new RuntimeException("coding error");
+				}
+				return Optional.of(new RowImpl.Builder(StringTools.fill(fcontext.getSpaceCharacter(), minLeft - margins.getLeftMargin().getContent().length())
+							+ StringTools.fill(rdp.getUnderlineStyle(), flowWidth - minLeft - minRight))
+							.leftMargin(margins.getLeftMargin())
+							.rightMargin(margins.getRightMargin())
+							.adjustedForMargin(true)
+							.build());
 			}
-		};
+			return Optional.empty();
+		}
+
+		@Override
+		public CurrentResult copy() {
+			return new CloseResult(this);
+		}
 	}
 
 	private RowImpl flushCurrentRow() {
@@ -246,34 +252,50 @@ class SegmentProcessor {
 		currentRow = null;
 		return r;
 	}
+	
+	private class NewLineResult implements CurrentResult {
+		private boolean newLine;
+		private Optional<CurrentResult> cr;
 
-	private CurrentResult layoutNewLine() {
-		return new CurrentResult() {
-			private boolean newLine = true;
-			private Optional<CurrentResult> cr = layoutLeader();
-			@Override
-			public boolean hasNext() {
-				return cr.isPresent() && cr.get().hasNext() || newLine;
+		private NewLineResult(Optional<CurrentResult> cr) {
+			this.cr = cr;
+			this.newLine = true;
+		}
+		
+		private NewLineResult(NewLineResult template) {
+			if (template.cr.isPresent()) {
+				this.cr = Optional.of(template.cr.get().copy());
 			}
+			this.newLine = template.newLine;
+		}
 
-			@Override
-			public Optional<RowImpl> process() {
-				if (cr.isPresent() && cr.get().hasNext()) {
-					return cr.get().process();
-				} else if (newLine) {
-					newLine = false;
-					try {
-						if (currentRow!=null) {
-							return Optional.of(flushCurrentRow());
-						}
-					} finally {
-						MarginProperties ret = new MarginProperties(margins.getLeftMargin().getContent()+StringTools.fill(fcontext.getSpaceCharacter(), rdp.getTextIndent()), margins.getLeftMargin().isSpaceOnly());
-						currentRow = rdp.configureNewEmptyRowBuilder(ret, margins.getRightMargin());
+		@Override
+		public boolean hasNext() {
+			return cr.isPresent() && cr.get().hasNext() || newLine;
+		}
+
+		@Override
+		public Optional<RowImpl> process() {
+			if (cr.isPresent() && cr.get().hasNext()) {
+				return cr.get().process();
+			} else if (newLine) {
+				newLine = false;
+				try {
+					if (currentRow!=null) {
+						return Optional.of(flushCurrentRow());
 					}
+				} finally {
+					MarginProperties ret = new MarginProperties(margins.getLeftMargin().getContent()+StringTools.fill(fcontext.getSpaceCharacter(), rdp.getTextIndent()), margins.getLeftMargin().isSpaceOnly());
+					currentRow = rdp.configureNewEmptyRowBuilder(ret, margins.getRightMargin());
 				}
-				return Optional.empty();
 			}
-		};
+			return Optional.empty();
+		}
+
+		@Override
+		public CurrentResult copy() {
+			return new NewLineResult(this);
+		}		
 	}
 	
 	private Optional<CurrentResult> layoutTextSegment(TextSegment ts) {
@@ -440,6 +462,7 @@ class SegmentProcessor {
 	private interface CurrentResult {
 		boolean hasNext();
 		Optional<RowImpl> process();
+		CurrentResult copy();
 	}
 	
 	private class CurrentResultImpl implements CurrentResult {
@@ -451,6 +474,16 @@ class SegmentProcessor {
 			this.btr = btr;
 			this.mode = mode;
 			this.first = true;
+		}
+		
+		CurrentResultImpl(CurrentResultImpl template) {
+			this.btr = template.btr.copy();
+			this.mode = template.mode;
+			this.first = template.first;
+		}
+		
+		public CurrentResult copy() {
+			return new CurrentResultImpl(this);
 		}
 
 		public boolean hasNext() {

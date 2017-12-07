@@ -38,7 +38,7 @@ repositories {
 
 dependencies {
     compileOnly group: "biz.aQute.bnd", name: "annotation", version: "2.3.0"
-    compile "org.daisy.dotify:dotify.api:3.2.0"
+    compile "org.daisy.dotify:dotify.api:3.3.0"
     compile "org.daisy.dotify:dotify.common:3.9.0"
     compile (group: 'org.daisy.libs', name: 'saxon-he', version: '9.5.1.5') {
 		exclude module: 'Saxon-HE'
@@ -54,7 +54,7 @@ dependencies {
     
 	testRuntime group: group, name:'dotify.hyphenator.impl', version:'3.0.0'
 	testRuntime group: group, name:'dotify.text.impl', version:'3.0.0'
-	testRuntime group: group, name:'dotify.translator.impl', version:'3.0.0'
+	testRuntime group: group, name:'dotify.translator.impl', version:'3.1.0'
 }
 
 buildscript {

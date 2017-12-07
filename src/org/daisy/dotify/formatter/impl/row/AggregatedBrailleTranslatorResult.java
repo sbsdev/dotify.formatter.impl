@@ -3,6 +3,7 @@ package org.daisy.dotify.formatter.impl.row;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.daisy.dotify.api.formatter.Marker;
 import org.daisy.dotify.api.translator.BrailleTranslatorResult;
@@ -31,7 +32,7 @@ class AggregatedBrailleTranslatorResult implements BrailleTranslatorResult {
 		}
 		
 		Builder(Builder template) {
-			this.results = new ArrayList<>(template.results);
+			this.results = copyResults(template.results);
 		}
 		
 		/**
@@ -75,9 +76,27 @@ class AggregatedBrailleTranslatorResult implements BrailleTranslatorResult {
 		this.pendingMarkers = new ArrayList<>();
 		this.pendingAnchors = new ArrayList<>();
 	}
+	
+	private AggregatedBrailleTranslatorResult(AggregatedBrailleTranslatorResult template) {
+		this.results = copyResults(template.results);
+		this.currentIndex = template.currentIndex;
+		this.pendingMarkers = new ArrayList<>(template.pendingMarkers);
+		this.pendingAnchors = new ArrayList<>(template.pendingAnchors);
+	}
+	
+	private static List<Object> copyResults(List<?> inputs) {
+		return inputs.stream().map(o->{
+			if (o instanceof BrailleTranslatorResult) {
+				BrailleTranslatorResult btr = ((BrailleTranslatorResult)o);
+				return btr.copy();
+			} else {
+				return o;
+			}
+		}).collect(Collectors.toList());
+	}
 
 	@Override
-	public String nextTranslatedRow(int limit, boolean force) {
+	public String nextTranslatedRow(int limit, boolean force, boolean wholeWordsOnly) {
 		String row = "";
 		BrailleTranslatorResult current = computeNext();
 		while (limit > row.length()) {
@@ -186,4 +205,10 @@ class AggregatedBrailleTranslatorResult implements BrailleTranslatorResult {
 			throw new UnsupportedMetricException("Metric not supported: " + metric);
 		}
 	}
+
+	@Override
+	public BrailleTranslatorResult copy() {
+		return new AggregatedBrailleTranslatorResult(this);
+	}
+
 }
