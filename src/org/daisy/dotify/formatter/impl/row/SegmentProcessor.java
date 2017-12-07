@@ -134,8 +134,13 @@ class SegmentProcessor {
 			segmentIndex++;
 			switch (s.getSegmentType()) {
 				case NewLine:
-					//flush
-					rows.addAll(layoutNewLine());
+					{
+						//flush
+						CurrentResult cr = layoutNewLine();
+						while (cr.hasNext()) {
+							cr.process().ifPresent(v->rows.add(v));
+						}
+					}
 					break;
 				case Text:
 					layoutTextSegment((TextSegment)s).ifPresent(cr->{
@@ -226,19 +231,33 @@ class SegmentProcessor {
 		return r;
 	}
 
-	private List<RowImpl> layoutNewLine() {
-		List<RowImpl> rows = new ArrayList<>();
-		layoutLeader().ifPresent(cr->{
-			while (cr.hasNext()) {
-				cr.process().ifPresent(v->rows.add(v));
+	private CurrentResult layoutNewLine() {
+		return new CurrentResult() {
+			private boolean newLine = true;
+			private Optional<CurrentResult> cr = layoutLeader();
+			@Override
+			public boolean hasNext() {
+				return cr.isPresent() && cr.get().hasNext() || newLine;
 			}
-		});
-		if (currentRow!=null) {
-			rows.add(flushCurrentRow());
-		}
-		MarginProperties ret = new MarginProperties(margins.getLeftMargin().getContent()+StringTools.fill(fcontext.getSpaceCharacter(), rdp.getTextIndent()), margins.getLeftMargin().isSpaceOnly());
-		currentRow = rdp.configureNewEmptyRowBuilder(ret, margins.getRightMargin());
-		return rows;
+
+			@Override
+			public Optional<RowImpl> process() {
+				if (cr.isPresent() && cr.get().hasNext()) {
+					return cr.get().process();
+				} else if (newLine) {
+					newLine = false;
+					try {
+						if (currentRow!=null) {
+							return Optional.of(flushCurrentRow());
+						}
+					} finally {
+						MarginProperties ret = new MarginProperties(margins.getLeftMargin().getContent()+StringTools.fill(fcontext.getSpaceCharacter(), rdp.getTextIndent()), margins.getLeftMargin().isSpaceOnly());
+						currentRow = rdp.configureNewEmptyRowBuilder(ret, margins.getRightMargin());
+					}
+				}
+				return Optional.empty();
+			}
+		};
 	}
 	
 	private Optional<CurrentResult> layoutTextSegment(TextSegment ts) {
