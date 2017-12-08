@@ -141,24 +141,21 @@ class SegmentProcessor {
 			throw new IllegalStateException();
 		}
 		List<RowImpl> rows = new ArrayList<>();
-		if (!hasSegments() && !closed) {
-			closed = true;
-			cr = new CloseResult(layoutLeader());
-			while (cr.hasNext()) {
-				cr.process().ifPresent(v->rows.add(v));
-			}
-		} else {
-			while (rows.isEmpty() && hasSegments()) {
-				cr = null;
+		if (cr == null) {
+			if (!hasSegments() && !closed) {
+				closed = true;
+				cr = new CloseResult(layoutLeader());
+			} else {
 				while (cr==null && hasSegments()) {
 					cr = loadNextSegment().orElse(null);
 				}
-				if (cr!=null) {
-					while (cr.hasNext()) {
-						cr.process().ifPresent(v->rows.add(v));
-					}
-				}
 			}
+		}
+		if (cr!=null) {
+			while (cr.hasNext()) {
+				cr.process().ifPresent(v->rows.add(v));
+			}
+			cr = null;
 		}
 		return rows;
 	}
