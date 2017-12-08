@@ -142,9 +142,9 @@ class SegmentProcessor {
 			}
 		}
 		if (!hasMoreData()) {
-			CurrentResult crx = new CloseResult(layoutLeader());
-			while (crx.hasNext()) {
-				crx.process().ifPresent(v->rows.add(v));
+			cr = new CloseResult(layoutLeader());
+			while (cr.hasNext()) {
+				cr.process().ifPresent(v->rows.add(v));
 			}
 		}
 		return rows;
