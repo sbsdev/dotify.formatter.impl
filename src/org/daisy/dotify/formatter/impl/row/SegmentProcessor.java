@@ -49,6 +49,7 @@ class SegmentProcessor {
 	private int minLeft;
 	private int minRight;
 	private boolean empty;
+	private CurrentResult cr;
 
 	SegmentProcessor(List<Segment> segments, int flowWidth, CrossReferenceHandler refs, Context context, int available, BlockMargin margins, FormatterCoreContext fcontext, RowDataProperties rdp) {
 		this.segments = Collections.unmodifiableList(segments);
@@ -129,43 +130,16 @@ class SegmentProcessor {
 			throw new IllegalStateException();
 		}
 		List<RowImpl> rows = new ArrayList<>();
-		Optional<CurrentResult> cr;
 		while (rows.isEmpty() && hasMoreData()) {
-			Segment s = segments.get(segmentIndex);
-			segmentIndex++;
-			switch (s.getSegmentType()) {
-				case NewLine:
-					//flush
-					cr = Optional.of(new NewLineResult(layoutLeader()));
-					break;
-				case Text:
-					cr = layoutTextSegment((TextSegment)s);
-					break;
-				case Leader:
-					cr = layoutLeaderSegment((LeaderSegment)s);
-					break;
-				case Reference:
-					cr = layoutPageSegment((PageNumberReferenceSegment)s);
-					break;
-				case Evaluate:
-					cr = layoutEvaluate((Evaluate)s);
-					break;
-				case Marker:
-					applyAfterLeader((MarkerSegment)s);
-					cr = Optional.empty();
-					break;
-				case Anchor:
-					applyAfterLeader((AnchorSegment)s);
-					cr = Optional.empty();
-					break;
-				default:
-					cr = Optional.empty();
+			cr = null;
+			while (cr==null && hasMoreData()) {
+				cr = loadNextSegment().orElse(null);
 			}
-			cr.ifPresent(cr2->{
-				while (cr2.hasNext()) {
-					cr2.process().ifPresent(v->rows.add(v));
+			if (cr!=null) {
+				while (cr.hasNext()) {
+					cr.process().ifPresent(v->rows.add(v));
 				}
-			});
+			}
 		}
 		if (!hasMoreData()) {
 			CurrentResult crx = new CloseResult(layoutLeader());
@@ -174,6 +148,32 @@ class SegmentProcessor {
 			}
 		}
 		return rows;
+	}
+	
+	private Optional<CurrentResult> loadNextSegment() {
+		Segment s = segments.get(segmentIndex);
+		segmentIndex++;
+		switch (s.getSegmentType()) {
+			case NewLine:
+				//flush
+				return Optional.of(new NewLineResult(layoutLeader()));
+			case Text:
+				return layoutTextSegment((TextSegment)s);
+			case Leader:
+				return layoutLeaderSegment((LeaderSegment)s);
+			case Reference:
+				return layoutPageSegment((PageNumberReferenceSegment)s);
+			case Evaluate:
+				return layoutEvaluate((Evaluate)s);
+			case Marker:
+				applyAfterLeader((MarkerSegment)s);
+				return Optional.empty();
+			case Anchor:
+				applyAfterLeader((AnchorSegment)s);
+				return Optional.empty();
+			default:
+				return Optional.empty();
+		}
 	}
 	
 	private class CloseResult implements CurrentResult {
