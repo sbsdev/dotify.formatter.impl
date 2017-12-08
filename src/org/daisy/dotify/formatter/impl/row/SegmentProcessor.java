@@ -50,6 +50,7 @@ class SegmentProcessor {
 	private int minRight;
 	private boolean empty;
 	private CurrentResult cr;
+	private boolean closed;
 
 	SegmentProcessor(List<Segment> segments, int flowWidth, CrossReferenceHandler refs, Context context, int available, BlockMargin margins, FormatterCoreContext fcontext, RowDataProperties rdp) {
 		this.segments = Collections.unmodifiableList(segments);
@@ -91,6 +92,7 @@ class SegmentProcessor {
 		this.empty  = template.empty;
 		this.segments = template.segments;
 		this.segmentIndex = template.segmentIndex;
+		this.closed = template.closed;
 	}
 
 	private void initFields() {
@@ -104,9 +106,14 @@ class SegmentProcessor {
 		minLeft = flowWidth;
 		minRight = flowWidth;
 		empty = true;
+		closed = false;
 	}
 
 	boolean couldTriggerNewRow() {
+		if (!hasSegments()) {
+			//There's a lot of conditions to keep track of here, but hopefully we can simplify later on
+			return !closed && (currentRow!=null || !empty && rdp.getUnderlineStyle()!=null || leaderManager.hasLeader());
+		}
 		Segment s = segments.get(segmentIndex);
 		switch (s.getSegmentType()) {
 			case Marker:
@@ -122,6 +129,10 @@ class SegmentProcessor {
 	}
 
 	boolean hasMoreData() {
+		return hasSegments() || !closed;
+	}
+	
+	private boolean hasSegments() {
 		return segmentIndex<segments.size();
 	}
 
@@ -130,21 +141,23 @@ class SegmentProcessor {
 			throw new IllegalStateException();
 		}
 		List<RowImpl> rows = new ArrayList<>();
-		while (rows.isEmpty() && hasMoreData()) {
-			cr = null;
-			while (cr==null && hasMoreData()) {
-				cr = loadNextSegment().orElse(null);
-			}
-			if (cr!=null) {
-				while (cr.hasNext()) {
-					cr.process().ifPresent(v->rows.add(v));
-				}
-			}
-		}
-		if (!hasMoreData()) {
+		if (!hasSegments() && !closed) {
+			closed = true;
 			cr = new CloseResult(layoutLeader());
 			while (cr.hasNext()) {
 				cr.process().ifPresent(v->rows.add(v));
+			}
+		} else {
+			while (rows.isEmpty() && hasSegments()) {
+				cr = null;
+				while (cr==null && hasSegments()) {
+					cr = loadNextSegment().orElse(null);
+				}
+				if (cr!=null) {
+					while (cr.hasNext()) {
+						cr.process().ifPresent(v->rows.add(v));
+					}
+				}
 			}
 		}
 		return rows;
