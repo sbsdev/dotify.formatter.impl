@@ -129,18 +129,17 @@ class SegmentProcessor {
 	}
 
 	boolean hasMoreData() {
-		return hasSegments() || !closed;
+		return hasSegments() || !closed || cr!=null && cr.hasNext();
 	}
 	
 	private boolean hasSegments() {
 		return segmentIndex<segments.size();
 	}
 
-	List<RowImpl> getNextRows() {
+	void prepareNext() {
 		if (!hasMoreData()) {
 			throw new IllegalStateException();
 		}
-		List<RowImpl> rows = new ArrayList<>();
 		if (cr == null) {
 			if (!hasSegments() && !closed) {
 				closed = true;
@@ -151,13 +150,23 @@ class SegmentProcessor {
 				}
 			}
 		}
-		if (cr!=null) {
-			while (cr.hasNext()) {
-				cr.process().ifPresent(v->rows.add(v));
+	}
+	
+	boolean hasNext() {
+		return cr!=null && cr.hasNext();
+	}
+	
+	Optional<RowImpl> getNext() {
+		if (cr!=null && cr.hasNext()) {
+			try {
+				return cr.process();
+			} finally {
+				if (!cr.hasNext()) {
+					cr = null;
+				}
 			}
-			cr = null;
 		}
-		return rows;
+		return Optional.empty();
 	}
 	
 	private Optional<CurrentResult> loadNextSegment() {
