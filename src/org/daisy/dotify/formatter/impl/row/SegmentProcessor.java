@@ -92,6 +92,7 @@ class SegmentProcessor {
 		this.empty  = template.empty;
 		this.segments = template.segments;
 		this.segmentIndex = template.segmentIndex;
+		this.cr = template.cr!=null?template.cr.copy():null;
 		this.closed = template.closed;
 	}
 
@@ -106,6 +107,7 @@ class SegmentProcessor {
 		minLeft = flowWidth;
 		minRight = flowWidth;
 		empty = true;
+		cr = null;
 		closed = false;
 	}
 
