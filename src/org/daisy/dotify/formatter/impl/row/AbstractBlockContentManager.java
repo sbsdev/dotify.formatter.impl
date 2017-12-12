@@ -1,6 +1,7 @@
 package org.daisy.dotify.formatter.impl.row;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.daisy.dotify.api.formatter.Marker;
 import org.daisy.dotify.formatter.impl.common.FormatterCoreContext;
@@ -54,7 +55,7 @@ public abstract class AbstractBlockContentManager implements BlockStatistics {
      * Gets the next row from the manager with the specified width
      * @return returns the next row
      */
-    public abstract RowImpl getNext();
+    public abstract Optional<RowImpl> getNext();
 
 	/**
 	 * Returns true if this manager supports rows with variable maximum

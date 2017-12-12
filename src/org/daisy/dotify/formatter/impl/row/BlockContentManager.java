@@ -3,6 +3,7 @@ package org.daisy.dotify.formatter.impl.row;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.daisy.dotify.api.formatter.Context;
 import org.daisy.dotify.api.formatter.Marker;
@@ -108,11 +109,14 @@ public class BlockContentManager extends AbstractBlockContentManager {
     }
 
 	@Override
-	public RowImpl getNext() {
-		ensureBuffer(rowIndex+1);
-		RowImpl ret = rows.get(rowIndex);
-		rowIndex++;
-		return ret;
+	public Optional<RowImpl> getNext() {
+		if (ensureBuffer(rowIndex+1)) {
+			RowImpl ret = rows.get(rowIndex);
+			rowIndex++;
+			return Optional.of(ret);
+		} else {
+			return Optional.empty();
+		}
 	}
 
 	@Override

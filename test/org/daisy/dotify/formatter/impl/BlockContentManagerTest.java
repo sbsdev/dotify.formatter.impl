@@ -46,9 +46,9 @@ public class BlockContentManagerTest {
 		AbstractBlockContentManager m = new BlockContentManager(10, segments, rdp, refs, context, c);
 
 		//test
-		assertEquals("⠀⠄⠄⠄⠀⠄⠄⠄", m.getNext().getChars());
-		assertEquals("⠀⠀⠀⠄⠄⠄⠀⠄⠄⠄", m.getNext().getChars());
-		assertEquals("⠀⠀⠀⠄⠄⠄⠀⠄⠄⠄", m.getNext().getChars());
+		assertEquals("⠀⠄⠄⠄⠀⠄⠄⠄", m.getNext().get().getChars());
+		assertEquals("⠀⠀⠀⠄⠄⠄⠀⠄⠄⠄", m.getNext().get().getChars());
+		assertEquals("⠀⠀⠀⠄⠄⠄⠀⠄⠄⠄", m.getNext().get().getChars());
 		assertFalse(m.hasNext());
 	}
 	
@@ -68,7 +68,7 @@ public class BlockContentManagerTest {
 		AbstractBlockContentManager m = new BlockContentManager(10, segments, rdp, refs, context, c);
 
 		//test
-		assertEquals("⠀⠀⠀⠀⠀⠀⠀⠄⠄⠄", m.getNext().getChars());
+		assertEquals("⠀⠀⠀⠀⠀⠀⠀⠄⠄⠄", m.getNext().get().getChars());
 		assertFalse(m.hasNext());
 	}
 	
@@ -89,12 +89,12 @@ public class BlockContentManagerTest {
 		AbstractBlockContentManager m = new BlockContentManager(10, segments, rdp, refs, context, c);
 
 		//test
-		assertEquals("⠀⠄⠄⠄⠀⠄⠄⠄", m.getNext().getChars());
-		RowImpl r = m.getNext();
+		assertEquals("⠀⠄⠄⠄⠀⠄⠄⠄", m.getNext().get().getChars());
+		RowImpl r = m.getNext().get();
 		assertEquals("⠀⠀⠀⠄⠄⠄", r.getLeftMargin().getContent()+r.getChars());
-		r = m.getNext();
+		r = m.getNext().get();
 		assertEquals("⠀⠀⠀⠄⠄⠄", r.getLeftMargin().getContent()+r.getChars());
-		r = m.getNext();
+		r = m.getNext().get();
 		assertEquals("⠀⠀⠀⠄⠄⠄", r.getLeftMargin().getContent()+r.getChars());
 		assertFalse(m.hasNext());
 	}

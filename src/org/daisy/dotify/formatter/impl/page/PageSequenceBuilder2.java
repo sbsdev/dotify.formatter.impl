@@ -1,6 +1,7 @@
 package org.daisy.dotify.formatter.impl.page;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.daisy.dotify.api.formatter.BlockPosition;
 import org.daisy.dotify.api.formatter.FallbackRule;
@@ -398,8 +399,9 @@ public class PageSequenceBuilder2 {
 					AbstractBlockContentManager bcm = g.getBlockContentManager(c);
 					b.addAll(bcm.getCollapsiblePreContentRows());
 					b.addAll(bcm.getInnerPreContentRows());
-					while (bcm.hasNext()) {
-						b.add(bcm.getNext());
+					Optional<RowImpl> r;
+					while ((r=bcm.getNext()).isPresent()) {
+						b.add(r.get());
 					}
 					b.addAll(bcm.getPostContentRows());
 					b.addAll(bcm.getSkippablePostContentRows());

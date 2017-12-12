@@ -1,6 +1,7 @@
 package org.daisy.dotify.formatter.impl.page;
 
 import java.util.ArrayList;
+import java.util.Optional;
 
 import org.daisy.dotify.api.formatter.FormattingTypes.Keep;
 import org.daisy.dotify.formatter.impl.core.Block;
@@ -123,8 +124,9 @@ class RowGroupProvider {
 			}
 		}
 		if (phase==3) {
-			if (bcm.hasNext()) {
-				RowImpl r = bcm.getNext();
+			Optional<RowImpl> rt;
+			if ((rt=bcm.getNext()).isPresent()) {
+				RowImpl r = rt.get();
 				rowIndex++;
 				if (!bcm.hasNext()) {
 					//we're at the last line, this should be kept with the next block's first line
