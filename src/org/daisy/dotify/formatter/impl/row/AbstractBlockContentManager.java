@@ -51,6 +51,12 @@ public abstract class AbstractBlockContentManager implements BlockStatistics {
      */
     public abstract boolean hasNext();
     
+	/**
+	 * Returns true if the manager has some "significant" content.
+	 * @return returns true if there is significant content, false otherwise.
+	 */
+	public abstract boolean hasSignificantContent();
+	
     /**
      * Gets the next row from the manager with the specified width
      * @return returns the next row

@@ -168,7 +168,7 @@ class RowGroupProvider {
 	}
 	
 	private boolean shouldAddGroupForEmptyContent() {
-		return !bcm.hasNext() && otherData;
+		return !bcm.hasSignificantContent() && otherData;
 	}
 	
 	private static void setProperties(RowGroup.Builder rgb, CrossReferenceHandler crh, Block g) {

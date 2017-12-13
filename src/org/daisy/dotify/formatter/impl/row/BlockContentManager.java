@@ -135,4 +135,9 @@ public class BlockContentManager extends AbstractBlockContentManager {
 		return sp.getGroupAnchors();
 	}
 
+	@Override
+	public boolean hasSignificantContent() {
+		return sp.hasSignificantContent();
+	}
+
 }

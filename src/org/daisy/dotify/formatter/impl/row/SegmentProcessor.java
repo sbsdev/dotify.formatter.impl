@@ -35,6 +35,7 @@ class SegmentProcessor {
 	private final FormatterCoreContext fcontext;
 	private final RowDataProperties rdp;
 	private Context context;
+	private final boolean significantContent;
 
 	private int segmentIndex;
 	private RowImpl.Builder currentRow;
@@ -64,6 +65,7 @@ class SegmentProcessor {
 		this.groupMarkers = new ArrayList<>();
 		this.groupAnchors = new ArrayList<>();
 		this.leaderManager = new LeaderManager();
+		this.significantContent = calculateSignificantContent(segments, context, rdp);
 		initFields();
 	}
 	
@@ -94,6 +96,34 @@ class SegmentProcessor {
 		this.segmentIndex = template.segmentIndex;
 		this.cr = template.cr!=null?template.cr.copy():null;
 		this.closed = template.closed;
+		this.significantContent = template.significantContent;
+	}
+	
+	private static boolean calculateSignificantContent(List<Segment> segments, Context context, RowDataProperties rdp) {
+		for (Segment s : segments) {
+			switch (s.getSegmentType()) {
+				case Marker:
+				case Anchor:
+					// continue
+					break;
+				case Evaluate:
+					if (!((Evaluate)s).getExpression().render(context).isEmpty()) {
+						return true;
+					}
+					break;
+				case Text:
+					if (!((TextSegment)s).getText().isEmpty()) {
+						return true;
+					}
+					break;
+				case NewLine:
+				case Leader:
+				case Reference:
+				default:
+					return true;
+			}
+		}
+		return rdp.getUnderlineStyle()!=null;
 	}
 
 	private void initFields() {
@@ -156,6 +186,10 @@ class SegmentProcessor {
 	
 	boolean hasNext() {
 		return cr!=null && cr.hasNext();
+	}
+	
+	public boolean hasSignificantContent() {
+		return significantContent;
 	}
 	
 	Optional<RowImpl> getNext() {

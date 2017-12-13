@@ -89,4 +89,9 @@ class TableBlockContentManager extends AbstractBlockContentManager {
 		return Collections.emptyList();
 	}
 
+	@Override
+	public boolean hasSignificantContent() {
+		return hasNext();
+	}
+
 }
