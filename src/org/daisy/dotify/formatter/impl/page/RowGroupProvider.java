@@ -128,7 +128,8 @@ class RowGroupProvider {
 			if ((rt=bcm.getNext()).isPresent()) {
 				RowImpl r = rt.get();
 				rowIndex++;
-				if (!bcm.hasNext()) {
+				boolean hasNext = bcm.hasNext(); 
+				if (!hasNext) {
 					//we're at the last line, this should be kept with the next block's first line
 					keepWithNext = g.getKeepWithNext();
 					bc.getRefs().setRowCount(g.getBlockAddress(), bcm.getRowCount());
@@ -138,8 +139,8 @@ class RowGroupProvider {
 								r.allowsBreakAfter()&&
 								owc.allowsBreakAfter(rowIndex-1)&&
 								keepWithNext<=0 &&
-								(Keep.AUTO==g.getKeepType() || !bcm.hasNext()) &&
-								(bcm.hasNext() || !bcm.hasPostContentRows())
+								(Keep.AUTO==g.getKeepType() || !hasNext) &&
+								(hasNext || !bcm.hasPostContentRows())
 								);
 				if (rowIndex==1) { //First item
 					setProperties(rgb, bc.getRefs(), g);
