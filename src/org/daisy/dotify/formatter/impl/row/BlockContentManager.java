@@ -99,7 +99,11 @@ public class BlockContentManager extends AbstractBlockContentManager {
 	public boolean hasNext() {
 		if (rows.size()-rowIndex<=0) {
 			SegmentProcessor copy = new SegmentProcessor(sp);
-			return ensureBuffer(1, copy, new ArrayList<>());
+			if (!copy.hasMoreData()) {
+				return false;
+			} else {
+				return copy.getNext().isPresent();
+			}
 		} else {
 			return true;
 		}
