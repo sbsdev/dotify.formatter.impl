@@ -54,7 +54,7 @@ public class BlockContentManager extends AbstractBlockContentManager {
 	}
 	
 	private boolean ensureBuffer(int index) {
-		return ensureBuffer(index, false);
+		return ensureBuffer(index, sp, rows);
 	}
 
 	/**
@@ -67,7 +67,7 @@ public class BlockContentManager extends AbstractBlockContentManager {
 	 * if the specified index cannot be made available (because the input doesn't contain
 	 * the required amount of data).
 	 */
-	private boolean ensureBuffer(int index, boolean testOnly) {
+	private static boolean ensureBuffer(int index, SegmentProcessor sp, List<RowImpl> rows) {
 		while (sp.hasNext() || index<0 || rows.size()<index) {
 			if (!sp.hasNext()) {
 				if (!sp.hasMoreData()) {
@@ -103,10 +103,11 @@ public class BlockContentManager extends AbstractBlockContentManager {
     	initFields();
     }
 
-    @Override
-    public boolean hasNext() {
-        return ensureBuffer(rowIndex+1, true);
-    }
+	@Override
+	public boolean hasNext() {
+		SegmentProcessor copy = new SegmentProcessor(sp);
+		return ensureBuffer(rowIndex+1, copy, new ArrayList<>(rows));
+	}
 
 	@Override
 	public Optional<RowImpl> getNext() {

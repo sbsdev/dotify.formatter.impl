@@ -139,6 +139,8 @@ class SegmentProcessor {
 		empty = true;
 		cr = null;
 		closed = false;
+		// produce group markers and anchors
+		getNext(false);
 	}
 
 	boolean couldTriggerNewRow() {
@@ -177,9 +179,7 @@ class SegmentProcessor {
 				closed = true;
 				cr = new CloseResult(layoutLeader());
 			} else {
-				while (cr==null && hasSegments()) {
-					cr = loadNextSegment().orElse(null);
-				}
+				cr = loadNextSegment().orElse(null);
 			}
 		}
 	}
@@ -193,11 +193,21 @@ class SegmentProcessor {
 	}
 	
 	Optional<RowImpl> getNext() {
+		return getNext(true);
+	}
+
+	private Optional<RowImpl> getNext(boolean produceRow) {
 		while (true) {
 			if (cr!=null && cr.hasNext()) {
 				try {
 					Optional<RowImpl> ret = cr.process();
 					if (ret.isPresent()) {
+						if (!produceRow) {
+							// there is a test below that verifies that the current segment cannot produce a row result
+							// and the segment was processed under this assumption. If a row has been produced anyway, that's an error
+							// in the code.
+							throw new RuntimeException("Error in code");
+						}
 						return ret;
 					} // else try the next segment.
 				} finally {
@@ -206,6 +216,9 @@ class SegmentProcessor {
 					}
 				}
 			} else if (hasMoreData()) {
+				if (!produceRow && couldTriggerNewRow()) {
+					return Optional.empty();
+				}
 				prepareNext();
 			} else {
 				return Optional.empty();
