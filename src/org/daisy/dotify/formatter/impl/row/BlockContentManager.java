@@ -53,28 +53,23 @@ public class BlockContentManager extends AbstractBlockContentManager {
 		return new BlockContentManager(this);
 	}
 	
-	private boolean ensureBuffer(int index) {
-		return ensureBuffer(index, sp, rows);
-	}
-
 	/**
 	 * Ensures that the specified result index is available in the result list.
 	 * Note that this function is modeled after {@link RowGroupDataSource}, but that it
 	 * isn't used in the same way (yet).
 	 * @param index the index to ensure
-	 * @param testOnly if a row should actually be produced
 	 * @return returns true if the specified index is available in the result list, false
 	 * if the specified index cannot be made available (because the input doesn't contain
 	 * the required amount of data).
 	 */
-	private static boolean ensureBuffer(int index, SegmentProcessor sp, List<RowImpl> rows) {
+	private boolean ensureBuffer(int index) {
 		while (sp.hasNext() || index<0 || rows.size()<index) {
 			if (!sp.hasMoreData()) {
 				return false;
 			}
 			sp.getNext().ifPresent(v->rows.add(v));
 		}
-		return true;
+		return rows.size()>=index;
 	}
 	
 	@Override
