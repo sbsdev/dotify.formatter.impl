@@ -74,7 +74,9 @@ public class BlockContentManager extends AbstractBlockContentManager {
 	
 	@Override
 	public int getRowCount() {
-		ensureBuffer(-1);
+		if (hasNext()) {
+			throw new IllegalStateException();
+		}
 		return rows.size();
 	}
 	
@@ -121,7 +123,9 @@ public class BlockContentManager extends AbstractBlockContentManager {
 
 	@Override
 	public int getForceBreakCount() {
-		ensureBuffer(-1);
+		if (hasNext()) {
+			throw new IllegalStateException();
+		}
 		return sp.getForceCount();
 	}
 
