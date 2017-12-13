@@ -97,13 +97,17 @@ public class BlockContentManager extends AbstractBlockContentManager {
 
 	@Override
 	public boolean hasNext() {
-		if (rows.size()-rowIndex<=0) {
-			SegmentProcessor copy = new SegmentProcessor(sp);
-			if (!copy.hasMoreData()) {
+		int diff = rows.size()-rowIndex;
+		if (diff==0) {
+			if (!sp.hasMoreData()) {
 				return false;
 			} else {
-				return copy.getNext().isPresent();
+				return new SegmentProcessor(sp).getNext().isPresent();
 			}
+		} else if (diff<0) {
+			// The next value should always follow the size of the last produced result.
+			// If it doesn't, something has gone wrong elsewhere in this class.
+			throw new RuntimeException("Error in code");
 		} else {
 			return true;
 		}
