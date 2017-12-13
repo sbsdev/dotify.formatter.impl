@@ -193,16 +193,24 @@ class SegmentProcessor {
 	}
 	
 	Optional<RowImpl> getNext() {
-		if (cr!=null && cr.hasNext()) {
-			try {
-				return cr.process();
-			} finally {
-				if (!cr.hasNext()) {
-					cr = null;
+		while (true) {
+			if (cr!=null && cr.hasNext()) {
+				try {
+					Optional<RowImpl> ret = cr.process();
+					if (ret.isPresent()) {
+						return ret;
+					} // else try the next segment.
+				} finally {
+					if (!cr.hasNext()) {
+						cr = null;
+					}
 				}
+			} else if (hasMoreData()) {
+				prepareNext();
+			} else {
+				return Optional.empty();
 			}
 		}
-		return Optional.empty();
 	}
 	
 	private Optional<CurrentResult> loadNextSegment() {
