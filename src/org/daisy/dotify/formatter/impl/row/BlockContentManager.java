@@ -97,8 +97,12 @@ public class BlockContentManager extends AbstractBlockContentManager {
 
 	@Override
 	public boolean hasNext() {
-		SegmentProcessor copy = new SegmentProcessor(sp);
-		return ensureBuffer(rowIndex+1, copy, new ArrayList<>(rows));
+		if (rows.size()-rowIndex<=0) {
+			SegmentProcessor copy = new SegmentProcessor(sp);
+			return ensureBuffer(1, copy, new ArrayList<>());
+		} else {
+			return true;
+		}
 	}
 
 	@Override
