@@ -69,18 +69,10 @@ public class BlockContentManager extends AbstractBlockContentManager {
 	 */
 	private static boolean ensureBuffer(int index, SegmentProcessor sp, List<RowImpl> rows) {
 		while (sp.hasNext() || index<0 || rows.size()<index) {
-			if (!sp.hasNext()) {
-				if (!sp.hasMoreData()) {
-					return false;
-				}
-				if (testOnly && sp.couldTriggerNewRow()) {
-					return true;
-				}
-				sp.prepareNext();
+			if (!sp.hasMoreData()) {
+				return false;
 			}
-			if (sp.hasNext()) {
-				sp.getNext().ifPresent(v->rows.add(v));
-			}
+			sp.getNext().ifPresent(v->rows.add(v));
 		}
 		return true;
 	}
