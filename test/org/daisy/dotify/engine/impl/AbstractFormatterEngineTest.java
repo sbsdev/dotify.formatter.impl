@@ -22,12 +22,19 @@ import org.daisy.dotify.consumer.writer.PagedMediaWriterFactoryMaker;
 
 abstract class AbstractFormatterEngineTest {
 	void testPEF(String input, String expected, boolean keep) throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
-		FormatterEngine engine = FormatterEngineMaker.newInstance().newFormatterEngine("sv-SE",
+		testPEF(input, expected, keep?File.createTempFile("TestResult", ".tmp"):null);
+	}
+	
+	void testPEF(String input, String expected, File res) throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
+		testPEF(FormatterEngineMaker.newInstance().newFormatterEngine("sv-SE",
 				BrailleTranslatorFactory.MODE_UNCONTRACTED, 
-				PagedMediaWriterFactoryMaker.newInstance().newPagedMediaWriter(MediaTypes.PEF_MEDIA_TYPE));
+				PagedMediaWriterFactoryMaker.newInstance().newPagedMediaWriter(MediaTypes.PEF_MEDIA_TYPE)), input, expected, res);
+	}
 
-		File res = File.createTempFile("TestResult", ".tmp");
+	void testPEF(FormatterEngine engine, String input, String expected, File res) throws LayoutEngineException, IOException {
+		boolean keep = res!=null;
 		if (!keep) {
+			res = File.createTempFile("TestResult", ".tmp");
 			res.deleteOnExit();
 		}
 
