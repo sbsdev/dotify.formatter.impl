@@ -111,8 +111,8 @@ public class BlockContentManager extends AbstractBlockContentManager {
 	}
 
 	@Override
-	public Optional<RowImpl> getNext() {
-		if (ensureBuffer(rowIndex+1, false)) {
+	public Optional<RowImpl> getNext(boolean wholeWordsOnly) {
+		if (ensureBuffer(rowIndex+1, wholeWordsOnly)) {
 			RowImpl ret = rows.get(rowIndex);
 			rowIndex++;
 			return Optional.of(ret);

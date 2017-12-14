@@ -141,9 +141,9 @@ public class PageSequenceBuilder2 {
 		return dataGroupsIndex<dataGroups.size() || (data!=null && !data.isEmpty());
 	}
 	
-	public PageImpl nextPage(int pageNumberOffset) throws PaginatorException, RestartPaginationException // pagination must be restarted in PageStructBuilder.paginateInner
+	public PageImpl nextPage(int pageNumberOffset, boolean hyphenateLastLine) throws PaginatorException, RestartPaginationException // pagination must be restarted in PageStructBuilder.paginateInner
 	{
-		PageImpl ret = nextPageInner(pageNumberOffset);
+		PageImpl ret = nextPageInner(pageNumberOffset, hyphenateLastLine);
 		blockContext.getRefs().keepPageDetails(ret.getDetails());
 		//This is for pre/post volume contents, where the volume number is known
 		if (blockContext.getCurrentVolume()!=null) {
@@ -155,7 +155,7 @@ public class PageSequenceBuilder2 {
 		return ret;
 	}
 
-	private PageImpl nextPageInner(int pageNumberOffset) throws PaginatorException, RestartPaginationException // pagination must be restarted in PageStructBuilder.paginateInner
+	private PageImpl nextPageInner(int pageNumberOffset, boolean hyphenateLastLine) throws PaginatorException, RestartPaginationException // pagination must be restarted in PageStructBuilder.paginateInner
 	{
 		PageImpl current = newPage(pageNumberOffset);
 		while (dataGroupsIndex<dataGroups.size() || (data!=null && !data.isEmpty())) {
@@ -204,7 +204,9 @@ public class PageSequenceBuilder2 {
 				// Using copy to find the break point so that only the required data is rendered
 				SplitPointSpecification spec = sph.find(flowHeight, copy, force?StandardSplitOption.ALLOW_FORCE:null);
 				// Now apply the information to the live data
+				data.setHyphenateLastLine(hyphenateLastLine);
 				SplitPoint<RowGroup, RowGroupDataSource> res = sph.split(spec, data);
+				data.setHyphenateLastLine(true);
 				if (res.getHead().size()==0 && force) {
 					if (firstUnitHasSupplements(data) && hasPageAreaCollection()) {
 						reassignCollection();

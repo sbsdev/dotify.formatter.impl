@@ -25,6 +25,7 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup, RowGroupDataS
 	private final List<Block> blocks;
 	private BlockContext bc;
 	private int blockIndex;
+	private boolean hyphenateLastLine;
 
 	RowGroupDataSource(LayoutMaster master, BlockContext bc, List<Block> blocks, VerticalSpacing vs, Supplements<RowGroup> supplements) {
 		this.master = master;
@@ -34,6 +35,7 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup, RowGroupDataS
 		this.supplements = supplements;
 		this.vs = vs;
 		this.blockIndex = 0;
+		this.hyphenateLastLine = true;
 	}
 	
 	RowGroupDataSource(RowGroupDataSource template) {
@@ -44,6 +46,7 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup, RowGroupDataS
 		this.supplements = template.supplements;
 		this.vs = template.vs;
 		this.blockIndex = template.blockIndex;
+		this.hyphenateLastLine = template.hyphenateLastLine;
 	}
 	
 	static RowGroupDataSource copyUnlessNull(RowGroupDataSource template) {
@@ -62,6 +65,7 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup, RowGroupDataS
 		this.vs = vs;
 		this.blocks = blocks;
 		this.blockIndex = blockIndex;
+		this.hyphenateLastLine = true;
 	}
 
 	@Override
@@ -115,6 +119,10 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup, RowGroupDataS
 		this.bc = c;
 	}
 	
+	void setHyphenateLastLine(boolean value) {
+		this.hyphenateLastLine = value;
+	}
+	
 	/**
 	 * Ensures that there are at least index elements in the buffer.
 	 * When index is -1 this method always returns false.
@@ -132,7 +140,7 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup, RowGroupDataS
 				blockIndex++;
 				data.loadBlock(master, b, bc);
 			}
-			data.processNextRowGroup(bc);
+			data.processNextRowGroup(bc, !hyphenateLastLine && data.size()>=index-1);
 		}
 		return true;
 	}

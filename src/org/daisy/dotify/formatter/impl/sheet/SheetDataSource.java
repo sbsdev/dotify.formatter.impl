@@ -206,7 +206,12 @@ public class SheetDataSource implements SplitPointDataSource<Sheet, SheetDataSou
 					si = new SheetIdentity(rcontext.getSpace(), rcontext.getCurrentVolume(), volumeGroup, sheetBuffer.size()+sheetOffset);
 					sheetIndex++;
 				}
-				PageImpl p = psb.nextPage(initialPageOffset);
+				
+				boolean hyphenateLastLine = 
+						!(	!context.getConfiguration().allowsEndingVolumeOnHyphen() 
+								&& sheetBuffer.size()==index-1 
+								&& (!sectionProperties.duplex() || pageIndex % 2 == 1));
+				PageImpl p = psb.nextPage(initialPageOffset, hyphenateLastLine);
 				struct.increasePageCount();
 				s.avoidVolumeBreakAfterPriority(p.getAvoidVolumeBreakAfter());
 				if (!psb.hasNext()) {
