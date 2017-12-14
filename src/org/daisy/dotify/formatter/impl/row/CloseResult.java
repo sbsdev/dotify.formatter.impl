@@ -1,5 +1,6 @@
 package org.daisy.dotify.formatter.impl.row;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import org.daisy.dotify.common.text.StringTools;
@@ -21,6 +22,8 @@ class CloseResult implements CurrentResult {
 		this.spc = template.spc;
 		if (template.cr.isPresent()) {
 			this.cr = Optional.of(template.cr.get().copy());
+		} else {
+			this.cr = Optional.empty();
 		}
 		this.doFlush = template.doFlush;
 		this.doUnderline = template.doUnderline;
