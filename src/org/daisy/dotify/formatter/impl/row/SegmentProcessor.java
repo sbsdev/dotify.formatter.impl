@@ -3,6 +3,7 @@ package org.daisy.dotify.formatter.impl.row;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -14,6 +15,7 @@ import org.daisy.dotify.api.translator.Translatable;
 import org.daisy.dotify.api.translator.TranslationException;
 import org.daisy.dotify.common.text.StringTools;
 import org.daisy.dotify.formatter.impl.common.FormatterCoreContext;
+import org.daisy.dotify.formatter.impl.row.RowImpl.Builder;
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.search.DefaultContext;
 import org.daisy.dotify.formatter.impl.segment.AnchorSegment;
@@ -24,18 +26,14 @@ import org.daisy.dotify.formatter.impl.segment.PageNumberReferenceSegment;
 import org.daisy.dotify.formatter.impl.segment.Segment;
 import org.daisy.dotify.formatter.impl.segment.TextSegment;
 
-class SegmentProcessor {
+class SegmentProcessor implements SegmentProcessing {
 	private static final Pattern softHyphenPattern  = Pattern.compile("\u00ad");
 	private static final Pattern trailingWsBraillePattern = Pattern.compile("[\\s\u2800]+\\z");
 	private final List<Segment> segments;
-	private final int flowWidth;
 	private final CrossReferenceHandler refs;
-	private final int available;
-	private final BlockMargin margins;
-	private final FormatterCoreContext fcontext;
-	private final RowDataProperties rdp;
 	private Context context;
 	private final boolean significantContent;
+	private final SegmentProcessorContext spc;
 
 	private int segmentIndex;
 	private RowImpl.Builder currentRow;
@@ -55,31 +53,22 @@ class SegmentProcessor {
 
 	SegmentProcessor(List<Segment> segments, int flowWidth, CrossReferenceHandler refs, Context context, int available, BlockMargin margins, FormatterCoreContext fcontext, RowDataProperties rdp) {
 		this.segments = Collections.unmodifiableList(segments);
-		this.flowWidth = flowWidth;
 		this.refs = refs;
 		this.context = context;
-		this.available = available;
-		this.margins = margins;
-		this.fcontext = fcontext;
-		this.rdp = rdp;
 		this.groupMarkers = new ArrayList<>();
 		this.groupAnchors = new ArrayList<>();
 		this.leaderManager = new LeaderManager();
 		this.significantContent = calculateSignificantContent(segments, context, rdp);
+		this.spc = new SegmentProcessorContext(fcontext, rdp, margins, flowWidth, available);
 		initFields();
 	}
 	
 	SegmentProcessor(SegmentProcessor template) {
-		this.flowWidth = template.flowWidth;
 		// Refs is mutable, but for now we assume that the same context should be used.
 		this.refs = template.refs;
-		this.available = template.available;
-		this.margins = template.margins;
-		// Mutable
-		this.fcontext = template.fcontext;
 		// Context is mutable, but for now we assume that the same context should be used.
 		this.context = template.context;
-		this.rdp = template.rdp;
+		this.spc = template.spc;
 		this.currentRow = template.currentRow==null?null:new RowImpl.Builder(template.currentRow);
 		this.groupAnchors = new ArrayList<>(template.groupAnchors);
 		this.groupMarkers = new ArrayList<>(template.groupMarkers);
@@ -133,9 +122,9 @@ class SegmentProcessor {
 		layoutOrApplyAfterLeader = null;
 		currentLeaderMode = null;
 		seenSegmentAfterLeader = false;
-		item = rdp.getListItem();
-		minLeft = flowWidth;
-		minRight = flowWidth;
+		item = spc.getRdp().getListItem();
+		minLeft = spc.getFlowWidth();
+		minRight = spc.getFlowWidth();
 		empty = true;
 		cr = null;
 		closed = false;
@@ -146,7 +135,7 @@ class SegmentProcessor {
 	boolean couldTriggerNewRow() {
 		if (!hasSegments()) {
 			//There's a lot of conditions to keep track of here, but hopefully we can simplify later on
-			return !closed && (currentRow!=null || !empty && rdp.getUnderlineStyle()!=null || leaderManager.hasLeader());
+			return !closed && (currentRow!=null || !empty && spc.getRdp().getUnderlineStyle()!=null || leaderManager.hasLeader());
 		}
 		Segment s = segments.get(segmentIndex);
 		switch (s.getSegmentType()) {
@@ -163,7 +152,7 @@ class SegmentProcessor {
 	}
 
 	boolean hasMoreData() {
-		return hasSegments() || !closed || cr!=null && cr.hasNext();
+		return hasSegments() || !closed || cr!=null && cr.hasNext(this);
 	}
 	
 	private boolean hasSegments() {
@@ -177,7 +166,7 @@ class SegmentProcessor {
 		if (cr == null) {
 			if (!hasSegments() && !closed) {
 				closed = true;
-				cr = new CloseResult(layoutLeader());
+				cr = new CloseResult(spc, layoutLeader());
 			} else {
 				cr = loadNextSegment().orElse(null);
 			}
@@ -185,7 +174,7 @@ class SegmentProcessor {
 	}
 	
 	boolean hasNext() {
-		return cr!=null && cr.hasNext();
+		return cr!=null && cr.hasNext(this);
 	}
 	
 	public boolean hasSignificantContent() {
@@ -198,9 +187,9 @@ class SegmentProcessor {
 
 	private Optional<RowImpl> getNext(boolean produceRow) {
 		while (true) {
-			if (cr!=null && cr.hasNext()) {
+			if (cr!=null && cr.hasNext(this)) {
 				try {
-					Optional<RowImpl> ret = cr.process();
+					Optional<RowImpl> ret = cr.process(this);
 					if (ret.isPresent()) {
 						if (!produceRow) {
 							// there is a test below that verifies that the current segment cannot produce a row result
@@ -211,7 +200,7 @@ class SegmentProcessor {
 						return ret;
 					} // else try the next segment.
 				} finally {
-					if (!cr.hasNext()) {
+					if (!cr.hasNext(this)) {
 						cr = null;
 					}
 				}
@@ -225,14 +214,14 @@ class SegmentProcessor {
 			}
 		}
 	}
-	
+
 	private Optional<CurrentResult> loadNextSegment() {
 		Segment s = segments.get(segmentIndex);
 		segmentIndex++;
 		switch (s.getSegmentType()) {
 			case NewLine:
 				//flush
-				return Optional.of(new NewLineResult(layoutLeader()));
+				return Optional.of(new NewLineResult(spc, layoutLeader()));
 			case Text:
 				return layoutTextSegment((TextSegment)s);
 			case Leader:
@@ -251,19 +240,22 @@ class SegmentProcessor {
 				return Optional.empty();
 		}
 	}
-	
-	private class CloseResult implements CurrentResult {
+
+	private static class CloseResult implements CurrentResult {
+		private final SegmentProcessorContext spc;
 		private Optional<CurrentResult> cr;
 		private boolean doFlush;
 		private boolean doUnderline;
 		
-		private CloseResult(Optional<CurrentResult> cr) {
+		private CloseResult(SegmentProcessorContext spc, Optional<CurrentResult> cr) {
+			this.spc = spc;
 			this.cr = cr;
 			this.doFlush = true;
-			this.doUnderline = rdp.getUnderlineStyle()!=null;
+			this.doUnderline = spc.getRdp().getUnderlineStyle()!=null;
 		}
 		
 		private CloseResult(CloseResult template) {
+			this.spc = template.spc;
 			if (template.cr.isPresent()) {
 				this.cr = Optional.of(template.cr.get().copy());
 			}
@@ -272,28 +264,28 @@ class SegmentProcessor {
 		}
 
 		@Override
-		public boolean hasNext() {
-			return cr.isPresent() && cr.get().hasNext() || doFlush || (!empty && doUnderline);
+		public boolean hasNext(SegmentProcessing spi) {
+			return cr.isPresent() && cr.get().hasNext(spi) || doFlush || (!spi.isEmpty() && doUnderline);
 		}
 
 		@Override
-		public Optional<RowImpl> process() {
-			if (cr.isPresent() && cr.get().hasNext()) {
-				return cr.get().process();
+		public Optional<RowImpl> process(SegmentProcessing spi) {
+			if (cr.isPresent() && cr.get().hasNext(spi)) {
+				return cr.get().process(spi);
 			} else if (doFlush) {
 				doFlush = false;
-				if (currentRow!=null) {
-					return Optional.of(flushCurrentRow());
+				if (spi.hasCurrentRow()) {
+					return Optional.of(spi.flushCurrentRow());
 				}
-			} else if (!empty && doUnderline) {
+			} else if (!spi.isEmpty() && doUnderline) {
 				doUnderline = false;
-				if (minLeft < margins.getLeftMargin().getContent().length() || minRight < margins.getRightMargin().getContent().length()) {
+				if (spi.getUnusedLeft() < spc.getMargins().getLeftMargin().getContent().length() || spi.getUnusedRight() < spc.getMargins().getRightMargin().getContent().length()) {
 					throw new RuntimeException("coding error");
 				}
-				return Optional.of(new RowImpl.Builder(StringTools.fill(fcontext.getSpaceCharacter(), minLeft - margins.getLeftMargin().getContent().length())
-							+ StringTools.fill(rdp.getUnderlineStyle(), flowWidth - minLeft - minRight))
-							.leftMargin(margins.getLeftMargin())
-							.rightMargin(margins.getRightMargin())
+				return Optional.of(new RowImpl.Builder(StringTools.fill(spc.getSpaceCharacter(), spi.getUnusedLeft() - spc.getMargins().getLeftMargin().getContent().length())
+							+ StringTools.fill(spc.getRdp().getUnderlineStyle(), spc.getFlowWidth() - spi.getUnusedLeft() - spi.getUnusedRight()))
+							.leftMargin(spc.getMargins().getLeftMargin())
+							.rightMargin(spc.getMargins().getRightMargin())
 							.adjustedForMargin(true)
 							.build());
 			}
@@ -306,7 +298,8 @@ class SegmentProcessor {
 		}
 	}
 
-	private RowImpl flushCurrentRow() {
+	@Override
+	public RowImpl flushCurrentRow() {
 		if (empty) {
 			// Clear group anchors and markers (since we have content, we don't need them)
 			currentRow.addAnchors(0, groupAnchors);
@@ -320,25 +313,28 @@ class SegmentProcessor {
 		int width = r.getChars().length();
 		int left = r.getLeftMargin().getContent().length();
 		int right = r.getRightMargin().getContent().length();
-		int space = flowWidth - width - left - right;
+		int space = spc.getFlowWidth() - width - left - right;
 		left += r.getAlignment().getOffset(space);
-		right = flowWidth - width - left;
+		right = spc.getFlowWidth() - width - left;
 		minLeft = Math.min(minLeft, left);
 		minRight = Math.min(minRight, right);
 		currentRow = null;
 		return r;
 	}
 	
-	private class NewLineResult implements CurrentResult {
+	private static class NewLineResult implements CurrentResult {
+		private final SegmentProcessorContext spc;
 		private boolean newLine;
 		private Optional<CurrentResult> cr;
 
-		private NewLineResult(Optional<CurrentResult> cr) {
+		private NewLineResult(SegmentProcessorContext spc, Optional<CurrentResult> cr) {
+			this.spc = spc;
 			this.cr = cr;
 			this.newLine = true;
 		}
 		
 		private NewLineResult(NewLineResult template) {
+			this.spc = template.spc;
 			if (template.cr.isPresent()) {
 				this.cr = Optional.of(template.cr.get().copy());
 			}
@@ -346,23 +342,23 @@ class SegmentProcessor {
 		}
 
 		@Override
-		public boolean hasNext() {
-			return cr.isPresent() && cr.get().hasNext() || newLine;
+		public boolean hasNext(SegmentProcessing spi) {
+			return cr.isPresent() && cr.get().hasNext(spi) || newLine;
 		}
 
 		@Override
-		public Optional<RowImpl> process() {
-			if (cr.isPresent() && cr.get().hasNext()) {
-				return cr.get().process();
+		public Optional<RowImpl> process(SegmentProcessing spi) {
+			if (cr.isPresent() && cr.get().hasNext(spi)) {
+				return cr.get().process(spi);
 			} else if (newLine) {
 				newLine = false;
 				try {
-					if (currentRow!=null) {
-						return Optional.of(flushCurrentRow());
+					if (spi.hasCurrentRow()) {
+						return Optional.of(spi.flushCurrentRow());
 					}
 				} finally {
-					MarginProperties ret = new MarginProperties(margins.getLeftMargin().getContent()+StringTools.fill(fcontext.getSpaceCharacter(), rdp.getTextIndent()), margins.getLeftMargin().isSpaceOnly());
-					currentRow = rdp.configureNewEmptyRowBuilder(ret, margins.getRightMargin());
+					MarginProperties ret = new MarginProperties(spc.getMargins().getLeftMargin().getContent()+StringTools.fill(spc.getSpaceCharacter(), spc.getRdp().getTextIndent()), spc.getMargins().getLeftMargin().isSpaceOnly());
+					spi.newCurrentRow(ret, spc.getMargins().getRightMargin());
 				}
 			}
 			return Optional.empty();
@@ -376,7 +372,7 @@ class SegmentProcessor {
 	
 	private Optional<CurrentResult> layoutTextSegment(TextSegment ts) {
 		Translatable spec = Translatable.text(
-						fcontext.getConfiguration().isMarkingCapitalLetters()?
+						spc.getFormatterContext().getConfiguration().isMarkingCapitalLetters()?
 						ts.getText():ts.getText().toLowerCase()
 				)
 				.locale(ts.getTextProperties().getLocale())
@@ -387,7 +383,7 @@ class SegmentProcessor {
 			layoutAfterLeader(spec, mode);
 		} else {
 			BrailleTranslatorResult btr = toResult(spec, mode);
-			CurrentResult cr = new CurrentResultImpl(btr, mode);
+			CurrentResult cr = new CurrentResultImpl(spc, btr, mode);
 			return Optional.of(cr);
 		}
 		return Optional.empty();
@@ -416,7 +412,7 @@ class SegmentProcessor {
 		} else {
 			String txt = "" + rs.getNumeralStyle().format(page);
 			spec = Translatable.text(
-					fcontext.getConfiguration().isMarkingCapitalLetters()?txt:txt.toLowerCase()
+					spc.getFormatterContext().getConfiguration().isMarkingCapitalLetters()?txt:txt.toLowerCase()
 					).locale(null).attributes(rs.getTextAttribute(txt.length())).build();
 		}
 		if (leaderManager.hasLeader()) {
@@ -424,7 +420,7 @@ class SegmentProcessor {
 		} else {
 			String mode = null;
 			BrailleTranslatorResult btr = toResult(spec, null);
-			CurrentResult cr = new CurrentResultImpl(btr, mode);
+			CurrentResult cr = new CurrentResultImpl(spc, btr, mode);
 			return Optional.of(cr);
 		}
 		return Optional.empty();
@@ -434,7 +430,7 @@ class SegmentProcessor {
 		String txt = e.getExpression().render(context);
 		if (!txt.isEmpty()) { // Don't create a new row if the evaluated expression is empty
 		                    // Note: this could be handled more generally (also for regular text) in layout().
-			Translatable spec = Translatable.text(fcontext.getConfiguration().isMarkingCapitalLetters()?txt:txt.toLowerCase()).
+			Translatable spec = Translatable.text(spc.getFormatterContext().getConfiguration().isMarkingCapitalLetters()?txt:txt.toLowerCase()).
 					locale(e.getTextProperties().getLocale()).
 					hyphenate(e.getTextProperties().isHyphenating()).
 					attributes(e.getTextAttribute(txt.length())).
@@ -444,7 +440,7 @@ class SegmentProcessor {
 			} else {
 				String mode = null;
 				BrailleTranslatorResult btr = toResult(spec, mode);
-				CurrentResult cr = new CurrentResultImpl(btr, mode);
+				CurrentResult cr = new CurrentResultImpl(spc, btr, mode);
 				return Optional.of(cr);
 			}
 		}
@@ -463,7 +459,7 @@ class SegmentProcessor {
 				}
 			}
 			try {
-				layoutOrApplyAfterLeader.add(fcontext.getTranslator(mode).translate(spec));
+				layoutOrApplyAfterLeader.add(spc.getFormatterContext().getTranslator(mode).translate(spec));
 			} catch (TranslationException e) {
 				throw new RuntimeException(e);
 			}
@@ -517,109 +513,116 @@ class SegmentProcessor {
 				layoutOrApplyAfterLeader = null;
 				seenSegmentAfterLeader = false;
 			}
-			CurrentResult cr = new CurrentResultImpl(btr, mode);
+			CurrentResult cr = new CurrentResultImpl(spc, btr, mode);
 			return Optional.of(cr);
 		}
 		return Optional.empty();
 	}
 
 	private BrailleTranslatorResult toResult(String c) {
-		return toResult(Translatable.text(fcontext.getConfiguration().isMarkingCapitalLetters()?c:c.toLowerCase()).build(), null);
+		return toResult(Translatable.text(spc.getFormatterContext().getConfiguration().isMarkingCapitalLetters()?c:c.toLowerCase()).build(), null);
 	}
 	
 	private BrailleTranslatorResult toResult(Translatable spec, String mode) {
 		try {
-			return fcontext.getTranslator(mode).translate(spec);
+			return spc.getFormatterContext().getTranslator(mode).translate(spec);
 		} catch (TranslationException e) {
 			throw new RuntimeException(e);
 		}		
 	}
 	
 	private interface CurrentResult {
-		boolean hasNext();
-		Optional<RowImpl> process();
+		boolean hasNext(SegmentProcessing spi);
+		Optional<RowImpl> process(SegmentProcessing spi);
 		CurrentResult copy();
 	}
 	
-	private class CurrentResultImpl implements CurrentResult {
+	private static class CurrentResultImpl implements CurrentResult {
+		private final SegmentProcessorContext spc;
 		private final BrailleTranslatorResult btr;
 		private final String mode;
 		private boolean first;
 		
-		CurrentResultImpl(BrailleTranslatorResult btr, String mode) {
+		CurrentResultImpl(SegmentProcessorContext spc, BrailleTranslatorResult btr, String mode) {
+			this.spc = spc;
 			this.btr = btr;
 			this.mode = mode;
 			this.first = true;
 		}
 		
 		CurrentResultImpl(CurrentResultImpl template) {
+			this.spc = template.spc;
 			this.btr = template.btr.copy();
 			this.mode = template.mode;
 			this.first = template.first;
 		}
-		
+
+		@Override
 		public CurrentResult copy() {
 			return new CurrentResultImpl(this);
 		}
 
-		public boolean hasNext() {
+		@Override
+		public boolean hasNext(SegmentProcessing spi) {
 			return first || btr.hasNext();
 		}
 
-		public Optional<RowImpl> process() {
+		@Override
+		public Optional<RowImpl> process(SegmentProcessing spi) {
 			if (first) {
 				first = false;
-				return processFirst();
+				return processFirst(spi);
 			}
 			try {
 				if (btr.hasNext()) { //LayoutTools.length(chars.toString())>0
-					if (currentRow!=null) {
-						return Optional.of(flushCurrentRow());
+					if (spi.hasCurrentRow()) {
+						return Optional.of(spi.flushCurrentRow());
 					}
-					return startNewRow(btr, "", rdp.getTextIndent(), rdp.getBlockIndent(), mode);
+					return startNewRow(spi, btr, "", spc.getRdp().getTextIndent(), spc.getRdp().getBlockIndent(), mode);
 				}
 			} finally {
 				if (!btr.hasNext() && btr.supportsMetric(BrailleTranslatorResult.METRIC_FORCED_BREAK)) {
-					forceCount += btr.getMetric(BrailleTranslatorResult.METRIC_FORCED_BREAK);
+					spi.addToForceCount(btr.getMetric(BrailleTranslatorResult.METRIC_FORCED_BREAK));
 				}
 			}
 			return Optional.empty();
 		}
 	
-		private Optional<RowImpl> processFirst() {
+		private Optional<RowImpl> processFirst(SegmentProcessing spi) {
 			// process first row, is it a new block or should we continue the current row?
-			if (currentRow==null) {
+			if (!spi.hasCurrentRow()) {
 				// add to left margin
-				if (item!=null) { //currentListType!=BlockProperties.ListType.NONE) {
+				if (spi.hasListItem()) { //currentListType!=BlockProperties.ListType.NONE) {
+					ListItem item = spi.getListItem();
 					String listLabel;
 					try {
-						listLabel = fcontext.getTranslator(mode).translate(Translatable.text(fcontext.getConfiguration().isMarkingCapitalLetters()?item.getLabel():item.getLabel().toLowerCase()).build()).getTranslatedRemainder();
+						listLabel = spc.getFormatterContext().getTranslator(mode).translate(Translatable.text(spc.getFormatterContext().getConfiguration().isMarkingCapitalLetters()?item.getLabel():item.getLabel().toLowerCase()).build()).getTranslatedRemainder();
 					} catch (TranslationException e) {
 						throw new RuntimeException(e);
 					}
 					try {
 						if (item.getType()==FormattingTypes.ListStyle.PL) {
-							return startNewRow(btr, listLabel, 0, rdp.getBlockIndentParent(), mode);
+							return startNewRow(spi, btr, listLabel, 0, spc.getRdp().getBlockIndentParent(), mode);
 						} else {
-							return startNewRow(btr, listLabel, rdp.getFirstLineIndent(), rdp.getBlockIndent(), mode);
+							return startNewRow(spi, btr, listLabel, spc.getRdp().getFirstLineIndent(), spc.getRdp().getBlockIndent(), mode);
 						}
 					} finally {
-						item = null;
+						spi.discardListItem();
 					}
 				} else {
-					return startNewRow(btr, "", rdp.getFirstLineIndent(), rdp.getBlockIndent(), mode);
+					return startNewRow(spi, btr, "", spc.getRdp().getFirstLineIndent(), spc.getRdp().getBlockIndent(), mode);
 				}
 			} else {
-				return continueRow(new RowInfo("", available), btr, rdp.getBlockIndent(), mode);
+				return continueRow(spi, new RowInfo("", spc.getAvailable()), btr, spc.getRdp().getBlockIndent(), mode);
 			}
 		}
 		
-		private Optional<RowImpl> startNewRow(BrailleTranslatorResult chars, String contentBefore, int indent, int blockIndent, String mode) {
-			if (currentRow!=null) {
+		private Optional<RowImpl> startNewRow(SegmentProcessing spi, BrailleTranslatorResult chars, String contentBefore, int indent, int blockIndent, String mode) {
+			if (spi.hasCurrentRow()) {
 				throw new RuntimeException("Error in code.");
 			}
-			currentRow = rdp.configureNewEmptyRowBuilder(margins.getLeftMargin(), margins.getRightMargin());
-			return continueRow(new RowInfo(getPreText(contentBefore, indent+blockIndent), available), chars, blockIndent, mode);
+			spi.newCurrentRow(spc.getMargins().getLeftMargin(), spc.getMargins().getRightMargin());
+			return continueRow(spi, new RowInfo(getPreText(contentBefore, indent+blockIndent), spc.getAvailable()), chars, blockIndent, mode);
 		}
 		
 		private String getPreText(String contentBefore, int totalIndent) {
@@ -629,39 +632,39 @@ class SegmentProcessor {
 					// In that case it is probably best to push the content instead of failing altogether.
 					totalIndent - StringTools.length(contentBefore),
 					0);
-			return contentBefore + StringTools.fill(fcontext.getSpaceCharacter(), thisIndent);
+			return contentBefore + StringTools.fill(spc.getSpaceCharacter(), thisIndent);
 		}
 	
 		//TODO: check leader functionality
-		private Optional<RowImpl> continueRow(RowInfo m1, BrailleTranslatorResult btr, int blockIndent, String mode) {
+		private Optional<RowImpl> continueRow(SegmentProcessing spi, RowInfo m1, BrailleTranslatorResult btr, int blockIndent, String mode) {
 			RowImpl ret = null;
 			// [margin][preContent][preTabText][tab][postTabText] 
 			//      preContentPos ^
 			String tabSpace = "";
-			if (leaderManager.hasLeader()) {
-				int preTabPos = m1.getPreTabPosition(currentRow);
-				int leaderPos = leaderManager.getLeaderPosition(available);
+			if (spi.getLeaderManager().hasLeader()) {
+				int preTabPos = m1.getPreTabPosition(spi.getCurrentRow());
+				int leaderPos = spi.getLeaderManager().getLeaderPosition(spc.getAvailable());
 				int offset = leaderPos-preTabPos;
-				int align = leaderManager.getLeaderAlign(btr.countRemaining());
+				int align = spi.getLeaderManager().getLeaderAlign(btr.countRemaining());
 				
 				if (preTabPos>leaderPos || offset - align < 0) { // if tab position has been passed or if text does not fit within row, try on a new row
-					MarginProperties _leftMargin = currentRow.getLeftMargin();
-					if (currentRow!=null) {
-						ret = flushCurrentRow();
+					MarginProperties _leftMargin = spi.getCurrentRow().getLeftMargin();
+					if (spi.hasCurrentRow()) {
+						ret = spi.flushCurrentRow();
 					}
-					currentRow = rdp.configureNewEmptyRowBuilder(_leftMargin, margins.getRightMargin());
-					m1 = new RowInfo(getPreText("", rdp.getTextIndent()+blockIndent), available);
+					spi.newCurrentRow(_leftMargin, spc.getMargins().getRightMargin());
+					m1 = new RowInfo(getPreText("", spc.getRdp().getTextIndent()+blockIndent), spc.getAvailable());
 					//update offset
-					offset = leaderPos-m1.getPreTabPosition(currentRow);
+					offset = leaderPos-m1.getPreTabPosition(spi.getCurrentRow());
 				}
 				try {
-					tabSpace = leaderManager.getLeaderPattern(fcontext.getTranslator(mode), offset - align);
+					tabSpace = spi.getLeaderManager().getLeaderPattern(spc.getFormatterContext().getTranslator(mode), offset - align);
 				} finally {
 					// always discard leader
-					leaderManager.removeLeader();
+					spi.getLeaderManager().removeLeader();
 				}
 			}
-			breakNextRow(m1, currentRow, btr, tabSpace);
+			breakNextRow(m1, spi.getCurrentRow(), btr, tabSpace);
 			return Optional.ofNullable(ret);
 		}
 	
@@ -705,5 +708,61 @@ class SegmentProcessor {
 	
 	int getForceCount() {
 		return forceCount;
+	}
+
+	@Override
+	public boolean isEmpty() {
+		return empty;
+	}
+
+	@Override
+	public boolean hasCurrentRow() {
+		return currentRow!=null;
+	}
+
+	@Override
+	public int getUnusedLeft() {
+		return minLeft;
+	}
+
+	@Override
+	public int getUnusedRight() {
+		return minRight;
+	}
+
+	@Override
+	public void newCurrentRow(MarginProperties left, MarginProperties right) {
+		currentRow = spc.getRdp().configureNewEmptyRowBuilder(left, right);
+	}
+
+	@Override
+	public Builder getCurrentRow() {
+		return currentRow;
+	}
+
+	@Override
+	public void addToForceCount(double value) {
+		forceCount += value;
+	}
+
+	@Override
+	public LeaderManager getLeaderManager() {
+		return leaderManager;
+	}
+
+	@Override
+	public boolean hasListItem() {
+		return item!=null;
+	}
+
+	@Override
+	public void discardListItem() {
+		item = null;
+	}
+
+	@Override
+	public ListItem getListItem() {
+		Objects.requireNonNull(item);
+		return item;
 	}
 }
