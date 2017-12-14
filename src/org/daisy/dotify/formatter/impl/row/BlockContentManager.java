@@ -62,12 +62,12 @@ public class BlockContentManager extends AbstractBlockContentManager {
 	 * if the specified index cannot be made available (because the input doesn't contain
 	 * the required amount of data).
 	 */
-	private boolean ensureBuffer(int index) {
+	private boolean ensureBuffer(int index, boolean wholeWordsOnly) {
 		while (index<0 || rows.size()<index) {
 			if (!sp.hasMoreData()) {
 				return false;
 			}
-			sp.getNext().ifPresent(v->rows.add(v));
+			sp.getNext(wholeWordsOnly).ifPresent(v->rows.add(v));
 		}
 		return rows.size()>=index;
 	}
@@ -99,7 +99,7 @@ public class BlockContentManager extends AbstractBlockContentManager {
 			if (!sp.hasMoreData()) {
 				return false;
 			} else {
-				return new SegmentProcessor(sp).getNext().isPresent();
+				return new SegmentProcessor(sp).getNext(false).isPresent();
 			}
 		} else if (diff<0) {
 			// The next value should always follow the size of the last produced result.
@@ -112,7 +112,7 @@ public class BlockContentManager extends AbstractBlockContentManager {
 
 	@Override
 	public Optional<RowImpl> getNext() {
-		if (ensureBuffer(rowIndex+1)) {
+		if (ensureBuffer(rowIndex+1, false)) {
 			RowImpl ret = rows.get(rowIndex);
 			rowIndex++;
 			return Optional.of(ret);
