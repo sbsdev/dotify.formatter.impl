@@ -184,7 +184,7 @@ class SegmentProcessor implements SegmentProcessing {
 		while (true) {
 			if (cr!=null && cr.hasNext(this)) {
 				try {
-					Optional<RowImpl> ret = cr.process(this);
+					Optional<RowImpl> ret = cr.process(this, false);
 					if (ret.isPresent()) {
 						if (!produceRow) {
 							// there is a test below that verifies that the current segment cannot produce a row result

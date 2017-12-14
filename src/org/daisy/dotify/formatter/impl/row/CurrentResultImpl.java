@@ -42,8 +42,7 @@ class CurrentResultImpl implements CurrentResult {
 	}
 
 	@Override
-	public Optional<RowImpl> process(SegmentProcessing spi) {
-		boolean wholeWordsOnly = false;
+	public Optional<RowImpl> process(SegmentProcessing spi, boolean wholeWordsOnly) {
 		if (first) {
 			first = false;
 			return processFirst(spi, wholeWordsOnly);
