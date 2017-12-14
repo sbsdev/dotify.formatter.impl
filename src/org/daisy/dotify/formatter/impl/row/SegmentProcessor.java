@@ -261,18 +261,24 @@ class SegmentProcessor implements SegmentProcessing {
 	}
 
 	private Optional<CurrentResult> layoutTextSegment(TextSegment ts) {
-		Translatable spec = Translatable.text(
-						spc.getFormatterContext().getConfiguration().isMarkingCapitalLetters()?
-						ts.getText():ts.getText().toLowerCase()
-				)
-				.locale(ts.getTextProperties().getLocale())
-				.hyphenate(ts.getTextProperties().isHyphenating())
-				.attributes(ts.getTextAttribute()).build();
 		String mode = ts.getTextProperties().getTranslationMode();
-		if (leaderManager.hasLeader()) {
-			layoutAfterLeader(spec, mode);
+		BrailleTranslatorResult btr = null;
+		if (!ts.canMakeResult()) {
+			Translatable spec = Translatable.text(
+					spc.getFormatterContext().getConfiguration().isMarkingCapitalLetters()?
+					ts.getText():ts.getText().toLowerCase()
+			)
+			.locale(ts.getTextProperties().getLocale())
+			.hyphenate(ts.getTextProperties().isHyphenating())
+			.attributes(ts.getTextAttribute()).build();
+			btr = toResult(spec, mode);
+			ts.storeResult(btr);
 		} else {
-			BrailleTranslatorResult btr = toResult(spec, mode);
+			btr = ts.newResult();
+		}
+		if (leaderManager.hasLeader()) {
+			layoutAfterLeader(btr, mode);
+		} else {
 			CurrentResult cr = new CurrentResultImpl(spc, btr, mode);
 			return Optional.of(cr);
 		}
@@ -336,8 +342,12 @@ class SegmentProcessor implements SegmentProcessing {
 		}
 		return Optional.empty(); 
 	}
-
+	
 	private void layoutAfterLeader(Translatable spec, String mode) {
+		layoutAfterLeader(toResult(spec, mode), mode);
+	}
+
+	private void layoutAfterLeader(BrailleTranslatorResult result, String mode) {
 		if (leaderManager.hasLeader()) {
 			if (layoutOrApplyAfterLeader == null) {
 				layoutOrApplyAfterLeader = new AggregatedBrailleTranslatorResult.Builder();
@@ -348,11 +358,7 @@ class SegmentProcessor implements SegmentProcessing {
 					seenSegmentAfterLeader = true;
 				}
 			}
-			try {
-				layoutOrApplyAfterLeader.add(spc.getFormatterContext().getTranslator(mode).translate(spec));
-			} catch (TranslationException e) {
-				throw new RuntimeException(e);
-			}
+			layoutOrApplyAfterLeader.add(result);
 		} else {
 			throw new RuntimeException("Error in code.");
 		}
