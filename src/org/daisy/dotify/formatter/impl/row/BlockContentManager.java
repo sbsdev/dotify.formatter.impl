@@ -63,7 +63,7 @@ public class BlockContentManager extends AbstractBlockContentManager {
 	 * the required amount of data).
 	 */
 	private boolean ensureBuffer(int index) {
-		while (sp.hasNext() || index<0 || rows.size()<index) {
+		while (index<0 || rows.size()<index) {
 			if (!sp.hasMoreData()) {
 				return false;
 			}
