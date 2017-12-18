@@ -11,12 +11,15 @@ import org.daisy.dotify.api.engine.FormatterEngine;
 import org.daisy.dotify.api.engine.FormatterEngineFactoryService;
 import org.daisy.dotify.api.formatter.FormatterConfiguration;
 import org.daisy.dotify.api.formatter.FormatterFactory;
+import org.daisy.dotify.api.formatter.FormatterFactoryMaker;
 import org.daisy.dotify.api.obfl.ExpressionFactory;
+import org.daisy.dotify.api.obfl.ExpressionFactoryMaker;
+import org.daisy.dotify.api.translator.MarkerProcessorFactoryMaker;
 import org.daisy.dotify.api.translator.MarkerProcessorFactoryMakerService;
+import org.daisy.dotify.api.translator.TextBorderFactoryMaker;
 import org.daisy.dotify.api.translator.TextBorderFactoryMakerService;
 import org.daisy.dotify.api.writer.PagedMediaWriter;
 import org.daisy.dotify.formatter.impl.FactoryManager;
-import org.daisy.dotify.formatter.impl.SPIHelper;
 
 import aQute.bnd.annotation.component.Component;
 import aQute.bnd.annotation.component.Reference;
@@ -146,10 +149,10 @@ public class LayoutEngineFactoryImpl implements FormatterEngineFactoryService {
 
 	@Override
 	public void setCreatedWithSPI() {
-		setFormatterFactory(SPIHelper.getFormatterFactory());
-		setMarkerProcessor(SPIHelper.getMarkerProcessorFactoryMaker());
-		setTextBorderFactoryMaker(SPIHelper.getTextBorderFactoryMaker());
-		setExpressionFactory(SPIHelper.getExpressionFactory());
+		setFormatterFactory(FormatterFactoryMaker.newInstance().getFactory());
+		setMarkerProcessor(MarkerProcessorFactoryMaker.newInstance());
+		setTextBorderFactoryMaker(TextBorderFactoryMaker.newInstance());
+		setExpressionFactory(ExpressionFactoryMaker.newInstance().getFactory());
 		factoryManager.setTransformerFactory(TransformerFactory.newInstance());
 	}
 

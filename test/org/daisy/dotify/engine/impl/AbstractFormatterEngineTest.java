@@ -17,8 +17,8 @@ import org.daisy.dotify.api.engine.LayoutEngineException;
 import org.daisy.dotify.api.translator.BrailleTranslatorFactory;
 import org.daisy.dotify.api.writer.MediaTypes;
 import org.daisy.dotify.api.writer.PagedMediaWriterConfigurationException;
-import org.daisy.dotify.consumer.engine.FormatterEngineMaker;
-import org.daisy.dotify.consumer.writer.PagedMediaWriterFactoryMaker;
+import org.daisy.dotify.api.engine.FormatterEngineMaker;
+import org.daisy.dotify.api.writer.PagedMediaWriterFactoryMaker;
 
 abstract class AbstractFormatterEngineTest {
 	void testPEF(String input, String expected, boolean keep) throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
