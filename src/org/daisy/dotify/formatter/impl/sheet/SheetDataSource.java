@@ -6,9 +6,10 @@ import java.util.List;
 import java.util.Optional;
 
 import org.daisy.dotify.api.writer.SectionProperties;
-import org.daisy.dotify.common.split.SplitPointDataSource;
-import org.daisy.dotify.common.split.SplitResult;
-import org.daisy.dotify.common.split.Supplements;
+import org.daisy.dotify.common.splitter.DefaultSplitResult;
+import org.daisy.dotify.common.splitter.SplitPointDataSource;
+import org.daisy.dotify.common.splitter.SplitResult;
+import org.daisy.dotify.common.splitter.Supplements;
 import org.daisy.dotify.formatter.impl.core.FormatterContext;
 import org.daisy.dotify.formatter.impl.page.BlockSequence;
 import org.daisy.dotify.formatter.impl.page.PageImpl;
@@ -25,7 +26,7 @@ import org.daisy.dotify.formatter.impl.search.SheetIdentity;
  * 
  * @author Joel Håkansson
  */
-public class SheetDataSource implements SplitPointDataSource<Sheet> {
+public class SheetDataSource implements SplitPointDataSource<Sheet, SheetDataSource> {
 	//Global state
 	private final PageStruct struct;
 	private final FormatterContext context;
@@ -114,21 +115,9 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 	}
 
 	@Override
-	@Deprecated
-	public List<Sheet> head(int toIndex) throws RestartPaginationException {
-		throw new UnsupportedOperationException("Method is deprecated.");
-	}
-
-	@Override
 	public List<Sheet> getRemaining() throws RestartPaginationException {
 		ensureBuffer(-1);
 		return sheetBuffer;
-	}
-
-	@Override
-	@Deprecated
-	public SplitPointDataSource<Sheet> tail(int fromIndex) throws RestartPaginationException {
-		throw new UnsupportedOperationException("Method is deprecated.");
 	}
 
 	@Override
@@ -217,7 +206,12 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 					si = new SheetIdentity(rcontext.getSpace(), rcontext.getCurrentVolume(), volumeGroup, sheetBuffer.size()+sheetOffset);
 					sheetIndex++;
 				}
-				PageImpl p = psb.nextPage(initialPageOffset);
+				
+				boolean hyphenateLastLine = 
+						!(	!context.getConfiguration().allowsEndingVolumeOnHyphen() 
+								&& sheetBuffer.size()==index-1 
+								&& (!sectionProperties.duplex() || pageIndex % 2 == 1));
+				PageImpl p = psb.nextPage(initialPageOffset, hyphenateLastLine);
 				struct.increasePageCount();
 				s.avoidVolumeBreakAfterPriority(p.getAvoidVolumeBreakAfter());
 				if (!psb.hasNext()) {
@@ -264,7 +258,7 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 	}
 
 	@Override
-	public SplitResult<Sheet> split(int atIndex) {
+	public SplitResult<Sheet, SheetDataSource> splitInRange(int atIndex) {
 		if (!allowsSplit) {
 			throw new IllegalStateException();
 		}
@@ -278,10 +272,20 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 			struct.setDefaultPageOffset(initialPageOffset + psb.getSizeLast());
 		}
 		if (atIndex==0) {
-			return new SplitResult<Sheet>(Collections.emptyList(), new SheetDataSource(this, atIndex, true));
+			return new DefaultSplitResult<Sheet, SheetDataSource>(Collections.emptyList(), new SheetDataSource(this, atIndex, true));
 		} else {
-			return new SplitResult<Sheet>(sheetBuffer.subList(0, atIndex), new SheetDataSource(this, atIndex, true));
+			return new DefaultSplitResult<Sheet, SheetDataSource>(sheetBuffer.subList(0, atIndex), new SheetDataSource(this, atIndex, true));
 		}
+	}
+
+	@Override
+	public SheetDataSource createEmpty() {
+		return new SheetDataSource(struct, context, rcontext, volumeGroup, Collections.emptyList());
+	}
+
+	@Override
+	public SheetDataSource getDataSource() {
+		return this;
 	}
 
 }

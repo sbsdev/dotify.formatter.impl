@@ -1,6 +1,7 @@
 package org.daisy.dotify.formatter.impl.page;
 
 import java.util.ArrayList;
+import java.util.Optional;
 
 import org.daisy.dotify.api.formatter.FormattingTypes.Keep;
 import org.daisy.dotify.formatter.impl.core.Block;
@@ -82,12 +83,12 @@ class RowGroupProvider {
 		return bcm;
 	}
 	
-	public RowGroup next(DefaultContext context) {
+	public RowGroup next(DefaultContext context, boolean wholeWordsOnly) {
 		if (this.context==null || !this.context.equals(context)) {
 			this.context = g.contextWithMeta(context);
 			bcm.setContext(this.context);
 		}
-		RowGroup b = nextInner();
+		RowGroup b = nextInner(wholeWordsOnly);
 		if (!hasNext()) {
 			b.setAvoidVolumeBreakAfterPriority(g.getAvoidVolumeBreakAfterPriority());
 		} else {
@@ -96,7 +97,7 @@ class RowGroupProvider {
 		return b;
 	}
 
-	private RowGroup nextInner() {
+	private RowGroup nextInner(boolean wholeWordsOnly) {
 		if (phase==0) {
 			phase++;
 			//if there is a row group, return it (otherwise, try next phase)
@@ -123,10 +124,12 @@ class RowGroupProvider {
 			}
 		}
 		if (phase==3) {
-			if (bcm.hasNext()) {
-				RowImpl r = bcm.getNext();
+			Optional<RowImpl> rt;
+			if ((rt=bcm.getNext(wholeWordsOnly)).isPresent()) {
+				RowImpl r = rt.get();
 				rowIndex++;
-				if (!bcm.hasNext()) {
+				boolean hasNext = bcm.hasNext(); 
+				if (!hasNext) {
 					//we're at the last line, this should be kept with the next block's first line
 					keepWithNext = g.getKeepWithNext();
 					bc.getRefs().setRowCount(g.getBlockAddress(), bcm.getRowCount());
@@ -136,8 +139,8 @@ class RowGroupProvider {
 								r.allowsBreakAfter()&&
 								owc.allowsBreakAfter(rowIndex-1)&&
 								keepWithNext<=0 &&
-								(Keep.AUTO==g.getKeepType() || !bcm.hasNext()) &&
-								(bcm.hasNext() || !bcm.hasPostContentRows())
+								(Keep.AUTO==g.getKeepType() || !hasNext) &&
+								(hasNext || !bcm.hasPostContentRows())
 								);
 				if (rowIndex==1) { //First item
 					setProperties(rgb, bc.getRefs(), g);
@@ -166,7 +169,7 @@ class RowGroupProvider {
 	}
 	
 	private boolean shouldAddGroupForEmptyContent() {
-		return !bcm.hasNext() && otherData;
+		return !bcm.hasSignificantContent() && otherData;
 	}
 	
 	private static void setProperties(RowGroup.Builder rgb, CrossReferenceHandler crh, Block g) {
