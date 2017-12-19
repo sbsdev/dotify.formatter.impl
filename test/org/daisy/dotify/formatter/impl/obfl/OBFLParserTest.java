@@ -1,8 +1,9 @@
-package org.daisy.dotify.obfl;
+package org.daisy.dotify.formatter.impl.obfl;
 
 import static org.junit.Assert.assertEquals;
 
 import org.daisy.dotify.api.formatter.NumeralStyle;
+import org.daisy.dotify.formatter.impl.obfl.ObflParser;
 import org.junit.Test;
 
 @SuppressWarnings("javadoc")

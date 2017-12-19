@@ -1,4 +1,4 @@
-package org.daisy.dotify.obfl.impl;
+package org.daisy.dotify.formatter.impl.obfl.impl;
 
 import java.util.Map;
 

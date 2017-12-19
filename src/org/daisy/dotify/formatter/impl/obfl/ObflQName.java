@@ -1,4 +1,4 @@
-package org.daisy.dotify.obfl;
+package org.daisy.dotify.formatter.impl.obfl;
 
 import javax.xml.namespace.QName;
 

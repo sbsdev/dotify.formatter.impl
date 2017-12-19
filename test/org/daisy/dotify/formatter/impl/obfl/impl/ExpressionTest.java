@@ -1,9 +1,10 @@
-package org.daisy.dotify.obfl.impl;
+package org.daisy.dotify.formatter.impl.obfl.impl;
 import static org.junit.Assert.assertEquals;
 
 import org.daisy.dotify.api.obfl.Expression;
 import org.daisy.dotify.api.text.Integer2TextConfigurationException;
 import org.daisy.dotify.api.text.IntegerOutOfRange;
+import org.daisy.dotify.formatter.impl.obfl.impl.ExpressionImpl;
 import org.daisy.dotify.api.text.Integer2TextFactoryMaker;
 import org.junit.Test;
 

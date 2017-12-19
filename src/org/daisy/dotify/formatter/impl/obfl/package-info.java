@@ -4,4 +4,4 @@
  * </p>
  * @author Joel Håkansson
  */
-package org.daisy.dotify.obfl;
+package org.daisy.dotify.formatter.impl.obfl;

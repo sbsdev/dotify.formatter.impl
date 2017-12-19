@@ -1,4 +1,4 @@
-package org.daisy.dotify.obfl;
+package org.daisy.dotify.formatter.impl.obfl;
 
 import static org.junit.Assert.assertTrue;
 
@@ -16,6 +16,7 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 
+import org.daisy.dotify.formatter.impl.obfl.OBFLWsNormalizer;
 import org.junit.Ignore;
 import org.junit.Test;
 @SuppressWarnings("javadoc")
