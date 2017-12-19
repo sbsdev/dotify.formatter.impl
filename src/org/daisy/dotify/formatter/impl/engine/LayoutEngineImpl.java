@@ -16,11 +16,11 @@ import org.daisy.dotify.api.engine.FormatterEngine;
 import org.daisy.dotify.api.engine.LayoutEngineException;
 import org.daisy.dotify.api.formatter.Formatter;
 import org.daisy.dotify.api.formatter.FormatterConfiguration;
+import org.daisy.dotify.api.obfl.ObflParserException;
 import org.daisy.dotify.api.writer.MetaDataItem;
 import org.daisy.dotify.api.writer.PagedMediaWriter;
 import org.daisy.dotify.api.writer.PagedMediaWriterException;
 import org.daisy.dotify.formatter.impl.FactoryManager;
-import org.daisy.dotify.formatter.impl.obfl.OBFLParserException;
 import org.daisy.dotify.formatter.impl.obfl.OBFLWsNormalizer;
 import org.daisy.dotify.formatter.impl.obfl.ObflParserImpl;
 
@@ -131,7 +131,7 @@ class LayoutEngineImpl implements FormatterEngine {
 				throw new LayoutEngineException("Could not open media writer.", e);
 			} catch (XMLStreamException e) {
 				throw new LayoutEngineException("XMLStreamException while running task.", e);
-			} catch (OBFLParserException e) {
+			} catch (ObflParserException e) {
 				throw new LayoutEngineException("FormatterException while running task.", e);
 			}
 		} finally {

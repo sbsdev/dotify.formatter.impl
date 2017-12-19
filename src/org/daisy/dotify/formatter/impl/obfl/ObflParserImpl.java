@@ -74,6 +74,7 @@ import org.daisy.dotify.api.formatter.TocProperties;
 import org.daisy.dotify.api.formatter.VolumeContentBuilder;
 import org.daisy.dotify.api.formatter.VolumeTemplateBuilder;
 import org.daisy.dotify.api.formatter.VolumeTemplateProperties;
+import org.daisy.dotify.api.obfl.ObflParserException;
 import org.daisy.dotify.api.translator.Border;
 import org.daisy.dotify.api.translator.TextBorderConfigurationException;
 import org.daisy.dotify.api.translator.TextBorderFactory;
@@ -117,7 +118,7 @@ public class ObflParserImpl extends XMLParserBase {
 		this.logger = Logger.getLogger(this.getClass().getCanonicalName());
 	}
 	
-	public void parse(XMLEventReader input, Formatter formatter) throws XMLStreamException, OBFLParserException {
+	public void parse(XMLEventReader input, Formatter formatter) throws XMLStreamException, ObflParserException {
 		this.formatter = formatter;
 		FormatterConfiguration config = formatter.getConfiguration();
 		this.locale = FilterLocale.parse(config.getLocale());
@@ -132,7 +133,7 @@ public class ObflParserImpl extends XMLParserBase {
 			if (equalsStart(event, ObflQName.OBFL)) {
 				String loc = getAttr(event, ObflQName.ATTR_XML_LANG);
 				if (loc==null) {
-					throw new OBFLParserException("Missing xml:lang on root element");
+					throw new ObflParserException("Missing xml:lang on root element");
 				}
 				tp = getTextProperties(event, tp);
 			} else if (equalsStart(event, ObflQName.META)) {
