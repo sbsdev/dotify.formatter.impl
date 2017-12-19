@@ -1,4 +1,4 @@
-package org.daisy.dotify.writer.impl;
+package org.daisy.dotify.formatter.impl.writer;
 
 import java.util.Properties;
 

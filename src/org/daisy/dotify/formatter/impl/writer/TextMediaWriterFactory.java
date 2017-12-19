@@ -1,4 +1,4 @@
-package org.daisy.dotify.writer.impl;
+package org.daisy.dotify.formatter.impl.writer;
 
 import org.daisy.dotify.api.writer.PagedMediaWriter;
 import org.daisy.dotify.api.writer.PagedMediaWriterConfigurationException;

@@ -27,8 +27,8 @@ import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.sheet.VolumeImpl;
 import org.daisy.dotify.formatter.impl.volume.TableOfContentsImpl;
 import org.daisy.dotify.formatter.impl.volume.VolumeTemplate;
-import org.daisy.dotify.writer.impl.Volume;
-import org.daisy.dotify.writer.impl.WriterHandler;
+import org.daisy.dotify.formatter.impl.writer.Volume;
+import org.daisy.dotify.formatter.impl.writer.WriterHandler;
 
 
 /**
