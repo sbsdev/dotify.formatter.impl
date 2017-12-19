@@ -19,3 +19,5 @@ Private-Package: org.daisy.dotify.formatter.impl.engine,\
 Service-Component: *
 Include-Resource: / = src/
 -sources: false
+Export-Package:  \
+	org.daisy.dotify.obfl
