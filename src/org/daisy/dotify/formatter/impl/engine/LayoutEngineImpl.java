@@ -22,7 +22,7 @@ import org.daisy.dotify.api.writer.PagedMediaWriterException;
 import org.daisy.dotify.formatter.impl.FactoryManager;
 import org.daisy.dotify.formatter.impl.obfl.OBFLParserException;
 import org.daisy.dotify.formatter.impl.obfl.OBFLWsNormalizer;
-import org.daisy.dotify.formatter.impl.obfl.ObflParser;
+import org.daisy.dotify.formatter.impl.obfl.ObflParserImpl;
 
 /**
  * <p>
@@ -103,7 +103,7 @@ class LayoutEngineImpl implements FormatterEngine {
 			try {
 				logger.info("Parsing input...");
 
-				ObflParser obflParser = new ObflParser(fm);
+				ObflParserImpl obflParser = new ObflParserImpl(fm);
 				Formatter formatter = fm.getFormatterFactory().newFormatter(config.getLocale(), config.getTranslationMode());
 				formatter.setConfiguration(config);
 				obflParser.parse(fm.getXmlInputFactory().createXMLEventReader(input), formatter);

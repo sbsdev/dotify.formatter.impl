@@ -91,7 +91,7 @@ import org.w3c.dom.Node;
  * @author Joel Håkansson
  *
  */
-public class ObflParser extends XMLParserBase {
+public class ObflParserImpl extends XMLParserBase {
 
 	
 	//private HashMap<String, LayoutMaster> masters;
@@ -112,7 +112,7 @@ public class ObflParser extends XMLParserBase {
 	 * Creates a new obfl parser with the specified factory manager.
 	 * @param fm the factory manager
 	 */
-	public ObflParser(FactoryManager fm) {
+	public ObflParserImpl(FactoryManager fm) {
 		this.fm = fm;
 		this.logger = Logger.getLogger(this.getClass().getCanonicalName());
 	}
@@ -206,11 +206,11 @@ public class ObflParser extends XMLParserBase {
 		} else if (event.isStartElement()) {
 			String msg = "Unsupported context for element: " + event.asStartElement().getName() + buildLocationMsg(event.getLocation());
 			//throw new UnsupportedOperationException(msg);
-			Logger.getLogger(ObflParser.class.getCanonicalName()).warning(msg);
+			Logger.getLogger(ObflParserImpl.class.getCanonicalName()).warning(msg);
 		} else if (event.isStartDocument() || event.isEndDocument()) {
 			// ok
 		} else {
-			Logger.getLogger(ObflParser.class.getCanonicalName()).warning(event.toString());
+			Logger.getLogger(ObflParserImpl.class.getCanonicalName()).warning(event.toString());
 		}
 	}
 
@@ -868,7 +868,7 @@ public class ObflParser extends XMLParserBase {
 					FormattingTypes.ListStyle type = FormattingTypes.ListStyle.valueOf(typeStr.toUpperCase());
 					if (FormattingTypes.ListStyle.OL == type) {
 						try {
-							builder.listNumberFormat(ObflParser.parseNumeralStyle(att.getValue()));
+							builder.listNumberFormat(ObflParserImpl.parseNumeralStyle(att.getValue()));
 						} catch (IllegalArgumentException e) {
 							logger.log(Level.WARNING, "Failed to parse as a number format: " + att.getValue(), e);
 						}

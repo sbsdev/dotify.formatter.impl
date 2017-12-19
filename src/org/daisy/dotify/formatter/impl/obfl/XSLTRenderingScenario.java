@@ -27,14 +27,14 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 public class XSLTRenderingScenario implements RenderingScenario {
-	private final ObflParser parser;
+	private final ObflParserImpl parser;
 	private final Transformer t;
 	private final Node node;
 	private final TextProperties tp;
 	private final Expression ev;
 	private final String exp;
 
-	public XSLTRenderingScenario(ObflParser parser, Transformer t, Node node, TextProperties tp, Expression ev, String exp) {
+	public XSLTRenderingScenario(ObflParserImpl parser, Transformer t, Node node, TextProperties tp, Expression ev, String exp) {
 		this.parser = parser;
 		this.t = t;
 		this.node = node;
@@ -58,21 +58,21 @@ public class XSLTRenderingScenario implements RenderingScenario {
 			XMLEvent event;
 			while (input.hasNext()) {
 				event = input.nextEvent();
-				if (ObflParser.equalsStart(event, ObflQName.XML_PROCESSOR_RESULT)) {
+				if (ObflParserImpl.equalsStart(event, ObflQName.XML_PROCESSOR_RESULT)) {
 					// ok
 				} else if (event.isCharacters()) {
 					formatter.addChars(event.asCharacters().getData(), tp);
-				} else if (ObflParser.equalsStart(event, ObflQName.BLOCK)) {
+				} else if (ObflParserImpl.equalsStart(event, ObflQName.BLOCK)) {
 					parser.parseBlock(event, input, formatter, tp);
-				} else if (ObflParser.equalsStart(event, ObflQName.TABLE)) {
+				} else if (ObflParserImpl.equalsStart(event, ObflQName.TABLE)) {
 					parser.parseTable(event, input, formatter, tp);
 				} else if (parser.processAsBlockContents(formatter, event, input, tp)) {
 					//done
-				} else if (ObflParser.equalsEnd(event, ObflQName.XML_PROCESSOR_RESULT)) {
+				} else if (ObflParserImpl.equalsEnd(event, ObflQName.XML_PROCESSOR_RESULT)) {
 					break;
 				}
 				else {
-					ObflParser.report(event);
+					ObflParserImpl.report(event);
 				}
 			}
 		} catch (FormatterException e) {
