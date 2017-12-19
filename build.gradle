@@ -11,7 +11,7 @@ targetCompatibility = 1.8
 
 sourceSets {
 	main {	java { srcDir 'src' }	resources { srcDir 'src' } }
-	test {	java { srcDir 'test' }	resources { srcDir 'test' } }
+	test {	java { srcDir 'test' srcDir 'integrationtest'}	resources { srcDir 'test' srcDir 'integrationtest'} }
 }
 
 compileJava {
@@ -95,10 +95,10 @@ task updateTestsOverviewFile() {
 		// There are more tests in this folder with another naming standard, but they
 		// don't suit the presentational format and are more of integration tests.
 		// Additional tests should be written based on these.
-		def r = writeTestsOverviewFile('test/org/daisy/dotify/engine/impl/resource-files', 'tests-overview.xml')
+		def r = writeTestsOverviewFile('integrationtest/org/daisy/dotify/formatter/test/resource-files', 'tests-overview.xml')
 		ant {
 			xslt (
-				basedir: "test",
+				basedir: "integrationtest",
 				destdir: (new File("${buildDir}/docs/tests")),
 				style: "build-resources/display.xslt",
 				includes: "**/tests-overview.xml",
