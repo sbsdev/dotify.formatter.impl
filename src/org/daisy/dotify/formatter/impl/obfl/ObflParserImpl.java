@@ -74,6 +74,7 @@ import org.daisy.dotify.api.formatter.TocProperties;
 import org.daisy.dotify.api.formatter.VolumeContentBuilder;
 import org.daisy.dotify.api.formatter.VolumeTemplateBuilder;
 import org.daisy.dotify.api.formatter.VolumeTemplateProperties;
+import org.daisy.dotify.api.obfl.ObflParser;
 import org.daisy.dotify.api.obfl.ObflParserException;
 import org.daisy.dotify.api.translator.Border;
 import org.daisy.dotify.api.translator.TextBorderConfigurationException;
@@ -92,9 +93,8 @@ import org.w3c.dom.Node;
  * @author Joel Håkansson
  *
  */
-public class ObflParserImpl extends XMLParserBase {
+public class ObflParserImpl extends XMLParserBase implements ObflParser {
 
-	
 	//private HashMap<String, LayoutMaster> masters;
 	private List<MetaDataItem> meta;
 
@@ -118,7 +118,8 @@ public class ObflParserImpl extends XMLParserBase {
 		this.logger = Logger.getLogger(this.getClass().getCanonicalName());
 	}
 	
-	public void parse(XMLEventReader input, Formatter formatter) throws XMLStreamException, ObflParserException {
+	@Override
+	public void parse(XMLEventReader input, Formatter formatter) throws ObflParserException {
 		this.formatter = formatter;
 		FormatterConfiguration config = formatter.getConfiguration();
 		this.locale = FilterLocale.parse(config.getLocale());
@@ -128,38 +129,42 @@ public class ObflParserImpl extends XMLParserBase {
 		XMLEvent event;
 		TextProperties tp = new TextProperties.Builder(this.locale.toString()).translationMode(mode).hyphenate(hyphGlobal).build();
 		
-		while (input.hasNext()) {
-			event = input.nextEvent();
-			if (equalsStart(event, ObflQName.OBFL)) {
-				String loc = getAttr(event, ObflQName.ATTR_XML_LANG);
-				if (loc==null) {
-					throw new ObflParserException("Missing xml:lang on root element");
+		try {
+			while (input.hasNext()) {
+				event = input.nextEvent();
+				if (equalsStart(event, ObflQName.OBFL)) {
+					String loc = getAttr(event, ObflQName.ATTR_XML_LANG);
+					if (loc==null) {
+						throw new ObflParserException("Missing xml:lang on root element");
+					}
+					tp = getTextProperties(event, tp);
+				} else if (equalsStart(event, ObflQName.META)) {
+					parseMeta(event, input);
+				} else if (equalsStart(event, ObflQName.LAYOUT_MASTER)) {
+					parseLayoutMaster(event, input);
+				} else if (equalsStart(event, ObflQName.SEQUENCE)) {
+					parseSequence(event, input, tp);
+				} else if (equalsStart(event, ObflQName.TABLE_OF_CONTENTS)) {
+					parseTableOfContents(event, input, tp);
+				} else if (equalsStart(event, ObflQName.VOLUME_TEMPLATE)) {
+					parseVolumeTemplate(event, input, tp);
+				} else if (equalsStart(event, ObflQName.COLLECTION)) {
+					parseCollection(event, input, tp);
+				} else if (equalsStart(event, ObflQName.FILE_REFERENCE)) {
+					parseFileReference(event, input, fileRefs);
+				} else if (equalsStart(event, ObflQName.XML_PROCESSOR)) {
+					parseProcessor(event, input, xslts);
+				} else if (equalsStart(event, ObflQName.RENDERER)) {
+					parseRenderer(event, input, renderers);
 				}
-				tp = getTextProperties(event, tp);
-			} else if (equalsStart(event, ObflQName.META)) {
-				parseMeta(event, input);
-			} else if (equalsStart(event, ObflQName.LAYOUT_MASTER)) {
-				parseLayoutMaster(event, input);
-			} else if (equalsStart(event, ObflQName.SEQUENCE)) {
-				parseSequence(event, input, tp);
-			} else if (equalsStart(event, ObflQName.TABLE_OF_CONTENTS)) {
-				parseTableOfContents(event, input, tp);
-			} else if (equalsStart(event, ObflQName.VOLUME_TEMPLATE)) {
-				parseVolumeTemplate(event, input, tp);
-			} else if (equalsStart(event, ObflQName.COLLECTION)) {
-				parseCollection(event, input, tp);
-			} else if (equalsStart(event, ObflQName.FILE_REFERENCE)) {
-				parseFileReference(event, input, fileRefs);
-			} else if (equalsStart(event, ObflQName.XML_PROCESSOR)) {
-				parseProcessor(event, input, xslts);
-			} else if (equalsStart(event, ObflQName.RENDERER)) {
-				parseRenderer(event, input, renderers);
+				else {
+					report(event);
+				}
 			}
-			else {
-				report(event);
-			}
+			input.close();
+		} catch (XMLStreamException e) {
+			throw new ObflParserException(e);
 		}
-		input.close();
 	}
 
 	private void parseMeta(XMLEvent event, XMLEventReader input) throws XMLStreamException {
@@ -1583,6 +1588,7 @@ public class ObflParserImpl extends XMLParserBase {
 		return translate;
 	}
 
+	@Override
 	public List<MetaDataItem> getMetaData() {
 		return meta;
 	}

@@ -16,13 +16,15 @@ import org.daisy.dotify.api.engine.FormatterEngine;
 import org.daisy.dotify.api.engine.LayoutEngineException;
 import org.daisy.dotify.api.formatter.Formatter;
 import org.daisy.dotify.api.formatter.FormatterConfiguration;
+import org.daisy.dotify.api.formatter.FormatterException;
+import org.daisy.dotify.api.obfl.ObflParser;
 import org.daisy.dotify.api.obfl.ObflParserException;
+import org.daisy.dotify.api.obfl.ObflParserFactoryService;
 import org.daisy.dotify.api.writer.MetaDataItem;
 import org.daisy.dotify.api.writer.PagedMediaWriter;
 import org.daisy.dotify.api.writer.PagedMediaWriterException;
 import org.daisy.dotify.formatter.impl.FactoryManager;
 import org.daisy.dotify.formatter.impl.obfl.OBFLWsNormalizer;
-import org.daisy.dotify.formatter.impl.obfl.ObflParserImpl;
 
 /**
  * <p>
@@ -42,6 +44,7 @@ class LayoutEngineImpl implements FormatterEngine {
 	private static final QName DC_FORMAT = new QName(DC_NS, "format");
 	private final FormatterConfiguration config;
 	private final PagedMediaWriter writer;
+	private final ObflParserFactoryService obflFactory;
 	private final Logger logger;
 	private boolean normalize;
 	private final FactoryManager fm;
@@ -52,9 +55,10 @@ class LayoutEngineImpl implements FormatterEngine {
 	 * @param mode
 	 * @param writer the output writer
 	 * @param fm factory manager
+	 * @param obflFactoryService the obfl factory service
 	 */
-	public LayoutEngineImpl(String locale, String mode, PagedMediaWriter writer, FactoryManager fm) {
-		this(FormatterConfiguration.with(locale, mode).build(), writer, fm);
+	public LayoutEngineImpl(String locale, String mode, PagedMediaWriter writer, FactoryManager fm, ObflParserFactoryService obflFactoryService) {
+		this(FormatterConfiguration.with(locale, mode).build(), writer, fm, obflFactoryService);
 	}
 
 	/**
@@ -62,10 +66,12 @@ class LayoutEngineImpl implements FormatterEngine {
 	 * @param config a descriptive name for the task
 	 * @param writer the output writer
 	 * @param fm factory manager
+	 * @param obflFactory the obfl factory service
 	 */
-	public LayoutEngineImpl(FormatterConfiguration config, PagedMediaWriter writer, FactoryManager fm) {
+	public LayoutEngineImpl(FormatterConfiguration config, PagedMediaWriter writer, FactoryManager fm, ObflParserFactoryService obflFactory) {
 		this.config = config;
 		this.writer = writer;
+		this.obflFactory = obflFactory;
 		this.logger = Logger.getLogger(LayoutEngineImpl.class.getCanonicalName());
 		this.normalize = true;
 		this.fm = fm;
@@ -103,7 +109,7 @@ class LayoutEngineImpl implements FormatterEngine {
 			try {
 				logger.info("Parsing input...");
 
-				ObflParserImpl obflParser = new ObflParserImpl(fm);
+				ObflParser obflParser = obflFactory.newObflParser();
 				Formatter formatter = fm.getFormatterFactory().newFormatter(config.getLocale(), config.getTranslationMode());
 				formatter.setConfiguration(config);
 				obflParser.parse(fm.getXmlInputFactory().createXMLEventReader(input), formatter);
@@ -132,6 +138,8 @@ class LayoutEngineImpl implements FormatterEngine {
 			} catch (XMLStreamException e) {
 				throw new LayoutEngineException("XMLStreamException while running task.", e);
 			} catch (ObflParserException e) {
+				throw new LayoutEngineException("ObflParserException while running task.", e);
+			} catch (FormatterException e) {
 				throw new LayoutEngineException("FormatterException while running task.", e);
 			}
 		} finally {

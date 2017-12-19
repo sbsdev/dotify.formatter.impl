@@ -1,4 +1,4 @@
-package org.daisy.dotify.formatter.impl.engine;
+package org.daisy.dotify.formatter.impl.obfl;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.stream.XMLEventFactory;
@@ -7,38 +7,33 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.xpath.XPathFactory;
 
-import org.daisy.dotify.api.engine.FormatterEngine;
-import org.daisy.dotify.api.engine.FormatterEngineFactoryService;
-import org.daisy.dotify.api.formatter.FormatterConfiguration;
 import org.daisy.dotify.api.formatter.FormatterFactory;
 import org.daisy.dotify.api.formatter.FormatterFactoryMaker;
 import org.daisy.dotify.api.obfl.ExpressionFactory;
 import org.daisy.dotify.api.obfl.ExpressionFactoryMaker;
-import org.daisy.dotify.api.obfl.ObflParserFactoryMaker;
+import org.daisy.dotify.api.obfl.ObflParser;
 import org.daisy.dotify.api.obfl.ObflParserFactoryService;
 import org.daisy.dotify.api.translator.MarkerProcessorFactoryMaker;
 import org.daisy.dotify.api.translator.MarkerProcessorFactoryMakerService;
 import org.daisy.dotify.api.translator.TextBorderFactoryMaker;
 import org.daisy.dotify.api.translator.TextBorderFactoryMakerService;
-import org.daisy.dotify.api.writer.PagedMediaWriter;
 import org.daisy.dotify.formatter.impl.FactoryManager;
 
 import aQute.bnd.annotation.component.Component;
 import aQute.bnd.annotation.component.Reference;
 
 /**
- * Provides a layout engine factory.
+ * Provides an expression factory implementation.
  * @author Joel Håkansson
  */
 @Component
-public class LayoutEngineFactoryImpl implements FormatterEngineFactoryService {
+public class ObflParserFactoryImpl implements ObflParserFactoryService {
 	private FactoryManager factoryManager;
-	private ObflParserFactoryService obflFactory;
 
 	/**
-	 * Creates a new layout engine factory instance.
+	 * Creates a new obfl parser factory instance.
 	 */
-	public LayoutEngineFactoryImpl() {
+	public ObflParserFactoryImpl() {
 		factoryManager = new FactoryManager();
 	}
 	
@@ -70,35 +65,11 @@ public class LayoutEngineFactoryImpl implements FormatterEngineFactoryService {
 	}
 
 	@Override
-	public LayoutEngineImpl newFormatterEngine(String locale, String mode, PagedMediaWriter writer) {
+	public ObflParser newObflParser() {
 		setupFactoryManager();
-		return new LayoutEngineImpl(locale, mode, writer, factoryManager, obflFactory);
+		return new ObflParserImpl(factoryManager);
 	}
 
-	@Override
-	public FormatterEngine newFormatterEngine(FormatterConfiguration config, PagedMediaWriter writer) {
-		setupFactoryManager();
-		return new LayoutEngineImpl(config, writer, factoryManager, obflFactory);
-	}
-	
-	/**
-	 * Sets a factory dependency.
-	 * @param service the dependency
-	 */
-	@Reference
-	public void setObflParserFactory(ObflParserFactoryService service) {
-		this.obflFactory = service;
-	}
-
-	/**
-	 * Removes a factory dependency.
-	 * @param service the dependency to remove
-	 */
-	public void unsetObflParserFactory(ObflParserFactoryService service) {
-		this.obflFactory = null;
-	}
-
-	// FIXME: not a service
 	/**
 	 * Sets a factory dependency.
 	 * @param service the dependency
@@ -169,7 +140,6 @@ public class LayoutEngineFactoryImpl implements FormatterEngineFactoryService {
 
 	@Override
 	public void setCreatedWithSPI() {
-		setObflParserFactory(ObflParserFactoryMaker.newInstance().getFactory());
 		setFormatterFactory(FormatterFactoryMaker.newInstance().getFactory());
 		setMarkerProcessor(MarkerProcessorFactoryMaker.newInstance());
 		setTextBorderFactoryMaker(TextBorderFactoryMaker.newInstance());
