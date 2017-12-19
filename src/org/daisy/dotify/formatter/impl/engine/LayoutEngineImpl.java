@@ -1,4 +1,4 @@
-package org.daisy.dotify.engine.impl;
+package org.daisy.dotify.formatter.impl.engine;
 
 import java.io.File;
 import java.io.FileInputStream;

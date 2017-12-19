@@ -1,4 +1,4 @@
-package org.daisy.dotify.engine.impl;
+package org.daisy.dotify.formatter.impl.engine;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.stream.XMLEventFactory;
