@@ -1,5 +1,6 @@
 package org.daisy.dotify.obfl;
 
+@Deprecated
 public class OBFLParserException extends Exception {
 
 	/**

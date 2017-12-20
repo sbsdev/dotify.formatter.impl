@@ -6,6 +6,7 @@ import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.events.XMLEvent;
 
+@Deprecated
 public abstract class XMLParserBase {
 	private static final Pattern ws = Pattern.compile("\\s+");
 

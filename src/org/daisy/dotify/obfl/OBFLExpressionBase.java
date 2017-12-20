@@ -6,6 +6,7 @@ import java.util.Map;
 import org.daisy.dotify.api.formatter.Context;
 import org.daisy.dotify.api.obfl.ExpressionFactory;
 
+@Deprecated
 public abstract class OBFLExpressionBase {
 	public static final String DEFAULT_PAGE_NUMBER_VARIABLE_NAME = "page";
 	public static final String DEFAULT_VOLUME_NUMBER_VARIABLE_NAME = "volume";

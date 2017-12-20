@@ -19,6 +19,7 @@ import javax.xml.stream.XMLStreamException;
 import org.junit.Ignore;
 import org.junit.Test;
 @SuppressWarnings("javadoc")
+@Deprecated
 public class ObflWsXsltTest {
 
 	@Test

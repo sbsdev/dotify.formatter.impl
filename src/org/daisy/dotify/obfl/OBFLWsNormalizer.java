@@ -23,6 +23,7 @@ import javax.xml.stream.events.XMLEvent;
  * Provides a whitespace normalizer for OBFL-files.
  * @author Joel Håkansson
  */
+@Deprecated
 public class OBFLWsNormalizer extends XMLParserBase {
 	private final XMLEventReader input;
 	private final OutputStream out;

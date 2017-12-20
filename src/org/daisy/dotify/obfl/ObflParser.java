@@ -89,8 +89,9 @@ import org.w3c.dom.Node;
  * as an InputStream or as an XMLEventReader.
  *
  * @author Joel Håkansson
- *
+ * @deprecated use the corresponding class in the dotify.api
  */
+@Deprecated
 public class ObflParser extends XMLParserBase {
 
 	

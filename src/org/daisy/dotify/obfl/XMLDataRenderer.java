@@ -6,6 +6,7 @@ import java.util.List;
 import org.daisy.dotify.api.formatter.DynamicRenderer;
 import org.daisy.dotify.api.formatter.RenderingScenario;
 
+@Deprecated
 public class XMLDataRenderer implements DynamicRenderer {
 	private final List<RenderingScenario> data;
 

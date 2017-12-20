@@ -8,6 +8,7 @@ import javax.xml.namespace.NamespaceContext;
 
 import org.w3c.dom.Node;
 
+@Deprecated
 final class RendererInfo {
 	private final NamespaceContext namespaceContext;
 	private final Node processor;

@@ -6,6 +6,7 @@ import org.daisy.dotify.api.formatter.NumeralStyle;
 import org.junit.Test;
 
 @SuppressWarnings("javadoc")
+@Deprecated
 public class OBFLParserTest {
 
 	@Test

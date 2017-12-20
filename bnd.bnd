@@ -3,7 +3,7 @@ Import-Package:  \
 	org.daisy.dotify.api.formatter; provide:=true,\
 	org.daisy.dotify.api.obfl; provide:=true,\
 	org.daisy.dotify.api.writer; provide:=true, *
-Private-Package: org.daisy.dotify.engine.impl,\
+Private-Package: org.daisy.dotify.formatter.impl.engine,\
 	org.daisy.dotify.formatter.impl,\
 	org.daisy.dotify.formatter.impl.common,\
 	org.daisy.dotify.formatter.impl.core,\
@@ -13,8 +13,9 @@ Private-Package: org.daisy.dotify.engine.impl,\
 	org.daisy.dotify.formatter.impl.segment,\
 	org.daisy.dotify.formatter.impl.sheet,\
 	org.daisy.dotify.formatter.impl.volume,\
-	org.daisy.dotify.obfl.impl,\
-	org.daisy.dotify.writer.impl
+	org.daisy.dotify.formatter.impl.obfl,\
+	org.daisy.dotify.formatter.impl.obfl.impl,\
+	org.daisy.dotify.formatter.impl.writer
 Service-Component: *
 Include-Resource: / = src/
 -sources: false

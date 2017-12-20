@@ -3,8 +3,9 @@ package org.daisy.dotify.obfl;
 import org.daisy.dotify.api.formatter.Context;
 import org.daisy.dotify.api.formatter.DynamicContent;
 import org.daisy.dotify.api.obfl.ExpressionFactory;
-import org.daisy.dotify.obfl.impl.ExpressionTools;
+import org.daisy.dotify.formatter.impl.obfl.impl.ExpressionTools;
 
+@Deprecated
 public class OBFLDynamicContent extends OBFLExpressionBase implements DynamicContent {
 
 	public OBFLDynamicContent(String exp, ExpressionFactory ef, boolean extended) {

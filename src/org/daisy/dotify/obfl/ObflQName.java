@@ -2,6 +2,7 @@ package org.daisy.dotify.obfl;
 
 import javax.xml.namespace.QName;
 
+@Deprecated
 interface ObflQName {
 	static final String OBFL_NS = "http://www.daisy.org/ns/2011/obfl";
 	 static final QName OBFL = new QName(OBFL_NS, "obfl");

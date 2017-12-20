@@ -26,6 +26,7 @@ import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
+@Deprecated
 public class XSLTRenderingScenario implements RenderingScenario {
 	private final ObflParser parser;
 	private final Transformer t;
