@@ -1,4 +1,4 @@
-package org.daisy.dotify.formatter.impl.obfl.impl;
+package org.daisy.dotify.formatter.impl.obfl;
 
 import java.text.MessageFormat;
 import java.text.SimpleDateFormat;

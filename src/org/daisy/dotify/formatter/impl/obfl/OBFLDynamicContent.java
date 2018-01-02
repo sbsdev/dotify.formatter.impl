@@ -3,7 +3,6 @@ package org.daisy.dotify.formatter.impl.obfl;
 import org.daisy.dotify.api.formatter.Context;
 import org.daisy.dotify.api.formatter.DynamicContent;
 import org.daisy.dotify.api.obfl.ExpressionFactory;
-import org.daisy.dotify.formatter.impl.obfl.impl.ExpressionTools;
 
 public class OBFLDynamicContent extends OBFLExpressionBase implements DynamicContent {
 
