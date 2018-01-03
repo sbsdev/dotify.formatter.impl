@@ -86,16 +86,6 @@ class ExpressionImpl implements Expression {
 	}
 	
 	@Override
-	public Object evaluate(String expr, Map<String, String> variables) {
-		return evaluate(ExpressionTools.resolveVariables(expr, variables));
-	}
-	
-	@Override
-	public Object evaluate(String expr, String ... vars) {
-		return evaluate(ExpressionTools.resolveVariables(expr, vars));
-	}
-	
-	@Override
 	public void setVariable(String key, Object value) {
 		globalVars.put("$"+key, value);
 	}

@@ -38,23 +38,23 @@ repositories {
 
 dependencies {
     compileOnly group: "biz.aQute.bnd", name: "annotation", version: "2.3.0"
-    compile "org.daisy.dotify:dotify.api:3.3.0"
-    compile "org.daisy.dotify:dotify.common:3.9.0"
+    compile "org.daisy.dotify:dotify.api:4.0.0"
+    compile "org.daisy.dotify:dotify.common:4.0.0"
     compile (group: 'org.daisy.libs', name: 'saxon-he', version: '9.5.1.5') {
 		exclude module: 'Saxon-HE'
 	}
 
     runtime 'com.fasterxml.woodstox:woodstox-core:5.0.2'
     testCompile group: "junit", name: "junit", version: "4.7"
-    testCompile 'org.daisy.braille:braille-utils.api:2.0.0'
-    testCompile ('org.daisy.braille:braille-utils.pef-tools:1.0.1') {
+    testCompile 'org.daisy.braille:braille-utils.api:4.2.0'
+    testCompile ('org.daisy.braille:braille-utils.pef-tools:3.0.0') {
 		exclude module: 'Saxon-HE'
 	}
     testCompile "org.mockito:mockito-core:1.10.19"
     
-	testRuntime group: group, name:'dotify.hyphenator.impl', version:'3.0.0'
-	testRuntime group: group, name:'dotify.text.impl', version:'3.0.0'
-	testRuntime group: group, name:'dotify.translator.impl', version:'3.1.0'
+	testRuntime group: group, name:'dotify.hyphenator.impl', version:'4.0.0'
+	testRuntime group: group, name:'dotify.text.impl', version:'4.0.0'
+	testRuntime group: group, name:'dotify.translator.impl', version:'4.0.0'
 }
 
 buildscript {
