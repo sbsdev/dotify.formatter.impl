@@ -1,5 +1,6 @@
 package org.daisy.dotify.formatter.impl.page;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -11,7 +12,7 @@ import org.daisy.dotify.formatter.impl.core.Block;
 import org.daisy.dotify.formatter.impl.core.BlockContext;
 import org.daisy.dotify.formatter.impl.core.LayoutMaster;
 
-class RowGroupDataSource implements SplitPointDataSource<RowGroup, RowGroupDataSource> {
+class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<RowGroup, RowGroupDataSource> {
 	private static final Supplements<RowGroup> EMPTY_SUPPLEMENTS = new Supplements<RowGroup>() {
 		@Override
 		public RowGroup get(String id) {
@@ -19,29 +20,42 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup, RowGroupDataS
 		}
 	};
 	private final LayoutMaster master;
-	private final RowGroupData data;
 	private final Supplements<RowGroup> supplements;
 	private final VerticalSpacing vs;
 	private final List<Block> blocks;
+	private List<RowGroup> groups;
 	private BlockContext bc;
 	private int blockIndex;
 	private boolean hyphenateLastLine;
 
 	RowGroupDataSource(LayoutMaster master, BlockContext bc, List<Block> blocks, VerticalSpacing vs, Supplements<RowGroup> supplements) {
+		super();
 		this.master = master;
 		this.bc = bc;
-		this.data = new RowGroupData();
+		this.groups = null;
 		this.blocks = blocks;
 		this.supplements = supplements;
 		this.vs = vs;
 		this.blockIndex = 0;
 		this.hyphenateLastLine = true;
 	}
-	
+
 	RowGroupDataSource(RowGroupDataSource template) {
+		this(template, 0);
+	}
+	
+	RowGroupDataSource(RowGroupDataSource template, int offset) {
+		super(template);
 		this.master = template.master;
 		this.bc = template.bc;
-		this.data = new RowGroupData(template.data);
+		if (template.groups==null) {
+			this.groups = null;
+		} else if (template.groups.size()>offset) {
+			this.groups = new ArrayList<>(
+					offset>0?template.groups.subList(offset, template.groups.size()):template.groups);
+		} else {
+			this.groups = new ArrayList<>();
+		}
 		this.blocks = template.blocks;
 		this.supplements = template.supplements;
 		this.vs = template.vs;
@@ -53,21 +67,6 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup, RowGroupDataS
 		return template==null?null:new RowGroupDataSource(template);
 	}
 	
-	private RowGroupDataSource(LayoutMaster master, BlockContext bc, RowGroupData data, List<Block> blocks, Supplements<RowGroup> supplements, VerticalSpacing vs, int blockIndex) {
-		this.master = master;
-		this.bc = bc;
-		this.data = data;
-		if (supplements==null) {
-			this.supplements = EMPTY_SUPPLEMENTS;
-		} else {
-			this.supplements = supplements;
-		}
-		this.vs = vs;
-		this.blocks = blocks;
-		this.blockIndex = blockIndex;
-		this.hyphenateLastLine = true;
-	}
-
 	@Override
 	public Supplements<RowGroup> getSupplements() {
 		return supplements;
@@ -80,7 +79,7 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup, RowGroupDataS
 
 	@Override
 	public boolean isEmpty() {
-		return this.data.size()==0 && blockIndex>=blocks.size() && !data.hasNextInBlock();
+		return this.groupSize()==0 && blockIndex>=blocks.size() && !hasNextInBlock();
 	}
 
 	@Override
@@ -88,20 +87,20 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup, RowGroupDataS
 		if (!ensureBuffer(n+1)) {
 			throw new IndexOutOfBoundsException("" + n);
 		}
-		return this.data.getList().get(n);
+		return this.groups.get(n);
 	}
 
 	@Override
 	public List<RowGroup> getRemaining() {
 		ensureBuffer(-1);
-		return this.data.getList().subList(0, data.size());
+		return this.groups.subList(0, groupSize());
 	}
 
 	@Override
 	public int getSize(int limit) {
 		if (!ensureBuffer(limit))  {
 			//we have buffered all elements
-			return this.data.size();
+			return this.groupSize();
 		} else {
 			return limit;
 		}
@@ -130,17 +129,17 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup, RowGroupDataS
 	 * @return returns true if the index element was available, false otherwise
 	 */
 	private boolean ensureBuffer(int index) {
-		while (index<0 || this.data.size()<index) {
-			if (blockIndex>=blocks.size() && !data.hasNextInBlock()) {
+		while (index<0 || this.groupSize()<index) {
+			if (blockIndex>=blocks.size() && !hasNextInBlock()) {
 				return false;
 			}
-			if (!data.hasNextInBlock()) {
+			if (!hasNextInBlock()) {
 				//get next block
 				Block b = blocks.get(blockIndex);
 				blockIndex++;
-				data.loadBlock(master, b, bc);
+				loadBlock(master, b, bc);
 			}
-			data.processNextRowGroup(bc, !hyphenateLastLine && data.size()>=index-1);
+			processNextRowGroup(bc, !hyphenateLastLine && groupSize()>=index-1);
 		}
 		return true;
 	}
@@ -151,11 +150,12 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup, RowGroupDataS
 		if (!ensureBuffer(atIndex)) {
 			throw new IndexOutOfBoundsException("" + atIndex);
 		}
-		RowGroupDataSource tail = new RowGroupDataSource(master, bc, new RowGroupData(data, atIndex), blocks, supplements, vs, blockIndex);
+		RowGroupDataSource tail = new RowGroupDataSource(this, atIndex);
+		tail.hyphenateLastLine = true;
 		if (atIndex==0) {
 			return new DefaultSplitResult<RowGroup, RowGroupDataSource>(Collections.emptyList(), tail);
 		} else {
-			return new DefaultSplitResult<RowGroup, RowGroupDataSource>(this.data.getList().subList(0, atIndex), tail);
+			return new DefaultSplitResult<RowGroup, RowGroupDataSource>(this.groups.subList(0, atIndex), tail);
 		}
 	}
 
@@ -169,4 +169,31 @@ class RowGroupDataSource implements SplitPointDataSource<RowGroup, RowGroupDataS
 		return this;
 	}
 
+	@Override
+	protected void newRowGroupSequence(VerticalSpacing vs) {
+		if (groups!=null) {
+			throw new IllegalStateException();
+		} else {
+			groups = new ArrayList<>();
+		}
+	}
+
+	@Override
+	protected boolean hasSequence() {
+		return groups!=null;
+	}
+
+	@Override
+	protected boolean hasResult() {
+		return hasSequence() && !groups.isEmpty();
+	}
+
+	@Override
+	protected void addRowGroup(RowGroup rg) {
+		groups.add(rg);
+	}
+	
+	int groupSize() {
+		return groups==null?0:groups.size();
+	}
 }
