@@ -305,6 +305,7 @@ public class VolumeProvider {
 		// required number of volume based on groups.countTotalSheets()
 		groups.updateAll();
 		crh.commitBreakable();
+		crh.commitAvoidVolumeBreakAfter();
 		crh.trimPageDetails();
 		crh.setVolumeCount(groups.getVolumeCount());
 		crh.setSheetsInDocument(groups.countTotalSheets());

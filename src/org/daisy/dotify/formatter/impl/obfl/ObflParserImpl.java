@@ -1392,9 +1392,6 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
 		String rangeStr = getAttr(event, "range");
 		if (rangeStr!=null) {
 			ApplicationRange range = ApplicationRange.parse(rangeStr);
-			if (range==ApplicationRange.SHEET) {
-				throw new RuntimeException(String.format("@range=\"sheet\" is not implemented."));
-			}
 			propsBuilder.applicationRange(range);
 		} else {
 			propsBuilder.applicationRange(ApplicationRange.PAGE);

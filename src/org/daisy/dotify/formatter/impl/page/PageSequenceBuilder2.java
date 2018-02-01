@@ -119,6 +119,15 @@ public class PageSequenceBuilder2 {
 	public static PageSequenceBuilder2 copyUnlessNull(PageSequenceBuilder2 template) {
 		return template==null?null:new PageSequenceBuilder2(template);
 	}
+	
+	/**
+	 * Gets a new PageId representing the next page in this sequence.
+	 * @param offset the offset
+	 * @return returns the next page Id
+	 */
+	public PageId nextPageId(int offset) {
+		return new PageId(pageCount+offset, getGlobalStartIndex(), seqId);
+	}
 
 	private PageImpl newPage(int pageNumberOffset) {
 		PageDetails details = new PageDetails(master.duplex(), new PageId(pageCount, getGlobalStartIndex(), seqId), pageNumberOffset);

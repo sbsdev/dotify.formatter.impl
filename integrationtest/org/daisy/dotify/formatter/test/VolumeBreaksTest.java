@@ -1,5 +1,6 @@
 package org.daisy.dotify.formatter.test;
 
+import java.io.File;
 import java.io.IOException;
 
 import org.daisy.dotify.api.engine.LayoutEngineException;
@@ -37,6 +38,11 @@ public class VolumeBreaksTest extends AbstractFormatterEngineTest {
 	@Test
 	public void testAdvancedVolumeBreak_02() throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
 		testPEF("resource-files/volume-breaks-advanced2-input.obfl", "resource-files/volume-breaks-advanced2-expected.pef", false);
+	}
+	
+	@Test
+	public void testAdvancedVolumeBreak_03() throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
+		testPEF("resource-files/volume-breaks-advanced3-input.obfl", "resource-files/volume-breaks-advanced3-expected.pef", false);
 	}
 
 	@Test
