@@ -13,6 +13,7 @@ import org.daisy.dotify.common.splitter.SplitResult;
 import org.daisy.dotify.common.splitter.Supplements;
 import org.daisy.dotify.formatter.impl.core.FormatterContext;
 import org.daisy.dotify.formatter.impl.core.TransitionContent;
+import org.daisy.dotify.formatter.impl.datatype.VolumeKeepPriority;
 import org.daisy.dotify.formatter.impl.page.BlockSequence;
 import org.daisy.dotify.formatter.impl.page.PageImpl;
 import org.daisy.dotify.formatter.impl.page.PageSequenceBuilder2;
@@ -227,15 +228,15 @@ public class SheetDataSource implements SplitPointDataSource<Sheet, SheetDataSou
 					if (!allowsSplit && index-1==sheetBuffer.size()) {
 						if ((!sectionProperties.duplex() || pageIndex % 2 == 1)) {
 							transition = context.getTransitionBuilder().getInterruptTransition();
-						} else {
+						} else if (context.getTransitionBuilder().getProperties().getApplicationRange()==ApplicationRange.SHEET) {
 							// This id is the same id as the one created below in the call to nextPage
 							PageId thisPageId = psb.nextPageId(0);
 							// This gets the page details for the next page in this sequence (if any)
 							Optional<PageDetails> next = rcontext.getRefs().findNextPageInSequence(thisPageId);
 							// If there is a page details in this sequence and volume break is preferred on this page
 							if (next.isPresent()) {
-								int v1 = getWithDefault(rcontext.getRefs().getAvoidVolumeBreakAfter(thisPageId), 10);
-								int v2 = getWithDefault(rcontext.getRefs().getAvoidVolumeBreakAfter(next.get().getPageId()), 10);
+								double v1 = rcontext.getRefs().getAvoidVolumeBreakAfter(thisPageId).orElse(10);
+								double v2 = rcontext.getRefs().getAvoidVolumeBreakAfter(next.get().getPageId()).orElse(10);
 								if (v1>v2) {
 									//break here
 									transition = context.getTransitionBuilder().getInterruptTransition();
@@ -255,26 +256,26 @@ public class SheetDataSource implements SplitPointDataSource<Sheet, SheetDataSou
 				PageImpl p = psb.nextPage(initialPageOffset, hyphenateLastLine, Optional.ofNullable(transition));
 				rcontext.getRefs().keepAvoidVolumeBreakAfter(p.getDetails().getPageId(), p.getAvoidVolumeBreakAfter());
 				struct.increasePageCount();
-				Integer vpx = p.getAvoidVolumeBreakAfter();
+				VolumeKeepPriority vpx = p.getAvoidVolumeBreakAfter();
 				if (context.getTransitionBuilder().getProperties().getApplicationRange()==ApplicationRange.SHEET) {
 					Sheet sx = s.build();
 					if (!sx.getPages().isEmpty()) {
-						Integer vp = sx.getAvoidVolumeBreakAfterPriority();
-						if (getWithDefault(vp, 10)>getWithDefault(vpx, 10)) {
+						VolumeKeepPriority vp = sx.getAvoidVolumeBreakAfterPriority();
+						if (vp.orElse(10)>vpx.orElse(10)) {
 							vpx = vp;
 						}
 					}
 				}
 				s.avoidVolumeBreakAfterPriority(vpx);
 				if (!psb.hasNext()) {
-					s.avoidVolumeBreakAfterPriority(null);
+					s.avoidVolumeBreakAfterPriority(VolumeKeepPriority.empty());
 					//Don't get or store this value in crh as it is transient and not a property of the sheet context
 					s.breakable(true);
 				} else {
 					boolean br = rcontext.getRefs().getBreakable(si);
 					//TODO: the following is a low effort way of giving existing uses of non-breakable units a high priority, but it probably shouldn't be done this way
 					if (!br) {
-						s.avoidVolumeBreakAfterPriority(1);
+						s.avoidVolumeBreakAfterPriority(VolumeKeepPriority.of(1));
 					}
 					s.breakable(br);
 				}
@@ -299,10 +300,6 @@ public class SheetDataSource implements SplitPointDataSource<Sheet, SheetDataSou
 			}
 		}
 		return true;
-	}
-	
-	private static int getWithDefault(Integer value, int def) {
-		return value==null?def:value;
 	}
 
 	private void setPreviousSheet(int start, int p, DefaultContext rcontext) {

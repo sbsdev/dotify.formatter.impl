@@ -4,10 +4,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import org.daisy.dotify.api.formatter.Marker;
 import org.daisy.dotify.api.writer.Row;
 import org.daisy.dotify.common.splitter.SplitPointUnit;
+import org.daisy.dotify.formatter.impl.datatype.VolumeKeepPriority;
 import org.daisy.dotify.formatter.impl.row.RowImpl;
 
 class RowGroup implements SplitPointUnit {
@@ -19,7 +21,7 @@ class RowGroup implements SplitPointUnit {
 	private final List<String> ids;
 	private final String identifier;
 	private final int keepWithNextSheets, keepWithPreviousSheets;
-	private final Integer avoidVolumeBreakAfterPriority;
+	private final VolumeKeepPriority avoidVolumeBreakAfterPriority;
 	private final boolean lastInBlock;
 	
 	static class Builder {
@@ -31,7 +33,7 @@ class RowGroup implements SplitPointUnit {
 		private int keepWithNextSheets=0, keepWithPreviousSheets=0;
 		private String identifier=null;
 		private boolean lazyCollapse = true;
-		private Integer avoidVolumeBreakAfterPriority = null;
+		private VolumeKeepPriority avoidVolumeBreakAfterPriority = VolumeKeepPriority.empty();
 		private boolean lastInBlock = false;
 		Builder(float rowDefault, RowImpl ... rows) {
 			this(rowDefault, Arrays.asList(rows));
@@ -91,8 +93,8 @@ class RowGroup implements SplitPointUnit {
 			this.keepWithPreviousSheets = value;
 			return this;
 		}
-		Builder avoidVolumeBreakAfterPriority(Integer value) {
-			this.avoidVolumeBreakAfterPriority = value;
+		Builder avoidVolumeBreakAfterPriority(VolumeKeepPriority value) {
+			this.avoidVolumeBreakAfterPriority = Objects.requireNonNull(value);
 			return this;
 		}
 		/**
@@ -263,7 +265,11 @@ class RowGroup implements SplitPointUnit {
 		return keepWithPreviousSheets;
 	}
 	
-	public Integer getAvoidVolumeBreakAfterPriority() {
+	/**
+	 * Gets the volume keep priority, never null.
+	 * @return returns the volume keep priority
+	 */
+	public VolumeKeepPriority getAvoidVolumeBreakAfterPriority() {
 		return avoidVolumeBreakAfterPriority;
 	}
 

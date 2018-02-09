@@ -11,6 +11,7 @@ import java.util.Set;
 
 import org.daisy.dotify.api.formatter.Marker;
 import org.daisy.dotify.api.formatter.MarkerReferenceField;
+import org.daisy.dotify.formatter.impl.datatype.VolumeKeepPriority;
 
 public class CrossReferenceHandler {
 	private final LookupHandler<String, Integer> pageRefs;
@@ -21,7 +22,7 @@ public class CrossReferenceHandler {
 	private final LookupHandler<BlockAddress, Integer> rowCount;
     private final LookupHandler<BlockAddress, List<String>> groupAnchors;
     private final LookupHandler<BlockAddress, List<Marker>> groupMarkers;
-	private final LookupHandler<PageId, Optional<Integer>> avoidVolumeBreakAfter;
+	private final LookupHandler<PageId, VolumeKeepPriority> avoidVolumeBreakAfter;
 	private final Map<Integer, Overhead> volumeOverhead;
     private final Map<String, Integer> counters;
 	private final SearchInfo searchInfo;
@@ -135,9 +136,9 @@ public class CrossReferenceHandler {
 		breakable.commit();
 	}
 	
-	public void keepAvoidVolumeBreakAfter(PageId id, Integer value) {
+	public void keepAvoidVolumeBreakAfter(PageId id, VolumeKeepPriority value) {
 		if (readOnly) { return; }
-		avoidVolumeBreakAfter.keep(id, Optional.ofNullable(value));
+		avoidVolumeBreakAfter.keep(id, value);
 	}
 	
 	public void commitAvoidVolumeBreakAfter() {
@@ -223,8 +224,8 @@ public class CrossReferenceHandler {
 		return breakable.get(ident, true);
 	}
 	
-	public Integer getAvoidVolumeBreakAfter(PageId id) {
-		return avoidVolumeBreakAfter.get(id, Optional.empty()).orElse(null);
+	public VolumeKeepPriority getAvoidVolumeBreakAfter(PageId id) {
+		return avoidVolumeBreakAfter.get(id, VolumeKeepPriority.empty());
 	}
 
 	public List<String> getGroupAnchors(BlockAddress blockId) {

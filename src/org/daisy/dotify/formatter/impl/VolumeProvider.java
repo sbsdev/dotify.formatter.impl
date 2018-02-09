@@ -16,6 +16,7 @@ import org.daisy.dotify.common.splitter.SplitPointHandler;
 import org.daisy.dotify.common.splitter.SplitPointSpecification;
 import org.daisy.dotify.common.splitter.StandardSplitOption;
 import org.daisy.dotify.formatter.impl.core.PaginatorException;
+import org.daisy.dotify.formatter.impl.datatype.VolumeKeepPriority;
 import org.daisy.dotify.formatter.impl.page.BlockSequence;
 import org.daisy.dotify.formatter.impl.page.PageImpl;
 import org.daisy.dotify.formatter.impl.page.PageStruct;
@@ -162,10 +163,10 @@ public class VolumeProvider {
 				// Calculates a maximum offset based on the maximum possible number of sheets
 				double range = splitterMax * 0.4;
 				if (!units.isEmpty()) {
-					Integer avoid = lastSheet.getAvoidVolumeBreakAfterPriority();
-					if (avoid!=null) {
+					VolumeKeepPriority avoid = lastSheet.getAvoidVolumeBreakAfterPriority();
+					if (avoid.hasValue()) {
 						// Reverses 1-9 to 9-1 with bounds control and normalizes that to [1/9, 1]
-						double normalized = ((10 - Math.max(1, Math.min(avoid, 9)))/9d);
+						double normalized = ((10 - avoid.getValue())/9d);
 						// Calculates a number of sheets that a high priority can beat
 						priorityPenalty = range * normalized;
 					}

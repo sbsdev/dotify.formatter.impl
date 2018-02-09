@@ -29,6 +29,7 @@ import org.daisy.dotify.formatter.impl.core.LayoutMaster;
 import org.daisy.dotify.formatter.impl.core.PaginatorException;
 import org.daisy.dotify.formatter.impl.core.TransitionContent;
 import org.daisy.dotify.formatter.impl.core.TransitionContent.Type;
+import org.daisy.dotify.formatter.impl.datatype.VolumeKeepPriority;
 import org.daisy.dotify.formatter.impl.row.AbstractBlockContentManager;
 import org.daisy.dotify.formatter.impl.row.MarginProperties;
 import org.daisy.dotify.formatter.impl.row.RowImpl;
@@ -233,10 +234,10 @@ public class PageSequenceBuilder2 {
 				boolean addTransition = true;
 				if (transitionContent.isPresent() && transitionContent.get().getType()==Type.INTERRUPT) {
 					SplitPointCost<RowGroup> cost = (SplitPointDataSource<RowGroup, ?> units, int in, int limit)->{
-						Integer volumeBreakPriority = // 1-9 or null: 
+						VolumeKeepPriority volumeBreakPriority = 
 								data.get(in).getAvoidVolumeBreakAfterPriority();
-						int volBreakCost = // 0-9:
-								10-(volumeBreakPriority!=null?volumeBreakPriority:10);
+						double volBreakCost = // 0-9:
+								10-(volumeBreakPriority.orElse(10));
 						// not breakable gets "series" 21
 						// breakable, but not last gets "series" 11-20
 						// breakable and last gets "series" 1-10
@@ -289,7 +290,7 @@ public class PageSequenceBuilder2 {
 				}
 				addRows(head, current);
 				current.setAvoidVolumeBreakAfter(
-					getVolumeKeepPriority(res.getDiscarded(), getVolumeKeepPriority(res.getHead(), null))
+					getVolumeKeepPriority(res.getDiscarded(), getVolumeKeepPriority(res.getHead(), VolumeKeepPriority.empty()))
 				);
 				for (RowGroup rg : res.getDiscarded()) {
 					addProperties(current, rg);
@@ -342,7 +343,7 @@ public class PageSequenceBuilder2 {
 		}
 	}
 	
-	private Integer getVolumeKeepPriority(List<RowGroup> list, Integer def) {		
+	private VolumeKeepPriority getVolumeKeepPriority(List<RowGroup> list, VolumeKeepPriority def) {		
 		if (!list.isEmpty()) {
 			if (context.getTransitionBuilder().getProperties().getApplicationRange()==ApplicationRange.NONE) {
 				return list.get(list.size()-1).getAvoidVolumeBreakAfterPriority();
@@ -350,7 +351,8 @@ public class PageSequenceBuilder2 {
 				// we want the highest value (lowest priority) to maximize the chance that this page is used
 				// when finding the break point
 				return list.stream().map(v->v.getAvoidVolumeBreakAfterPriority())
-						.map(v->v==null?100:v).max(Integer::compare).map(v->v==100?null:v).orElse(null);				
+						.max(VolumeKeepPriority::compare)
+						.orElse(VolumeKeepPriority.empty());
 			}
 		} else {
 			return def;

@@ -14,6 +14,7 @@ import org.daisy.dotify.formatter.impl.core.HeightCalculator;
 import org.daisy.dotify.formatter.impl.core.LayoutMaster;
 import org.daisy.dotify.formatter.impl.core.PageTemplate;
 import org.daisy.dotify.formatter.impl.core.PaginatorException;
+import org.daisy.dotify.formatter.impl.datatype.VolumeKeepPriority;
 import org.daisy.dotify.formatter.impl.row.RowImpl;
 import org.daisy.dotify.formatter.impl.search.PageDetails;
 import org.daisy.dotify.formatter.impl.writer.Page;
@@ -42,7 +43,7 @@ public class PageImpl implements Page {
 	private boolean hasRows;
 	private boolean isVolBreakAllowed;
 	private int keepPreviousSheets;
-	private Integer volumeBreakAfterPriority;
+	private VolumeKeepPriority volumeBreakAfterPriority;
 	private final BrailleTranslator filter;
 	
 	public PageImpl(FieldResolver fieldResolver, PageDetails details, LayoutMaster master, FormatterContext fcontext, PageAreaContent pageAreaTemplate) {
@@ -59,7 +60,7 @@ public class PageImpl implements Page {
         this.flowHeight = master.getFlowHeight(template);
 		this.isVolBreakAllowed = true;
 		this.keepPreviousSheets = 0;
-		this.volumeBreakAfterPriority = null;
+		this.volumeBreakAfterPriority = VolumeKeepPriority.empty();
 		this.pageMargin = ((details.getPageId().getOrdinal() % 2 == 0) ? master.getInnerMargin() : master.getOuterMargin());
 		this.finalRows = new BorderManager(master, fcontext, pageMargin);
 		this.hasRows = false;
@@ -237,11 +238,11 @@ public class PageImpl implements Page {
 		return template;
 	}
 	
-	public Integer getAvoidVolumeBreakAfter() {
+	public VolumeKeepPriority getAvoidVolumeBreakAfter() {
 		return volumeBreakAfterPriority;
 	}
 	
-	void setAvoidVolumeBreakAfter(Integer value) {
+	void setAvoidVolumeBreakAfter(VolumeKeepPriority value) {
 		this.volumeBreakAfterPriority = value;
 	}
 

@@ -7,6 +7,7 @@ import org.daisy.dotify.api.formatter.FormattingTypes.Keep;
 import org.daisy.dotify.formatter.impl.core.Block;
 import org.daisy.dotify.formatter.impl.core.BlockContext;
 import org.daisy.dotify.formatter.impl.core.LayoutMaster;
+import org.daisy.dotify.formatter.impl.datatype.VolumeKeepPriority;
 import org.daisy.dotify.formatter.impl.row.AbstractBlockContentManager;
 import org.daisy.dotify.formatter.impl.row.BlockStatistics;
 import org.daisy.dotify.formatter.impl.row.RowImpl;
@@ -182,10 +183,10 @@ class RowGroupProvider {
 	
 	private static RowGroup.Builder setPropertiesThatDependOnHasNext(RowGroup.Builder rgb, boolean hasNext, Block g) {
 		if (hasNext) {
-			return rgb.avoidVolumeBreakAfterPriority(g.getAvoidVolumeBreakInsidePriority())
+			return rgb.avoidVolumeBreakAfterPriority(VolumeKeepPriority.ofNullable(g.getAvoidVolumeBreakInsidePriority()))
 					.lastRowGroupInBlock(false);
 		} else {
-			return rgb.avoidVolumeBreakAfterPriority(g.getAvoidVolumeBreakAfterPriority())
+			return rgb.avoidVolumeBreakAfterPriority(VolumeKeepPriority.ofNullable(g.getAvoidVolumeBreakAfterPriority()))
 					.lastRowGroupInBlock(true);
 		}
 	}
