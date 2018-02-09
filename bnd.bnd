@@ -7,6 +7,7 @@ Private-Package: org.daisy.dotify.formatter.impl.engine,\
 	org.daisy.dotify.formatter.impl,\
 	org.daisy.dotify.formatter.impl.common,\
 	org.daisy.dotify.formatter.impl.core,\
+	org.daisy.dotify.formatter.impl.datatype,\
 	org.daisy.dotify.formatter.impl.page,\
 	org.daisy.dotify.formatter.impl.row,\
 	org.daisy.dotify.formatter.impl.search,\
