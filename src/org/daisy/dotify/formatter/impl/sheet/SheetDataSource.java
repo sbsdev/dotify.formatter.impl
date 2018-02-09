@@ -23,6 +23,7 @@ import org.daisy.dotify.formatter.impl.search.DefaultContext;
 import org.daisy.dotify.formatter.impl.search.DocumentSpace;
 import org.daisy.dotify.formatter.impl.search.PageDetails;
 import org.daisy.dotify.formatter.impl.search.PageId;
+import org.daisy.dotify.formatter.impl.search.TransitionProperties;
 import org.daisy.dotify.formatter.impl.search.SheetIdentity;
 
 /**
@@ -235,8 +236,10 @@ public class SheetDataSource implements SplitPointDataSource<Sheet, SheetDataSou
 							Optional<PageDetails> next = rcontext.getRefs().findNextPageInSequence(thisPageId);
 							// If there is a page details in this sequence and volume break is preferred on this page
 							if (next.isPresent()) {
-								double v1 = rcontext.getRefs().getAvoidVolumeBreakAfter(thisPageId).orElse(10);
-								double v2 = rcontext.getRefs().getAvoidVolumeBreakAfter(next.get().getPageId()).orElse(10);
+								TransitionProperties st = rcontext.getRefs().getTransitionProperties(thisPageId);
+								double v1 = st.getVolumeKeepPriority().orElse(10) + (st.hasBlockBoundary()?0.5:0);
+								st = rcontext.getRefs().getTransitionProperties(next.get().getPageId());
+								double v2 = st.getVolumeKeepPriority().orElse(10) + (st.hasBlockBoundary()?0.5:0);
 								if (v1>v2) {
 									//break here
 									transition = context.getTransitionBuilder().getInterruptTransition();
@@ -254,7 +257,6 @@ public class SheetDataSource implements SplitPointDataSource<Sheet, SheetDataSou
 								&& (!sectionProperties.duplex() || pageIndex % 2 == 1));
 				
 				PageImpl p = psb.nextPage(initialPageOffset, hyphenateLastLine, Optional.ofNullable(transition));
-				rcontext.getRefs().keepAvoidVolumeBreakAfter(p.getDetails().getPageId(), p.getAvoidVolumeBreakAfter());
 				struct.increasePageCount();
 				VolumeKeepPriority vpx = p.getAvoidVolumeBreakAfter();
 				if (context.getTransitionBuilder().getProperties().getApplicationRange()==ApplicationRange.SHEET) {

@@ -2,6 +2,7 @@ package org.daisy.dotify.formatter.impl.page;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,6 +39,7 @@ import org.daisy.dotify.formatter.impl.search.DocumentSpace;
 import org.daisy.dotify.formatter.impl.search.PageDetails;
 import org.daisy.dotify.formatter.impl.search.PageId;
 import org.daisy.dotify.formatter.impl.search.SequenceId;
+import org.daisy.dotify.formatter.impl.search.TransitionProperties;
 
 public class PageSequenceBuilder2 {
 	private final FormatterContext context;
@@ -203,6 +205,7 @@ public class PageSequenceBuilder2 {
 					.flowWidth(master.getFlowWidth() - master.getTemplate(current.getPageNumber()).getTotalMarginRegionWidth())
 					.build();
 			data.setContext(bc);
+			Optional<Boolean> blockBoundary = Optional.empty();
 			if (!data.isEmpty()) {
 				RowGroupDataSource copy = new RowGroupDataSource(data);
 				// Using a copy to find the skippable data, so that only the required data is rendered
@@ -215,24 +218,20 @@ public class PageSequenceBuilder2 {
 				data = sl.getTail();
 				// And on copy...
 				copy = SplitPointHandler.skipLeading(copy, index).getTail();
-				int flowHeight = current.getFlowHeight();
-				List<RowGroup> transitionText = Collections.emptyList();
-				int fh = copy.getSize(flowHeight+1);
-				if (fh<=flowHeight) {
-					transitionContent=Optional.empty();
-				}
-				if (transitionContent.isPresent()) {
-					// Get the announcement text
-					transitionText = new RowGroupDataSource(master, bc, transitionContent.get().getInSequence(), null, cd).getRemaining();
-					// Subtract the height of the transition text from the available height
-					for (RowGroup r : transitionText) {
-						flowHeight-=r.getUnitSize();
-					}
-				}
-				// Using copy to find the break point so that only the required data is rendered
+				List<RowGroup> seqTransitionText = transitionContent.isPresent()
+						?new RowGroupDataSource(master, bc, transitionContent.get().getInSequence(), null, cd).getRemaining()
+						:Collections.emptyList();
 				SplitPointSpecification spec;
 				boolean addTransition = true;
 				if (transitionContent.isPresent() && transitionContent.get().getType()==Type.INTERRUPT) {
+					// Subtract the height of the transition text from the available height.
+					// We need to account for the last unit size here (because this is the last unit) instead of the one below.
+					// The transition text may have a smaller row spacing than the last row of the text flow, for example:
+					// Text rows: 		X-X-X--|
+					// Transition rows:		 X-|
+					// This transition doesn't fit, because the last row of the text flow takes up three rows, not just one (which it would
+					// if a transition didn't follow).
+					float flowHeight = current.getFlowHeight() - height(seqTransitionText, true);
 					SplitPointCost<RowGroup> cost = (SplitPointDataSource<RowGroup, ?> units, int in, int limit)->{
 						VolumeKeepPriority volumeBreakPriority = 
 								data.get(in).getAvoidVolumeBreakAfterPriority();
@@ -247,15 +246,21 @@ public class PageSequenceBuilder2 {
 									:21 // because 11 + 9 = 20
 								)*limit-in;
 					};
+					// Finding from the full height
 					spec = sph.find(current.getFlowHeight(), copy, cost, force?StandardSplitOption.ALLOW_FORCE:null);
-					if (sph.split(spec, copy).getHead().stream().limit(flowHeight).filter(r->r.isLastRowGroupInBlock()).findFirst().isPresent()) {
-						// reset and retry with the new limit
-						copy = new RowGroupDataSource(data);
-						spec = sph.find(flowHeight, copy, cost, force?StandardSplitOption.ALLOW_FORCE:null);
+					SplitPoint<RowGroup, RowGroupDataSource> x = sph.split(spec, copy);
+					// If the tail is empty, there's no need for a transition
+					// If there isn't a transition between blocks available, don't insert the text
+					blockBoundary = Optional.of(hasBlockInScope(x.getHead(), flowHeight));
+					if (!x.getTail().isEmpty() && blockBoundary.get()) {
+						// Find the best break point with the new limit
+						spec = sph.find(flowHeight, copy, cost, transitionContent.isPresent()?StandardSplitOption.NO_LAST_UNIT_SIZE:null, force?StandardSplitOption.ALLOW_FORCE:null);
 					} else {
 						addTransition = false;
 					}
 				} else {
+					// Either RESUME, or no transition on this page.
+					float flowHeight = current.getFlowHeight() - height(seqTransitionText, false);
 					spec = sph.find(flowHeight, copy, force?StandardSplitOption.ALLOW_FORCE:null);
 				}
 				// Now apply the information to the live data
@@ -278,9 +283,9 @@ public class PageSequenceBuilder2 {
 				if (addTransition && transitionContent.isPresent()) {
 					if (transitionContent.get().getType()==TransitionContent.Type.INTERRUPT) {
 						head = new ArrayList<>(res.getHead());
-						head.addAll(transitionText);
+						head.addAll(seqTransitionText);
 					} else if (transitionContent.get().getType()==TransitionContent.Type.RESUME) {
-						head = new ArrayList<>(transitionText);
+						head = new ArrayList<>(seqTransitionText);
 						head.addAll(res.getHead());
 					} else {
 						head = res.getHead();
@@ -289,9 +294,12 @@ public class PageSequenceBuilder2 {
 					head = res.getHead();
 				}
 				addRows(head, current);
-				current.setAvoidVolumeBreakAfter(
-					getVolumeKeepPriority(res.getDiscarded(), getVolumeKeepPriority(res.getHead(), VolumeKeepPriority.empty()))
-				);
+				current.setAvoidVolumeBreakAfter(getVolumeKeepPriority(res.getDiscarded(), getVolumeKeepPriority(res.getHead(), VolumeKeepPriority.empty())));
+				if (context.getTransitionBuilder().getProperties().getApplicationRange()!=ApplicationRange.NONE) {
+					// no need to do this, unless there is an active transition builder
+					boolean hasBlockBoundary = blockBoundary.isPresent()?blockBoundary.get():res.getHead().stream().filter(r->r.isLastRowGroupInBlock()).findFirst().isPresent();
+					bc.getRefs().keepTransitionProperties(current.getDetails().getPageId(), new TransitionProperties(current.getAvoidVolumeBreakAfter(), hasBlockBoundary));
+				}
 				for (RowGroup rg : res.getDiscarded()) {
 					addProperties(current, rg);
 				}
@@ -304,6 +312,45 @@ public class PageSequenceBuilder2 {
 			}
 		}
 		return current;
+	}
+	
+	/**
+	 * Returns true if there is a block boundary before or at the specified limit.
+	 * @param groups the data
+	 * @param limit the size limit
+	 * @return true if there is a block boundary within the limit
+	 */
+	private static boolean hasBlockInScope(List<RowGroup> groups, double limit) {
+		// TODO: In Java 9, use takeWhile
+		//return groups.stream().limit((int)Math.ceil(limit)).filter(r->r.isLastRowGroupInBlock()).findFirst().isPresent();
+		double h = 0;
+		Iterator<RowGroup> rg = groups.iterator();
+		RowGroup r;
+		while (rg.hasNext()) {
+			r=rg.next();
+			h += rg.hasNext()?r.getUnitSize():r.getLastUnitSize();
+			if (h>limit) {
+				// we've passed the limit
+				return false;
+			} else if (r.isLastRowGroupInBlock()) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	private static float height(List<RowGroup> rg, boolean useLastUnitSize) {
+		if (rg.isEmpty()) {
+			return 0;
+		} else {
+			float ret = 0;
+			Iterator<RowGroup> ri = rg.iterator();
+			while (ri.hasNext()) {
+				RowGroup r = ri.next();
+				ret += useLastUnitSize&&!ri.hasNext()?r.getLastUnitSize():r.getUnitSize();
+			}
+			return ret;
+		}
 	}
 	
 	private void addRows(List<RowGroup> head, PageImpl p) {
