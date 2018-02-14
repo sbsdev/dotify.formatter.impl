@@ -17,7 +17,6 @@ import org.daisy.dotify.formatter.impl.datatype.VolumeKeepPriority;
 import org.daisy.dotify.formatter.impl.page.BlockSequence;
 import org.daisy.dotify.formatter.impl.page.PageImpl;
 import org.daisy.dotify.formatter.impl.page.PageSequenceBuilder2;
-import org.daisy.dotify.formatter.impl.page.PageStruct;
 import org.daisy.dotify.formatter.impl.page.RestartPaginationException;
 import org.daisy.dotify.formatter.impl.search.DefaultContext;
 import org.daisy.dotify.formatter.impl.search.DocumentSpace;
@@ -34,7 +33,7 @@ import org.daisy.dotify.formatter.impl.search.SheetIdentity;
  */
 public class SheetDataSource implements SplitPointDataSource<Sheet, SheetDataSource> {
 	//Global state
-	private final PageStruct struct;
+	private final PageCounter pageCounter;
 	private final FormatterContext context;
 	//Input data
 	private final DefaultContext rcontext;
@@ -57,8 +56,8 @@ public class SheetDataSource implements SplitPointDataSource<Sheet, SheetDataSou
 	//Output buffer
 	private List<Sheet> sheetBuffer;
 
-	public SheetDataSource(PageStruct struct, FormatterContext context, DefaultContext rcontext, Integer volumeGroup, List<BlockSequence> seqsIterator) {
-		this.struct = struct;
+	public SheetDataSource(PageCounter pageCounter, FormatterContext context, DefaultContext rcontext, Integer volumeGroup, List<BlockSequence> seqsIterator) {
+		this.pageCounter = pageCounter;
 		this.context = context;
 		this.rcontext = rcontext;
 		this.volumeGroup = volumeGroup;
@@ -93,7 +92,7 @@ public class SheetDataSource implements SplitPointDataSource<Sheet, SheetDataSou
 	 * 		cases.
 	 */
 	private SheetDataSource(SheetDataSource template, int offset, boolean tail) {
-		this.struct = tail?template.struct:new PageStruct(template.struct);
+		this.pageCounter = tail?template.pageCounter:new PageCounter(template.pageCounter);
 		this.context = template.context;
 		this.rcontext = template.rcontext;
 		this.volumeGroup = template.volumeGroup;
@@ -171,7 +170,7 @@ public class SheetDataSource implements SplitPointDataSource<Sheet, SheetDataSou
 				if(counter!=null) {
 					initialPageOffset = rcontext.getRefs().getPageNumberOffset(counter) - psb.size();
 				} else {
-					initialPageOffset = struct.getDefaultPageOffset() - psb.size();
+					initialPageOffset = pageCounter.getDefaultPageOffset() - psb.size();
 				}
 				updateCounter = false;
 			}
@@ -195,9 +194,9 @@ public class SheetDataSource implements SplitPointDataSource<Sheet, SheetDataSou
 				} else if (counter!=null) {
 					initialPageOffset = Optional.ofNullable(rcontext.getRefs().getPageNumberOffset(counter)).orElse(0);
 				} else {
-					 initialPageOffset = struct.getDefaultPageOffset();
+					 initialPageOffset = pageCounter.getDefaultPageOffset();
 				}
-				psb = new PageSequenceBuilder2(struct.getPageCount(), bs.getLayoutMaster(), initialPageOffset, bs, context, rcontext, seqsIndex);
+				psb = new PageSequenceBuilder2(pageCounter.getPageCount(), bs.getLayoutMaster(), initialPageOffset, bs, context, rcontext, seqsIndex);
 				sectionProperties = bs.getLayoutMaster().newSectionProperties();
 				s = null;
 				si = null;
@@ -257,7 +256,7 @@ public class SheetDataSource implements SplitPointDataSource<Sheet, SheetDataSou
 								&& (!sectionProperties.duplex() || pageIndex % 2 == 1));
 				
 				PageImpl p = psb.nextPage(initialPageOffset, hyphenateLastLine, Optional.ofNullable(transition));
-				struct.increasePageCount();
+				pageCounter.increasePageCount();
 				VolumeKeepPriority vpx = p.getAvoidVolumeBreakAfter();
 				if (context.getTransitionBuilder().getProperties().getApplicationRange()==ApplicationRange.SHEET) {
 					Sheet sx = s.build();
@@ -297,7 +296,7 @@ public class SheetDataSource implements SplitPointDataSource<Sheet, SheetDataSou
 				if (counter!=null) {
 					rcontext.getRefs().setPageNumberOffset(counter, initialPageOffset + psb.getSizeLast());
 				} else {
-					struct.setDefaultPageOffset(initialPageOffset + psb.getSizeLast());
+					pageCounter.setDefaultPageOffset(initialPageOffset + psb.getSizeLast());
 				}
 			}
 		}
@@ -331,7 +330,7 @@ public class SheetDataSource implements SplitPointDataSource<Sheet, SheetDataSou
 		if (counter!=null) {
 			rcontext.getRefs().setPageNumberOffset(counter, initialPageOffset + psb.getSizeLast());
 		} else {
-			struct.setDefaultPageOffset(initialPageOffset + psb.getSizeLast());
+			pageCounter.setDefaultPageOffset(initialPageOffset + psb.getSizeLast());
 		}
 		wasSplitInsideSequence = psb.hasNext();
 		if (atIndex==0) {
@@ -343,7 +342,7 @@ public class SheetDataSource implements SplitPointDataSource<Sheet, SheetDataSou
 
 	@Override
 	public SheetDataSource createEmpty() {
-		return new SheetDataSource(struct, context, rcontext, volumeGroup, Collections.emptyList());
+		return new SheetDataSource(pageCounter, context, rcontext, volumeGroup, Collections.emptyList());
 	}
 
 	@Override

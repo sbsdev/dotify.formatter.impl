@@ -19,12 +19,12 @@ import org.daisy.dotify.formatter.impl.core.PaginatorException;
 import org.daisy.dotify.formatter.impl.datatype.VolumeKeepPriority;
 import org.daisy.dotify.formatter.impl.page.BlockSequence;
 import org.daisy.dotify.formatter.impl.page.PageImpl;
-import org.daisy.dotify.formatter.impl.page.PageStruct;
 import org.daisy.dotify.formatter.impl.page.RestartPaginationException;
 import org.daisy.dotify.formatter.impl.search.AnchorData;
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.search.DefaultContext;
 import org.daisy.dotify.formatter.impl.search.Space;
+import org.daisy.dotify.formatter.impl.sheet.PageCounter;
 import org.daisy.dotify.formatter.impl.sheet.SectionBuilder;
 import org.daisy.dotify.formatter.impl.sheet.Sheet;
 import org.daisy.dotify.formatter.impl.sheet.SheetDataSource;
@@ -251,7 +251,7 @@ public class VolumeProvider {
 	}
 	
 	private SheetDataSource prepareToPaginate(List<BlockSequence> fs, DefaultContext rcontext, Integer volumeGroup) throws PaginatorException {
-		return prepareToPaginate(new PageStruct(), rcontext, volumeGroup, fs);
+		return prepareToPaginate(new PageCounter(), rcontext, volumeGroup, fs);
 	}
 	
 	private Iterable<SheetDataSource> prepareToPaginateWithVolumeGroups(List<BlockSequence> fs, DefaultContext rcontext) {
@@ -265,30 +265,30 @@ public class VolumeProvider {
 			}
 			currentGroup.add(bs);
 		}
-		PageStruct struct = new PageStruct();
+		PageCounter pageCounter = new PageCounter();
         crh.resetUniqueChecks();
 		return new Iterable<SheetDataSource>(){
 			@Override
 			public Iterator<SheetDataSource> iterator() {
 				try {
-					return prepareToPaginateWithVolumeGroups(struct, rcontext, volGroups).iterator();
+					return prepareToPaginateWithVolumeGroups(pageCounter, rcontext, volGroups).iterator();
 				} catch (PaginatorException e) {
 					throw new RuntimeException(e);
 				}
 			}};
 	}
 
-	private List<SheetDataSource> prepareToPaginateWithVolumeGroups(PageStruct struct, DefaultContext rcontext, Iterable<List<BlockSequence>> volGroups) throws PaginatorException {
+	private List<SheetDataSource> prepareToPaginateWithVolumeGroups(PageCounter pageCounter, DefaultContext rcontext, Iterable<List<BlockSequence>> volGroups) throws PaginatorException {
 		List<SheetDataSource> ret = new ArrayList<>();
 		int i = 0;
 		for (List<BlockSequence> glist : volGroups) {
-			ret.add(prepareToPaginate(struct, rcontext, i++, glist));
+			ret.add(prepareToPaginate(pageCounter, rcontext, i++, glist));
 		}
 		return ret;
 	}
 	
-	private SheetDataSource prepareToPaginate(PageStruct struct, DefaultContext rcontext, Integer volumeGroup, List<BlockSequence> seqs) throws PaginatorException {
-		return new SheetDataSource(struct, context.getFormatterContext(), rcontext, volumeGroup, seqs);
+	private SheetDataSource prepareToPaginate(PageCounter pageCounter, DefaultContext rcontext, Integer volumeGroup, List<BlockSequence> seqs) throws PaginatorException {
+		return new SheetDataSource(pageCounter, context.getFormatterContext(), rcontext, volumeGroup, seqs);
 	}
 	
 	/**

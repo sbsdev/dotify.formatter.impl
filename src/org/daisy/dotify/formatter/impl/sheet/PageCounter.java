@@ -1,20 +1,20 @@
-package org.daisy.dotify.formatter.impl.page;
+package org.daisy.dotify.formatter.impl.sheet;
 
 /**
  * Provides state needed for a text flow.
  * 
  * @author Joel Håkansson
  */
-public class PageStruct {
+public class PageCounter {
 	private int pageOffset;
 	private int pageCount;
 
-	public PageStruct() {
+	public PageCounter() {
 		pageOffset = 0;
 		pageCount = 0;
 	}
 
-	public PageStruct(PageStruct template) {
+	public PageCounter(PageCounter template) {
 		this.pageOffset = template.pageOffset;
 		this.pageCount = template.pageCount;
 	}
