@@ -58,13 +58,6 @@ dependencies {
 	testRuntime group: group, name:'dotify.translator.impl', version:'4.0.0'
 }
 
-task updateBndVersion() {
-	doLast() {
-		String contents = file('bnd.bnd').getText('UTF-8')
-		file('bnd.bnd').write(contents.replaceAll('Bundle-Version: [\\d\\.A-Za-z\\-]+', "Bundle-Version: $version"), 'UTF-8')
-	}
-}
-
 ext.writeTestsOverviewFile = { folderPath, fileName ->
 	def folder = file(folderPath)
 	def f = new File(folder, fileName)
@@ -123,7 +116,14 @@ task updateTestsOverviewFile() {
 
 bundle {
     instructions << [
-        "-include": file('bnd.bnd'),
+		'-sources': 'true',
+		'Import-Package': 'org.daisy.dotify.api.engine; provide:=true,'+
+							'org.daisy.dotify.api.formatter; provide:=true,'+
+							'org.daisy.dotify.api.obfl; provide:=true,'+
+							'org.daisy.dotify.api.writer; provide:=true, *',
+		////The split-package instruction is because a resource folder is included twice on the classpath
+		'Private-Package': 'org.daisy.dotify.formatter.impl.*;-split-package:=merge-first',
+		'Service-Component': '*',
         'Automatic-Module-Name': "$moduleName",
         'Built-By': System.getProperty("user.name"),
         'Built-On': new Date().format('yyyy-MM-dd'),
