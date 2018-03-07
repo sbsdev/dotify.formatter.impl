@@ -1,6 +1,5 @@
 package org.daisy.dotify.formatter.impl.row;
 
-import java.util.Objects;
 import java.util.Optional;
 
 import org.daisy.dotify.common.text.StringTools;

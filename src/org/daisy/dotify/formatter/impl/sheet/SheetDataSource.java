@@ -22,8 +22,8 @@ import org.daisy.dotify.formatter.impl.search.DefaultContext;
 import org.daisy.dotify.formatter.impl.search.DocumentSpace;
 import org.daisy.dotify.formatter.impl.search.PageDetails;
 import org.daisy.dotify.formatter.impl.search.PageId;
-import org.daisy.dotify.formatter.impl.search.TransitionProperties;
 import org.daisy.dotify.formatter.impl.search.SheetIdentity;
+import org.daisy.dotify.formatter.impl.search.TransitionProperties;
 
 /**
  * Provides a data source for sheets. Given a list of 

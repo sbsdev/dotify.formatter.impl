@@ -11,7 +11,6 @@ import java.util.Set;
 
 import org.daisy.dotify.api.formatter.Marker;
 import org.daisy.dotify.api.formatter.MarkerReferenceField;
-import org.daisy.dotify.formatter.impl.datatype.VolumeKeepPriority;
 
 public class CrossReferenceHandler {
 	private final LookupHandler<String, Integer> pageRefs;

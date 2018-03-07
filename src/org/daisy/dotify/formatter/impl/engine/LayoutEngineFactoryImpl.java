@@ -22,9 +22,9 @@ import org.daisy.dotify.api.translator.TextBorderFactoryMaker;
 import org.daisy.dotify.api.translator.TextBorderFactoryMakerService;
 import org.daisy.dotify.api.writer.PagedMediaWriter;
 import org.daisy.dotify.formatter.impl.FactoryManager;
-
-import aQute.bnd.annotation.component.Component;
-import aQute.bnd.annotation.component.Reference;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
 
 /**
  * Provides a layout engine factory.
@@ -85,7 +85,7 @@ public class LayoutEngineFactoryImpl implements FormatterEngineFactoryService {
 	 * Sets a factory dependency.
 	 * @param service the dependency
 	 */
-	@Reference
+	@Reference(cardinality=ReferenceCardinality.MANDATORY)
 	public void setObflParserFactory(ObflParserFactoryService service) {
 		this.obflFactory = service;
 	}
@@ -103,7 +103,7 @@ public class LayoutEngineFactoryImpl implements FormatterEngineFactoryService {
 	 * Sets a factory dependency.
 	 * @param service the dependency
 	 */
-	@Reference
+	@Reference(cardinality=ReferenceCardinality.MANDATORY)
 	public void setFormatterFactory(FormatterFactory service) {
 		factoryManager.setFormatterFactory(service);
 	}
@@ -120,7 +120,7 @@ public class LayoutEngineFactoryImpl implements FormatterEngineFactoryService {
 	 * Sets a factory dependency.
 	 * @param service the dependency
 	 */
-	@Reference
+	@Reference(cardinality=ReferenceCardinality.MANDATORY)
 	public void setMarkerProcessor(MarkerProcessorFactoryMakerService service) {
 		factoryManager.setMarkerProcessorFactory(service);
 	}
@@ -137,7 +137,7 @@ public class LayoutEngineFactoryImpl implements FormatterEngineFactoryService {
 	 * Sets a factory dependency.
 	 * @param service the dependency
 	 */
-	@Reference
+	@Reference(cardinality=ReferenceCardinality.MANDATORY)
 	public void setTextBorderFactoryMaker(TextBorderFactoryMakerService service) {
 		factoryManager.setTextBorderFactory(service);
 	}
@@ -154,7 +154,7 @@ public class LayoutEngineFactoryImpl implements FormatterEngineFactoryService {
 	 * Sets a factory dependency.
 	 * @param service the dependency
 	 */
-	@Reference
+	@Reference(cardinality=ReferenceCardinality.MANDATORY)
 	public void setExpressionFactory(ExpressionFactory service) {
 		factoryManager.setExpressionFactory(service);
 	}

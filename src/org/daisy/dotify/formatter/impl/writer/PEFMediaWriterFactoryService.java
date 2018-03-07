@@ -7,8 +7,7 @@ import java.util.List;
 import org.daisy.dotify.api.writer.MediaTypes;
 import org.daisy.dotify.api.writer.PagedMediaWriterFactory;
 import org.daisy.dotify.api.writer.PagedMediaWriterFactoryService;
-
-import aQute.bnd.annotation.component.Component;
+import org.osgi.service.component.annotations.Component;
 
 /**
  * Provides a paged media writer factory for PEF.

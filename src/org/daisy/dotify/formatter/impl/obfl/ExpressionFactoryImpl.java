@@ -4,9 +4,9 @@ import org.daisy.dotify.api.obfl.Expression;
 import org.daisy.dotify.api.obfl.ExpressionFactory;
 import org.daisy.dotify.api.text.Integer2TextFactoryMaker;
 import org.daisy.dotify.api.text.Integer2TextFactoryMakerService;
-
-import aQute.bnd.annotation.component.Component;
-import aQute.bnd.annotation.component.Reference;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
 
 /**
  * Provides an expression factory implementation.
@@ -25,7 +25,7 @@ public class ExpressionFactoryImpl implements ExpressionFactory {
 	 * Sets a factory dependency.
 	 * @param service the dependency
 	 */
-	@Reference
+	@Reference(cardinality=ReferenceCardinality.MANDATORY)
 	public void setInteger2TextFactory(Integer2TextFactoryMakerService service) {
 		this.itf = service;
 	}
