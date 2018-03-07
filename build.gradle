@@ -1,8 +1,9 @@
+plugins {
+    id 'org.dm.bundle' version '0.10.0'
+}
 apply plugin: 'java'
 apply plugin: "maven"
 apply plugin: "signing"
-//custom plugins
-apply plugin: "org.dm.bundle"
 
 group = 'org.daisy.dotify'
 
@@ -55,11 +56,6 @@ dependencies {
 	testRuntime group: group, name:'dotify.hyphenator.impl', version:'4.0.0'
 	testRuntime group: group, name:'dotify.text.impl', version:'4.0.0'
 	testRuntime group: group, name:'dotify.translator.impl', version:'4.0.0'
-}
-
-buildscript {
-    repositories { mavenCentral() }
-    dependencies { classpath group: "org.dm.gradle", name: "gradle-bundle-plugin", version: "0.6.4" }
 }
 
 task updateBndVersion() {
