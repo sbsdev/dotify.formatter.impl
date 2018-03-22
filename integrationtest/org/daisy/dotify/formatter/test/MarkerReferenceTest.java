@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import org.daisy.dotify.api.engine.LayoutEngineException;
 import org.daisy.dotify.api.writer.PagedMediaWriterConfigurationException;
+import org.junit.Ignore;
 import org.junit.Test;
 @SuppressWarnings("javadoc")
 public class MarkerReferenceTest extends AbstractFormatterEngineTest {
@@ -61,6 +62,12 @@ public class MarkerReferenceTest extends AbstractFormatterEngineTest {
 	@Test
 	public void testSequenceVolMarker() throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
 		testPEF("resource-files/marker-ref-sequence-vol-input.obfl", "resource-files/marker-ref-sequence-vol-expected.pef", false);
+	}
+	
+	@Test
+	@Ignore("This is an open issue, see https://github.com/brailleapps/dotify.formatter.impl/issues/48")
+	public void testMarkerMultiple() throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
+		testPEF("resource-files/marker-ref-multiple-input.obfl", "resource-files/marker-ref-multiple-expected.pef", false);
 	}
 
 }
