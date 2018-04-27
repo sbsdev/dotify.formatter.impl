@@ -267,9 +267,9 @@ public class PageSequenceBuilder2 {
 					spec = sph.find(flowHeight, copy, force?StandardSplitOption.ALLOW_FORCE:null);
 				}
 				// Now apply the information to the live data
-				data.setHyphenateLastLine(hyphenateLastLine);
+				data.setAllowHyphenateLastLine(hyphenateLastLine);
 				SplitPoint<RowGroup, RowGroupDataSource> res = sph.split(spec, data);
-				data.setHyphenateLastLine(true);
+				data.setAllowHyphenateLastLine(true);
 				if (res.getHead().size()==0 && force) {
 					if (firstUnitHasSupplements(data) && hasPageAreaCollection()) {
 						reassignCollection();
