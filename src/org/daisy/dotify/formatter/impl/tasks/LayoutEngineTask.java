@@ -1,10 +1,10 @@
 package org.daisy.dotify.formatter.impl.tasks;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.net.MalformedURLException;
+import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -31,6 +31,7 @@ import org.daisy.dotify.api.writer.PagedMediaWriterFactory;
 import org.daisy.dotify.api.writer.PagedMediaWriterFactoryMakerService;
 import org.daisy.streamline.api.media.AnnotatedFile;
 import org.daisy.streamline.api.media.DefaultAnnotatedFile;
+import org.daisy.streamline.api.media.FormatIdentifier;
 import org.daisy.streamline.api.option.UserOption;
 import org.daisy.streamline.api.option.UserOptionValue;
 import org.daisy.streamline.api.tasks.InternalTaskException;
@@ -82,9 +83,9 @@ public class LayoutEngineTask extends ReadWriteTask  {
 	 * @throws TaskSystemException if the instance could not be created 
 	 */
 	public LayoutEngineTask(Properties p2, TaskGroupSpecification spec, PagedMediaWriterFactoryMakerService pmw, FormatterEngineFactoryService fe, ValidatorFactoryMakerService vf) throws TaskSystemException {
-		super(buildName(spec.getOutputFormat().toUpperCase()));
+		super(buildName(spec.getOutputType().getIdentifier().toUpperCase()));
 		addDefaults(p2);
-		String translatorMode = getTranslationMode(p2, spec.getOutputFormat());
+		String translatorMode = getTranslationMode(p2, spec.getOutputType());
 		this.spec = spec;
 		this.writer = getWriter(p2, spec, pmw);
 		this.config = getFormatterConfig(p2, translatorMode, spec.getLocale());
@@ -99,7 +100,7 @@ public class LayoutEngineTask extends ReadWriteTask  {
 	
 	private static PagedMediaWriter getWriter(Properties p2, TaskGroupSpecification spec, PagedMediaWriterFactoryMakerService pmw) throws TaskSystemException {
 		try {
-			PagedMediaWriterFactory pmf = pmw.getFactory(mediaTypeForFormat(spec.getOutputFormat()));
+			PagedMediaWriterFactory pmf = pmw.getFactory(mediaTypeForFormat(spec.getOutputType()));
 			PagedMediaWriter paged = pmf.newPagedMediaWriter();
 			paged.prepare(asMetadata(p2));
 			return paged;
@@ -108,8 +109,8 @@ public class LayoutEngineTask extends ReadWriteTask  {
 		}		
 	}
 	
-	private static String getTranslationMode(Properties p2, String out) throws TaskSystemException {
-		switch (out) {
+	private static String getTranslationMode(Properties p2, FormatIdentifier out) throws TaskSystemException {
+		switch (out.getIdentifier()) {
 			case Keys.PEF_FORMAT:
 				return p2.getProperty(TRANSLATE, BrailleTranslatorFactory.MODE_UNCONTRACTED);
 			case Keys.TEXT_FORMAT:
@@ -119,8 +120,8 @@ public class LayoutEngineTask extends ReadWriteTask  {
 		}
 	}
 	
-	private static String mediaTypeForFormat(String ext) throws TaskSystemException {
-		switch (ext) {
+	private static String mediaTypeForFormat(FormatIdentifier ext) throws TaskSystemException {
+		switch (ext.getIdentifier()) {
 			case Keys.PEF_FORMAT:
 				return MediaTypes.PEF_MEDIA_TYPE;
 			case Keys.TEXT_FORMAT:
@@ -204,7 +205,7 @@ public class LayoutEngineTask extends ReadWriteTask  {
 			.description("Specifies a translation mode.")
 			.build());
 		//PEF supports additional options
-		if (Keys.PEF_FORMAT.equals(spec.getOutputFormat())) {
+		if (Keys.PEF_FORMAT.equals(spec.getOutputType().getIdentifier())) {
 			ret.add(new UserOption.Builder(IDENTIFIER)
 				.description("Sets identifier in meta data.")
 				.build());
@@ -232,11 +233,11 @@ public class LayoutEngineTask extends ReadWriteTask  {
 	public AnnotatedFile execute(AnnotatedFile input, File output) throws InternalTaskException {
 		try {
 
-			logger.info(String.format("Validating input (%s)...", input.getFile()));
+			logger.info(String.format("Validating input (%s)...", input.getPath()));
 			Validator v = vf.newValidator("application/x-obfl+xml");
 			if (v!=null) {
 				try {
-					ValidationReport vr = v.validate(input.getFile().toURI().toURL());
+					ValidationReport vr = v.validate(input.getPath().toUri().toURL());
 					for (ValidatorMessage m : vr.getMessages()) {
 						switch (m.getType()) {
 							case ERROR: case FATAL_ERROR:case WARNING:
@@ -266,17 +267,16 @@ public class LayoutEngineTask extends ReadWriteTask  {
 				throw new InternalTaskException("Could not find a validator for OBFL.");
 			}
 			FormatterEngine engine = fe.newFormatterEngine(config, writer);
-			engine.convert(new FileInputStream(input.getFile()), new FileOutputStream(output));
+			engine.convert(Files.newInputStream(input.getPath()), new FileOutputStream(output));
 
-		} catch (LayoutEngineException e) {
-			throw new InternalTaskException(e);
-		} catch (FileNotFoundException e) {
+		} catch (LayoutEngineException | IOException e) {
 			throw new InternalTaskException(e);
 		}
-		return new DefaultAnnotatedFile.Builder(output).build();
+		return new DefaultAnnotatedFile.Builder(output.toPath()).build();
 	}
 
 	@Override
+	@Deprecated
 	public void execute(File input, File output) throws InternalTaskException {
 		execute(new DefaultAnnotatedFile.Builder(input).build(), output);
 	}
