@@ -72,7 +72,7 @@ public class OBFLWsNormalizer extends XMLParserBase {
 				} else if (event.getEventType() == XMLStreamConstants.CHARACTERS) {
 					writer.add(eventFactory.createCharacters(normalizeSpace(event.asCharacters().getData())));
 				} else if (beginsMixedContent(event)) {
-					parseBlock(event);
+					writeEvents(parseBlock(event));
 				} else {
 					writer.add(event);
 				}
@@ -116,24 +116,26 @@ public class OBFLWsNormalizer extends XMLParserBase {
 		this.writingOften = writingOften;
 	}
 
-	private void parseBlock(XMLEvent event) throws XMLStreamException {
+	private List<XMLEvent> parseBlock(XMLEvent event) throws XMLStreamException {
 		QName end = event.asStartElement().getName();
+		List<XMLEvent> ret = new ArrayList<>();
 		List<XMLEvent> events = new ArrayList<>();
 		events.add(event);
 		while (input.hasNext()) {
 			event = input.nextEvent();
 			if (beginsMixedContent(event)) {
-				writeEvents(modifyWhitespace(events));
+				ret.addAll(modifyWhitespace(events));
 				events.clear();
-				parseBlock(event);
+				ret.addAll(parseBlock(event));
 			} else if (equalsEnd(event, end)) {
 				events.add(event);
-				writeEvents(modifyWhitespace(events));
+				ret.addAll(modifyWhitespace(events));
 				break;
 			} else {
 				events.add(event);
 			}
 		}
+		return ret;
 	}
 	
 	private void writeEvents(List<XMLEvent> modified) throws XMLStreamException {
