@@ -27,7 +27,6 @@ public class OBFLWsNormalizer extends XMLParserBase {
 	private final XMLEventReader input;
 	private final OutputStream out;
 	private final XMLEventFactory eventFactory;
-	private XMLEventWriter writer;
 	private boolean writingOften;
 
 	/**
@@ -38,7 +37,6 @@ public class OBFLWsNormalizer extends XMLParserBase {
 	 */
 	public OBFLWsNormalizer(XMLEventReader input, XMLEventFactory eventFactory, OutputStream out) {
 		this.input = input;
-		this.writer = null;
 		this.out = out;
 		this.eventFactory = eventFactory;
 		this.writingOften = false;
@@ -51,6 +49,7 @@ public class OBFLWsNormalizer extends XMLParserBase {
 	//FIXME: this argument doesn't make sense from a user's perspective
 	public void parse(XMLOutputFactory outputFactory) {
 		XMLEvent event;
+		List<XMLEvent> writer = new ArrayList<>();
 		while (input.hasNext()) {
 			try {
 				event = input.nextEvent();
@@ -63,16 +62,14 @@ public class OBFLWsNormalizer extends XMLParserBase {
 				if (event.getEventType() == XMLStreamConstants.START_DOCUMENT) {
 					StartDocument sd = (StartDocument) event;
 					if (sd.encodingSet()) {
-						writer = outputFactory.createXMLEventWriter(out, sd.getCharacterEncodingScheme());
 						writer.add(event);
 					} else {
-						writer = outputFactory.createXMLEventWriter(out, "utf-8");
 						writer.add(eventFactory.createStartDocument("utf-8", "1.0"));
 					}
 				} else if (event.getEventType() == XMLStreamConstants.CHARACTERS) {
 					writer.add(eventFactory.createCharacters(normalizeSpace(event.asCharacters().getData())));
 				} else if (beginsMixedContent(event)) {
-					writeEvents(parseBlock(event));
+					writer.addAll(parseBlock(event));
 				} else {
 					writer.add(event);
 				}
@@ -85,11 +82,12 @@ public class OBFLWsNormalizer extends XMLParserBase {
 		} catch (XMLStreamException e) {
 			e.printStackTrace();
 		}
-		//close outer one first
+
+		//write
 		try {
-			writer.close();
-		} catch (XMLStreamException e) {
-			e.printStackTrace();
+			writeEvents(outputFactory, writer);
+		} catch (XMLStreamException e1) {
+			throw new RuntimeException(e1);
 		}
 		//should be closed automatically, but it isn't
 		try {
@@ -138,13 +136,31 @@ public class OBFLWsNormalizer extends XMLParserBase {
 		return ret;
 	}
 	
-	private void writeEvents(List<XMLEvent> modified) throws XMLStreamException {
+	private void writeEvents(XMLOutputFactory outputFactory, List<XMLEvent> modified) throws XMLStreamException {
+		XMLEventWriter writer = null;
 		// write result
 		for (XMLEvent event : modified) {
-			writer.add(event);
+			if (event.getEventType() == XMLStreamConstants.START_DOCUMENT) {
+				StartDocument sd = (StartDocument) event;
+				if (sd.encodingSet()) {
+					writer = outputFactory.createXMLEventWriter(out, sd.getCharacterEncodingScheme());
+					writer.add(event);
+				} else {
+					writer = outputFactory.createXMLEventWriter(out, "utf-8");
+					writer.add(eventFactory.createStartDocument("utf-8", "1.0"));
+				}
+			} else {
+				writer.add(event);
+			}
 		}
 		if (writingOften) {
 			writer.flush();
+		}
+		//close outer one first
+		try {
+			writer.close();
+		} catch (XMLStreamException e) {
+			e.printStackTrace();
 		}
 	}
 
