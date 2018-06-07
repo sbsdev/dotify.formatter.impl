@@ -5,7 +5,9 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
 
 import javax.xml.namespace.QName;
@@ -23,7 +25,7 @@ import javax.xml.stream.events.XMLEvent;
  * Provides a whitespace normalizer for OBFL-files.
  * @author Joel Håkansson
  */
-public class OBFLWsNormalizer extends XMLParserBase {
+public class OBFLWsNormalizer extends XMLParserBase implements XMLEventIterator {
 	private final XMLEventReader input;
 	private final OutputStream out;
 	private final XMLEventFactory eventFactory;
@@ -41,54 +43,94 @@ public class OBFLWsNormalizer extends XMLParserBase {
 		this.eventFactory = eventFactory;
 		this.writingOften = false;
 	}
+	
+	Deque<XMLEvent> buffer = new ArrayDeque<>();
 
+	@Override
+	public boolean hasNext() {
+		return !buffer.isEmpty() || input.hasNext();
+	}
+
+	@Override
+	public XMLEvent nextEvent() throws XMLStreamException {
+		while (buffer.isEmpty() && input.hasNext()) {
+			readNextChunk();
+		}
+		if (!buffer.isEmpty()) {
+			return buffer.removeFirst();
+		} else {
+			throw new XMLStreamException();
+		}
+	}
+	
+	private void readNextChunk() {
+		XMLEvent event;
+		try {
+			event = input.nextEvent();
+		} catch (XMLStreamException e) {
+			// if something goes wrong when reading the next input, it is possible
+			// to get stuck in an endless loop if we keep calling nextEvent.
+			throw new RuntimeException(e);
+		}
+		try {
+			if (event.getEventType() == XMLStreamConstants.START_DOCUMENT) {
+				buffer.add(event);
+			} else if (event.getEventType() == XMLStreamConstants.CHARACTERS) {
+				buffer.add(eventFactory.createCharacters(normalizeSpace(event.asCharacters().getData())));
+			} else if (beginsMixedContent(event)) {
+				parseBlock(event);
+			} else {
+				buffer.add(event);
+			}
+		} catch (XMLStreamException e) {
+			e.printStackTrace();
+		}
+	}
+
+	@Override
+	public void close() throws XMLStreamException {
+		buffer.clear();
+	}
+	
 	/**
 	 * Parses for whitespace.
 	 * @param outputFactory an xml output factory
 	 */
 	//FIXME: this argument doesn't make sense from a user's perspective
 	public void parse(XMLOutputFactory outputFactory) {
-		XMLEvent event;
-		List<XMLEvent> writer = new ArrayList<>();
-		while (input.hasNext()) {
-			try {
-				event = input.nextEvent();
-			} catch (XMLStreamException e) {
-				// if something goes wrong when reading the next input, it is possible
-				// to get stuck in an endless loop if we keep calling nextEvent.
-				throw new RuntimeException(e);
-			}
-			try {
+		XMLEventWriter writer = null;
+		try {
+			while (hasNext()) {
+				// write result
+				XMLEvent event = nextEvent();
 				if (event.getEventType() == XMLStreamConstants.START_DOCUMENT) {
 					StartDocument sd = (StartDocument) event;
 					if (sd.encodingSet()) {
+						writer = outputFactory.createXMLEventWriter(out, sd.getCharacterEncodingScheme());
 						writer.add(event);
 					} else {
+						writer = outputFactory.createXMLEventWriter(out, "utf-8");
 						writer.add(eventFactory.createStartDocument("utf-8", "1.0"));
 					}
-				} else if (event.getEventType() == XMLStreamConstants.CHARACTERS) {
-					writer.add(eventFactory.createCharacters(normalizeSpace(event.asCharacters().getData())));
-				} else if (beginsMixedContent(event)) {
-					writer.addAll(parseBlock(event));
 				} else {
 					writer.add(event);
 				}
-			} catch (XMLStreamException e) {
-				e.printStackTrace();
+				if (writingOften) {
+					writer.flush();
+				}
 			}
-		}
-		try {
 			input.close();
 		} catch (XMLStreamException e) {
 			e.printStackTrace();
 		}
 
-		//write
+		//close outer one first
 		try {
-			writeEvents(outputFactory, writer);
-		} catch (XMLStreamException e1) {
-			throw new RuntimeException(e1);
+			writer.close();
+		} catch (XMLStreamException e) {
+			e.printStackTrace();
 		}
+		
 		//should be closed automatically, but it isn't
 		try {
 			out.close();
@@ -114,53 +156,23 @@ public class OBFLWsNormalizer extends XMLParserBase {
 		this.writingOften = writingOften;
 	}
 
-	private List<XMLEvent> parseBlock(XMLEvent event) throws XMLStreamException {
+	private void parseBlock(XMLEvent event) throws XMLStreamException {
 		QName end = event.asStartElement().getName();
-		List<XMLEvent> ret = new ArrayList<>();
 		List<XMLEvent> events = new ArrayList<>();
 		events.add(event);
 		while (input.hasNext()) {
 			event = input.nextEvent();
 			if (beginsMixedContent(event)) {
-				ret.addAll(modifyWhitespace(events));
+				buffer.addAll(modifyWhitespace(events));
 				events.clear();
-				ret.addAll(parseBlock(event));
+				parseBlock(event);
 			} else if (equalsEnd(event, end)) {
 				events.add(event);
-				ret.addAll(modifyWhitespace(events));
+				buffer.addAll(modifyWhitespace(events));
 				break;
 			} else {
 				events.add(event);
 			}
-		}
-		return ret;
-	}
-	
-	private void writeEvents(XMLOutputFactory outputFactory, List<XMLEvent> modified) throws XMLStreamException {
-		XMLEventWriter writer = null;
-		// write result
-		for (XMLEvent event : modified) {
-			if (event.getEventType() == XMLStreamConstants.START_DOCUMENT) {
-				StartDocument sd = (StartDocument) event;
-				if (sd.encodingSet()) {
-					writer = outputFactory.createXMLEventWriter(out, sd.getCharacterEncodingScheme());
-					writer.add(event);
-				} else {
-					writer = outputFactory.createXMLEventWriter(out, "utf-8");
-					writer.add(eventFactory.createStartDocument("utf-8", "1.0"));
-				}
-			} else {
-				writer.add(event);
-			}
-		}
-		if (writingOften) {
-			writer.flush();
-		}
-		//close outer one first
-		try {
-			writer.close();
-		} catch (XMLStreamException e) {
-			e.printStackTrace();
 		}
 	}
 
@@ -331,4 +343,6 @@ public class OBFLWsNormalizer extends XMLParserBase {
 			e.printStackTrace();
 		}
 	}
+
+
 }
