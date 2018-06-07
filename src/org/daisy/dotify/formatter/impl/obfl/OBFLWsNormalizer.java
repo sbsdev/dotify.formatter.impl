@@ -18,6 +18,7 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.events.Characters;
 import javax.xml.stream.events.StartDocument;
 import javax.xml.stream.events.XMLEvent;
 
@@ -76,7 +77,10 @@ public class OBFLWsNormalizer extends XMLParserBase implements XMLEventIterator 
 			if (event.getEventType() == XMLStreamConstants.START_DOCUMENT) {
 				buffer.add(event);
 			} else if (event.getEventType() == XMLStreamConstants.CHARACTERS) {
-				buffer.add(eventFactory.createCharacters(normalizeSpace(event.asCharacters().getData())));
+				eventFactory.setLocation(event.getLocation());
+				Characters c = eventFactory.createCharacters(normalizeSpace(event.asCharacters().getData()));
+				eventFactory.setLocation(null);
+				buffer.add(c);
 			} else if (beginsMixedContent(event)) {
 				parseBlock(event);
 			} else {
@@ -181,6 +185,7 @@ public class OBFLWsNormalizer extends XMLParserBase implements XMLEventIterator 
 		// process
 		for (int i = 0; i < events.size(); i++) {
 			XMLEvent event = events.get(i);
+			eventFactory.setLocation(event.getLocation());
 
 			if (event.getEventType() == XMLStreamConstants.CHARACTERS) {
 				final String data = event.asCharacters().getData();
@@ -277,6 +282,7 @@ public class OBFLWsNormalizer extends XMLParserBase implements XMLEventIterator 
 				modified.add(event);
 			}
 		}
+		eventFactory.setLocation(null);
 		return modified;
 	}
 
