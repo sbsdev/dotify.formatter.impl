@@ -126,8 +126,7 @@ bundle {
 							'org.daisy.dotify.api.writer; provide:=true,'+
 							'org.daisy.streamline.api.tasks; provide:=true,*',
 		////The split-package instruction is because a resource folder is included twice on the classpath
-		'Private-Package': 'org.daisy.dotify.formatter.impl.*;-split-package:=merge-first,'+
-							'org.daisy.dotify.formatter.tasks',
+		'Private-Package': 'org.daisy.dotify.formatter.impl.*;-split-package:=merge-first,',
 		'Service-Component': '*',
         'Automatic-Module-Name': "$moduleName",
         'Built-By': System.getProperty("user.name"),
