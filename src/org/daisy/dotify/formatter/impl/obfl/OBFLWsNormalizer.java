@@ -28,7 +28,6 @@ import javax.xml.stream.events.XMLEvent;
  */
 public class OBFLWsNormalizer extends XMLParserBase implements XMLEventIterator {
 	private final XMLEventReader input;
-	private final OutputStream out;
 	private final XMLEventFactory eventFactory;
 	private boolean writingOften;
 
@@ -36,11 +35,9 @@ public class OBFLWsNormalizer extends XMLParserBase implements XMLEventIterator 
 	 * Creates a new OBFLWsNormalizer. 
 	 * @param input the input XMLEventReader. Note that the underlying stream might not be closed after parsing, due to limitations in the StaX implementation.
 	 * @param eventFactory the xml event factory
-	 * @param out the output stream
 	 */
-	public OBFLWsNormalizer(XMLEventReader input, XMLEventFactory eventFactory, OutputStream out) {
+	public OBFLWsNormalizer(XMLEventReader input, XMLEventFactory eventFactory) {
 		this.input = input;
-		this.out = out;
 		this.eventFactory = eventFactory;
 		this.writingOften = false;
 	}
@@ -77,10 +74,13 @@ public class OBFLWsNormalizer extends XMLParserBase implements XMLEventIterator 
 			if (event.getEventType() == XMLStreamConstants.START_DOCUMENT) {
 				buffer.add(event);
 			} else if (event.getEventType() == XMLStreamConstants.CHARACTERS) {
-				eventFactory.setLocation(event.getLocation());
-				Characters c = eventFactory.createCharacters(normalizeSpace(event.asCharacters().getData()));
-				eventFactory.setLocation(null);
-				buffer.add(c);
+				String chars = normalizeSpace(event.asCharacters().getData());
+				if (!"".equals(chars)) {
+					eventFactory.setLocation(event.getLocation());
+					Characters c = eventFactory.createCharacters(chars);
+					eventFactory.setLocation(null);
+					buffer.add(c);
+				}
 			} else if (beginsMixedContent(event)) {
 				parseBlock(event);
 			} else {
@@ -99,9 +99,10 @@ public class OBFLWsNormalizer extends XMLParserBase implements XMLEventIterator 
 	/**
 	 * Parses for whitespace.
 	 * @param outputFactory an xml output factory
+	 * @param out the output stream
 	 */
 	//FIXME: this argument doesn't make sense from a user's perspective
-	public void parse(XMLOutputFactory outputFactory) {
+	public void parse(XMLOutputFactory outputFactory, OutputStream out) {
 		XMLEventWriter writer = null;
 		try {
 			while (hasNext()) {
@@ -249,7 +250,10 @@ public class OBFLWsNormalizer extends XMLParserBase implements XMLEventIterator 
 				}
 				// System.out.println("'" + pre + "'" + normalizeSpace(data) +
 				// "'" + post + "'");
-				modified.add(eventFactory.createCharacters(pre + normalizeSpace(data) + post));
+				String chars = pre + normalizeSpace(data) + post;
+				if (!"".equals(chars)) {
+					modified.add(eventFactory.createCharacters(chars));
+				}
 			} else if (equalsStart(event, ObflQName.SPAN, ObflQName.STYLE)) {
 
 				if (i > 0) {
@@ -339,8 +343,8 @@ public class OBFLWsNormalizer extends XMLParserBase implements XMLEventIterator 
 			inFactory.setProperty(XMLInputFactory.IS_NAMESPACE_AWARE, Boolean.TRUE);
 			inFactory.setProperty(XMLInputFactory.SUPPORT_DTD, Boolean.FALSE);
 			inFactory.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, Boolean.FALSE);
-			OBFLWsNormalizer p = new OBFLWsNormalizer(inFactory.createXMLEventReader(new FileInputStream("ws-test-input.xml")), XMLEventFactory.newInstance(), new FileOutputStream("out.xml"));
-			p.parse(XMLOutputFactory.newInstance());
+			OBFLWsNormalizer p = new OBFLWsNormalizer(inFactory.createXMLEventReader(new FileInputStream("ws-test-input.xml")), XMLEventFactory.newInstance());
+			p.parse(XMLOutputFactory.newInstance(), new FileOutputStream("out.xml"));
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

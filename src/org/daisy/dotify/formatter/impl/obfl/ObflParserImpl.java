@@ -110,6 +110,7 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
 	private boolean hyphGlobal;
 	private final Logger logger;
 	private final FactoryManager fm;
+	private boolean normalizeSpace = true;
 
 	Map<String, Node> xslts = new HashMap<>();
 	Map<String, Node> fileRefs = new HashMap<>();
@@ -123,6 +124,14 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
 		this.fm = fm;
 		this.logger = Logger.getLogger(this.getClass().getCanonicalName());
 	}
+
+	public void setNormalizeSpace(boolean value) {
+		this.normalizeSpace = value;
+	}
+	
+	public boolean isNormalizingSpace() {
+		return normalizeSpace;
+	}
 	
 	@Override
 	public void parse(XMLEventReader inputER, Formatter formatter) throws ObflParserException {
@@ -134,7 +143,12 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
 		this.meta = new ArrayList<>();
 		XMLEvent event;
 		TextProperties tp = new TextProperties.Builder(this.locale.toString()).translationMode(mode).hyphenate(hyphGlobal).build();
-		XMLEventIterator input = new XMLEventReaderAdapter(inputER);
+		XMLEventIterator input;
+		if (normalizeSpace) {
+			input = new OBFLWsNormalizer(inputER, fm.getXmlEventFactory()); 
+		} else {
+			input = new XMLEventReaderAdapter(inputER);
+		}
 		try {
 			while (input.hasNext()) {
 				event = input.nextEvent();
