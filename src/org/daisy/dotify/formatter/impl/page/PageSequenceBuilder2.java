@@ -62,6 +62,7 @@ public class PageSequenceBuilder2 {
 	private int keepNextSheets;
 	private int pageCount = 0;
 	private int dataGroupsIndex;
+	private boolean nextEmpty = false;
 
 	//From view, temporary
 	private final int fromIndex;
@@ -116,6 +117,7 @@ public class PageSequenceBuilder2 {
 		this.data = RowGroupDataSource.copyUnlessNull(template.data);
 		this.keepNextSheets = template.keepNextSheets;
 		this.pageCount = template.pageCount;
+		this.nextEmpty = template.nextEmpty;
 		this.fromIndex = template.fromIndex;
 		this.toIndex = template.toIndex;
 	}
@@ -180,6 +182,10 @@ public class PageSequenceBuilder2 {
 	private PageImpl nextPageInner(int pageNumberOffset, boolean hyphenateLastLine, Optional<TransitionContent> transitionContent) throws PaginatorException, RestartPaginationException // pagination must be restarted in PageStructBuilder.paginateInner
 	{
 		PageImpl current = newPage(pageNumberOffset);
+		if (nextEmpty) {
+			nextEmpty = false;
+			return current;
+		}
 		while (dataGroupsIndex<dataGroups.size() || (data!=null && !data.isEmpty())) {
 			if ((data==null || data.isEmpty()) && dataGroupsIndex<dataGroups.size()) {
 				//pick up next group
@@ -310,8 +316,16 @@ public class PageSequenceBuilder2 {
 				if (hasPageAreaCollection() && current.pageAreaSpaceNeeded() > master.getPageArea().getMaxHeight()) {
 					reassignCollection();
 				}
-				if (!data.isEmpty() || (current!=null && dataGroupsIndex<dataGroups.size() && dataGroups.get(dataGroupsIndex).getBreakBefore()!=BreakBefore.AUTO)) {
+				if (!data.isEmpty()) {
 					return current;
+				} else if (current!=null && dataGroupsIndex<dataGroups.size()) {
+					BreakBefore nextStart = dataGroups.get(dataGroupsIndex).getBreakBefore();
+					if (nextStart!=BreakBefore.AUTO) {
+						if (nextStart == BreakBefore.SHEET && master.duplex() && pageCount%2==1) {
+							nextEmpty = true;
+						}
+						return current;
+					}
 				}
 			}
 		}
