@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.daisy.dotify.api.formatter.FormattingTypes.BreakBefore;
 import org.daisy.dotify.common.splitter.DefaultSplitResult;
 import org.daisy.dotify.common.splitter.SplitPointDataSource;
 import org.daisy.dotify.common.splitter.SplitPointHandler;
@@ -31,6 +32,7 @@ class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<
 	};
 	private final LayoutMaster master;
 	private final Supplements<RowGroup> supplements;
+	private final BreakBefore breakBefore;
 	private final VerticalSpacing vs;
 	private final List<Block> blocks;
 	private List<RowGroup> groups;
@@ -38,13 +40,14 @@ class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<
 	private int blockIndex;
 	private boolean allowHyphenateLastLine;
 
-	RowGroupDataSource(LayoutMaster master, BlockContext bc, List<Block> blocks, VerticalSpacing vs, Supplements<RowGroup> supplements) {
+	RowGroupDataSource(LayoutMaster master, BlockContext bc, List<Block> blocks, BreakBefore breakBefore, VerticalSpacing vs, Supplements<RowGroup> supplements) {
 		super();
 		this.master = master;
 		this.bc = bc;
 		this.groups = null;
 		this.blocks = blocks;
 		this.supplements = supplements;
+		this.breakBefore = breakBefore;
 		this.vs = vs;
 		this.blockIndex = 0;
 		this.allowHyphenateLastLine = true;
@@ -68,6 +71,7 @@ class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<
 		}
 		this.blocks = template.blocks;
 		this.supplements = template.supplements;
+		this.breakBefore = template.breakBefore;
 		this.vs = template.vs;
 		this.blockIndex = template.blockIndex;
 		this.allowHyphenateLastLine = template.allowHyphenateLastLine;
@@ -122,6 +126,10 @@ class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<
 
 	VerticalSpacing getVerticalSpacing() {
 		return vs;
+	}
+	
+	BreakBefore getBreakBefore() {
+		return breakBefore;
 	}
 	
 	BlockContext getContext() {
@@ -187,7 +195,7 @@ class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<
 
 	@Override
 	public RowGroupDataSource createEmpty() {
-		return new RowGroupDataSource(master, bc, Collections.emptyList(), vs, EMPTY_SUPPLEMENTS);
+		return new RowGroupDataSource(master, bc, Collections.emptyList(), breakBefore, vs, EMPTY_SUPPLEMENTS);
 	}
 
 	@Override
@@ -196,7 +204,7 @@ class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<
 	}
 
 	@Override
-	protected void newRowGroupSequence(VerticalSpacing vs) {
+	protected void newRowGroupSequence(BreakBefore breakBefore, VerticalSpacing vs) {
 		if (groups!=null) {
 			throw new IllegalStateException();
 		} else {
