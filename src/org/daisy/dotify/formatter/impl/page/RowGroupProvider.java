@@ -1,11 +1,11 @@
 package org.daisy.dotify.formatter.impl.page;
 
 import java.util.ArrayList;
+import java.util.function.Consumer;
 import java.util.Optional;
 
 import org.daisy.dotify.api.formatter.FormattingTypes.Keep;
 import org.daisy.dotify.formatter.impl.core.Block;
-import org.daisy.dotify.formatter.impl.core.BlockContext;
 import org.daisy.dotify.formatter.impl.core.LayoutMaster;
 import org.daisy.dotify.formatter.impl.datatype.VolumeKeepPriority;
 import org.daisy.dotify.formatter.impl.row.AbstractBlockContentManager;
@@ -18,11 +18,10 @@ class RowGroupProvider {
 	private final LayoutMaster master;
 	private final Block g;
 	private final AbstractBlockContentManager bcm;
-	private final BlockContext bc;
+	private DefaultContext context;
 
 	private final OrphanWidowControl owc;
 	private final boolean otherData;
-	private DefaultContext context;
 	private int rowIndex;
 	private int phase;
 	private int keepWithNext;
@@ -31,7 +30,7 @@ class RowGroupProvider {
 		this.master = template.master;
 		this.g= template.g;
 		this.bcm = template.bcm==null?null:template.bcm.copy();
-		this.bc = template.bc;
+		this.context = template.context;
 		this.owc = template.owc;
 		this.otherData = template.otherData;
 		this.rowIndex = template.rowIndex;
@@ -39,23 +38,37 @@ class RowGroupProvider {
 		this.keepWithNext = template.keepWithNext;
 	}
 
-	RowGroupProvider(LayoutMaster master, Block g, AbstractBlockContentManager bcm, BlockContext bc, int keepWithNext) {
+	RowGroupProvider(LayoutMaster master, Block g, AbstractBlockContentManager bcm, DefaultContext context, int keepWithNext) {
 		this.master = master;
 		this.g = g;
 		this.bcm = bcm;
-		this.bc = bc;
+		this.context = context;
 		this.phase = 0;
 		this.rowIndex = 0;
+		CrossReferenceHandler refs = context.getRefs();
 		this.owc = new OrphanWidowControl(g.getRowDataProperties().getOrphans(),
 				g.getRowDataProperties().getWidows(), 
-				bc.getRefs().getRowCount(g.getBlockAddress()));
-		this.otherData = !bc.getRefs().getGroupAnchors(g.getBlockAddress()).isEmpty()
-				|| !bc.getRefs().getGroupMarkers(g.getBlockAddress()).isEmpty()
-				|| !bc.getRefs().getGroupIdentifiers(g.getBlockAddress()).isEmpty()
+				refs.getRowCount(g.getBlockAddress()));
+		this.otherData = !refs.getGroupAnchors(g.getBlockAddress()).isEmpty()
+				|| !refs.getGroupMarkers(g.getBlockAddress()).isEmpty()
+				|| !refs.getGroupIdentifiers(g.getBlockAddress()).isEmpty()
 				|| g.getKeepWithNextSheets() > 0 || g.getKeepWithPreviousSheets() > 0;
 		this.keepWithNext = keepWithNext;
+		if (!hasNext()) {
+			close();
+		}
 	}
 
+	CrossReferenceHandler getRefs() {
+		return context.getRefs();
+	}
+
+	private void modifyRefs(Consumer<CrossReferenceHandler.Builder> modifier) {
+		DefaultContext.Builder b = context.builder();
+		modifier.accept(b.getRefs());
+		context = b.build();
+	}
+	
 	int getKeepWithNext() {
 		return keepWithNext;
 	}
@@ -76,22 +89,28 @@ class RowGroupProvider {
 			phase < 6 && bcm.hasSkippablePostContentRows();
 	}
 	
-	void close() {
-		bc.getRefs().setGroupAnchors(g.getBlockAddress(), bcm.getGroupAnchors());
-		bc.getRefs().setGroupMarkers(g.getBlockAddress(), bcm.getGroupMarkers());
-		bc.getRefs().setGroupIdentifiers(g.getBlockAddress(), bcm.getGroupIdentifiers());
+	private void close() {
+		modifyRefs(
+			refs -> refs.setGroupAnchors(g.getBlockAddress(), bcm.getGroupAnchors())
+			            .setGroupMarkers(g.getBlockAddress(), bcm.getGroupMarkers())
+			            .setGroupIdentifiers(g.getBlockAddress(), bcm.getGroupIdentifiers()));
 	}
 	
 	BlockStatistics getBlockStatistics() {
 		return bcm;
 	}
 	
+	// FIXME: move context argument to separate setContext() method? (that is how it is done everywhere else)
+	// -> or make it so that the argument does not mutate the RowGroupProvider object
 	public RowGroup next(DefaultContext context, boolean wholeWordsOnly) {
 		if (this.context==null || !this.context.equals(context)) {
 			this.context = g.contextWithMeta(context);
 			bcm.setContext(this.context);
 		}
 		RowGroup b = nextInner(wholeWordsOnly);
+		if (!hasNext()) {
+			close();
+		}
 		return b;
 	}
 
@@ -118,7 +137,7 @@ class RowGroupProvider {
 			if (shouldAddGroupForEmptyContent()) {
 				RowGroup.Builder rgb = setPropertiesForFirstContentRowGroup(
 					new RowGroup.Builder(master.getRowSpacing(), new ArrayList<RowImpl>()), 
-					bc.getRefs(),
+					context.getRefs(),
 					g
 				);
 				return setPropertiesThatDependOnHasNext(rgb, hasNext(), g).build();
@@ -133,7 +152,7 @@ class RowGroupProvider {
 				if (!hasNext) {
 					//we're at the last line, this should be kept with the next block's first line
 					keepWithNext = g.getKeepWithNext();
-					bc.getRefs().setRowCount(g.getBlockAddress(), bcm.getRowCount());
+					modifyRefs(refs -> refs.setRowCount(g.getBlockAddress(), bcm.getRowCount()));
 				}
 				RowGroup.Builder rgb = new RowGroup.Builder(master.getRowSpacing()).add(r).
 						collapsible(false).skippable(false).breakable(
@@ -144,7 +163,7 @@ class RowGroupProvider {
 								(hasNext || !bcm.hasPostContentRows())
 								);
 				if (rowIndex==1) { //First item
-					setPropertiesForFirstContentRowGroup(rgb, bc.getRefs(), g);
+					setPropertiesForFirstContentRowGroup(rgb, context.getRefs(), g);
 				}
 				keepWithNext = keepWithNext-1;
 				return setPropertiesThatDependOnHasNext(rgb, hasNext(), g).build();

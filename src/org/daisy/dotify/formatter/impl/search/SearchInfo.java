@@ -2,7 +2,6 @@ package org.daisy.dotify.formatter.impl.search;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 
@@ -11,43 +10,26 @@ import org.daisy.dotify.api.formatter.MarkerReferenceField;
 import org.daisy.dotify.api.formatter.MarkerReferenceField.MarkerSearchDirection;
 import org.daisy.dotify.api.formatter.MarkerReferenceField.MarkerSearchScope;
 
-class SearchInfo {
+class SearchInfo implements Cloneable {
 
-	private final Map<DocumentSpace, DocumentSpaceData> spaces;
-	private final Map<String, PageDetails> uncommitted;
-	private boolean dirty;
+	private HashMap<DocumentSpace, DocumentSpaceData> spaces;
+	private Runnable setDirty;
 	
-	SearchInfo() {
+	SearchInfo(Runnable setDirty) {
 		this.spaces = new HashMap<>();
-		this.uncommitted = new HashMap<>();
-		this.dirty = false;
+		this.setDirty = setDirty;
 	}
 	
-	private static String toKey(PageDetails value) {
-		return value.getSequenceId().getSpace() + "-" + value.getPageId();
-	}
-	
-	void keepPageDetails(PageDetails value) {
-		if (value.getPageId().getPageIndex()<0) {
-			throw new IllegalArgumentException("Negative page id not allowed.");
+	void setPageDetails(PageDetails value) {
+		DocumentSpaceData data = getViewForSpace(value.getSequenceId().getSpace());
+		while (value.getPageId().getPageIndex()>=data.pageDetails.size()) {
+			data.pageDetails.add(null);
 		}
-		uncommitted.put(toKey(value), value);
-	}
-	
-	void commitPageDetails() {
-		for (Entry<String, PageDetails> entry : uncommitted.entrySet()) {
-			PageDetails value = entry.getValue();
-			DocumentSpaceData data = getViewForSpace(value.getSequenceId().getSpace());
-			while (value.getPageId().getPageIndex()>=data.pageDetails.size()) {
-				data.pageDetails.add(null);
-			}
-			PageDetails old = data.pageDetails.set(value.getPageId().getPageIndex(), value);
-			// Only check the previous value if dirty isn't already true
-			if (!dirty && !value.equals(old)) {
-				dirty = true;
-			}
+		PageDetails old = data.pageDetails.set(value.getPageId().getPageIndex(), value);
+		// FIXME: Only check the previous value if dirty isn't already true
+		if (!value.equals(old)) {
+			setDirty.run();
 		}
-		uncommitted.clear();
 	}
 
 	View<PageDetails> getPageView(DocumentSpace space) {
@@ -242,11 +224,17 @@ class SearchInfo {
 		return getPageDetails(id).flatMap(p->Optional.ofNullable(getPageInSequenceWithOffset(p, 1, false)));
 	}
 	
-	boolean isDirty() {
-		return dirty;
-	}
-	
-	void setDirty(boolean value) {
-		this.dirty = value;
+	@Override
+	public SearchInfo clone() {
+		SearchInfo clone;
+		try {
+			clone = (SearchInfo)super.clone();
+		} catch (CloneNotSupportedException e) {
+			throw new InternalError("coding error");
+		}
+		clone.spaces = new HashMap<>();
+		for (Entry<DocumentSpace, DocumentSpaceData> e : spaces.entrySet())
+			clone.spaces.put(e.getKey(), (DocumentSpaceData)e.getValue().clone());
+		return clone;
 	}
 }

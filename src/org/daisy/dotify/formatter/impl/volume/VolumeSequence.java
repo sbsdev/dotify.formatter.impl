@@ -1,10 +1,10 @@
 package org.daisy.dotify.formatter.impl.volume;
 
+import org.daisy.dotify.api.formatter.Context;
 import org.daisy.dotify.api.formatter.SequenceProperties;
 import org.daisy.dotify.formatter.impl.core.FormatterContext;
 import org.daisy.dotify.formatter.impl.page.BlockSequence;
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
-import org.daisy.dotify.formatter.impl.search.DefaultContext;
 
 /**
  * Provides a volume sequence object. A volume sequence is a chunk of contents
@@ -19,5 +19,5 @@ public interface VolumeSequence {
 	 */
 	public SequenceProperties getSequenceProperties();
 	
-	public BlockSequence getBlockSequence(FormatterContext context, DefaultContext c, CrossReferenceHandler crh);
+	public BlockSequence getBlockSequence(FormatterContext context, Context c, CrossReferenceHandler crh);
 }

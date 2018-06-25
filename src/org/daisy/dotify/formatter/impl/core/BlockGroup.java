@@ -2,8 +2,8 @@ package org.daisy.dotify.formatter.impl.core;
 
 import java.util.List;
 
+import org.daisy.dotify.api.formatter.Context;
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
-import org.daisy.dotify.formatter.impl.search.DefaultContext;
 
 /**
  * Provides an interface for blocks in a dynamic sequence whose inclusion 
@@ -20,7 +20,7 @@ public interface BlockGroup {
 	 * @param crh the cross reference handler
 	 * @return returns a list of blocks
 	 */
-	public List<Block> getBlocks(FormatterContext context, DefaultContext c, CrossReferenceHandler crh);
+	public List<Block> getBlocks(FormatterContext context, Context c, CrossReferenceHandler crh);
 
 	/**
 	 * Returns true if these blocks are dynamic.

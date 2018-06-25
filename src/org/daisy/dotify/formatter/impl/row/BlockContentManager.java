@@ -4,10 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import org.daisy.dotify.api.formatter.Context;
 import org.daisy.dotify.api.formatter.Marker;
 import org.daisy.dotify.formatter.impl.common.FormatterCoreContext;
-import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.search.DefaultContext;
 import org.daisy.dotify.formatter.impl.segment.Segment;
 
@@ -23,11 +21,11 @@ public class BlockContentManager extends AbstractBlockContentManager {
 	private final List<RowImpl> rows;
 	private final SegmentProcessor sp;
 	private int rowIndex;
-	
-	public BlockContentManager(String blockId, int flowWidth, List<Segment> segments, RowDataProperties rdp, CrossReferenceHandler refs, Context context, FormatterCoreContext fcontext) {
+
+	public BlockContentManager(String blockId, int flowWidth, List<Segment> segments, RowDataProperties rdp, DefaultContext context, FormatterCoreContext fcontext) {
 		super(flowWidth, rdp, fcontext);
 		this.rows = new ArrayList<>();
-		this.sp = new SegmentProcessor(blockId, segments, flowWidth, refs, context, flowWidth - margins.getRightMargin().getContent().length(), margins, fcontext, rdp);
+		this.sp = new SegmentProcessor(blockId, segments, flowWidth, context, flowWidth - margins.getRightMargin().getContent().length(), margins, fcontext, rdp);
 		initFields();
 	}
 	
@@ -42,6 +40,7 @@ public class BlockContentManager extends AbstractBlockContentManager {
 		rowIndex = 0;
     }
 	
+	// FIXME: make immutable
     @Override
 	public void setContext(DefaultContext context) {
 		this.sp.setContext(context);

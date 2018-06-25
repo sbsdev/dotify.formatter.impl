@@ -3,6 +3,7 @@ package org.daisy.dotify.formatter.impl.volume;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.daisy.dotify.api.formatter.Context;
 import org.daisy.dotify.api.formatter.FormatterCore;
 import org.daisy.dotify.api.formatter.ItemSequenceProperties;
 import org.daisy.dotify.api.formatter.ReferenceListBuilder;
@@ -15,7 +16,6 @@ import org.daisy.dotify.formatter.impl.core.FormatterCoreImpl;
 import org.daisy.dotify.formatter.impl.search.AnchorData;
 import org.daisy.dotify.formatter.impl.search.BlockAddress;
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
-import org.daisy.dotify.formatter.impl.search.DefaultContext;
 
 class ItemSequenceEventImpl implements ReferenceListBuilder, BlockGroup {
 	private final String collectionID;
@@ -72,7 +72,7 @@ class ItemSequenceEventImpl implements ReferenceListBuilder, BlockGroup {
 	}
 
 	@Override
-	public List<Block> getBlocks(FormatterContext context, DefaultContext vars, CrossReferenceHandler crh) {
+	public List<Block> getBlocks(FormatterContext context, Context vars, CrossReferenceHandler crh) {
 		ContentCollectionImpl c = context.getCollections().get(collectionID);
 		ArrayList<Block> ret = new ArrayList<>();
 		if (c==null) {

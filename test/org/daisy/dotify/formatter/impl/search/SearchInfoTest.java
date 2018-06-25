@@ -14,7 +14,7 @@ public class SearchInfoTest {
 	
 	@Test
 	public void testSearchInfo_01() {
-		SearchInfo si = new SearchInfo();
+		SearchInfo si = new SearchInfo(() -> {});
 		addPages(si, 6, 0, true, 0, 0, new DocumentSpace(Space.PRE_CONTENT, 0));
 		addPages(si, 3, 0, true, 0, 0, DocumentSpace.BODY);
 		addPages(si, 3, 3, true, 0, 0, DocumentSpace.BODY);
@@ -44,9 +44,8 @@ public class SearchInfoTest {
 			if (m!=null) {
 				pd.getMarkers().addAll(m);
 			}
-			si.keepPageDetails(pd);
+			si.setPageDetails(pd);
 		}
-		si.commitPageDetails();
 	}
 
 }

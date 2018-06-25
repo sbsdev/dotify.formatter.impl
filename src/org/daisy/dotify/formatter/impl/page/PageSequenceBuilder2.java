@@ -1,7 +1,7 @@
 package org.daisy.dotify.formatter.impl.page;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.function.Consumer;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
@@ -19,6 +19,7 @@ import org.daisy.dotify.api.translator.TranslationException;
 import org.daisy.dotify.common.splitter.SplitPoint;
 import org.daisy.dotify.common.splitter.SplitPointCost;
 import org.daisy.dotify.common.splitter.SplitPointDataSource;
+import org.daisy.dotify.common.splitter.SplitPointDataList;
 import org.daisy.dotify.common.splitter.SplitPointHandler;
 import org.daisy.dotify.common.splitter.SplitPointSpecification;
 import org.daisy.dotify.common.splitter.StandardSplitOption;
@@ -35,6 +36,7 @@ import org.daisy.dotify.formatter.impl.datatype.VolumeKeepPriority;
 import org.daisy.dotify.formatter.impl.row.AbstractBlockContentManager;
 import org.daisy.dotify.formatter.impl.row.MarginProperties;
 import org.daisy.dotify.formatter.impl.row.RowImpl;
+import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.search.DefaultContext;
 import org.daisy.dotify.formatter.impl.search.DocumentSpace;
 import org.daisy.dotify.formatter.impl.search.PageDetails;
@@ -48,13 +50,13 @@ public class PageSequenceBuilder2 {
 	private final PageAreaProperties areaProps;
 
 	private final ContentCollectionImpl collection;
-	private final BlockContext blockContext;
+	private BlockContext initialContext;
 	private final CollectionData cd;
 	private final LayoutMaster master;
 	private final List<RowGroupSequence> dataGroups;
 	private final FieldResolver fieldResolver;
 	private final SequenceId seqId;
-	private final SplitPointHandler<RowGroup, RowGroupDataSource> sph;
+	private final SplitPointHandler<RowGroup> sph;
 
 	private boolean force;
 	private RowGroupDataSource data;
@@ -82,22 +84,24 @@ public class PageSequenceBuilder2 {
 		}
 		keepNextSheets = 0;
 		
-		this.blockContext = BlockContext.from(rcontext)
+		initialContext = BlockContext.from(rcontext)
 				.flowWidth(seq.getLayoutMaster().getFlowWidth())
 				.formatterContext(context)
 				.build();
-		this.staticAreaContent = new PageAreaContent(seq.getLayoutMaster().getPageAreaBuilder(), blockContext);
+		// BlockContext used for rendering before and after sequences in page-area (CrossReferenceHandler used for getting page number)
+		this.staticAreaContent = new PageAreaContent(seq.getLayoutMaster().getPageAreaBuilder(), initialContext);
 		//For the scenario processing, it is assumed that all page templates have margin regions that are of the same width.
 		//However, it is unlikely to have a big impact on the selection.
-		BlockContext bc = BlockContext.from(blockContext)
+		BlockContext bc = BlockContext.from(initialContext)
 				.flowWidth(master.getFlowWidth() - master.getTemplate(1).getTotalMarginRegionWidth())
 				.build();
 		this.dataGroups = seq.selectScenario(master, bc, true);
-		this.cd = new CollectionData(staticAreaContent, blockContext, master, collection);
+		// BlockContext used for rendering collection items (CrossReferenceHandler used for getting page number)
+		this.cd = new CollectionData(staticAreaContent, initialContext, master, collection);
 		this.dataGroupsIndex = 0;
-		this.seqId = new SequenceId(sequenceId, new DocumentSpace(blockContext.getSpace(), blockContext.getCurrentVolume()));
+		this.seqId = new SequenceId(sequenceId, new DocumentSpace(rcontext.getSpace(), rcontext.getCurrentVolume()));
 		PageDetails details = new PageDetails(master.duplex(), new PageId(pageCount, getGlobalStartIndex(), seqId), pageOffset);
-		this.fieldResolver = new FieldResolver(master, context, rcontext.getRefs(), details);
+		this.fieldResolver = new FieldResolver(master, context, () -> getContext().getRefs(), details);
 	}
 
 	public PageSequenceBuilder2(PageSequenceBuilder2 template) {
@@ -105,7 +109,7 @@ public class PageSequenceBuilder2 {
 		this.staticAreaContent = template.staticAreaContent;
 		this.areaProps = template.areaProps;
 		this.collection = template.collection;
-		this.blockContext = template.blockContext;
+		this.initialContext = template.initialContext;
 		this.master = template.master;
 		this.dataGroups = template.dataGroups;
 		this.cd = template.cd;
@@ -124,6 +128,28 @@ public class PageSequenceBuilder2 {
 	
 	public static PageSequenceBuilder2 copyUnlessNull(PageSequenceBuilder2 template) {
 		return template==null?null:new PageSequenceBuilder2(template);
+	}
+	
+	public BlockContext getContext() {
+		if (data != null)
+			return data.getContext();
+		else
+			return initialContext;
+	}
+	
+	// FIXME: make immutable
+	public void modifyContext(Consumer<? super BlockContext.Builder> modifier) {
+		if (data != null) {
+			data.modifyContext(modifier);
+		} else {
+			BlockContext.Builder b = initialContext.builder();
+			modifier.accept(b);
+			initialContext = b.build();
+		}
+	}
+	
+	private void modifyRefs(Consumer<CrossReferenceHandler.Builder> modifier) {
+		modifyContext(c -> modifier.accept(c.getRefs()));
 	}
 	
 	/**
@@ -165,16 +191,19 @@ public class PageSequenceBuilder2 {
 	public PageImpl nextPage(int pageNumberOffset, boolean hyphenateLastLine, Optional<TransitionContent> transitionContent) throws PaginatorException, RestartPaginationException // pagination must be restarted in PageStructBuilder.paginateInner
 	{
 		PageImpl ret = nextPageInner(pageNumberOffset, hyphenateLastLine, transitionContent);
-		blockContext.getRefs().keepPageDetails(ret.getDetails());
-		for (String id : ret.getIdentifiers()) {
-			blockContext.getRefs().setPageNumber(id, ret.getPageNumber());
-		}
-		//This is for pre/post volume contents, where the volume number is known
-		if (blockContext.getCurrentVolume()!=null) {
-			for (String id : ret.getIdentifiers()) {
-				blockContext.getRefs().setVolumeNumber(id, blockContext.getCurrentVolume());
-			}
-		}
+		modifyRefs(refs -> {
+				refs.setPageDetails(ret.getDetails());
+				for (String id : ret.getIdentifiers()) {
+					refs.setPageNumber(id, ret.getPageNumber());
+				}
+				//This is for pre/post volume contents, where the volume number is known
+				Integer volume = getContext().getCurrentVolume();
+				if (volume!=null) {
+					for (String id : ret.getIdentifiers()) {
+						refs.setVolumeNumber(id, volume);
+					}
+				}
+			});
 		toIndex++;
 		return ret;
 	}
@@ -191,16 +220,18 @@ public class PageSequenceBuilder2 {
 				//pick up next group
 				RowGroupSequence rgs = dataGroups.get(dataGroupsIndex);
 				//TODO: This assumes that all page templates have margin regions that are of the same width
-				BlockContext bc = BlockContext.from(blockContext)
+				BlockContext bc = BlockContext.from(getContext())
 						.flowWidth(master.getFlowWidth() - master.getTemplate(current.getPageNumber()).getTotalMarginRegionWidth())
 						.build();
 				data = new RowGroupDataSource(master, bc, rgs.getBlocks(), rgs.getBreakBefore(), rgs.getVerticalSpacing(), cd);
 				dataGroupsIndex++;
-				if (((RowGroupDataSource)data).getVerticalSpacing()!=null) {
-					VerticalSpacing vSpacing = ((RowGroupDataSource)data).getVerticalSpacing();
-					float size = 0;
-					for (RowGroup g : data.getRemaining()) {
-						size += g.getUnitSize();
+				if (data.getVerticalSpacing()!=null) {
+					VerticalSpacing vSpacing = data.getVerticalSpacing();
+					float size; {
+						size = 0;
+						for (SplitPointDataSource.Iterator<RowGroup> it = data.iterator(); it.hasNext();) {
+							size += it.next(false).getUnitSize();
+						}
 					}
 					int pos = calculateVerticalSpace(current, vSpacing.getBlockPosition(), (int)Math.ceil(size));
 					for (int i = 0; i < pos; i++) {
@@ -210,27 +241,23 @@ public class PageSequenceBuilder2 {
 				}
 				force = false;
 			}
-			BlockContext bc = BlockContext.from(data.getContext())
-					.currentPage(current.getDetails().getPageNumber())
-					.flowWidth(master.getFlowWidth() - master.getTemplate(current.getPageNumber()).getTotalMarginRegionWidth())
-					.build();
-			data.setContext(bc);
+			modifyContext(ctxt -> {
+					ctxt.currentPage(current.getDetails().getPageNumber())
+					    .flowWidth(master.getFlowWidth() - master.getTemplate(current.getPageNumber()).getTotalMarginRegionWidth());
+				}
+			);
 			Optional<Boolean> blockBoundary = Optional.empty();
 			if (!data.isEmpty()) {
-				RowGroupDataSource copy = new RowGroupDataSource(data);
-				// Using a copy to find the skippable data, so that only the required data is rendered
-				int index = SplitPointHandler.findLeading(copy);
-				// Now apply the information to the live data
-				SplitPoint<RowGroup, RowGroupDataSource> sl = SplitPointHandler.skipLeading(data, index);
+				int index = SplitPointHandler.findLeading(data);
+				SplitPoint<RowGroup> sl = SplitPointHandler.skipLeading(data, index);
 				for (RowGroup rg : sl.getDiscarded()) {
 					addProperties(current, rg);
 				}
-				data = sl.getTail();
-				// And on copy...
-				copy = SplitPointHandler.skipLeading(copy, index).getTail();
-				List<RowGroup> seqTransitionText = transitionContent.isPresent()
-						?new RowGroupDataSource(master, bc, transitionContent.get().getInSequence(), BreakBefore.AUTO, null, cd).getRemaining()
-						:Collections.emptyList();
+				data = (RowGroupDataSource)sl.getTail();
+				SplitPointDataSource<RowGroup> seqTransitionText = transitionContent.isPresent()
+						? new RowGroupDataSource(master, getContext(), transitionContent.get().getInSequence(), BreakBefore.AUTO, null, cd)
+						: SplitPointDataList.emptyList();
+				float transitionHeight;
 				SplitPointSpecification spec;
 				boolean addTransition = true;
 				if (transitionContent.isPresent() && transitionContent.get().getType()==Type.INTERRUPT) {
@@ -241,43 +268,46 @@ public class PageSequenceBuilder2 {
 					// Transition rows:		 X-|
 					// This transition doesn't fit, because the last row of the text flow takes up three rows, not just one (which it would
 					// if a transition didn't follow).
-					float flowHeight = current.getFlowHeight() - height(seqTransitionText, true);
-					SplitPointCost<RowGroup> cost = (SplitPointDataSource<RowGroup, ?> units, int in, int limit)->{
+					transitionHeight = height(seqTransitionText, true);
+					float flowHeight = current.getFlowHeight() - transitionHeight;
+					SplitPointCost<RowGroup> cost = (RowGroup unit, int in, int limit)->{
 						VolumeKeepPriority volumeBreakPriority = 
-								data.get(in).getAvoidVolumeBreakAfterPriority();
+								unit.getAvoidVolumeBreakAfterPriority();
 						double volBreakCost = // 0-9:
 								10-(volumeBreakPriority.orElse(10));
 						// not breakable gets "series" 21
 						// breakable, but not last gets "series" 11-20
 						// breakable and last gets "series" 1-10
-						return (data.get(in).isBreakable()?
+						return (unit.isBreakable()?
 									//prefer new block, then lower volume priority cost
-								(data.get(in).isLastRowGroupInBlock()?1:11) + volBreakCost 
+								(unit.isLastRowGroupInBlock()?1:11) + volBreakCost 
 									:21 // because 11 + 9 = 20
 								)*limit-in;
 					};
 					// Finding from the full height
-					spec = sph.find(current.getFlowHeight(), copy, cost, force?StandardSplitOption.ALLOW_FORCE:null);
-					SplitPoint<RowGroup, RowGroupDataSource> x = sph.split(spec, copy);
+					spec = sph.find(current.getFlowHeight(), data, cost, force?StandardSplitOption.ALLOW_FORCE:null);
+					SplitPoint<RowGroup> x = sph.split(spec, data);
 					// If the tail is empty, there's no need for a transition
 					// If there isn't a transition between blocks available, don't insert the text
 					blockBoundary = Optional.of(hasBlockInScope(x.getHead(), flowHeight));
 					if (!x.getTail().isEmpty() && blockBoundary.get()) {
 						// Find the best break point with the new limit
-						spec = sph.find(flowHeight, copy, cost, transitionContent.isPresent()?StandardSplitOption.NO_LAST_UNIT_SIZE:null, force?StandardSplitOption.ALLOW_FORCE:null);
+						spec = sph.find(flowHeight, data, cost, transitionContent.isPresent()?StandardSplitOption.NO_LAST_UNIT_SIZE:null, force?StandardSplitOption.ALLOW_FORCE:null);
 					} else {
 						addTransition = false;
 					}
 				} else {
 					// Either RESUME, or no transition on this page.
-					float flowHeight = current.getFlowHeight() - height(seqTransitionText, false);
-					spec = sph.find(flowHeight, copy, force?StandardSplitOption.ALLOW_FORCE:null);
+					transitionHeight = height(seqTransitionText, false);
+					float flowHeight = current.getFlowHeight() - transitionHeight;
+					spec = sph.find(flowHeight, data, force?StandardSplitOption.ALLOW_FORCE:null);
 				}
 				// Now apply the information to the live data
 				data.setAllowHyphenateLastLine(hyphenateLastLine);
-				SplitPoint<RowGroup, RowGroupDataSource> res = sph.split(spec, data);
+				SplitPoint<RowGroup> res = sph.split(spec, data);
 				data.setAllowHyphenateLastLine(true);
 				if (res.getHead().size()==0 && force) {
+					// FIXME: isn't it better to check spec.getIndex() before split?
 					if (firstUnitHasSupplements(data) && hasPageAreaCollection()) {
 						reassignCollection();
 					} else {
@@ -288,14 +318,31 @@ public class PageSequenceBuilder2 {
 					current.addToPageArea(rg.getRows());
 				}
 				force = res.getHead().size()==0;
-				data = res.getTail();
+				data = (RowGroupDataSource)res.getTail();
 				List<RowGroup> head;
 				if (addTransition && transitionContent.isPresent()) {
+					// recompute transition with new context
+					seqTransitionText = new RowGroupDataSource(master, getContext(), transitionContent.get().getInSequence(), BreakBefore.AUTO, null, cd);
+					if (transitionHeight != height(seqTransitionText, transitionContent.get().getType()==Type.INTERRUPT))
+						throw new RuntimeException();
 					if (transitionContent.get().getType()==TransitionContent.Type.INTERRUPT) {
 						head = new ArrayList<>(res.getHead());
-						head.addAll(seqTransitionText);
+						SplitPointDataSource.Iterator<RowGroup> it = seqTransitionText.iterator();
+						while (it.hasNext()) {
+							head.add(it.next(false));
+						}
+						modifyContext(
+							c -> c.refs(((RowGroupDataSource)it.iterable()).getContext().getRefs())
+						);
 					} else if (transitionContent.get().getType()==TransitionContent.Type.RESUME) {
-						head = new ArrayList<>(seqTransitionText);
+						head = new ArrayList<>();
+						SplitPointDataSource.Iterator<RowGroup> it = seqTransitionText.iterator();
+						while (it.hasNext()) {
+							head.add(it.next(false));
+						}
+						modifyContext(
+							c -> c.refs(((RowGroupDataSource)it.iterable()).getContext().getRefs())
+						);
 						head.addAll(res.getHead());
 					} else {
 						head = res.getHead();
@@ -308,7 +355,10 @@ public class PageSequenceBuilder2 {
 				if (context.getTransitionBuilder().getProperties().getApplicationRange()!=ApplicationRange.NONE) {
 					// no need to do this, unless there is an active transition builder
 					boolean hasBlockBoundary = blockBoundary.isPresent()?blockBoundary.get():res.getHead().stream().filter(r->r.isLastRowGroupInBlock()).findFirst().isPresent();
-					bc.getRefs().keepTransitionProperties(current.getDetails().getPageId(), new TransitionProperties(current.getAvoidVolumeBreakAfter(), hasBlockBoundary));
+					modifyRefs(
+						refs -> refs.setTransitionProperties(current.getDetails().getPageId(),
+						                                     new TransitionProperties(current.getAvoidVolumeBreakAfter(), hasBlockBoundary)));
+					
 				}
 				for (RowGroup rg : res.getDiscarded()) {
 					addProperties(current, rg);
@@ -357,14 +407,14 @@ public class PageSequenceBuilder2 {
 		return false;
 	}
 	
-	private static float height(List<RowGroup> rg, boolean useLastUnitSize) {
+	private static float height(SplitPointDataSource<RowGroup> rg, boolean useLastUnitSize) {
 		if (rg.isEmpty()) {
 			return 0;
 		} else {
 			float ret = 0;
-			Iterator<RowGroup> ri = rg.iterator();
+			SplitPointDataSource.Iterator<RowGroup> ri = rg.iterator();
 			while (ri.hasNext()) {
-				RowGroup r = ri.next();
+				RowGroup r = ri.next(false);
 				ret += useLastUnitSize&&!ri.hasNext()?r.getLastUnitSize():r.getUnitSize();
 			}
 			return ret;
@@ -424,8 +474,12 @@ public class PageSequenceBuilder2 {
 		}
 	}
 	
-	private boolean firstUnitHasSupplements(SplitPointDataSource<?, ?> spd) {
-		return !spd.isEmpty() && !spd.get(0).getSupplementaryIDs().isEmpty();
+	private boolean firstUnitHasSupplements(SplitPointDataSource<?> spd) {
+		if (spd.isEmpty()) {
+			return false;
+		} else {
+			return !spd.iterator().next(false).getSupplementaryIDs().isEmpty();
+		}
 	}
 	
 	private boolean hasPageAreaCollection() {

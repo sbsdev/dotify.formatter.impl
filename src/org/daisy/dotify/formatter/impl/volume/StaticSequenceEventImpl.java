@@ -1,12 +1,12 @@
 package org.daisy.dotify.formatter.impl.volume;
 
+import org.daisy.dotify.api.formatter.Context;
 import org.daisy.dotify.api.formatter.SequenceProperties;
 import org.daisy.dotify.formatter.impl.common.FormatterCoreContext;
 import org.daisy.dotify.formatter.impl.core.FormatterContext;
 import org.daisy.dotify.formatter.impl.core.FormatterCoreImpl;
 import org.daisy.dotify.formatter.impl.page.BlockSequence;
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
-import org.daisy.dotify.formatter.impl.search.DefaultContext;
 
 class StaticSequenceEventImpl extends FormatterCoreImpl implements VolumeSequence {
 	private static final long serialVersionUID = 4646831324973203983L;
@@ -31,7 +31,7 @@ class StaticSequenceEventImpl extends FormatterCoreImpl implements VolumeSequenc
 	}
 
 	@Override
-	public BlockSequence getBlockSequence(FormatterContext context, DefaultContext c, CrossReferenceHandler crh) {
+	public BlockSequence getBlockSequence(FormatterContext context, Context c, CrossReferenceHandler crh) {
 		if (ret!=null) {
 			//we can return previous result, because static contents does not depend on context.
 			return ret;

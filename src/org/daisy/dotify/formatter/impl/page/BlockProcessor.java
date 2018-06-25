@@ -15,7 +15,7 @@ import org.daisy.dotify.formatter.impl.search.DefaultContext;
  * @author Joel Håkansson
  */
 abstract class BlockProcessor {
-	private RowGroupProvider rowGroupProvider;
+	protected RowGroupProvider rowGroupProvider;
 	
 	protected abstract void newRowGroupSequence(BreakBefore breakBefore, VerticalSpacing vs);
 	protected abstract boolean hasSequence();
@@ -51,14 +51,7 @@ abstract class BlockProcessor {
 	}
 	
 	protected boolean hasNextInBlock() {
-		if (rowGroupProvider != null) {
-			if (rowGroupProvider.hasNext()) {
-				return true;
-			} else {
-				rowGroupProvider.close();
-			}
-		}
-		return false;
+		return rowGroupProvider != null && rowGroupProvider.hasNext();
 	}
 	
 	private RowGroupProvider copyUnlessNull(RowGroupProvider template) {

@@ -8,6 +8,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.daisy.dotify.api.formatter.BlockProperties;
+import org.daisy.dotify.api.formatter.Context;
 import org.daisy.dotify.api.formatter.DynamicContent;
 import org.daisy.dotify.api.formatter.DynamicRenderer;
 import org.daisy.dotify.api.formatter.FormatterCore;
@@ -36,7 +37,6 @@ import org.daisy.dotify.formatter.impl.row.RowDataProperties;
 import org.daisy.dotify.formatter.impl.row.SingleLineDecoration;
 import org.daisy.dotify.formatter.impl.search.BlockAddress;
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
-import org.daisy.dotify.formatter.impl.search.DefaultContext;
 import org.daisy.dotify.formatter.impl.segment.AnchorSegment;
 import org.daisy.dotify.formatter.impl.segment.ConnectedTextSegment;
 import org.daisy.dotify.formatter.impl.segment.Evaluate;
@@ -396,8 +396,7 @@ public class FormatterCoreImpl extends Stack<Block> implements FormatterCore, Bl
 	}
 
 	@Override
-	public List<Block> getBlocks(FormatterContext context, DefaultContext c,
-			CrossReferenceHandler crh) {
+	public List<Block> getBlocks(FormatterContext context, Context c, CrossReferenceHandler crh) {
 		return this;
 	}
 

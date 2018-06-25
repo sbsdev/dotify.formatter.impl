@@ -3,6 +3,7 @@ package org.daisy.dotify.formatter.impl.volume;
 import java.util.List;
 import java.util.Stack;
 
+import org.daisy.dotify.api.formatter.Context;
 import org.daisy.dotify.api.formatter.DynamicSequenceBuilder;
 import org.daisy.dotify.api.formatter.FormatterCore;
 import org.daisy.dotify.api.formatter.ItemSequenceProperties;
@@ -15,7 +16,6 @@ import org.daisy.dotify.formatter.impl.core.FormatterContext;
 import org.daisy.dotify.formatter.impl.core.FormatterCoreImpl;
 import org.daisy.dotify.formatter.impl.page.BlockSequence;
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
-import org.daisy.dotify.formatter.impl.search.DefaultContext;
 
 class DynamicSequenceEventImpl implements VolumeSequence, DynamicSequenceBuilder {
 	private final SequenceProperties props;
@@ -40,7 +40,7 @@ class DynamicSequenceEventImpl implements VolumeSequence, DynamicSequenceBuilder
 	}
 
 	@Override
-	public BlockSequence getBlockSequence(FormatterContext context, DefaultContext c, CrossReferenceHandler crh) {
+	public BlockSequence getBlockSequence(FormatterContext context, Context c, CrossReferenceHandler crh) {
 		BlockSequenceManipulator fsm = new BlockSequenceManipulator(
 				context.getMasters().get(getSequenceProperties().getMasterName()), 
 				getSequenceProperties());

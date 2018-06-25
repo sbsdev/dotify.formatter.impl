@@ -26,8 +26,7 @@ import org.daisy.dotify.formatter.impl.segment.TextSegment;
 
 class SegmentProcessor implements SegmentProcessing {
 	private final List<Segment> segments;
-	private final CrossReferenceHandler refs;
-	private Context context;
+	private DefaultContext context;
 	private final boolean significantContent;
 	private final SegmentProcessorContext spc;
 
@@ -49,9 +48,8 @@ class SegmentProcessor implements SegmentProcessing {
 	private boolean closed;
 	private String blockId;
 
-	SegmentProcessor(String blockId, List<Segment> segments, int flowWidth, CrossReferenceHandler refs, Context context, int available, BlockMargin margins, FormatterCoreContext fcontext, RowDataProperties rdp) {
+	SegmentProcessor(String blockId, List<Segment> segments, int flowWidth, DefaultContext context, int available, BlockMargin margins, FormatterCoreContext fcontext, RowDataProperties rdp) {
 		this.segments = Collections.unmodifiableList(segments);
-		this.refs = refs;
 		this.context = context;
 		this.groupMarkers = new ArrayList<>();
 		this.groupAnchors = new ArrayList<>();
@@ -64,9 +62,6 @@ class SegmentProcessor implements SegmentProcessing {
 	}
 	
 	SegmentProcessor(SegmentProcessor template) {
-		// Refs is mutable, but for now we assume that the same context should be used.
-		this.refs = template.refs;
-		// Context is mutable, but for now we assume that the same context should be used.
 		this.context = template.context;
 		this.spc = template.spc;
 		this.currentRow = template.currentRow==null?null:new RowImpl.Builder(template.currentRow);
@@ -315,8 +310,8 @@ class SegmentProcessor implements SegmentProcessing {
 
 	private Optional<CurrentResult> layoutPageSegment(PageNumberReferenceSegment rs) {
 		Integer page = null;
-		if (refs!=null) {
-			page = refs.getPageNumber(rs.getRefId());
+		if (context.getRefs()!=null) {
+			page = context.getRefs().getPageNumber(rs.getRefId());
 		}
 		//TODO: translate references using custom language?
 		Translatable spec;
@@ -478,6 +473,7 @@ class SegmentProcessor implements SegmentProcessing {
 		return groupIdentifiers;
 	}
 	
+	// FIXME: make immutable
 	void setContext(DefaultContext context) {
 		this.context = context;
 	}

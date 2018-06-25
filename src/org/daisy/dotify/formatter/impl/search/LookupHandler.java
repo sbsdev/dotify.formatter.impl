@@ -2,20 +2,16 @@ package org.daisy.dotify.formatter.impl.search;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 
-class LookupHandler<K, V> {
-	private final Map<K, V> keyValueMap;
-	private final Map<K, V> uncommitted;
-	private final Set<K> requestedKeys;
-	private boolean dirty;
+class LookupHandler<K, V> implements Cloneable {
+	private HashMap<K, V> keyValueMap;
+	// private HashSet<K> requestedKeys;
+	private Runnable setDirty;
 	
-	LookupHandler() {
+	LookupHandler(Runnable setDirty) {
 		this.keyValueMap = new HashMap<>();
-		this.uncommitted = new HashMap<>();
-		this.requestedKeys = new HashSet<>();
-		this.dirty = false;
+		// this.requestedKeys = new HashSet<>();
+		this.setDirty = setDirty;
 	}
 
 	V get(K key) {
@@ -23,10 +19,10 @@ class LookupHandler<K, V> {
 	}
 
 	V get(K key, V def) {
-		requestedKeys.add(key);
+		// requestedKeys.add(key);
 		V ret = keyValueMap.get(key);
 		if (ret==null) {
-			dirty = true;
+			setDirty.run();
 			//ret is null here, so if def is also null, either variable can be returned
 			return def;
 		} else {
@@ -34,56 +30,37 @@ class LookupHandler<K, V> {
 		}
 	}
 
-	/**
-	 * Keeps a value for later commit. Unlike put, multiple calls to keep for the same key will not 
-	 * affect the status of the LookupHandler. Upon calling commit, the final value for each key are put
-	 * and, if changed, affects the status of the LookupHandler. Note that kept variables cannot 
-	 * be read unless committed.
-	 * 
-	 * @param key the value to keep
-	 * @param value the value
-	 */
-	void keep(K key, V value) {
-		uncommitted.put(key, value);
-	}
-	
-	/**
-	 * Commits values stored with keep.
-	 */
-	void commit() {
-		while (!uncommitted.isEmpty()) {
-			K key = uncommitted.keySet().iterator().next();
-			V value = uncommitted.remove(key);
-			put(key, value);
-		}
-	}
-	
 	void put(K key, V value) {
-		if (uncommitted.containsKey(key)) {
-			throw new IllegalStateException(key + " has uncommitted values. Commit before putting.");
-		}
 		V prv = keyValueMap.put(key, value);
-		if (requestedKeys.contains(key) && prv!=null && !prv.equals(value)) {
-			dirty = true;
+		if (/*requestedKeys.contains(key) &&*/ prv!=null && !prv.equals(value)) {
+			setDirty.run();
 		}
 	}
 
-	boolean isDirty() {
-		return dirty;
-	}
+	// FIXME: or do this implicitly when creating a new CrossReferenceHandler from another (not a clone) ?
+	// FIXME: or could we just skip the requestedKeys check?
+	// -> why don't we set dirty if the key hasn't been requested yet?
+	//    -> because in that case we can be sure the right value is used, so we don't need another iteration
+	//    -> for now skip anyway
 	
-	/**
-	 * Sets the dirty status
-	 * @param value the value
-	 * @throws IllegalStateException if there are uncommitted values.
-	 */
-	void setDirty(boolean value) {
-		if (!uncommitted.isEmpty()) {
-			throw new IllegalStateException("Uncommitted values.");
+	// /**
+	//  * Forget the requested keys (but not the values)
+	//  */
+	// void forgetRequests() {
+	// 	requestedKeys.clear();
+	// }
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public LookupHandler<K, V> clone() {
+		LookupHandler<K, V> clone;
+		try {
+			clone = (LookupHandler<K, V>)super.clone();
+		} catch (CloneNotSupportedException e) {
+			throw new InternalError("coding error");
 		}
-		if (!value) {
-			requestedKeys.clear();
-		}
-		dirty = value;
+		clone.keyValueMap = (HashMap<K, V>)keyValueMap.clone();
+		// clone.requestedKeys = (HashSet<K>)requestedKeys.clone();
+		return clone;
 	}
 }

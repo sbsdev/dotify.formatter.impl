@@ -1,63 +1,61 @@
 package org.daisy.dotify.formatter.impl.search;
 
 import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
 import org.daisy.dotify.api.formatter.Marker;
 import org.daisy.dotify.api.formatter.MarkerReferenceField;
 
-public class CrossReferenceHandler {
-	private final LookupHandler<String, Integer> pageRefs;
-	private final LookupHandler<String, Integer> volumeRefs;
-	private final LookupHandler<Integer, Iterable<AnchorData>> anchorRefs;
-	private final LookupHandler<String, Integer> variables;
-	private final LookupHandler<SheetIdentity, Boolean> breakable;
-	private final LookupHandler<BlockAddress, Integer> rowCount;
-    private final LookupHandler<BlockAddress, List<String>> groupAnchors;
-    private final LookupHandler<BlockAddress, List<Marker>> groupMarkers;
-    private final LookupHandler<BlockAddress, List<String>> groupIdentifiers;
-	private final LookupHandler<PageId, TransitionProperties> transitionProperties;
-	private final Map<Integer, Overhead> volumeOverhead;
-    private final Map<String, Integer> counters;
-	private final SearchInfo searchInfo;
+public class CrossReferenceHandler implements Cloneable {
+	protected LookupHandler<String, Integer> pageRefs;
+	protected LookupHandler<String, Integer> volumeRefs;
+	protected LookupHandler<Integer, Iterable<AnchorData>> anchorRefs;
+	protected LookupHandler<String, Integer> variables;
+	protected LookupHandler<SheetIdentity, Boolean> breakable;
+	protected LookupHandler<BlockAddress, Integer> rowCount;
+    protected LookupHandler<BlockAddress, List<String>> groupAnchors;
+    protected LookupHandler<BlockAddress, List<Marker>> groupMarkers;
+    protected LookupHandler<BlockAddress, List<String>> groupIdentifiers;
+	protected LookupHandler<PageId, TransitionProperties> transitionProperties;
+	protected HashMap<Integer, Overhead> volumeOverhead;
+    protected HashMap<String, Integer> counters;
+	protected SearchInfo searchInfo;
 	private static final String VOLUMES_KEY = "volumes";
 	private static final String SHEETS_IN_VOLUME = "sheets-in-volume-";
 	private static final String SHEETS_IN_DOCUMENT = "sheets-in-document";
 	private static final String PAGES_IN_VOLUME = "pages-in-volume-";
 	private static final String PAGES_IN_DOCUMENT = "pages-in-document";
-    private Set<String> pageIds;
-	private boolean overheadDirty = false;
-	private boolean readOnly = false;
+    protected HashSet<String> pageIds;
+	private final Runnable setDirty;
+	protected final AtomicBoolean dirty;
 	
-	public CrossReferenceHandler() {
-		this.pageRefs = new LookupHandler<>();
-		this.volumeRefs = new LookupHandler<>();
-		this.anchorRefs = new LookupHandler<>();
-		this.variables = new LookupHandler<>();
-		this.breakable = new LookupHandler<>();
-		this.rowCount = new LookupHandler<>();
-        this.groupAnchors = new LookupHandler<>();
-        this.groupMarkers = new LookupHandler<>();
-        this.groupIdentifiers = new LookupHandler<>();
-		this.transitionProperties = new LookupHandler<>();
+	/**
+	 * @param setDirty called if some information has been changed since last use
+	 */
+	public CrossReferenceHandler(Runnable setDirty) {
+		this.dirty = new AtomicBoolean(false);
+		this.pageRefs = new LookupHandler<>(setDirty);
+		this.volumeRefs = new LookupHandler<>(setDirty);
+		this.anchorRefs = new LookupHandler<>(setDirty);
+		this.variables = new LookupHandler<>(setDirty);
+		this.breakable = new LookupHandler<>(setDirty);
+		//TODO: fix dirty flag for anchors/markers
+		Runnable nop = () -> {};
+		this.rowCount = new LookupHandler<>(nop);
+        this.groupAnchors = new LookupHandler<>(nop);
+        this.groupMarkers = new LookupHandler<>(nop);
+        this.groupIdentifiers = new LookupHandler<>(setDirty);
+		this.transitionProperties = new LookupHandler<>(() -> dirty.set(true));
 		this.volumeOverhead = new HashMap<>();
 		this.counters = new HashMap<>();
-		this.searchInfo = new SearchInfo();
+		this.searchInfo = new SearchInfo(setDirty);
         this.pageIds = new HashSet<>();
-	}
-	
-	public void setReadOnly() {
-		readOnly = true;
-	}
-	
-	public void setReadWrite() {
-		readOnly = false;
+        this.setDirty = setDirty;
 	}
 	
 	/**
@@ -69,11 +67,6 @@ public class CrossReferenceHandler {
 		return volumeRefs.get(refid);
 	}
 	
-	public void setVolumeNumber(String refid, int volume) {
-		if (readOnly) { return; }
-		volumeRefs.put(refid, volume);
-	}
-	
 	/**
 	 * Gets the page number for the specified identifier.
 	 * @param refid the identifier to get the page for
@@ -83,99 +76,18 @@ public class CrossReferenceHandler {
 		return pageRefs.get(refid);
 	}
 	
-	public void setPageNumber(String refid, int page) {
-		if (readOnly) { return; }
-        if (!pageIds.add(refid)) {
-            throw new IllegalArgumentException("Identifier not unique: " + refid);
-        }
-		pageRefs.put(refid, page);
-	}
-	
 	public Iterable<AnchorData> getAnchorData(int volume) {
 		return anchorRefs.get(volume);
 	}
 	
-	public void setAnchorData(int volume, Iterable<AnchorData> data) {
-		if (readOnly) { return; }
-		anchorRefs.put(volume, data);
-	}
-	
-	public void setVolumeCount(int volumes) {
-		if (readOnly) { return; }
-		variables.put(VOLUMES_KEY, volumes);
-	}
-	
-	public void setSheetsInVolume(int volume, int value) {
-		if (readOnly) { return; }
-		variables.put(SHEETS_IN_VOLUME+volume, value);
-	}
-	
-	public void setSheetsInDocument(int value) {
-		if (readOnly) { return; }
-		variables.put(SHEETS_IN_DOCUMENT, value);
-	}
-	
 	private void setPagesInVolume(int volume, int value) {
-		if (readOnly) { return; }
 		//TODO: use this method
 		variables.put(PAGES_IN_VOLUME+volume, value);
 	}
 	
 	private void setPagesInDocument(int value) {
-		if (readOnly) { return; }
 		//TODO: use this method
 		variables.put(PAGES_IN_DOCUMENT, value);
-	}
-	
-	public void keepBreakable(SheetIdentity ident, boolean value) {
-		if (readOnly) { return; }
-		breakable.keep(ident, value);
-	}
-	
-	public void commitBreakable() {
-		if (readOnly) { return; }
-		breakable.commit();
-	}
-	
-	public void keepTransitionProperties(PageId id, TransitionProperties value) {
-		if (readOnly) { return; }
-		transitionProperties.keep(id, value);
-	}
-	
-	public void commitTransitionProperties() {
-		if (readOnly) { return; }
-		transitionProperties.commit();
-	}
-	
-	public void setRowCount(BlockAddress blockId, int value) {
-		if (readOnly) { return; }
-		rowCount.put(blockId, value);
-	}
-	
-	public void trimPageDetails() {
-		if (readOnly) { return; }
-		//FIXME: implement
-	}
-	
-	public void setGroupAnchors(BlockAddress blockId, List<String> anchors) {
-		if (readOnly) {
-			return;
-		}
-		groupAnchors.put(blockId, anchors.isEmpty() ? Collections.emptyList() : new ArrayList<>(anchors));
-	}
-
-	public void setGroupMarkers(BlockAddress blockId, List<Marker> markers) {
-		if (readOnly) {
-			return;
-		}
-		groupMarkers.put(blockId, markers.isEmpty() ? Collections.emptyList() : new ArrayList<>(markers));
-	}
-	
-	public void setGroupIdentifiers(BlockAddress blockId, List<String> identifiers) {
-		if (readOnly) {
-			return;
-		}
-		groupIdentifiers.put(blockId, identifiers.isEmpty() ? Collections.emptyList() : new ArrayList<>(identifiers));
 	}
 	
 	public Overhead getOverhead(int volumeNumber) {
@@ -183,25 +95,14 @@ public class CrossReferenceHandler {
 			throw new IndexOutOfBoundsException("Volume must be greater than or equal to 1");
 		}
 		if (volumeOverhead.get(volumeNumber)==null) {
-			if (readOnly) { return new Overhead(0, 0); }
 			volumeOverhead.put(volumeNumber, new Overhead(0, 0));
-			overheadDirty = true;
+			setDirty.run();
 		}
 		return volumeOverhead.get(volumeNumber);
 	}
 	
-	public void setOverhead(int volumeNumber, Overhead overhead) {
-		if (readOnly) { return; }
-		volumeOverhead.put(volumeNumber, overhead);
-	}
-	
 	public Integer getPageNumberOffset(String key) {
 		return counters.get(key);
-	}
-
-	public void setPageNumberOffset(String key, Integer value) {
-		if (readOnly) { return; }
-		counters.put(key, value);
 	}
 
 	/**
@@ -252,40 +153,7 @@ public class CrossReferenceHandler {
 		return rowCount.get(blockId, Integer.MAX_VALUE);
 	}
 	
-	public void keepPageDetails(PageDetails value) {
-		if (readOnly) { return; }
-		searchInfo.keepPageDetails(value);
-	}
-	
-	public void commitPageDetails() {
-		if (readOnly) { return; }
-		searchInfo.commitPageDetails();
-	}
-	
-	/**
-	 * Sets the sequence scope for the purpose of finding markers in a specific sequence.
-	 * @param space the document space
-	 * @param sequenceNumber the sequence number
-	 * @param fromIndex the start index
-	 * @param toIndex the end index
-	 */
-	public void setSequenceScope(DocumentSpace space, int sequenceNumber, int fromIndex, int toIndex) {
-		if (readOnly) { return; }
-		searchInfo.setSequenceScope(space, sequenceNumber, fromIndex, toIndex);
-	}
-	
-	/**
-	 * Sets the volume scope for the purpose of finding markers in a specific volume.
-	 * @param volumeNumber the volume number
-	 * @param fromIndex the start index
-	 * @param toIndex the end index
-	 */
-	public void setVolumeScope(int volumeNumber, int fromIndex, int toIndex) {
-		if (readOnly) { return; }
-		searchInfo.setVolumeScope(volumeNumber, fromIndex, toIndex);
-	}
-	
-	/**
+	/*
 	 * <p>Finds a marker value starting from the page with the supplied id.</p>
 	 * <p>To find markers, the following methods must be used to register
 	 * data needed by this method:</p>
@@ -307,47 +175,185 @@ public class CrossReferenceHandler {
 	public Optional<PageDetails> findNextPageInSequence(PageId id) {
 		return searchInfo.findNextPageInSequence(id);
 	}
-	
-	/**
-	 * Returns true if some information has been changed since last use.
-	 * @return true if some information has been changed, false otherwise
-	 */
-	public boolean isDirty() {
-		//TODO: fix dirty flag for anchors/markers
-		return pageRefs.isDirty() || volumeRefs.isDirty() || anchorRefs.isDirty() || variables.isDirty() || breakable.isDirty() || overheadDirty || searchInfo.isDirty()
-				|| transitionProperties.isDirty()
-				;
-		 //|| groupAnchors.isDirty()
-		 //|| groupMarkers.isDirty() || rowCount.isDirty()
-	}
-	
-	/**
-	 * Sets the dirty flag on all tracked data. This is typically used to reset 
-	 * the value of the flag when rendering another pass. However, by setting this
-	 * value to true, it can be used to disable tracking for the remainder of 
-	 * the rendering.
-	 * @param value the value
-	 */
-	public void setDirty(boolean value) {
-		if (readOnly) { return; }
-		pageRefs.setDirty(value);
-		volumeRefs.setDirty(value);
-		anchorRefs.setDirty(value);
-		variables.setDirty(value);
-		breakable.setDirty(value);
-		searchInfo.setDirty(value);
-		transitionProperties.setDirty(value);
-		//TODO: fix dirty flag for anchors/markers
-		//rowCount.setDirty(value);
-		//groupAnchors.setDirty(value);
-		//groupMarkers.setDirty(value);
-		overheadDirty = value;
-		counters.clear();
+
+	public boolean getDirty() {
+		return dirty.get();
 	}
 
-    public void resetUniqueChecks() {
-		if (readOnly) { return; }
-        pageIds = new HashSet<>();
-    }
+	// public void resetLookupHandlers() {
+	// 	pageRefs.forgetRequests();
+	// 	volumeRefs.forgetRequests();
+	// 	anchorRefs.forgetRequests();
+	// 	variables.forgetRequests();
+	// 	breakable.forgetRequests();
+	// 	transitionProperties.forgetRequests();
+	// 	rowCount.forgetRequests();
+	// 	groupAnchors.forgetRequests();
+	// 	groupMarkers.forgetRequests();
+	// }
 
+	public Builder builder() {
+		return new Builder(this);
+	}
+	
+	@SuppressWarnings("unchecked")
+	private CrossReferenceHandler(CrossReferenceHandler template) {
+		pageRefs = template.pageRefs.clone();
+		volumeRefs = template.volumeRefs.clone();
+		anchorRefs = template.anchorRefs.clone();
+		variables = template.variables.clone();
+		breakable = template.breakable.clone();
+		rowCount = template.rowCount.clone();
+		groupAnchors = template.groupAnchors.clone();
+		groupMarkers = template.groupMarkers.clone();
+		groupIdentifiers = template.groupIdentifiers.clone();
+		transitionProperties = template.transitionProperties.clone();
+		volumeOverhead = (HashMap<Integer, Overhead>)template.volumeOverhead.clone();
+		counters = (HashMap<String, Integer>)template.counters.clone();
+		searchInfo = template.searchInfo.clone();
+		pageIds = (HashSet<String>)template.pageIds.clone();
+		setDirty = template.setDirty;
+		dirty = new AtomicBoolean(template.dirty.get());
+	}
+
+	public static class Builder extends CrossReferenceHandler {
+
+		private Builder(CrossReferenceHandler template) {
+			super(template);
+		}
+
+		public CrossReferenceHandler build() {
+			return new Builder(this);
+		}
+
+		public Builder setVolumeNumber(String refid, int volume) {
+			volumeRefs.put(refid, volume);
+			return this;
+		}
+
+		public Builder setPageNumber(String refid, int page) {
+			if (!pageIds.add(refid)) {
+				throw new IllegalArgumentException("Identifier not unique: " + refid);
+			}
+			pageRefs.put(refid, page);
+			return this;
+		}
+
+		public Builder setAnchorData(int volume, Iterable<AnchorData> data) {
+			anchorRefs.put(volume, data);
+			return this;
+		}
+
+		public Builder setVolumeCount(int volumes) {
+			variables.put(VOLUMES_KEY, volumes);
+			return this;
+		}
+
+		public Builder setSheetsInVolume(int volume, int value) {
+			variables.put(SHEETS_IN_VOLUME+volume, value);
+			return this;
+		}
+
+		public Builder setSheetsInDocument(int value) {
+			variables.put(SHEETS_IN_DOCUMENT, value);
+			return this;
+		}
+
+		// public void keepBreakable(SheetIdentity ident, boolean value) {
+		// 	breakable.keep(ident, value);
+		// }
+	
+		// public void commitBreakable() {
+		// 	breakable.commit();
+		// }
+	
+		public Builder setBreakable(SheetIdentity ident, boolean value) {
+			breakable.put(ident, value);
+			return this;
+		}
+
+		public Builder setTransitionProperties(PageId id, TransitionProperties value) {
+			transitionProperties.put(id, value);
+			return this;
+		}
+
+		public Builder setRowCount(BlockAddress blockId, int value) {
+			rowCount.put(blockId, value);
+			return this;
+		}
+
+		public Builder trimPageDetails() {
+			//FIXME: implement
+			return this;
+		}
+
+		public Builder setGroupAnchors(BlockAddress blockId, List<String> anchors) {
+			groupAnchors.put(blockId, anchors.isEmpty() ? Collections.emptyList() : new ArrayList<>(anchors));
+			return this;
+		}
+
+		public Builder setGroupMarkers(BlockAddress blockId, List<Marker> markers) {
+			groupMarkers.put(blockId, markers.isEmpty() ? Collections.emptyList() : new ArrayList<>(markers));
+			return this;
+		}
+
+		public Builder setGroupIdentifiers(BlockAddress blockId, List<String> identifiers) {
+			groupIdentifiers.put(blockId, identifiers.isEmpty() ? Collections.emptyList() : new ArrayList<>(identifiers));
+			return this;
+		}
+
+		public Builder setOverhead(int volumeNumber, Overhead overhead) {
+			volumeOverhead.put(volumeNumber, overhead);
+			return this;
+		}
+
+		public Builder setPageNumberOffset(String key, Integer value) {
+			counters.put(key, value);
+			return this;
+		}
+		
+		public Builder setPageDetails(PageDetails value) {
+			searchInfo.setPageDetails(value);
+			return this;
+		}
+		
+		/**
+		 * Sets the sequence scope for the purpose of finding markers in a specific sequence.
+		 * @param space the document space
+		 * @param sequenceNumber the sequence number
+		 * @param fromIndex the start index
+		 * @param toIndex the end index
+		 */
+		public Builder setSequenceScope(DocumentSpace space, int sequenceNumber, int fromIndex, int toIndex) {
+			searchInfo.setSequenceScope(space, sequenceNumber, fromIndex, toIndex);
+			return this;
+		}
+
+		/**
+		 * Sets the volume scope for the purpose of finding markers in a specific volume.
+		 * @param volumeNumber the volume number
+		 * @param fromIndex the start index
+		 * @param toIndex the end index
+		 */
+		public Builder setVolumeScope(int volumeNumber, int fromIndex, int toIndex) {
+			searchInfo.setVolumeScope(volumeNumber, fromIndex, toIndex);
+			return this;
+		}
+
+		public Builder resetUniqueChecks() {
+			pageIds = new HashSet<>();
+			return this;
+		}
+
+		public Builder resetDirty() {
+			dirty.set(false);
+			return this;
+		}
+		
+		// FIXME: move counters to a separate object (similar to PageCounter)
+		public Builder resetCounters() {
+			counters.clear();
+			return this;
+		}
+	}
 }

@@ -24,7 +24,6 @@ import org.daisy.dotify.api.translator.TextBorderFactoryMakerService;
 import org.daisy.dotify.api.writer.PagedMediaWriter;
 import org.daisy.dotify.formatter.impl.page.BlockSequence;
 import org.daisy.dotify.formatter.impl.page.RestartPaginationException;
-import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.sheet.VolumeImpl;
 import org.daisy.dotify.formatter.impl.volume.TableOfContentsImpl;
 import org.daisy.dotify.formatter.impl.volume.VolumeTemplate;
@@ -128,22 +127,19 @@ class FormatterImpl implements Formatter {
 	}
 
 	private Iterable<? extends Volume> getVolumes() {
-		CrossReferenceHandler crh = new CrossReferenceHandler();
-		VolumeProvider volumeProvider = new VolumeProvider(blocks, volumeTemplates, context, crh);
-
-		ArrayList<VolumeImpl> ret;
+		VolumeProvider volumeProvider = new VolumeProvider(blocks, volumeTemplates, context);
 
 		int maxIterations = 50;
 		for (int j=1;j<=maxIterations;j++) {
 			try {
-				ret = new ArrayList<>();
-				volumeProvider.prepare();
-				for (int i=1;i<= crh.getVolumeCount();i++) {
+				ArrayList<VolumeImpl> ret = new ArrayList<>();
+				int volumeCount = volumeProvider.prepare();
+				for (int i=1;i<= volumeCount;i++) {
 					ret.add(volumeProvider.nextVolume());
 				}
 	
 				if (volumeProvider.done()) {
-					//everything fits
+					//everything fits and nothing is dirty
 					return ret;
 				}
 

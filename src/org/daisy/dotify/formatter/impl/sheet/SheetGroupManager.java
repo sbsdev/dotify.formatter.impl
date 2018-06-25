@@ -60,7 +60,7 @@ public class SheetGroupManager {
 	 * Gets the number of groups in the manager.
 	 * @return the size
 	 */
-	int size() {
+	public int size() {
 		return groups.size();
 	}
 	
@@ -72,6 +72,7 @@ public class SheetGroupManager {
 		return groups.get(index);
 	}
 
+	// FIXME: why do we allow this method to be called when index + 1 = groups.size()?
 	/**
 	 * Informs the manager that a new volume has started. If the current group's splitter
 	 * has reached its target number of volumes (as counted by previous calls to this method),
@@ -91,6 +92,10 @@ public class SheetGroupManager {
 		index++;
 		if (groups.size()<index) {
 			throw new IllegalStateException("No more groups.");
+		}
+		if (index < groups.size()) {
+			SheetDataSource cur = groups.get(index-1).getUnits();
+			groups.get(index).getUnits().initialize(cur.getPageCounter(), cur.getContext());
 		}
 	}
 
@@ -135,7 +140,7 @@ public class SheetGroupManager {
 	 */
 	public void updateAll() {
 		for (SheetGroup g : groups) {
-			int remaining = g.hasNext() ? g.getUnits().getRemaining().size() : 0;
+			int remaining = g.countRemainingSheets();
 			g.getSplitter().updateSheetCount(g.countTotalSheets(), remaining);
 		}
 	}
@@ -155,7 +160,7 @@ public class SheetGroupManager {
 	 * @return returns the number of remaining sheets
 	 */
 	public int countRemainingSheets() {
-		return groups.stream().mapToInt(g -> g.getUnits().getRemaining().size()).sum();
+		return groups.stream().mapToInt(g -> g.countRemainingSheets()).sum();
 	}
 	
 	/**
@@ -164,7 +169,7 @@ public class SheetGroupManager {
 	 * @return returns the number of remaining pages
 	 */
 	public int countRemainingPages() {
-		return groups.stream().map(g -> g.getUnits().getRemaining()).mapToInt(Sheet::countPages).sum();
+		return groups.stream().mapToInt(g -> g.countRemainingPages()).sum();
 	}
 	
 	/**

@@ -33,6 +33,9 @@ public class View<T> {
 	}
 
 	public List<T> getItems() {
+		if (getToIndex() > items.size()) {
+			throw new IndexOutOfBoundsException("Index: "+getToIndex()+", Size: "+items.size());
+		}
 		return items.subList(fromIndex, getToIndex());
 	}
 	int toLocalIndex(int globalIndex) {
