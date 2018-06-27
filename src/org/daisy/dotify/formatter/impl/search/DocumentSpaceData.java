@@ -1,9 +1,7 @@
 package org.daisy.dotify.formatter.impl.search;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import org.daisy.dotify.common.collection.ImmutableList;
+import org.daisy.dotify.common.collection.ImmutableMap;
 
 /**
  * Provides the data needed for searching a document space.  
@@ -11,17 +9,16 @@ import java.util.Map;
  */
 class DocumentSpaceData implements Cloneable {
 
-		List<PageDetails> pageDetails;
-		Map<Integer, View<PageDetails>> volumeViews;
-		Map<Integer, View<PageDetails>> sequenceViews;
+		ImmutableList<PageDetails> pageDetails;
+		ImmutableMap<Integer, View<PageDetails>> volumeViews;
+		ImmutableMap<Integer, View<PageDetails>> sequenceViews;
 		
 		DocumentSpaceData() {
-			this.pageDetails = new ArrayList<>();
-			this.volumeViews = new HashMap<>();
-			this.sequenceViews = new HashMap<>();		
+			this.pageDetails = ImmutableList.empty();
+			this.volumeViews = ImmutableMap.empty();
+			this.sequenceViews = ImmutableMap.empty();
 		}
 		
-		@SuppressWarnings("unchecked")
 		@Override
 		public DocumentSpaceData clone() {
 			DocumentSpaceData clone;
@@ -30,9 +27,6 @@ class DocumentSpaceData implements Cloneable {
 			} catch (CloneNotSupportedException e) {
 				throw new InternalError("coding error");
 			}
-			clone.pageDetails = (ArrayList<PageDetails>)((ArrayList<PageDetails>)pageDetails).clone();
-			clone.volumeViews = (HashMap<Integer, View<PageDetails>>)((HashMap<Integer, View<PageDetails>>)volumeViews).clone();
-			clone.sequenceViews = (HashMap<Integer, View<PageDetails>>)((HashMap<Integer, View<PageDetails>>)sequenceViews).clone();
 			return clone;
 		}
 }

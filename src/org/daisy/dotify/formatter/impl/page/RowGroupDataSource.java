@@ -1,11 +1,11 @@
 package org.daisy.dotify.formatter.impl.page;
 
-import java.util.ArrayList;
 import java.util.function.Consumer;
 import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.daisy.dotify.api.formatter.FormattingTypes.BreakBefore;
+import org.daisy.dotify.common.collection.ImmutableList;
 import org.daisy.dotify.common.splitter.SplitPointDataSource;
 import org.daisy.dotify.common.splitter.SplitPointHandler;
 import org.daisy.dotify.common.splitter.SplitPointSpecification;
@@ -29,7 +29,7 @@ class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<
 	private final BreakBefore breakBefore;
 	private final VerticalSpacing vs;
 	private final List<Block> blocks;
-	private List<RowGroup> groups;
+	private ImmutableList.Builder<RowGroup> groups;
 	private int groupIndex;
 	private BlockContext bc;
 	private int blockIndex;
@@ -62,7 +62,7 @@ class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<
 		super(template);
 		this.master = template.master;
 		this.bc = template.bc;
-		this.groups = template.groups == null ? null : new ArrayList<>(template.groups);
+		this.groups = template.groups == null ? null : template.groups.clone();
 		this.groupIndex = template.groupIndex;
 		this.blocks = template.blocks;
 		this.supplements = template.supplements;
@@ -170,7 +170,7 @@ class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<
 		if (groups!=null) {
 			throw new IllegalStateException();
 		} else {
-			groups = new ArrayList<>();
+			groups = ImmutableList.<RowGroup>empty().builder();
 		}
 	}
 

@@ -1,15 +1,16 @@
 package org.daisy.dotify.formatter.impl.search;
 
-import java.util.HashMap;
 import java.util.HashSet;
 
-class LookupHandler<K, V> implements Cloneable {
-	private HashMap<K, V> keyValueMap;
+import org.daisy.dotify.common.collection.ImmutableMap;
+
+public class LookupHandler<K, V> implements Cloneable {
+	private ImmutableMap<K, V> keyValueMap;
 	// private HashSet<K> requestedKeys;
 	private Runnable setDirty;
 	
 	LookupHandler(Runnable setDirty) {
-		this.keyValueMap = new HashMap<>();
+		this.keyValueMap = ImmutableMap.empty();
 		// this.requestedKeys = new HashSet<>();
 		this.setDirty = setDirty;
 	}
@@ -29,9 +30,12 @@ class LookupHandler<K, V> implements Cloneable {
 			return ret;
 		}
 	}
-
+	
+	// FIXME: move to Builder and/or return new LookupHandler?
+	// -> in this case clone method can also be removed
 	void put(K key, V value) {
-		V prv = keyValueMap.put(key, value);
+		V prv = keyValueMap.get(key);
+		keyValueMap = ImmutableMap.put(keyValueMap, key, value);
 		if (/*requestedKeys.contains(key) &&*/ prv!=null && !prv.equals(value)) {
 			setDirty.run();
 		}
@@ -59,7 +63,6 @@ class LookupHandler<K, V> implements Cloneable {
 		} catch (CloneNotSupportedException e) {
 			throw new InternalError("coding error");
 		}
-		clone.keyValueMap = (HashMap<K, V>)keyValueMap.clone();
 		// clone.requestedKeys = (HashSet<K>)requestedKeys.clone();
 		return clone;
 	}

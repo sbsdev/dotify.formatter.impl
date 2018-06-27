@@ -1,6 +1,5 @@
 package org.daisy.dotify.formatter.impl.sheet;
 
-import java.util.ArrayList;
 import java.util.function.Consumer;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -8,6 +7,7 @@ import java.util.Optional;
 
 import org.daisy.dotify.api.formatter.TransitionBuilderProperties.ApplicationRange;
 import org.daisy.dotify.api.writer.SectionProperties;
+import org.daisy.dotify.common.collection.ImmutableList;
 import org.daisy.dotify.common.splitter.SplitPointDataSource;
 import org.daisy.dotify.common.splitter.Supplements;
 import org.daisy.dotify.formatter.impl.core.FormatterContext;
@@ -53,14 +53,14 @@ public class SheetDataSource implements SplitPointDataSource<Sheet,SheetDataSour
 	private boolean wasSplitInsideSequence;
 	private boolean volumeEnded;
 	//Output buffer
-	private List<Sheet> sheetBuffer;
+	private ImmutableList.Builder<Sheet> sheetBuffer;
 	private int bufferIndex;
 
 	public SheetDataSource(FormatterContext context, Integer volumeGroup, List<BlockSequence> seqsIterator) {
 		this.context = context;
 		this.volumeGroup = volumeGroup;
 		this.seqsIterator = seqsIterator;
-		this.sheetBuffer = new ArrayList<>();
+		this.sheetBuffer = ImmutableList.<Sheet>empty().builder();
 		this.bufferIndex = 0;
 		this.volBreakAllowed = true;
 		this.seqsIndex = 0;
@@ -95,7 +95,7 @@ public class SheetDataSource implements SplitPointDataSource<Sheet,SheetDataSour
 		this.sectionProperties = template.sectionProperties;
 		this.sheetIndex = template.sheetIndex;
 		this.pageIndex = template.pageIndex;
-		this.sheetBuffer = new ArrayList<>(template.sheetBuffer);
+		this.sheetBuffer = template.sheetBuffer.clone();
 		this.bufferIndex = template.bufferIndex;
 		this.volBreakAllowed = template.volBreakAllowed;
 		this.counter = template.counter;

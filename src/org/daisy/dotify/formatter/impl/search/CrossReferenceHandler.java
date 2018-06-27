@@ -10,6 +10,7 @@ import java.util.Optional;
 
 import org.daisy.dotify.api.formatter.Marker;
 import org.daisy.dotify.api.formatter.MarkerReferenceField;
+import org.daisy.dotify.common.collection.ImmutableMap;
 
 public class CrossReferenceHandler implements Cloneable {
 	protected LookupHandler<String, Integer> pageRefs;
@@ -22,8 +23,8 @@ public class CrossReferenceHandler implements Cloneable {
     protected LookupHandler<BlockAddress, List<Marker>> groupMarkers;
     protected LookupHandler<BlockAddress, List<String>> groupIdentifiers;
 	protected LookupHandler<PageId, TransitionProperties> transitionProperties;
-	protected HashMap<Integer, Overhead> volumeOverhead;
-    protected HashMap<String, Integer> counters;
+	protected ImmutableMap<Integer, Overhead> volumeOverhead;
+    protected ImmutableMap<String, Integer> counters;
 	protected SearchInfo searchInfo;
 	private static final String VOLUMES_KEY = "volumes";
 	private static final String SHEETS_IN_VOLUME = "sheets-in-volume-";
@@ -51,12 +52,16 @@ public class CrossReferenceHandler implements Cloneable {
         this.groupMarkers = new LookupHandler<>(nop);
         this.groupIdentifiers = new LookupHandler<>(setDirty);
 		this.transitionProperties = new LookupHandler<>(() -> dirty.set(true));
-		this.volumeOverhead = new HashMap<>();
-		this.counters = new HashMap<>();
+		this.volumeOverhead = ImmutableMap.empty();
+		this.counters = ImmutableMap.empty();
 		this.searchInfo = new SearchInfo(setDirty);
         this.pageIds = new HashSet<>();
         this.setDirty = setDirty;
 	}
+	
+	/* ----------------- */
+	/* Read-only methods */
+	/* ----------------- */
 	
 	/**
 	 * Gets the volume for the specified identifier.
@@ -95,7 +100,8 @@ public class CrossReferenceHandler implements Cloneable {
 			throw new IndexOutOfBoundsException("Volume must be greater than or equal to 1");
 		}
 		if (volumeOverhead.get(volumeNumber)==null) {
-			volumeOverhead.put(volumeNumber, new Overhead(0, 0));
+			// inserting null values is not considered mutating
+			volumeOverhead = ImmutableMap.put(volumeOverhead, volumeNumber, new Overhead(0, 0));
 			setDirty.run();
 		}
 		return volumeOverhead.get(volumeNumber);
@@ -192,6 +198,10 @@ public class CrossReferenceHandler implements Cloneable {
 	// 	groupMarkers.forgetRequests();
 	// }
 
+	/* ----------------- */
+	/* Builder (mutable) */
+	/* ----------------- */
+	
 	public Builder builder() {
 		return new Builder(this);
 	}
@@ -208,30 +218,40 @@ public class CrossReferenceHandler implements Cloneable {
 		groupMarkers = template.groupMarkers.clone();
 		groupIdentifiers = template.groupIdentifiers.clone();
 		transitionProperties = template.transitionProperties.clone();
-		volumeOverhead = (HashMap<Integer, Overhead>)template.volumeOverhead.clone();
-		counters = (HashMap<String, Integer>)template.counters.clone();
+		volumeOverhead = template.volumeOverhead;
+		counters = template.counters;
 		searchInfo = template.searchInfo.clone();
 		pageIds = (HashSet<String>)template.pageIds.clone();
 		setDirty = template.setDirty;
 		dirty = new AtomicBoolean(template.dirty.get());
 	}
 
+	// FIXME: don't extend CrossReferenceHandler so that Builder can not be accidentally passed when immutable object is expected?
 	public static class Builder extends CrossReferenceHandler {
+
+		private boolean readonly = false;;
 
 		private Builder(CrossReferenceHandler template) {
 			super(template);
 		}
 
 		public CrossReferenceHandler build() {
-			return new Builder(this);
+			if (readonly)
+				throw new UnsupportedOperationException("Already built");
+			readonly = true;
+			return this;
 		}
 
 		public Builder setVolumeNumber(String refid, int volume) {
+			if (readonly)
+				throw new UnsupportedOperationException("Already built");
 			volumeRefs.put(refid, volume);
 			return this;
 		}
 
 		public Builder setPageNumber(String refid, int page) {
+			if (readonly)
+				throw new UnsupportedOperationException("Already built");
 			if (!pageIds.add(refid)) {
 				throw new IllegalArgumentException("Identifier not unique: " + refid);
 			}
@@ -240,21 +260,29 @@ public class CrossReferenceHandler implements Cloneable {
 		}
 
 		public Builder setAnchorData(int volume, Iterable<AnchorData> data) {
+			if (readonly)
+				throw new UnsupportedOperationException("Already built");
 			anchorRefs.put(volume, data);
 			return this;
 		}
 
 		public Builder setVolumeCount(int volumes) {
+			if (readonly)
+				throw new UnsupportedOperationException("Already built");
 			variables.put(VOLUMES_KEY, volumes);
 			return this;
 		}
 
 		public Builder setSheetsInVolume(int volume, int value) {
+			if (readonly)
+				throw new UnsupportedOperationException("Already built");
 			variables.put(SHEETS_IN_VOLUME+volume, value);
 			return this;
 		}
 
 		public Builder setSheetsInDocument(int value) {
+			if (readonly)
+				throw new UnsupportedOperationException("Already built");
 			variables.put(SHEETS_IN_DOCUMENT, value);
 			return this;
 		}
@@ -268,51 +296,71 @@ public class CrossReferenceHandler implements Cloneable {
 		// }
 	
 		public Builder setBreakable(SheetIdentity ident, boolean value) {
+			if (readonly)
+				throw new UnsupportedOperationException("Already built");
 			breakable.put(ident, value);
 			return this;
 		}
 
 		public Builder setTransitionProperties(PageId id, TransitionProperties value) {
+			if (readonly)
+				throw new UnsupportedOperationException("Already built");
 			transitionProperties.put(id, value);
 			return this;
 		}
 
 		public Builder setRowCount(BlockAddress blockId, int value) {
+			if (readonly)
+				throw new UnsupportedOperationException("Already built");
 			rowCount.put(blockId, value);
 			return this;
 		}
 
 		public Builder trimPageDetails() {
+			if (readonly)
+				throw new UnsupportedOperationException("Already built");
 			//FIXME: implement
 			return this;
 		}
 
 		public Builder setGroupAnchors(BlockAddress blockId, List<String> anchors) {
+			if (readonly)
+				throw new UnsupportedOperationException("Already built");
 			groupAnchors.put(blockId, anchors.isEmpty() ? Collections.emptyList() : new ArrayList<>(anchors));
 			return this;
 		}
 
 		public Builder setGroupMarkers(BlockAddress blockId, List<Marker> markers) {
+			if (readonly)
+				throw new UnsupportedOperationException("Already built");
 			groupMarkers.put(blockId, markers.isEmpty() ? Collections.emptyList() : new ArrayList<>(markers));
 			return this;
 		}
 
 		public Builder setGroupIdentifiers(BlockAddress blockId, List<String> identifiers) {
+			if (readonly)
+				throw new UnsupportedOperationException("Already built");
 			groupIdentifiers.put(blockId, identifiers.isEmpty() ? Collections.emptyList() : new ArrayList<>(identifiers));
 			return this;
 		}
 
 		public Builder setOverhead(int volumeNumber, Overhead overhead) {
-			volumeOverhead.put(volumeNumber, overhead);
+			if (readonly)
+				throw new UnsupportedOperationException("Already built");
+			volumeOverhead = ImmutableMap.put(volumeOverhead, volumeNumber, overhead);
 			return this;
 		}
 
 		public Builder setPageNumberOffset(String key, Integer value) {
-			counters.put(key, value);
+			if (readonly)
+				throw new UnsupportedOperationException("Already built");
+			counters = ImmutableMap.put(counters, key, value);
 			return this;
 		}
 		
 		public Builder setPageDetails(PageDetails value) {
+			if (readonly)
+				throw new UnsupportedOperationException("Already built");
 			searchInfo.setPageDetails(value);
 			return this;
 		}
@@ -325,6 +373,8 @@ public class CrossReferenceHandler implements Cloneable {
 		 * @param toIndex the end index
 		 */
 		public Builder setSequenceScope(DocumentSpace space, int sequenceNumber, int fromIndex, int toIndex) {
+			if (readonly)
+				throw new UnsupportedOperationException("Already built");
 			searchInfo.setSequenceScope(space, sequenceNumber, fromIndex, toIndex);
 			return this;
 		}
@@ -336,23 +386,31 @@ public class CrossReferenceHandler implements Cloneable {
 		 * @param toIndex the end index
 		 */
 		public Builder setVolumeScope(int volumeNumber, int fromIndex, int toIndex) {
+			if (readonly)
+				throw new UnsupportedOperationException("Already built");
 			searchInfo.setVolumeScope(volumeNumber, fromIndex, toIndex);
 			return this;
 		}
 
 		public Builder resetUniqueChecks() {
+			if (readonly)
+				throw new UnsupportedOperationException("Already built");
 			pageIds = new HashSet<>();
 			return this;
 		}
 
 		public Builder resetDirty() {
+			if (readonly)
+				throw new UnsupportedOperationException("Already built");
 			dirty.set(false);
 			return this;
 		}
 		
 		// FIXME: move counters to a separate object (similar to PageCounter)
 		public Builder resetCounters() {
-			counters.clear();
+			if (readonly)
+				throw new UnsupportedOperationException("Already built");
+			counters = ImmutableMap.empty();
 			return this;
 		}
 	}

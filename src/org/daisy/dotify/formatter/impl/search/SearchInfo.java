@@ -1,35 +1,41 @@
 package org.daisy.dotify.formatter.impl.search;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Optional;
 
 import org.daisy.dotify.api.formatter.Marker;
 import org.daisy.dotify.api.formatter.MarkerReferenceField;
 import org.daisy.dotify.api.formatter.MarkerReferenceField.MarkerSearchDirection;
 import org.daisy.dotify.api.formatter.MarkerReferenceField.MarkerSearchScope;
+import org.daisy.dotify.common.collection.ImmutableList;
+import org.daisy.dotify.common.collection.ImmutableMap;
 
 class SearchInfo implements Cloneable {
 
-	private HashMap<DocumentSpace, DocumentSpaceData> spaces;
+	private ImmutableMap<DocumentSpace, DocumentSpaceData> spaces;
 	private Runnable setDirty;
 	
 	SearchInfo(Runnable setDirty) {
-		this.spaces = new HashMap<>();
+		this.spaces = ImmutableMap.empty();
 		this.setDirty = setDirty;
 	}
 	
+	// FIXME: move to Builder and/or return new SearchInfo object?
+	// -> in this case clone method can also be removed
 	void setPageDetails(PageDetails value) {
-		DocumentSpaceData data = getViewForSpace(value.getSequenceId().getSpace());
-		while (value.getPageId().getPageIndex()>=data.pageDetails.size()) {
-			data.pageDetails.add(null);
+		DocumentSpace space = value.getSequenceId().getSpace();
+		DocumentSpaceData data = getViewForSpace(space).clone();
+		ImmutableList.Builder<PageDetails> pageDetails = data.pageDetails.builder();
+		while (value.getPageId().getPageIndex()>=pageDetails.size()) {
+			pageDetails.add(null);
 		}
-		PageDetails old = data.pageDetails.set(value.getPageId().getPageIndex(), value);
+		PageDetails old = pageDetails.set(value.getPageId().getPageIndex(), value);
 		// FIXME: Only check the previous value if dirty isn't already true
 		if (!value.equals(old)) {
 			setDirty.run();
 		}
+		data.pageDetails = pageDetails.build();
+		spaces = ImmutableMap.put(spaces, space, data);
 	}
 
 	View<PageDetails> getPageView(DocumentSpace space) {
@@ -44,28 +50,40 @@ class SearchInfo implements Cloneable {
 		return getViewForSpace(seqId.getSpace()).sequenceViews.get(seqId.getOrdinal());
 	}
 	
+	// FIXME: move to Builder and/or return new SearchInfo object?
+	// -> in this case clone method can also be removed
 	void setSequenceScope(DocumentSpace space, int sequenceNumber, int fromIndex, int toIndex) {
-		View<PageDetails> pw = new View<PageDetails>(getViewForSpace(space).pageDetails, fromIndex, toIndex);
-		getViewForSpace(space).sequenceViews.put(sequenceNumber, pw);
+		DocumentSpaceData data = getViewForSpace(space).clone();
+		View<PageDetails> pw = new View<PageDetails>(data.pageDetails, fromIndex, toIndex);
+		data.sequenceViews = ImmutableMap.put(data.sequenceViews, sequenceNumber, pw);
+		spaces = ImmutableMap.put(spaces, space, data);
 	}
 	
+	// FIXME: move to Builder and/or return new SearchInfo object?
+	// -> in this case clone method can also be removed
 	void setVolumeScope(int volumeNumber, int fromIndex, int toIndex) {
 		setVolumeScope(volumeNumber, fromIndex, toIndex, DocumentSpace.BODY);
 	}
 
+	// FIXME: move to Builder and/or return new SearchInfo object?
+	// -> in this case clone method can also be removed
 	void setVolumeScope(int volumeNumber, int fromIndex, int toIndex, DocumentSpace space) {
-		View<PageDetails> pw = new View<PageDetails>(getViewForSpace(space).pageDetails, fromIndex, toIndex);
+		DocumentSpaceData data = getViewForSpace(space).clone();
+		ImmutableList.Builder<PageDetails> pageDetails = data.pageDetails.builder();
+		View<PageDetails> pw = new View<PageDetails>(pageDetails, fromIndex, toIndex);
 		for (PageDetails p : pw.getItems()) {
 			p.setVolumeNumber(volumeNumber);
 		}
-		getViewForSpace(space).volumeViews.put(volumeNumber, pw);
+		data.pageDetails = pageDetails.build();
+		data.volumeViews = ImmutableMap.put(data.volumeViews, volumeNumber, pw);
+		spaces = ImmutableMap.put(spaces, space, data);
 	}
 	
 	DocumentSpaceData getViewForSpace(DocumentSpace space) {
 		DocumentSpaceData ret = spaces.get(space);
 		if (ret==null) {
 			ret = new DocumentSpaceData();
-			spaces.put(space, ret);
+			spaces = ImmutableMap.put(spaces, space, ret);
 		}
 		return ret;
 	}
@@ -232,9 +250,6 @@ class SearchInfo implements Cloneable {
 		} catch (CloneNotSupportedException e) {
 			throw new InternalError("coding error");
 		}
-		clone.spaces = new HashMap<>();
-		for (Entry<DocumentSpace, DocumentSpaceData> e : spaces.entrySet())
-			clone.spaces.put(e.getKey(), (DocumentSpaceData)e.getValue().clone());
 		return clone;
 	}
 }
