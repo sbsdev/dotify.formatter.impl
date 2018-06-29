@@ -622,8 +622,7 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
 			XMLDataRenderer qtd = filterRenderers(renderers.get(renderer), d, tp);
 			fc.insertDynamicLayout(qtd);
 		} catch (ParserConfigurationException | TransformerFactoryConfigurationError | FactoryConfigurationError e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.log(Level.WARNING, "Failed to parse xml-data element.", e);
 		}
 	}
 	
@@ -647,7 +646,7 @@ public class ObflParserImpl extends XMLParserBase implements ObflParser {
 							qtd.add(new XSLTRenderingScenario(this, configureTransformer(td), node, tp, fm.getExpressionFactory().newExpression(), td.getCost()));
 						}
 					} catch (XPathExpressionException e) {
-						e.printStackTrace();
+						logger.log(Level.WARNING, "Failed to evaluate xpath expression.", e);
 					}
 				} else {
 					qtd.add(new XSLTRenderingScenario(this, configureTransformer(td), node, tp, fm.getExpressionFactory().newExpression(), td.getCost()));

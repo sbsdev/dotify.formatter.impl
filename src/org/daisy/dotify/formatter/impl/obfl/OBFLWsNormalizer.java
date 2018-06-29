@@ -9,6 +9,8 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLEventFactory;
@@ -27,6 +29,7 @@ import javax.xml.stream.events.XMLEvent;
  * @author Joel Håkansson
  */
 public class OBFLWsNormalizer extends XMLParserBase implements XMLEventIterator {
+	private static final Logger logger = Logger.getLogger(OBFLWsNormalizer.class.getCanonicalName());
 	private final XMLEventReader input;
 	private final XMLEventFactory eventFactory;
 	private boolean writingOften;
@@ -87,7 +90,7 @@ public class OBFLWsNormalizer extends XMLParserBase implements XMLEventIterator 
 				buffer.add(event);
 			}
 		} catch (XMLStreamException e) {
-			e.printStackTrace();
+			logger.log(Level.WARNING, "Parsing failed.", e);
 		}
 	}
 
@@ -126,21 +129,21 @@ public class OBFLWsNormalizer extends XMLParserBase implements XMLEventIterator 
 			}
 			input.close();
 		} catch (XMLStreamException e) {
-			e.printStackTrace();
+			logger.log(Level.WARNING, "Exception while parsing.", e);
 		}
 
 		//close outer one first
 		try {
 			writer.close();
 		} catch (XMLStreamException e) {
-			e.printStackTrace();
+			logger.log(Level.WARNING, "Failed to close writer.", e);
 		}
 		
 		//should be closed automatically, but it isn't
 		try {
 			out.close();
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.log(Level.WARNING, "Failed to close output stream.", e);
 		}
 	}
 
@@ -346,11 +349,9 @@ public class OBFLWsNormalizer extends XMLParserBase implements XMLEventIterator 
 			OBFLWsNormalizer p = new OBFLWsNormalizer(inFactory.createXMLEventReader(new FileInputStream("ws-test-input.xml")), XMLEventFactory.newInstance());
 			p.parse(XMLOutputFactory.newInstance(), new FileOutputStream("out.xml"));
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.log(Level.WARNING, "Failed to open stream.", e);
 		} catch (XMLStreamException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.log(Level.WARNING, "Failed to create event reader.", e);
 		}
 	}
 
