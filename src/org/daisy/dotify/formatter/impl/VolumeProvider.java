@@ -219,10 +219,10 @@ public class VolumeProvider {
 		SplitPoint<Sheet> sp;
 
 		SplitPointDataSource<Sheet> data = groups.currentGroup().getUnits();
-		SplitPointSpecification spec = volSplitter.find(splitterMax-overhead,
-				data,
+		SplitPointSpecification spec = volSplitter.find(splitterMax,
+				overhead, data,
 				cost, StandardSplitOption.ALLOW_FORCE);
-		sp = volSplitter.split(spec, groups.currentGroup().getUnits());
+		sp = volSplitter.split(spec, overhead, groups.currentGroup().getUnits());
 		/*
 			sp = volSplitter.split(splitterMax-overhead, 
 					groups.currentGroup().getUnits(),
@@ -270,6 +270,7 @@ public class VolumeProvider {
 				}
 			}
 			SectionBuilder sb = new SectionBuilder();
+			int count = 0;
 			SheetDataSource sheets = prepareToPaginate(ib, null);
 			sheets.initialize(new PageCounter(),
 			                  DefaultContext.from(c)
@@ -278,7 +279,7 @@ public class VolumeProvider {
 			                                .build());
 			SplitPointDataSource.Iterator<Sheet> it = sheets.iterator();
 			while (it.hasNext()) {
-				Sheet ps = it.next(false);
+				Sheet ps = it.next(count++, false);
 				for (PageImpl p : ps.getPages()) {
 					if (p.getAnchors().size()>0) {
 						ad.add(new AnchorData(p.getAnchors(), p.getPageNumber()));

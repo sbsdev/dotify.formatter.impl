@@ -197,7 +197,7 @@ class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<
 		}
 
 		@Override
-		public RowGroup next(boolean last) throws NoSuchElementException {
+		public RowGroup next(float position, boolean last) throws NoSuchElementException {
 			// hasNext calls maybeLoadBlock
 			if (!hasNext()) {
 				throw new NoSuchElementException();

@@ -16,12 +16,14 @@ import org.daisy.dotify.api.formatter.RenameFallbackRule;
 import org.daisy.dotify.api.formatter.TransitionBuilderProperties.ApplicationRange;
 import org.daisy.dotify.api.translator.Translatable;
 import org.daisy.dotify.api.translator.TranslationException;
+import org.daisy.dotify.common.splitter.CantFitInOtherDimensionException;
 import org.daisy.dotify.common.splitter.SplitPoint;
 import org.daisy.dotify.common.splitter.SplitPointCost;
 import org.daisy.dotify.common.splitter.SplitPointDataSource;
 import org.daisy.dotify.common.splitter.SplitPointDataList;
 import org.daisy.dotify.common.splitter.SplitPointHandler;
 import org.daisy.dotify.common.splitter.SplitPointSpecification;
+import org.daisy.dotify.common.splitter.SplitPointUnit;
 import org.daisy.dotify.common.splitter.StandardSplitOption;
 import org.daisy.dotify.common.splitter.Supplements;
 import org.daisy.dotify.formatter.impl.core.Block;
@@ -227,13 +229,7 @@ public class PageSequenceBuilder2 {
 				dataGroupsIndex++;
 				if (data.getVerticalSpacing()!=null) {
 					VerticalSpacing vSpacing = data.getVerticalSpacing();
-					float size; {
-						size = 0;
-						for (SplitPointDataSource.Iterator<RowGroup> it = data.iterator(); it.hasNext();) {
-							size += it.next(false).getUnitSize();
-						}
-					}
-					int pos = calculateVerticalSpace(current, vSpacing.getBlockPosition(), (int)Math.ceil(size));
+					int pos = calculateVerticalSpace(current, vSpacing.getBlockPosition(), (int)Math.ceil(height(data, 0, false)));
 					for (int i = 0; i < pos; i++) {
 						RowImpl ri = vSpacing.getEmptyRow();
 						newRow(current, new RowImpl(ri.getChars(), ri.getLeftMargin(), ri.getRightMargin()));
@@ -248,8 +244,7 @@ public class PageSequenceBuilder2 {
 			);
 			Optional<Boolean> blockBoundary = Optional.empty();
 			if (!data.isEmpty()) {
-				int index = SplitPointHandler.findLeading(data);
-				SplitPoint<RowGroup> sl = SplitPointHandler.skipLeading(data, index);
+				SplitPoint<RowGroup> sl = SplitPointHandler.trimLeading(data);
 				for (RowGroup rg : sl.getDiscarded()) {
 					addProperties(current, rg);
 				}
@@ -257,6 +252,7 @@ public class PageSequenceBuilder2 {
 				SplitPointDataSource<RowGroup> seqTransitionText = transitionContent.isPresent()
 						? new RowGroupDataSource(master, getContext(), transitionContent.get().getInSequence(), BreakBefore.AUTO, null, cd)
 						: SplitPointDataList.emptyList();
+				float startPosition = current.currentPosition();
 				float transitionHeight;
 				SplitPointSpecification spec;
 				boolean addTransition = true;
@@ -268,7 +264,7 @@ public class PageSequenceBuilder2 {
 					// Transition rows:		 X-|
 					// This transition doesn't fit, because the last row of the text flow takes up three rows, not just one (which it would
 					// if a transition didn't follow).
-					transitionHeight = height(seqTransitionText, true);
+					transitionHeight = height(seqTransitionText, 0, true); // start position unknown at this point
 					float flowHeight = current.getFlowHeight() - transitionHeight;
 					SplitPointCost<RowGroup> cost = (RowGroup unit, int in, int limit)->{
 						VolumeKeepPriority volumeBreakPriority = 
@@ -285,30 +281,30 @@ public class PageSequenceBuilder2 {
 								)*limit-in;
 					};
 					// Finding from the full height
-					spec = sph.find(current.getFlowHeight(), data, cost, force?StandardSplitOption.ALLOW_FORCE:null);
-					SplitPoint<RowGroup> x = sph.split(spec, data);
+					spec = sph.find(current.getFlowHeight(), startPosition, data, cost, force?StandardSplitOption.ALLOW_FORCE:null);
+					SplitPoint<RowGroup> x = sph.split(spec, startPosition, data);
 					// If the tail is empty, there's no need for a transition
 					// If there isn't a transition between blocks available, don't insert the text
 					blockBoundary = Optional.of(hasBlockInScope(x.getHead(), flowHeight));
 					if (!x.getTail().isEmpty() && blockBoundary.get()) {
 						// Find the best break point with the new limit
-						spec = sph.find(flowHeight, data, cost, transitionContent.isPresent()?StandardSplitOption.NO_LAST_UNIT_SIZE:null, force?StandardSplitOption.ALLOW_FORCE:null);
+						spec = sph.find(flowHeight, startPosition, data, cost, transitionContent.isPresent()?StandardSplitOption.NO_LAST_UNIT_SIZE:null, force?StandardSplitOption.ALLOW_FORCE:null);
 					} else {
 						addTransition = false;
 					}
 				} else {
 					// Either RESUME, or no transition on this page.
-					transitionHeight = height(seqTransitionText, false);
-					float flowHeight = current.getFlowHeight() - transitionHeight;
-					spec = sph.find(flowHeight, data, force?StandardSplitOption.ALLOW_FORCE:null);
+					transitionHeight = height(seqTransitionText, 0, false);
+					startPosition += transitionHeight;
+					spec = sph.find(current.getFlowHeight(), startPosition, data, force?StandardSplitOption.ALLOW_FORCE:null);
 				}
 				// Now apply the information to the live data
 				data.setAllowHyphenateLastLine(hyphenateLastLine);
-				SplitPoint<RowGroup> res = sph.split(spec, data);
+				SplitPoint<RowGroup> res = sph.split(spec, startPosition, data);
 				data.setAllowHyphenateLastLine(true);
 				if (res.getHead().size()==0 && force) {
 					// FIXME: isn't it better to check spec.getIndex() before split?
-					if (firstUnitHasSupplements(data) && hasPageAreaCollection()) {
+					if (firstUnitHasSupplements(startPosition, data) && hasPageAreaCollection()) {
 						reassignCollection();
 					} else {
 						throw new RuntimeException("A layout unit was too big for the page.");
@@ -321,24 +317,47 @@ public class PageSequenceBuilder2 {
 				data = (RowGroupDataSource)res.getTail();
 				List<RowGroup> head;
 				if (addTransition && transitionContent.isPresent()) {
-					// recompute transition with new context
-					seqTransitionText = new RowGroupDataSource(master, getContext(), transitionContent.get().getInSequence(), BreakBefore.AUTO, null, cd);
-					if (transitionHeight != height(seqTransitionText, transitionContent.get().getType()==Type.INTERRUPT))
-						throw new RuntimeException();
 					if (transitionContent.get().getType()==TransitionContent.Type.INTERRUPT) {
 						head = new ArrayList<>(res.getHead());
+						float pos = 0;
+						for (RowGroup r : head) {
+							pos += r.getUnitSize();
+						}
+						// recompute transition with new context and position
+						seqTransitionText = new RowGroupDataSource(master, getContext(), transitionContent.get().getInSequence(), BreakBefore.AUTO, null, cd);
+						if (transitionHeight != height(seqTransitionText, pos, transitionContent.get().getType()==Type.INTERRUPT))
+							throw new RuntimeException();
 						SplitPointDataSource.Iterator<RowGroup> it = seqTransitionText.iterator();
 						while (it.hasNext()) {
-							head.add(it.next(false));
+							RowGroup r;
+							try {
+								r = it.next(pos, false);
+							} catch (CantFitInOtherDimensionException e) {
+								throw new RuntimeException(); // FIXME: start over with a smaller flowHeight
+							}
+							head.add(r);
+							pos += r.getUnitSize();
 						}
 						modifyContext(
 							c -> c.refs(((RowGroupDataSource)it.iterable()).getContext().getRefs())
 						);
 					} else if (transitionContent.get().getType()==TransitionContent.Type.RESUME) {
 						head = new ArrayList<>();
+						float pos = 0;
+						// recompute transition with new context and position
+						seqTransitionText = new RowGroupDataSource(master, getContext(), transitionContent.get().getInSequence(), BreakBefore.AUTO, null, cd);
+						if (transitionHeight != height(seqTransitionText, pos, transitionContent.get().getType()==Type.INTERRUPT))
+							throw new RuntimeException();
 						SplitPointDataSource.Iterator<RowGroup> it = seqTransitionText.iterator();
 						while (it.hasNext()) {
-							head.add(it.next(false));
+							RowGroup r;
+							try {
+								r = it.next(pos, false);
+							} catch (CantFitInOtherDimensionException e) {
+								throw new RuntimeException(); // FIXME: try to insert an empty row first
+							}
+							head.add(r);
+							pos += r.getUnitSize();
 						}
 						modifyContext(
 							c -> c.refs(((RowGroupDataSource)it.iterable()).getContext().getRefs())
@@ -407,17 +426,18 @@ public class PageSequenceBuilder2 {
 		return false;
 	}
 	
-	private static float height(SplitPointDataSource<RowGroup> rg, boolean useLastUnitSize) {
+	private static float height(SplitPointDataSource<RowGroup> rg, float position, boolean useLastUnitSize)
+			throws CantFitInOtherDimensionException {
 		if (rg.isEmpty()) {
 			return 0;
 		} else {
-			float ret = 0;
+			float startPosition = position;
 			SplitPointDataSource.Iterator<RowGroup> ri = rg.iterator();
 			while (ri.hasNext()) {
-				RowGroup r = ri.next(false);
-				ret += useLastUnitSize&&!ri.hasNext()?r.getLastUnitSize():r.getUnitSize();
+				RowGroup r = ri.next(position, false);
+				position += useLastUnitSize&&!ri.hasNext()?r.getLastUnitSize():r.getUnitSize();
 			}
-			return ret;
+			return position - startPosition;
 		}
 	}
 	
@@ -474,11 +494,17 @@ public class PageSequenceBuilder2 {
 		}
 	}
 	
-	private boolean firstUnitHasSupplements(SplitPointDataSource<?> spd) {
+	private boolean firstUnitHasSupplements(float position, SplitPointDataSource<?> spd) {
 		if (spd.isEmpty()) {
 			return false;
 		} else {
-			return !spd.iterator().next(false).getSupplementaryIDs().isEmpty();
+			SplitPointUnit u;
+			try {
+				u = spd.iterator().next(position, false);
+			} catch (CantFitInOtherDimensionException e) {
+				return false;
+			}
+			return !u.getSupplementaryIDs().isEmpty();
 		}
 	}
 	

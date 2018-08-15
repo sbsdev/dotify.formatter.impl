@@ -175,7 +175,8 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 	public int countRemainingSheets() {
 		int count = 0;
 		for (Iterator<Sheet> it = iterator(); it.hasNext();) {
-			it.next(false);
+			// position is irrelevant
+			it.next(-1, false);
 			count++;
 		}
 		return count;
@@ -184,7 +185,8 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 	public int countRemainingPages() {
 		int pages = 0;
 		for (Iterator<Sheet> it = iterator(); it.hasNext();) {
-			pages += it.next(false).getPages().size();
+			// position is irrelevant
+			pages += it.next(-1, false).getPages().size();
 		}
 		return pages;
 	}
@@ -196,8 +198,9 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 			return seqsIndex < seqsIterator.size() || bufferIndex < sheetBuffer.size() || (psb != null && psb.hasNext());
 		}
 
+		/** @param position is ignored */
 		@Override
-		public Sheet next(boolean last) throws RestartPaginationException {
+		public Sheet next(float position, boolean last) throws RestartPaginationException {
 			if (last) {
 				if (!allowsSplit) {
 					throw new IllegalStateException();
