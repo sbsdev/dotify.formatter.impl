@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.daisy.dotify.api.formatter.Marker;
+import org.daisy.dotify.formatter.impl.page.PageShape;
 import org.daisy.dotify.formatter.impl.row.AbstractBlockContentManager;
 import org.daisy.dotify.formatter.impl.row.RowDataProperties;
 import org.daisy.dotify.formatter.impl.row.RowImpl;
@@ -53,8 +54,9 @@ class TableBlockContentManager extends AbstractBlockContentManager {
     	initFields();
     }
 	
+	// FIXME: what if the row does not fit on the page?
 	@Override
-	public Optional<RowImpl> getNext(boolean wholeWordsOnly) {
+	public Optional<RowImpl> getNext(float position, boolean wholeWordsOnly) {
 		if (rowIndex<rows.size()) {
 			RowImpl ret = rows.get(rowIndex);
 			rowIndex++;
@@ -75,7 +77,7 @@ class TableBlockContentManager extends AbstractBlockContentManager {
 	}
 
 	@Override
-	public void setContext(DefaultContext context) {
+	public void setContext(DefaultContext context, PageShape pageShape) {
 		// FIXME: Support setting context of tables. At the moment, there is no point in setting a context here, because the contents has already been rendered.
 	}
 	

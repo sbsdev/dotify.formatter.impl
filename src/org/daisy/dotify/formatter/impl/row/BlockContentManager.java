@@ -6,6 +6,7 @@ import java.util.Optional;
 
 import org.daisy.dotify.api.formatter.Marker;
 import org.daisy.dotify.formatter.impl.common.FormatterCoreContext;
+import org.daisy.dotify.formatter.impl.page.PageShape;
 import org.daisy.dotify.formatter.impl.search.DefaultContext;
 import org.daisy.dotify.formatter.impl.segment.Segment;
 
@@ -18,32 +19,25 @@ import org.daisy.dotify.formatter.impl.segment.Segment;
  * @author Joel Håkansson
  */
 public class BlockContentManager extends AbstractBlockContentManager {
-	private final List<RowImpl> rows;
+	private int rowCount;
 	private final SegmentProcessor sp;
-	private int rowIndex;
 
-	public BlockContentManager(String blockId, int flowWidth, List<Segment> segments, RowDataProperties rdp, DefaultContext context, FormatterCoreContext fcontext) {
+	public BlockContentManager(String blockId, int flowWidth, PageShape pageShape, List<Segment> segments, RowDataProperties rdp, DefaultContext context, FormatterCoreContext fcontext) {
 		super(flowWidth, rdp, fcontext);
-		this.rows = new ArrayList<>();
-		this.sp = new SegmentProcessor(blockId, segments, flowWidth, context, flowWidth - margins.getRightMargin().getContent().length(), margins, fcontext, rdp);
-		initFields();
+		this.sp = new SegmentProcessor(blockId, segments, flowWidth, pageShape, context, margins, fcontext, rdp);
+		this.rowCount = 0;
 	}
 	
 	private BlockContentManager(BlockContentManager template) {
 		super(template);
-		this.rows = new ArrayList<>(template.rows);
 		this.sp = new SegmentProcessor(template.sp);
-		this.rowIndex = template.rowIndex;
+		this.rowCount = template.rowCount;
 	}
-	
-    private void initFields() {
-		rowIndex = 0;
-    }
 	
 	// FIXME: make immutable
     @Override
-	public void setContext(DefaultContext context) {
-		this.sp.setContext(context);
+	public void setContext(DefaultContext context, PageShape pageShape) {
+		this.sp.setContext(context, pageShape);
 	}
 
 	@Override
@@ -51,31 +45,12 @@ public class BlockContentManager extends AbstractBlockContentManager {
 		return new BlockContentManager(this);
 	}
 	
-	/**
-	 * Ensures that the specified result index is available in the result list.
-	 * Note that this function is modeled after {@link RowGroupDataSource}, but that it
-	 * isn't used in the same way (yet).
-	 * @param index the index to ensure
-	 * @return returns true if the specified index is available in the result list, false
-	 * if the specified index cannot be made available (because the input doesn't contain
-	 * the required amount of data).
-	 */
-	private boolean ensureBuffer(int index, boolean wholeWordsOnly) {
-		while (index<0 || rows.size()<index) {
-			if (!sp.hasMoreData()) {
-				return false;
-			}
-			sp.getNext(wholeWordsOnly).ifPresent(v->rows.add(v));
-		}
-		return rows.size()>=index;
-	}
-	
 	@Override
 	public int getRowCount() {
 		if (hasNext()) {
 			throw new IllegalStateException();
 		}
-		return rows.size();
+		return rowCount;
 	}
 	
 	@Override
@@ -83,40 +58,31 @@ public class BlockContentManager extends AbstractBlockContentManager {
 		return true;
 	}
 	
-    @Override
+	@Override
 	public void reset() {
-    	sp.reset();
-    	rows.clear();
-    	initFields();
-    }
+		sp.reset();
+		rowCount = 0;
+	}
 
 	@Override
 	public boolean hasNext() {
-		int diff = rows.size()-rowIndex;
-		if (diff==0) {
-			if (!sp.hasMoreData()) {
-				return false;
-			} else {
-				return new SegmentProcessor(sp).getNext(false).isPresent();
-			}
-		} else if (diff<0) {
-			// The next value should always follow the size of the last produced result.
-			// If it doesn't, something has gone wrong elsewhere in this class.
-			throw new RuntimeException("Error in code");
+		if (!sp.hasMoreData()) {
+			return false;
 		} else {
-			return true;
+			return new SegmentProcessor(sp).getNext(0, false).isPresent();
 		}
 	}
 
 	@Override
-	public Optional<RowImpl> getNext(boolean wholeWordsOnly) {
-		if (ensureBuffer(rowIndex+1, wholeWordsOnly)) {
-			RowImpl ret = rows.get(rowIndex);
-			rowIndex++;
-			return Optional.of(ret);
-		} else {
+	public Optional<RowImpl> getNext(float position, boolean wholeWordsOnly) {
+		if (!sp.hasMoreData()) {
 			return Optional.empty();
 		}
+		Optional<RowImpl> v = sp.getNext(position, wholeWordsOnly);
+		if (v.isPresent()) {
+			rowCount++;
+		}
+		return v;
 	}
 
 	@Override

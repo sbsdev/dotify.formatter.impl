@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.daisy.dotify.api.formatter.Marker;
 import org.daisy.dotify.formatter.impl.common.FormatterCoreContext;
+import org.daisy.dotify.formatter.impl.page.PageShape;
 import org.daisy.dotify.formatter.impl.search.DefaultContext;
 
 public abstract class AbstractBlockContentManager implements BlockStatistics {
@@ -43,7 +44,7 @@ public abstract class AbstractBlockContentManager implements BlockStatistics {
 	
 	public abstract AbstractBlockContentManager copy();
 	
-	public abstract void setContext(DefaultContext context);
+	public abstract void setContext(DefaultContext context, PageShape pageShape);
     
     /**
      * Returns true if the manager has more rows.
@@ -61,11 +62,11 @@ public abstract class AbstractBlockContentManager implements BlockStatistics {
      * Gets the next row from the manager with the specified width
      * @return returns the next row
      */
-	public Optional<RowImpl> getNext() {
-		return getNext(false);
+	public Optional<RowImpl> getNext(float position) {
+		return getNext(position, false);
 	}
 	
-    public abstract Optional<RowImpl> getNext(boolean wholeWordsOnly);
+    public abstract Optional<RowImpl> getNext(float position, boolean wholeWordsOnly);
 
 	/**
 	 * Returns true if this manager supports rows with variable maximum

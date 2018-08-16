@@ -41,12 +41,12 @@ abstract class BlockProcessor {
 		} else if (rowGroupProvider!=null) {
 			keepWithNext = rowGroupProvider.getKeepWithNext();
 		}
-		rowGroupProvider = new RowGroupProvider(master, g, bcm, bc, keepWithNext);
+		rowGroupProvider = new RowGroupProvider(master, g, bcm, bc, bc.getPageShape(), keepWithNext);
 	}
 	
-	protected void processNextRowGroup(DefaultContext context, boolean wholeWordsOnly) {
+	protected void processNextRowGroup(DefaultContext context, PageShape pageShape, float position, boolean wholeWordsOnly) {
 		if (hasNextInBlock()) {
-			addRowGroup(rowGroupProvider.next(context, wholeWordsOnly));
+			addRowGroup(rowGroupProvider.next(context, pageShape, position, wholeWordsOnly));
 		}
 	}
 	

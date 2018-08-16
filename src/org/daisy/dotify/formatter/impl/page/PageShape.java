@@ -1,7 +1,7 @@
 package org.daisy.dotify.formatter.impl.page;
 
 @FunctionalInterface
-interface PageShape {
+public interface PageShape {
 
 	/**
 	 * Gets the row width for the specified offset. The first flowable row in a page

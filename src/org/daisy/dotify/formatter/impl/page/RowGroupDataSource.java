@@ -203,7 +203,7 @@ class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<
 				throw new NoSuchElementException();
 			}
 			if (currentRowCount() <= groupIndex) {
-				processNextRowGroup(getContext(), !allowHyphenateLastLine && last);
+				processNextRowGroup(getContext(), getContext().getPageShape(), position, !allowHyphenateLastLine && last);
 				// refs possibly mutated
 				mergeRefs = true;
 			}

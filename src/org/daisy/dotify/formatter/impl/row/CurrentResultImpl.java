@@ -8,6 +8,7 @@ import org.daisy.dotify.api.translator.BrailleTranslatorResult;
 import org.daisy.dotify.api.translator.Translatable;
 import org.daisy.dotify.api.translator.TranslationException;
 import org.daisy.dotify.common.text.StringTools;
+import org.daisy.dotify.formatter.impl.page.PageShape;
 
 class CurrentResultImpl implements CurrentResult {
 	private static final Pattern softHyphenPattern  = Pattern.compile("\u00ad");
@@ -42,17 +43,17 @@ class CurrentResultImpl implements CurrentResult {
 	}
 
 	@Override
-	public Optional<RowImpl> process(SegmentProcessing spi, boolean wholeWordsOnly) {
+	public Optional<RowImpl> process(SegmentProcessing spi, Integer page, float position, boolean wholeWordsOnly) {
 		if (first) {
 			first = false;
-			return processFirst(spi, wholeWordsOnly);
+			return processFirst(spi, page, position, wholeWordsOnly);
 		}
 		try {
 			if (btr.hasNext()) { //LayoutTools.length(chars.toString())>0
 				if (spi.hasCurrentRow()) {
 					return Optional.of(spi.flushCurrentRow());
 				}
-				return startNewRow(spi, btr, "", spc.getRdp().getTextIndent(), spc.getRdp().getBlockIndent(), mode, wholeWordsOnly);
+				return startNewRow(spi, btr, "", spc.getRdp().getTextIndent(), spc.getRdp().getBlockIndent(), mode, page, position, wholeWordsOnly);
 			}
 		} finally {
 			if (!btr.hasNext() && btr.supportsMetric(BrailleTranslatorResult.METRIC_FORCED_BREAK)) {
@@ -62,7 +63,7 @@ class CurrentResultImpl implements CurrentResult {
 		return Optional.empty();
 	}
 
-	private Optional<RowImpl> processFirst(SegmentProcessing spi, boolean wholeWordsOnly) {
+	private Optional<RowImpl> processFirst(SegmentProcessing spi, Integer page, float position, boolean wholeWordsOnly) {
 		// process first row, is it a new block or should we continue the current row?
 		if (!spi.hasCurrentRow()) {
 			// add to left margin
@@ -76,27 +77,27 @@ class CurrentResultImpl implements CurrentResult {
 				}
 				try {
 					if (item.getType()==FormattingTypes.ListStyle.PL) {
-						return startNewRow(spi, btr, listLabel, 0, spc.getRdp().getBlockIndentParent(), mode, wholeWordsOnly);
+						return startNewRow(spi, btr, listLabel, 0, spc.getRdp().getBlockIndentParent(), mode, page, position, wholeWordsOnly);
 					} else {
-						return startNewRow(spi, btr, listLabel, spc.getRdp().getFirstLineIndent(), spc.getRdp().getBlockIndent(), mode, wholeWordsOnly);
+						return startNewRow(spi, btr, listLabel, spc.getRdp().getFirstLineIndent(), spc.getRdp().getBlockIndent(), mode, page, position, wholeWordsOnly);
 					}
 				} finally {
 					spi.discardListItem();
 				}
 			} else {
-				return startNewRow(spi, btr, "", spc.getRdp().getFirstLineIndent(), spc.getRdp().getBlockIndent(), mode, wholeWordsOnly);
+				return startNewRow(spi, btr, "", spc.getRdp().getFirstLineIndent(), spc.getRdp().getBlockIndent(), mode, page, position, wholeWordsOnly);
 			}
 		} else {
-			return continueRow(spi, new RowInfo("", spc.getAvailable()), btr, spc.getRdp().getBlockIndent(), mode, wholeWordsOnly);
+			return continueRow(spi, new RowInfo("", getAvailable(spc, page, position)), btr, spc.getRdp().getBlockIndent(), mode, page, position, wholeWordsOnly);
 		}
 	}
 	
-	private Optional<RowImpl> startNewRow(SegmentProcessing spi, BrailleTranslatorResult chars, String contentBefore, int indent, int blockIndent, String mode, boolean wholeWordsOnly) {
+	private Optional<RowImpl> startNewRow(SegmentProcessing spi, BrailleTranslatorResult chars, String contentBefore, int indent, int blockIndent, String mode, Integer page, float position, boolean wholeWordsOnly) {
 		if (spi.hasCurrentRow()) {
 			throw new RuntimeException("Error in code.");
 		}
 		spi.newCurrentRow(spc.getMargins().getLeftMargin(), spc.getMargins().getRightMargin());
-		return continueRow(spi, new RowInfo(getPreText(contentBefore, indent+blockIndent), spc.getAvailable()), chars, blockIndent, mode, wholeWordsOnly);
+		return continueRow(spi, new RowInfo(getPreText(contentBefore, indent+blockIndent), getAvailable(spc, page, position)), chars, blockIndent, mode, page, position, wholeWordsOnly);
 	}
 	
 	private String getPreText(String contentBefore, int totalIndent) {
@@ -110,14 +111,14 @@ class CurrentResultImpl implements CurrentResult {
 	}
 
 	//TODO: check leader functionality
-	private Optional<RowImpl> continueRow(SegmentProcessing spi, RowInfo m1, BrailleTranslatorResult btr, int blockIndent, String mode, boolean wholeWordsOnly) {
+	private Optional<RowImpl> continueRow(SegmentProcessing spi, RowInfo m1, BrailleTranslatorResult btr, int blockIndent, String mode, Integer page, float position, boolean wholeWordsOnly) {
 		RowImpl ret = null;
 		// [margin][preContent][preTabText][tab][postTabText] 
 		//      preContentPos ^
 		String tabSpace = "";
 		if (spi.getLeaderManager().hasLeader()) {
 			int preTabPos = m1.getPreTabPosition(spi.getCurrentRow());
-			int leaderPos = spi.getLeaderManager().getLeaderPosition(spc.getAvailable());
+			int leaderPos = spi.getLeaderManager().getLeaderPosition(getAvailable(spc, page, position));
 			int offset = leaderPos-preTabPos;
 			int align = spi.getLeaderManager().getLeaderAlign(btr.countRemaining());
 			
@@ -127,7 +128,7 @@ class CurrentResultImpl implements CurrentResult {
 					ret = spi.flushCurrentRow();
 				}
 				spi.newCurrentRow(_leftMargin, spc.getMargins().getRightMargin());
-				m1 = new RowInfo(getPreText("", spc.getRdp().getTextIndent()+blockIndent), spc.getAvailable());
+				m1 = new RowInfo(getPreText("", spc.getRdp().getTextIndent()+blockIndent), getAvailable(spc, page, position));
 				//update offset
 				offset = leaderPos-m1.getPreTabPosition(spi.getCurrentRow());
 			}
@@ -159,6 +160,21 @@ class CurrentResultImpl implements CurrentResult {
 			row.addAnchors(abtr.getAnchors());
 			row.addIdentifiers(abtr.getIdentifiers());
 			abtr.clearPending();
+		}
+	}
+
+	private int getAvailable(SegmentProcessorContext spc, Integer page, float position) {
+		int rightMargin = spc.getMargins().getRightMargin().getContent().length();
+		int flowWidth = spc.getFlowWidth();
+		PageShape pageShape = spc.getPageShape();
+		if (pageShape != null) {
+			if (page == null || position == -1) {
+				throw new RuntimeException("Expecting page and row context, but got {page: "+page+", row: "+position+"}");
+			}
+			// FIXME: or should it be pageShape.getWidth(page, position) - rightMargin?
+			return Math.min(flowWidth - rightMargin, pageShape.getWidth(page, (int)Math.ceil(position)));
+		} else {
+			return flowWidth - rightMargin;
 		}
 	}
 }

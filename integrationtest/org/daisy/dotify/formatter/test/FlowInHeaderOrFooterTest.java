@@ -11,7 +11,6 @@ import org.junit.Test;
 public class FlowInHeaderOrFooterTest extends AbstractFormatterEngineTest {
 	
 	@Test
-	@Ignore("Enable once functionality has been restored.")
 	public void testFlowInFooter() throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
 		testPEF("resource-files/flow-in-footer-input.obfl",
 		        "resource-files/flow-in-footer-expected.pef",
@@ -19,15 +18,13 @@ public class FlowInHeaderOrFooterTest extends AbstractFormatterEngineTest {
 	}
 	
 	@Test
-	@Ignore
 	public void testFlowInFooterWithMarkerReference() throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
 		testPEF("resource-files/flow-in-footer-with-marker-reference-input.obfl",
 		        "resource-files/flow-in-footer-with-marker-reference-expected.pef",
-		        true);
+		        false);
 	}
 	
 	@Test
-	@Ignore("Enable once functionality has been restored.")
 	public void testFlowInHeader() throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
 		testPEF("resource-files/flow-in-header-input.obfl",
 		        "resource-files/flow-in-header-expected.pef",

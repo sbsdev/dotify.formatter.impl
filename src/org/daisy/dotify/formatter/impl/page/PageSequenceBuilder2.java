@@ -116,7 +116,7 @@ public class PageSequenceBuilder2 {
 		this.dataGroups = template.dataGroups;
 		this.cd = template.cd;
 		this.dataGroupsIndex = template.dataGroupsIndex;
-		this.fieldResolver = template.fieldResolver;
+		this.fieldResolver = template.fieldResolver.clone();
 		this.seqId = template.seqId;
 		this.sph = template.sph;
 		this.force = template.force;
@@ -236,9 +236,11 @@ public class PageSequenceBuilder2 {
 					}
 				}
 				force = false;
+				fieldResolver.setAllowFlowInHeader(true);
 			}
 			modifyContext(ctxt -> {
-					ctxt.currentPage(current.getDetails().getPageNumber())
+					ctxt.pageShape(fieldResolver)
+					    .currentPage(current.getDetails().getPageNumber())
 					    .flowWidth(master.getFlowWidth() - master.getTemplate(current.getPageNumber()).getTotalMarginRegionWidth());
 				}
 			);
@@ -252,7 +254,7 @@ public class PageSequenceBuilder2 {
 				SplitPointDataSource<RowGroup> seqTransitionText = transitionContent.isPresent()
 						? new RowGroupDataSource(master, getContext(), transitionContent.get().getInSequence(), BreakBefore.AUTO, null, cd)
 						: SplitPointDataList.emptyList();
-				float startPosition = current.currentPosition();
+				float startPosition = current.currentPositionInFlow();
 				float transitionHeight;
 				SplitPointSpecification spec;
 				boolean addTransition = true;
@@ -311,9 +313,28 @@ public class PageSequenceBuilder2 {
 					}
 				}
 				for (RowGroup rg : res.getSupplements()) {
+					// FIXME: catch exception if rows do not fit
 					current.addToPageArea(rg.getRows());
 				}
-				force = res.getHead().size()==0;
+				if (current.currentPosition() < 0) {
+					float pos = current.currentPosition();
+					for (RowGroup r : res.getHead()) {
+						pos += r.getUnitSize();
+					}
+					if (pos < 0) {
+						fieldResolver.setAllowFlowInHeader(false);
+						if (current.currentPositionInFlow() > 0) {
+							throw new RuntimeException(); // when would this happen?
+						}
+						continue;
+					}
+				}
+				if (res.getHead().size()==0 && current.currentPositionInFlow() == 0 && !(addTransition && transitionContent.isPresent())) {
+					force = true;
+					continue;
+				} else {
+					force = false;
+				}
 				data = (RowGroupDataSource)res.getTail();
 				List<RowGroup> head;
 				if (addTransition && transitionContent.isPresent()) {
@@ -370,6 +391,7 @@ public class PageSequenceBuilder2 {
 					head = res.getHead();
 				}
 				addRows(head, current);
+				fieldResolver.setAllowFlowInHeader(true);
 				current.setAvoidVolumeBreakAfter(getVolumeKeepPriority(res.getDiscarded(), getVolumeKeepPriority(res.getHead(), VolumeKeepPriority.empty())));
 				if (context.getTransitionBuilder().getProperties().getApplicationRange()!=ApplicationRange.NONE) {
 					// no need to do this, unless there is an active transition builder
@@ -596,7 +618,8 @@ public class PageSequenceBuilder2 {
 		private final ContentCollectionImpl collection;
 		
 		private CollectionData(PageAreaContent staticAreaContent, BlockContext c, LayoutMaster master, ContentCollectionImpl collection) {
-			this.c = c;
+			// FIXME: don't set pageShape to null
+			this.c = BlockContext.from(c).pageShape(null).build();
 			this.staticAreaContent = staticAreaContent;
 			this.master = master;
 			this.collection = collection;
@@ -608,6 +631,8 @@ public class PageSequenceBuilder2 {
 					+ PageImpl.rowsNeeded(staticAreaContent.getAfter(), master.getRowSpacing());
 		}
 
+		// FIXME: what if the returned rows do not fit on the page?
+		// --> pass position
 		@Override
 		public RowGroup get(String id) {
 			if (collection!=null) {
@@ -617,7 +642,8 @@ public class PageSequenceBuilder2 {
 					b.addAll(bcm.getCollapsiblePreContentRows());
 					b.addAll(bcm.getInnerPreContentRows());
 					Optional<RowImpl> r;
-					while ((r=bcm.getNext()).isPresent()) {
+					// block context is independent of position (pageShape was set to null above)
+					while ((r=bcm.getNext(-1)).isPresent()) {
 						b.add(r.get());
 					}
 					b.addAll(bcm.getPostContentRows());

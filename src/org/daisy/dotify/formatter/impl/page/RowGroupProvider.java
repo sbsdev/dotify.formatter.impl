@@ -2,9 +2,11 @@ package org.daisy.dotify.formatter.impl.page;
 
 import java.util.ArrayList;
 import java.util.function.Consumer;
+import java.util.List;
 import java.util.Optional;
 
 import org.daisy.dotify.api.formatter.FormattingTypes.Keep;
+import org.daisy.dotify.common.splitter.CantFitInOtherDimensionException;
 import org.daisy.dotify.formatter.impl.core.Block;
 import org.daisy.dotify.formatter.impl.core.LayoutMaster;
 import org.daisy.dotify.formatter.impl.datatype.VolumeKeepPriority;
@@ -19,6 +21,7 @@ class RowGroupProvider {
 	private final Block g;
 	private final AbstractBlockContentManager bcm;
 	private DefaultContext context;
+	private PageShape pageShape;
 
 	private final OrphanWidowControl owc;
 	private final boolean otherData;
@@ -31,6 +34,7 @@ class RowGroupProvider {
 		this.g= template.g;
 		this.bcm = template.bcm==null?null:template.bcm.copy();
 		this.context = template.context;
+		this.pageShape = template.pageShape;
 		this.owc = template.owc;
 		this.otherData = template.otherData;
 		this.rowIndex = template.rowIndex;
@@ -38,11 +42,12 @@ class RowGroupProvider {
 		this.keepWithNext = template.keepWithNext;
 	}
 
-	RowGroupProvider(LayoutMaster master, Block g, AbstractBlockContentManager bcm, DefaultContext context, int keepWithNext) {
+	RowGroupProvider(LayoutMaster master, Block g, AbstractBlockContentManager bcm, DefaultContext context, PageShape pageShape, int keepWithNext) {
 		this.master = master;
 		this.g = g;
 		this.bcm = bcm;
 		this.context = context;
+		this.pageShape = pageShape;
 		this.phase = 0;
 		this.rowIndex = 0;
 		CrossReferenceHandler refs = context.getRefs();
@@ -102,19 +107,35 @@ class RowGroupProvider {
 	
 	// FIXME: move context argument to separate setContext() method? (that is how it is done everywhere else)
 	// -> or make it so that the argument does not mutate the RowGroupProvider object
-	public RowGroup next(DefaultContext context, boolean wholeWordsOnly) {
-		if (this.context==null || !this.context.equals(context)) {
+	public RowGroup next(DefaultContext context, PageShape pageShape, float position, boolean wholeWordsOnly) {
+		if (this.context==null || !this.context.equals(context)
+		    || this.pageShape == null || !this.pageShape.equals(pageShape)) {
+			// FIXME: find a solution for having to wrap the context every time
 			this.context = g.contextWithMeta(context);
-			bcm.setContext(this.context);
+			this.pageShape = pageShape;
+			bcm.setContext(this.context, this.pageShape);
 		}
-		RowGroup b = nextInner(wholeWordsOnly);
+		RowGroup b = nextInner(position, wholeWordsOnly);
 		if (!hasNext()) {
 			close();
 		}
 		return b;
 	}
 
-	private RowGroup nextInner(boolean wholeWordsOnly) {
+	private void checkFitsInWidth(List<RowImpl> rows, float position) throws CantFitInOtherDimensionException {
+		if (pageShape != null) {
+			for (RowImpl r : rows) {
+				int available = pageShape.getWidth(context.getCurrentPage(), (int)Math.ceil(position));
+				// FIXME: if this is padding, make it small enough to fit into the header
+				if (r.getWidth() > available) {
+					throw new CantFitInOtherDimensionException();
+				}
+				position += r.getRowSpacing() != null ? r.getRowSpacing() : master.getRowSpacing();
+			}
+		}
+	}
+	
+	private RowGroup nextInner(float position, boolean wholeWordsOnly) {
 		if (phase==0) {
 			phase++;
 			//if there is a row group, return it (otherwise, try next phase)
@@ -127,7 +148,9 @@ class RowGroupProvider {
 			phase++;
 			//if there is a row group, return it (otherwise, try next phase)
 			if (bcm.hasInnerPreContentRows()) {
-				return setPropertiesThatDependOnHasNext(new RowGroup.Builder(master.getRowSpacing(), bcm.getInnerPreContentRows()).
+				List<RowImpl> rows = bcm.getInnerPreContentRows();
+				checkFitsInWidth(rows, position);
+				return setPropertiesThatDependOnHasNext(new RowGroup.Builder(master.getRowSpacing(), rows).
 										collapsible(false).skippable(false).breakable(false), hasNext(), g).build();
 			}
 		}
@@ -145,7 +168,7 @@ class RowGroupProvider {
 		}
 		if (phase==3) {
 			Optional<RowImpl> rt;
-			if ((rt=bcm.getNext(wholeWordsOnly)).isPresent()) {
+			if ((rt=bcm.getNext(position, wholeWordsOnly)).isPresent()) {
 				RowImpl r = rt.get();
 				rowIndex++;
 				boolean hasNext = bcm.hasNext(); 
@@ -174,7 +197,9 @@ class RowGroupProvider {
 		if (phase==4) {
 			phase++;
 			if (bcm.hasPostContentRows()) {
-				return setPropertiesThatDependOnHasNext(new RowGroup.Builder(master.getRowSpacing(), bcm.getPostContentRows()).
+				List<RowImpl> rows = bcm.getPostContentRows();
+				checkFitsInWidth(rows, position);
+				return setPropertiesThatDependOnHasNext(new RowGroup.Builder(master.getRowSpacing(), rows).
 					collapsible(false).skippable(false).breakable(keepWithNext<0), hasNext(), g).build();
 			}
 		}

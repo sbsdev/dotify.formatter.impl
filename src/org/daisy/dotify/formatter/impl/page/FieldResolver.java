@@ -2,6 +2,7 @@ package org.daisy.dotify.formatter.impl.page;
 
 import java.util.ArrayList;
 import java.util.function.Supplier;
+import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -16,6 +17,8 @@ import org.daisy.dotify.api.translator.BrailleTranslator;
 import org.daisy.dotify.api.translator.DefaultTextAttribute;
 import org.daisy.dotify.api.translator.Translatable;
 import org.daisy.dotify.api.translator.TranslationException;
+import org.daisy.dotify.common.text.StringTools;
+import org.daisy.dotify.formatter.impl.core.BorderManager;
 import org.daisy.dotify.formatter.impl.core.FormatterContext;
 import org.daisy.dotify.formatter.impl.core.LayoutMaster;
 import org.daisy.dotify.formatter.impl.core.PageTemplate;
@@ -24,64 +27,171 @@ import org.daisy.dotify.formatter.impl.row.RowImpl;
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.search.PageDetails;
 
-class FieldResolver implements PageShape {
+class FieldResolver implements PageShape, Cloneable {
 	private static final Pattern softHyphen = Pattern.compile("\u00ad");
 	private final LayoutMaster master;
 	private final FormatterContext fcontext;
 	private final Supplier<CrossReferenceHandler> crh;
 	private final PageDetails detailsTemplate;
+	private boolean allowFlowInHeader;
 
 	FieldResolver(LayoutMaster master, FormatterContext fcontext, Supplier<CrossReferenceHandler> crh, PageDetails detailsTemplate) {
 		this.master = master;
 		this.fcontext = fcontext;
 		this.crh = crh;
 		this.detailsTemplate = detailsTemplate;
+		allowFlowInHeader = true;
 	}
 	
-    List<RowImpl> renderFields(PageDetails p, List<FieldList> fields, BrailleTranslator translator) throws PaginatorException {
-        ArrayList<RowImpl> ret = new ArrayList<>();
-		for (FieldList row : fields) {
-            ret.add(renderField(p, row, translator));
+	// FIXME: make immutable
+	void setAllowFlowInHeader(boolean allow) {
+		allowFlowInHeader = allow;
+	}
+	
+	boolean getAllowFlowInHeader() {
+		return allowFlowInHeader;
+	}
+	
+	List<RowImpl> renderFields(PageDetails p, Iterable<FieldList> fields, BrailleTranslator translator) throws PaginatorException {
+		return renderFields(p, fields.iterator(), translator);
+	}
+	
+	List<RowImpl> renderFields(PageDetails p, Iterator<FieldList> fields, BrailleTranslator translator) throws PaginatorException {
+		ArrayList<RowImpl> ret = new ArrayList<>();
+		while (fields.hasNext()) {
+			ret.add(renderFields(p, fields.next(), translator));
 		}
 		return ret;
 	}
-    
-    private RowImpl renderField(PageDetails p, FieldList field, BrailleTranslator translator) throws PaginatorException {
-    	try {
-            return new RowImpl.Builder(distribute(p, field, master.getFlowWidth(), fcontext.getSpaceCharacter()+"", translator))
-            		.rowSpacing(field.getRowSpacing())
-            		.build();
-        } catch (PaginatorToolsException e) {
-            throw new PaginatorException("Error while rendering header", e);
+	
+	RowImpl renderFields(PageDetails p, FieldList fields, BrailleTranslator translator) throws PaginatorException {
+		return renderFields(p, fields, translator, null);
+	}
+	
+	RowImpl renderFields(PageDetails p, FieldList fields, BrailleTranslator translator, RowImpl bodyRow) throws PaginatorException {
+		int width = master.getFlowWidth();
+		char space = fcontext.getSpaceCharacter();
+		List<String> distributedRow; {
+			String padding = space+"";
+			try {
+				distributedRow = distribute(p, fields, width, padding, translator);
+			} catch (PaginatorToolsException e) {
+				throw new PaginatorException("Error while rendering header/footer", e);
+			}
 		}
-    }
-    
-    private List<String> resolveField(PageDetails p, FieldList chunks, int width, String padding, BrailleTranslator translator) throws PaginatorToolsException {
-		ArrayList<String> chunkF = new ArrayList<>();
+		int length = 0;
+		for (String s : distributedRow) {
+			if (s != null) {
+				length += s.length();
+			}
+		}
+		StringBuffer sb = new StringBuffer();
+		for (String s : distributedRow) {
+			if (s != null) {
+				sb.append(s);
+			} else {
+				float rowSpacing = (bodyRow != null && bodyRow.getRowSpacing() != null)
+					? bodyRow.getRowSpacing()
+					: master.getRowSpacing();
+				if (rowSpacing != 1.0f) {
+					throw new RuntimeException("Text can only flow in <field allow-text-flow=\"true\"/> when row-spacing of text is '1'.");
+				}
+				String chars = bodyRow != null
+					? BorderManager.padLeft(width - length,
+					                        bodyRow.getChars(),
+					                        bodyRow.getLeftMargin(),
+					                        bodyRow.getRightMargin(),
+					                        bodyRow.getAlignment(),
+					                        space)
+					: "";
+				if (chars.length() + length > width) {
+					throw new RuntimeException("Row does not fit in empty field in header/footer");
+				}
+				sb.append(chars);
+				if (chars.length() + length <= width) {
+					sb.append(StringTools.fill(space, width - length - chars.length()));
+				}
+				bodyRow = null;
+			}
+		}
+		if (bodyRow != null) {
+			throw new RuntimeException("Coding error");
+		}
+		return new RowImpl.Builder(sb.toString()).rowSpacing(fields.getRowSpacing()).build();
+	}
+	
+	private List<String> distribute(PageDetails p, FieldList chunks, int width, String padding, BrailleTranslator translator)
+			throws PaginatorToolsException {
+		List<String> chunksResolved = resolveFields(p, chunks, width, padding, translator);
+		List<String> chunksWithOutFlow = new ArrayList<>();
+		List<Boolean> flowPositions = new ArrayList<>();
+		for (String f : chunksResolved) {
+			if (f == null) {
+				f = "";
+				flowPositions.add(true);
+			} else {
+				flowPositions.add(false);
+			}
+			chunksWithOutFlow.add(f);
+		}
+		List<String> chunksWithPadding = PaginatorTools.distributeRetain(
+			chunksWithOutFlow, width, padding,
+			fcontext.getConfiguration().isAllowingTextOverflowTrimming()
+				? PaginatorTools.DistributeMode.EQUAL_SPACING_TRUNCATE
+				: PaginatorTools.DistributeMode.EQUAL_SPACING);
+		List<String> ret = new ArrayList<>(); {
+			// copy chunks
+			int i = 0;
+			for (String s : chunksWithPadding) {
+				if (i % 2 == 0) {
+					if (flowPositions.get(i/2)) {
+						ret.add(null);
+					} else {
+						ret.add(s);
+					}
+				}
+				i++;
+			}
+			// add padding
+			i = 0;
+			for (String s : chunksWithPadding) {
+				if (i % 2 == 1) {
+					if (ret.get((i-1)/2) == null || ret.get((i+1)/2) == null) {
+						// drop padding before and after flow positions
+					} else {
+						// append to following chunk
+						ret.set((i+1)/2, s + ret.get((i+1)/2));
+					}
+				}
+				i++;
+			}
+		}
+		return ret;
+	}
+	
+	private List<String> resolveFields(PageDetails p, FieldList chunks, int width, String padding, BrailleTranslator translator)
+			throws PaginatorToolsException {
+		List<String> chunkF = new ArrayList<>();
 		for (Field f : chunks.getFields()) {
 			DefaultTextAttribute.Builder b = new DefaultTextAttribute.Builder(null);
-            String resolved = softHyphen.matcher(resolveField(f, p, b)).replaceAll("");
-			Translatable.Builder tr = Translatable.text(fcontext.getConfiguration().isMarkingCapitalLetters()?resolved:resolved.toLowerCase()).
-										hyphenate(false);
-			if (resolved.length()>0) {
-				tr.attributes(b.build(resolved.length()));
+			String resolved = resolveField(f, p, b);
+			if (resolved != null) {
+				resolved = softHyphen.matcher(resolved).replaceAll("");
+				Translatable.Builder tr = Translatable
+					.text(fcontext.getConfiguration().isMarkingCapitalLetters()?resolved:resolved.toLowerCase())
+					.hyphenate(false);
+				if (resolved.length()>0) {
+					tr.attributes(b.build(resolved.length()));
+				}
+				try {
+					resolved = translator.translate(tr.build()).getTranslatedRemainder();
+				} catch (TranslationException e) {
+					throw new PaginatorToolsException(e);
+				}
 			}
-			try {
-				chunkF.add(translator.translate(tr.build()).getTranslatedRemainder());
-			} catch (TranslationException e) {
-				throw new PaginatorToolsException(e);
-			}
+			chunkF.add(resolved);
 		}
 		return chunkF;
-    }
-	
-    private String distribute(PageDetails p, FieldList chunks, int width, String padding, BrailleTranslator translator) throws PaginatorToolsException {
-    	List<String> chunkF = resolveField(p, chunks, width, padding, translator);
-        return PaginatorTools.distribute(chunkF, width, padding,
-                fcontext.getConfiguration().isAllowingTextOverflowTrimming()?
-                PaginatorTools.DistributeMode.EQUAL_SPACING_TRUNCATE:
-                PaginatorTools.DistributeMode.EQUAL_SPACING
-            );
 	}
 	
 	/*
@@ -90,7 +200,7 @@ class FieldResolver implements PageShape {
 	 */
 	private String resolveField(Field field, PageDetails p, DefaultTextAttribute.Builder b) {
 		if (field instanceof NoField) {
-			return "";
+			return null;
 		}
 		String ret;
 		DefaultTextAttribute.Builder b2 = new DefaultTextAttribute.Builder(field.getTextStyle());
@@ -144,10 +254,14 @@ class FieldResolver implements PageShape {
 
 	private int getWidth(PageDetails details, int rowOffset) {
 		PageTemplate p = master.getTemplate(details.getPageNumber());
+		int flowHeight = master.getFlowHeight(p);
 		int flowHeader = p.validateAndAnalyzeHeader();
+		if (!allowFlowInHeader) {
+			flowHeight -= flowHeader;
+			flowHeader = 0;
+		}
 		int flowFooter = p.validateAndAnalyzeFooter();
 		if (flowHeader+flowFooter>0) {
-			int flowHeight = master.getFlowHeight(p);
 			rowOffset = rowOffset % flowHeight;
 			if (rowOffset<flowHeader) {
 				//this is a shared row
@@ -167,11 +281,22 @@ class FieldResolver implements PageShape {
 
 	private int getAvailableForNoField(PageDetails details, FieldList list) {
 		try {
-			List<String> parts = resolveField(details, list, master.getFlowWidth(), fcontext.getSpaceCharacter()+"", fcontext.getDefaultTranslator());
-			int size = parts.stream().mapToInt(str -> str.length()).sum();
+			List<String> parts = resolveFields(details, list, master.getFlowWidth(), fcontext.getSpaceCharacter()+"", fcontext.getDefaultTranslator());
+			int size = parts.stream().mapToInt(str -> str == null ? 0 : str.length()).sum();
 			return master.getFlowWidth()-size;
 		} catch (PaginatorToolsException e) {
 			throw new RuntimeException("", e);
 		}
+	}
+	
+	@Override
+	public FieldResolver clone() {
+		FieldResolver clone;
+		try {
+			clone = (FieldResolver)super.clone();
+		} catch (CloneNotSupportedException e) {
+			throw new InternalError("coding error");
+		}
+		return clone;
 	}
 }

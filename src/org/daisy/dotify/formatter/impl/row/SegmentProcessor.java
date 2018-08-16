@@ -13,6 +13,7 @@ import org.daisy.dotify.api.translator.Translatable;
 import org.daisy.dotify.api.translator.TranslationException;
 import org.daisy.dotify.formatter.impl.common.FormatterCoreContext;
 import org.daisy.dotify.formatter.impl.row.RowImpl.Builder;
+import org.daisy.dotify.formatter.impl.page.PageShape;
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.search.DefaultContext;
 import org.daisy.dotify.formatter.impl.segment.AnchorSegment;
@@ -48,7 +49,7 @@ class SegmentProcessor implements SegmentProcessing {
 	private boolean closed;
 	private String blockId;
 
-	SegmentProcessor(String blockId, List<Segment> segments, int flowWidth, DefaultContext context, int available, BlockMargin margins, FormatterCoreContext fcontext, RowDataProperties rdp) {
+	SegmentProcessor(String blockId, List<Segment> segments, int flowWidth, PageShape pageShape, DefaultContext context, BlockMargin margins, FormatterCoreContext fcontext, RowDataProperties rdp) {
 		this.segments = Collections.unmodifiableList(segments);
 		this.context = context;
 		this.groupMarkers = new ArrayList<>();
@@ -56,14 +57,14 @@ class SegmentProcessor implements SegmentProcessing {
 		this.groupIdentifiers = new ArrayList<>();
 		this.leaderManager = new LeaderManager();
 		this.significantContent = calculateSignificantContent(segments, context, rdp);
-		this.spc = new SegmentProcessorContext(fcontext, rdp, margins, flowWidth, available);
+		this.spc = new SegmentProcessorContext(fcontext, rdp, margins, flowWidth, pageShape);
 		this.blockId = blockId;
 		initFields();
 	}
 	
 	SegmentProcessor(SegmentProcessor template) {
 		this.context = template.context;
-		this.spc = template.spc;
+		this.spc = new SegmentProcessorContext(template.spc);
 		this.currentRow = template.currentRow==null?null:new RowImpl.Builder(template.currentRow);
 		this.groupAnchors = new ArrayList<>(template.groupAnchors);
 		this.groupMarkers = new ArrayList<>(template.groupMarkers);
@@ -130,7 +131,11 @@ class SegmentProcessor implements SegmentProcessing {
 			groupIdentifiers.add(blockId);
 		}
 		// produce group markers and anchors
-		getNext(false, false);
+		// The position that is passed when produceRow is false is irrelevant. We can't pass -1, but
+		// we can pass any positive value because no row will be produced anyway. The position is
+		// only used to process the next segments that can not trigger a new row, so the actual
+		// available space on the page does not matter.
+		getNext(false, 0, false);
 	}
 
 	boolean couldTriggerNewRow() {
@@ -161,7 +166,7 @@ class SegmentProcessor implements SegmentProcessing {
 		return segmentIndex<segments.size();
 	}
 
-	void prepareNext() {
+	private void prepareNext() {
 		if (!hasMoreData()) {
 			throw new IllegalStateException();
 		}
@@ -175,23 +180,19 @@ class SegmentProcessor implements SegmentProcessing {
 		}
 	}
 	
-	boolean hasNext() {
-		return cr!=null && cr.hasNext(this);
-	}
-	
 	public boolean hasSignificantContent() {
 		return significantContent;
 	}
 	
-	Optional<RowImpl> getNext(boolean wholeWordsOnly) {
-		return getNext(true, wholeWordsOnly);
+	Optional<RowImpl> getNext(float position, boolean wholeWordsOnly) {
+		return getNext(true, position, wholeWordsOnly);
 	}
 
-	private Optional<RowImpl> getNext(boolean produceRow, boolean wholeWordsOnly) {
+	private Optional<RowImpl> getNext(boolean produceRow, float position, boolean wholeWordsOnly) {
 		while (true) {
 			if (cr!=null && cr.hasNext(this)) {
 				try {
-					Optional<RowImpl> ret = cr.process(this, wholeWordsOnly);
+					Optional<RowImpl> ret = cr.process(this, context.getCurrentPage(), position, wholeWordsOnly);
 					if (ret.isPresent()) {
 						if (!produceRow) {
 							// there is a test below that verifies that the current segment cannot produce a row result
@@ -474,8 +475,9 @@ class SegmentProcessor implements SegmentProcessing {
 	}
 	
 	// FIXME: make immutable
-	void setContext(DefaultContext context) {
+	void setContext(DefaultContext context, PageShape pageShape) {
 		this.context = context;
+		spc.setContext(pageShape);
 	}
 	
 	int getForceCount() {

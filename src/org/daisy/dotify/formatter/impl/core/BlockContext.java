@@ -1,5 +1,6 @@
 package org.daisy.dotify.formatter.impl.core;
 
+import org.daisy.dotify.formatter.impl.page.PageShape;
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.search.DefaultContext;
 import org.daisy.dotify.formatter.impl.search.Space;
@@ -7,6 +8,8 @@ import org.daisy.dotify.formatter.impl.search.Space;
 public interface BlockContext extends DefaultContext {
 
 	public int getFlowWidth();
+
+	public PageShape getPageShape();
 
 	public FormatterContext getFcontext();
 
@@ -17,6 +20,8 @@ public interface BlockContext extends DefaultContext {
 		
 		public BlockContext.Builder flowWidth(int value);
 		
+		public BlockContext.Builder pageShape(PageShape shape);
+
 		public BlockContext.Builder formatterContext(FormatterContext value);
 
 		@Override
@@ -55,6 +60,7 @@ public interface BlockContext extends DefaultContext {
 	public static class Impl extends DefaultContext.Impl implements BlockContext.Builder {
 		
 		private int flowWidth = 0;
+		private PageShape pageShape = null;
 		private FormatterContext fcontext = null;
 		
 		private Impl(DefaultContext base, boolean mutable) {
@@ -64,6 +70,7 @@ public interface BlockContext extends DefaultContext {
 		private Impl(BlockContext base, boolean mutable) {
 			super(base, mutable);
 			this.flowWidth = base.getFlowWidth();
+			this.pageShape = base.getPageShape();
 			this.fcontext = base.getFcontext();
 		}
 		
@@ -80,6 +87,12 @@ public interface BlockContext extends DefaultContext {
 		@Override
 		public BlockContext.Builder flowWidth(int value) {
 			this.flowWidth = value;
+			return this;
+		}
+		
+		@Override
+		public BlockContext.Builder pageShape(PageShape shape) {
+			this.pageShape = shape;
 			return this;
 		}
 		
@@ -129,6 +142,11 @@ public interface BlockContext extends DefaultContext {
 		public int getFlowWidth() {
 			return flowWidth;
 		}
+		
+		@Override
+		public PageShape getPageShape() {
+			return pageShape;
+		}
 
 		@Override
 		public FormatterContext getFcontext() {
@@ -141,6 +159,7 @@ public interface BlockContext extends DefaultContext {
 			int result = super.hashCode();
 			result = prime * result + ((fcontext == null) ? 0 : fcontext.hashCode());
 			result = prime * result + flowWidth;
+			result = prime * result + ((pageShape == null) ? 0 : pageShape.hashCode());
 			return result;
 		}
 
@@ -159,6 +178,11 @@ public interface BlockContext extends DefaultContext {
 			} else if (!fcontext.equals(other.fcontext))
 				return false;
 			if (flowWidth != other.flowWidth)
+				return false;
+			if (pageShape == null) {
+				if (other.pageShape != null)
+					return false;
+			} else if (!pageShape.equals(other.pageShape))
 				return false;
 			return true;
 		}

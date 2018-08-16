@@ -62,7 +62,8 @@ class RegularBlock extends Block {
 
 	@Override
 	protected AbstractBlockContentManager newBlockContentManager(BlockContext context) {
-		return new BlockContentManager(getIdentifier(), context.getFlowWidth(), processAttributes(segments), rdp,
+		return new BlockContentManager(getIdentifier(), context.getFlowWidth(), context.getPageShape(),
+				processAttributes(segments), rdp,
 				DefaultContext.from(context).metaVolume(metaVolume).metaPage(metaPage).build(),
 				context.getFcontext());
 	}

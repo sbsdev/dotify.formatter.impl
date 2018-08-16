@@ -47,7 +47,8 @@ class TableCell extends FormatterCoreImpl {
 			rowData.addAll(bcm.getCollapsiblePreContentRows());
 			rowData.addAll(bcm.getInnerPreContentRows());
 			Optional<RowImpl> r;
-			while ((r=bcm.getNext()).isPresent()) {
+			// block context is independent of position (no pageShape was set)
+			while ((r=bcm.getNext(-1)).isPresent()) {
 				rowData.add(r.get());
 			}
 			forceCount += bcm.getForceBreakCount();

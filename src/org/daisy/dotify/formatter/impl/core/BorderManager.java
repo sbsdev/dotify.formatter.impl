@@ -140,7 +140,7 @@ public class BorderManager {
 		return padLeft(w, chars, row.getLeftMargin(), row.getRightMargin(), row.getAlignment(), space);
 	}
 
-	private static String padLeft(int w, String text, MarginProperties leftMargin, MarginProperties rightMargin,
+	public static String padLeft(int w, String text, MarginProperties leftMargin, MarginProperties rightMargin,
 			FormattingTypes.Alignment align, char space) {
 		if ("".equals(text) && leftMargin.isSpaceOnly() && rightMargin.isSpaceOnly()) {
 			return "";

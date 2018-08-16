@@ -41,12 +41,12 @@ public class BlockContentManagerTest {
 		RowDataProperties rdp = new RowDataProperties.Builder().firstLineIndent(1).textIndent(3).build();
 		CrossReferenceHandler refs = new CrossReferenceHandler(()->{});
 		DefaultContext context = createContext(refs);
-		AbstractBlockContentManager m = new BlockContentManager(null, 10, segments, rdp, context, c);
+		AbstractBlockContentManager m = new BlockContentManager(null, 10, null, segments, rdp, context, c);
 
 		//test
-		assertEquals("⠀⠄⠄⠄⠀⠄⠄⠄", m.getNext().get().getChars());
-		assertEquals("⠀⠀⠀⠄⠄⠄⠀⠄⠄⠄", m.getNext().get().getChars());
-		assertEquals("⠀⠀⠀⠄⠄⠄⠀⠄⠄⠄", m.getNext().get().getChars());
+		assertEquals("⠀⠄⠄⠄⠀⠄⠄⠄", m.getNext(0).get().getChars());
+		assertEquals("⠀⠀⠀⠄⠄⠄⠀⠄⠄⠄", m.getNext(1).get().getChars());
+		assertEquals("⠀⠀⠀⠄⠄⠄⠀⠄⠄⠄", m.getNext(2).get().getChars());
 		assertFalse(m.hasNext());
 	}
 	
@@ -63,10 +63,10 @@ public class BlockContentManagerTest {
 		RowDataProperties rdp = new RowDataProperties.Builder().firstLineIndent(1).textIndent(3).build();
 		CrossReferenceHandler refs = new CrossReferenceHandler(()->{});
 		DefaultContext context = createContext(refs);
-		AbstractBlockContentManager m = new BlockContentManager(null, 10, segments, rdp, context, c);
+		AbstractBlockContentManager m = new BlockContentManager(null, 10, null, segments, rdp, context, c);
 
 		//test
-		assertEquals("⠀⠀⠀⠀⠀⠀⠀⠄⠄⠄", m.getNext().get().getChars());
+		assertEquals("⠀⠀⠀⠀⠀⠀⠀⠄⠄⠄", m.getNext(0).get().getChars());
 		assertFalse(m.hasNext());
 	}
 	
@@ -84,15 +84,15 @@ public class BlockContentManagerTest {
 		RowDataProperties rdp = new RowDataProperties.Builder().firstLineIndent(1).textIndent(3).build();
 		CrossReferenceHandler refs = new CrossReferenceHandler(()->{});
 		DefaultContext context = createContext(refs);
-		AbstractBlockContentManager m = new BlockContentManager(null, 10, segments, rdp, context, c);
+		AbstractBlockContentManager m = new BlockContentManager(null, 10, null, segments, rdp, context, c);
 
 		//test
-		assertEquals("⠀⠄⠄⠄⠀⠄⠄⠄", m.getNext().get().getChars());
-		RowImpl r = m.getNext().get();
+		assertEquals("⠀⠄⠄⠄⠀⠄⠄⠄", m.getNext(0).get().getChars());
+		RowImpl r = m.getNext(1).get();
 		assertEquals("⠀⠀⠀⠄⠄⠄", r.getLeftMargin().getContent()+r.getChars());
-		r = m.getNext().get();
+		r = m.getNext(2).get();
 		assertEquals("⠀⠀⠀⠄⠄⠄", r.getLeftMargin().getContent()+r.getChars());
-		r = m.getNext().get();
+		r = m.getNext(3).get();
 		assertEquals("⠀⠀⠀⠄⠄⠄", r.getLeftMargin().getContent()+r.getChars());
 		assertFalse(m.hasNext());
 	}
