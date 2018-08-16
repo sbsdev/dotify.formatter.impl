@@ -151,7 +151,7 @@ public class PageSequenceBuilder2 {
 	}
 
 	private void newRow(PageImpl p, RowImpl row) {
-		if (p.spaceUsedOnPage(1) > p.getFlowHeight()) {
+		if (p.spaceAvailableInFlow() < 1) {
 			throw new RuntimeException("Error in code.");
 			//newPage();
 		}
@@ -554,7 +554,7 @@ public class PageSequenceBuilder2 {
 	private int calculateVerticalSpace(PageImpl pa, BlockPosition p, int blockSpace) {
 		if (p != null) {
 			int pos = p.getPosition().makeAbsolute(pa.getFlowHeight());
-			int t = pos - pa.spaceUsedOnPage(0);
+			int t = pos - (int)Math.ceil(pa.currentPosition());
 			if (t > 0) {
 				int advance = 0;
 				switch (p.getAlignment()) {
