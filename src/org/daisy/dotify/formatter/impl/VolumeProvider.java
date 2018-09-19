@@ -53,7 +53,7 @@ public class VolumeProvider {
 	private CrossReferenceHandler crh;
 	private DefaultContext initialContext;
 	private SheetGroupManager groups;
-	private final SplitPointHandler<Sheet> volSplitter;
+	private final SplitPointHandler<Sheet,SheetDataSource> volSplitter;
 
 	private int pageIndex = 0;
 	private int currentVolumeNumber=0;
@@ -216,9 +216,9 @@ public class VolumeProvider {
 				int unbreakablePenalty = lastSheet.isBreakable()?0:100;
 				return distancePenalty + priorityPenalty + unbreakablePenalty;
 			}};
-		SplitPoint<Sheet> sp;
+		SplitPoint<Sheet,SheetDataSource> sp;
 
-		SplitPointDataSource<Sheet> data = groups.currentGroup().getUnits();
+		SheetDataSource data = groups.currentGroup().getUnits();
 		SplitPointSpecification spec = volSplitter.find(splitterMax,
 				overhead, data,
 				cost, StandardSplitOption.ALLOW_FORCE);
@@ -228,7 +228,7 @@ public class VolumeProvider {
 					groups.currentGroup().getUnits(),
 					cost, StandardSplitOption.ALLOW_FORCE);
 		*/
-		groups.currentGroup().setUnits((SheetDataSource)sp.getTail());
+		groups.currentGroup().setUnits(sp.getTail());
 		List<Sheet> contents = sp.getHead();
 		int pageCount = Sheet.countPages(contents);
 		modifyRefs(refs -> refs.setVolumeScope(currentVolumeNumber, pageIndex, pageIndex+pageCount));
@@ -277,7 +277,7 @@ public class VolumeProvider {
 			                                .space(pre?Space.PRE_CONTENT:Space.POST_CONTENT)
 			                                .refs(getContext().getRefs())
 			                                .build());
-			SplitPointDataSource.Iterator<Sheet> it = sheets.iterator();
+			SplitPointDataSource.Iterator<Sheet,SheetDataSource> it = sheets.iterator();
 			while (it.hasNext()) {
 				Sheet ps = it.next(count++, false);
 				for (PageImpl p : ps.getPages()) {
@@ -288,7 +288,7 @@ public class VolumeProvider {
 				sb.addSheet(ps);
 			}
 			modifyContext(
-				ctxt -> ctxt.refs(((SheetDataSource)it.iterable()).getContext().getRefs())
+				ctxt -> ctxt.refs(it.iterable().getContext().getRefs())
 			);
 			return sb;
 		} catch (PaginatorException e) {

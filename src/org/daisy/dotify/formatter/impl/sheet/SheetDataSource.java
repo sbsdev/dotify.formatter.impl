@@ -31,7 +31,7 @@ import org.daisy.dotify.formatter.impl.search.TransitionProperties;
  * 
  * @author Joel Håkansson
  */
-public class SheetDataSource implements SplitPointDataSource<Sheet> {
+public class SheetDataSource implements SplitPointDataSource<Sheet,SheetDataSource> {
 	//Global state
 	private final FormatterContext context;
 	//Input data
@@ -163,18 +163,18 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 	}
 	
 	@Override
-	public Iterator<Sheet> iterator() {
+	public Iterator<Sheet,SheetDataSource> iterator() {
 		checkInitialized();
 		return new SheetDataSource(this).asIterator();
 	}
 	
-	private Iterator<Sheet> asIterator() {
+	private Iterator<Sheet,SheetDataSource> asIterator() {
 		return new SheetDataSourceIterator();
 	}
 	
 	public int countRemainingSheets() {
 		int count = 0;
-		for (Iterator<Sheet> it = iterator(); it.hasNext();) {
+		for (Iterator<Sheet,SheetDataSource> it = iterator(); it.hasNext();) {
 			// position is irrelevant
 			it.next(-1, false);
 			count++;
@@ -184,14 +184,14 @@ public class SheetDataSource implements SplitPointDataSource<Sheet> {
 
 	public int countRemainingPages() {
 		int pages = 0;
-		for (Iterator<Sheet> it = iterator(); it.hasNext();) {
+		for (Iterator<Sheet,SheetDataSource> it = iterator(); it.hasNext();) {
 			// position is irrelevant
 			pages += it.next(-1, false).getPages().size();
 		}
 		return pages;
 	}
 
-	private class SheetDataSourceIterator implements Iterator<Sheet> {
+	private class SheetDataSourceIterator implements Iterator<Sheet,SheetDataSource> {
 
 		@Override
 		public boolean hasNext() {

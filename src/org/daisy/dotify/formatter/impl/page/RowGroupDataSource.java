@@ -22,7 +22,7 @@ import org.daisy.dotify.formatter.impl.core.LayoutMaster;
  * things will break.</p>
  * @author Joel Håkansson
  */
-class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<RowGroup> {
+class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<RowGroup,RowGroupDataSource> {
 
 	private final LayoutMaster master;
 	private final Supplements<RowGroup> supplements;
@@ -157,11 +157,11 @@ class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<
 	}
 
 	@Override
-	public Iterator<RowGroup> iterator() {
+	public Iterator<RowGroup,RowGroupDataSource> iterator() {
 		return new RowGroupDataSource(this).asIterator();
 	}
 
-	private Iterator<RowGroup> asIterator() {
+	private Iterator<RowGroup,RowGroupDataSource> asIterator() {
 		return new RowGroupDataSourceIterator();
 	}
 
@@ -189,7 +189,7 @@ class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<
 		groups.add(rg);
 	}
 
-	private class RowGroupDataSourceIterator implements Iterator<RowGroup> {
+	private class RowGroupDataSourceIterator implements Iterator<RowGroup,RowGroupDataSource> {
 
 		@Override
 		public boolean hasNext() {
