@@ -162,9 +162,9 @@ public class PageSequenceBuilder2 {
 		return dataGroupsIndex<dataGroups.size() || (data!=null && !data.isEmpty());
 	}
 	
-	public PageImpl nextPage(int pageNumberOffset, boolean hyphenateLastLine, Optional<TransitionContent> transitionContent) throws PaginatorException, RestartPaginationException // pagination must be restarted in PageStructBuilder.paginateInner
+	public PageImpl nextPage(int pageNumberOffset, boolean hyphenateLastLine, Optional<TransitionContent> transitionContent, boolean wasSplitInSequence, boolean isFirst) throws PaginatorException, RestartPaginationException // pagination must be restarted in PageStructBuilder.paginateInner
 	{
-		PageImpl ret = nextPageInner(pageNumberOffset, hyphenateLastLine, transitionContent);
+		PageImpl ret = nextPageInner(pageNumberOffset, hyphenateLastLine, transitionContent, wasSplitInSequence, isFirst);
 		blockContext.getRefs().keepPageDetails(ret.getDetails());
 		for (String id : ret.getIdentifiers()) {
 			blockContext.getRefs().setPageNumber(id, ret.getPageNumber());
@@ -179,7 +179,7 @@ public class PageSequenceBuilder2 {
 		return ret;
 	}
 
-	private PageImpl nextPageInner(int pageNumberOffset, boolean hyphenateLastLine, Optional<TransitionContent> transitionContent) throws PaginatorException, RestartPaginationException // pagination must be restarted in PageStructBuilder.paginateInner
+	private PageImpl nextPageInner(int pageNumberOffset, boolean hyphenateLastLine, Optional<TransitionContent> transitionContent, boolean wasSplitInSequence, boolean isFirst) throws PaginatorException, RestartPaginationException // pagination must be restarted in PageStructBuilder.paginateInner
 	{
 		PageImpl current = newPage(pageNumberOffset);
 		if (nextEmpty) {
@@ -231,6 +231,10 @@ public class PageSequenceBuilder2 {
 				List<RowGroup> seqTransitionText = transitionContent.isPresent()
 						?new RowGroupDataSource(master, bc, transitionContent.get().getInSequence(), BreakBefore.AUTO, null, cd).getRemaining()
 						:Collections.emptyList();
+				List<RowGroup> anyTransitionText = transitionContent.isPresent()
+						?new RowGroupDataSource(master, bc, transitionContent.get().getInAny(), BreakBefore.AUTO, null, cd).getRemaining()
+						:Collections.emptyList();
+				float anyHeight = height(anyTransitionText, true);
 				SplitPointSpecification spec;
 				boolean addTransition = true;
 				if (transitionContent.isPresent() && transitionContent.get().getType()==Type.INTERRUPT) {
@@ -241,7 +245,7 @@ public class PageSequenceBuilder2 {
 					// Transition rows:		 X-|
 					// This transition doesn't fit, because the last row of the text flow takes up three rows, not just one (which it would
 					// if a transition didn't follow).
-					float flowHeight = current.getFlowHeight() - height(seqTransitionText, true);
+					float flowHeight = current.getFlowHeight() - anyHeight - height(seqTransitionText, true);
 					SplitPointCost<RowGroup> cost = (SplitPointDataSource<RowGroup, ?> units, int in, int limit)->{
 						VolumeKeepPriority volumeBreakPriority = 
 								data.get(in).getAvoidVolumeBreakAfterPriority();
@@ -257,7 +261,7 @@ public class PageSequenceBuilder2 {
 								)*limit-in;
 					};
 					// Finding from the full height
-					spec = sph.find(current.getFlowHeight(), copy, cost, force?StandardSplitOption.ALLOW_FORCE:null);
+					spec = sph.find(current.getFlowHeight() - anyHeight, copy, cost, force?StandardSplitOption.ALLOW_FORCE:null);
 					SplitPoint<RowGroup, RowGroupDataSource> x = sph.split(spec, copy);
 					// If the tail is empty, there's no need for a transition
 					// If there isn't a transition between blocks available, don't insert the text
@@ -269,8 +273,12 @@ public class PageSequenceBuilder2 {
 						addTransition = false;
 					}
 				} else {
+					float seqHeight = 0;
+					if (wasSplitInSequence) {
+						seqHeight = height(seqTransitionText, false);
+					}
 					// Either RESUME, or no transition on this page.
-					float flowHeight = current.getFlowHeight() - height(seqTransitionText, false);
+					float flowHeight = current.getFlowHeight() - anyHeight - seqHeight;
 					spec = sph.find(flowHeight, copy, force?StandardSplitOption.ALLOW_FORCE:null);
 				}
 				// Now apply the information to the live data
@@ -294,7 +302,7 @@ public class PageSequenceBuilder2 {
 					if (transitionContent.get().getType()==TransitionContent.Type.INTERRUPT) {
 						head = new ArrayList<>(res.getHead());
 						head.addAll(seqTransitionText);
-					} else if (transitionContent.get().getType()==TransitionContent.Type.RESUME) {
+					} else if (transitionContent.get().getType()==TransitionContent.Type.RESUME && wasSplitInSequence) {
 						head = new ArrayList<>(seqTransitionText);
 						head.addAll(res.getHead());
 					} else {
@@ -302,6 +310,16 @@ public class PageSequenceBuilder2 {
 					}
 				} else {
 					head = res.getHead();
+				}
+				//TODO: combine this if statement with the one above
+				if (!anyTransitionText.isEmpty()) {
+					if (transitionContent.get().getType()==TransitionContent.Type.INTERRUPT) {
+						head.addAll(anyTransitionText);
+					 } else if (transitionContent.get().getType()==TransitionContent.Type.RESUME  && !isFirst) {
+						 // Adding to the top of the list isn't very efficient.
+						 // When combined with the if statement above, this isn't necessary.
+						 head.addAll(0, anyTransitionText); 
+					 }
 				}
 				addRows(head, current);
 				current.setAvoidVolumeBreakAfter(getVolumeKeepPriority(res.getDiscarded(), getVolumeKeepPriority(res.getHead(), VolumeKeepPriority.empty())));
