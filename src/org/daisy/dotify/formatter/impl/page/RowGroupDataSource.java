@@ -4,8 +4,11 @@ import java.util.function.Consumer;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import com.github.krukow.clj_ds.Transients;
+import com.github.krukow.clj_ds.PersistentVector;
+import com.github.krukow.clj_lang.ITransientVector;
+
 import org.daisy.dotify.api.formatter.FormattingTypes.BreakBefore;
-import org.daisy.dotify.common.collection.ImmutableList;
 import org.daisy.dotify.common.splitter.SplitPointDataSource;
 import org.daisy.dotify.common.splitter.SplitPointHandler;
 import org.daisy.dotify.common.splitter.SplitPointSpecification;
@@ -29,7 +32,7 @@ class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<
 	private final BreakBefore breakBefore;
 	private final VerticalSpacing vs;
 	private final List<Block> blocks;
-	private ImmutableList.Builder<RowGroup> groups;
+	private ITransientVector<RowGroup> groups;
 	private int groupIndex;
 	private BlockContext bc;
 	private int blockIndex;
@@ -62,7 +65,13 @@ class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<
 		super(template);
 		this.master = template.master;
 		this.bc = template.bc;
-		this.groups = template.groups == null ? null : template.groups.clone();
+		if (template.groups == null) {
+			this.groups = null;
+		} else {
+			PersistentVector persistent = (PersistentVector)template.groups.persistent();
+			this.groups = (ITransientVector)persistent.asTransient();
+			template.groups = (ITransientVector)persistent.asTransient();
+		}
 		this.groupIndex = template.groupIndex;
 		this.blocks = template.blocks;
 		this.supplements = template.supplements;
@@ -125,7 +134,7 @@ class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<
 	}
 
 	private int currentRowCount() {
-		return groups==null?0:groups.size();
+		return groups==null?0:groups.count();
 	}
 
 	@Override
@@ -170,7 +179,7 @@ class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<
 		if (groups!=null) {
 			throw new IllegalStateException();
 		} else {
-			groups = ImmutableList.<RowGroup>empty().builder();
+			groups = (ITransientVector)Transients.transientVector();
 		}
 	}
 
@@ -181,12 +190,12 @@ class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<
 
 	@Override
 	protected boolean hasResult() {
-		return hasSequence() && !groups.isEmpty();
+		return hasSequence() && groups.count() > 0;
 	}
 
 	@Override
 	protected void addRowGroup(RowGroup rg) {
-		groups.add(rg);
+		groups = (ITransientVector)groups.conj(rg);
 	}
 
 	private class RowGroupDataSourceIterator implements Iterator<RowGroup,RowGroupDataSource> {
@@ -207,7 +216,7 @@ class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<
 				// refs possibly mutated
 				mergeRefs = true;
 			}
-			return groups.get(groupIndex++);
+			return groups.nth(groupIndex++);
 		}
 
 		@Override

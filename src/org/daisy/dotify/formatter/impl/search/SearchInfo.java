@@ -3,11 +3,14 @@ package org.daisy.dotify.formatter.impl.search;
 import java.util.List;
 import java.util.Optional;
 
+import com.github.krukow.clj_ds.PersistentVector;
+import com.github.krukow.clj_lang.IPersistentVector;
+import com.github.krukow.clj_lang.ITransientVector;
+
 import org.daisy.dotify.api.formatter.Marker;
 import org.daisy.dotify.api.formatter.MarkerReferenceField;
 import org.daisy.dotify.api.formatter.MarkerReferenceField.MarkerSearchDirection;
 import org.daisy.dotify.api.formatter.MarkerReferenceField.MarkerSearchScope;
-import org.daisy.dotify.common.collection.ImmutableList;
 import org.daisy.dotify.common.collection.ImmutableMap;
 
 class SearchInfo implements Cloneable {
@@ -25,21 +28,22 @@ class SearchInfo implements Cloneable {
 	void setPageDetails(PageDetails value) {
 		DocumentSpace space = value.getSequenceId().getSpace();
 		DocumentSpaceData data = getViewForSpace(space).clone();
-		ImmutableList.Builder<PageDetails> pageDetails = data.pageDetails.builder();
-		while (value.getPageId().getPageIndex()>=pageDetails.size()) {
-			pageDetails.add(null);
+		ITransientVector<PageDetails> pageDetails = (ITransientVector)((PersistentVector)data.pageDetails).asTransient();
+		while (value.getPageId().getPageIndex()>=pageDetails.count()) {
+			pageDetails = (ITransientVector)pageDetails.conj(null);
 		}
-		PageDetails old = pageDetails.set(value.getPageId().getPageIndex(), value);
+		PageDetails old = pageDetails.nth(value.getPageId().getPageIndex());
+		pageDetails = pageDetails.assocN(value.getPageId().getPageIndex(), value);
 		// FIXME: Only check the previous value if dirty isn't already true
 		if (!value.equals(old)) {
 			setDirty.run();
 		}
-		data.pageDetails = pageDetails.build();
+		data.pageDetails = (IPersistentVector)pageDetails.persistent();
 		spaces = ImmutableMap.put(spaces, space, data);
 	}
 
 	View<PageDetails> getPageView(DocumentSpace space) {
-		return new View<PageDetails>(getViewForSpace(space).pageDetails, 0, getViewForSpace(space).pageDetails.size());
+		return new View<PageDetails>((PersistentVector)getViewForSpace(space).pageDetails, 0, getViewForSpace(space).pageDetails.count());
 	}
 
 	View<PageDetails> getContentsInVolume(int volumeNumber, DocumentSpace space) {
@@ -54,7 +58,7 @@ class SearchInfo implements Cloneable {
 	// -> in this case clone method can also be removed
 	void setSequenceScope(DocumentSpace space, int sequenceNumber, int fromIndex, int toIndex) {
 		DocumentSpaceData data = getViewForSpace(space).clone();
-		View<PageDetails> pw = new View<PageDetails>(data.pageDetails, fromIndex, toIndex);
+		View<PageDetails> pw = new View<PageDetails>((PersistentVector)data.pageDetails, fromIndex, toIndex);
 		data.sequenceViews = ImmutableMap.put(data.sequenceViews, sequenceNumber, pw);
 		spaces = ImmutableMap.put(spaces, space, data);
 	}
@@ -69,7 +73,7 @@ class SearchInfo implements Cloneable {
 	// -> in this case clone method can also be removed
 	void setVolumeScope(int volumeNumber, int fromIndex, int toIndex, DocumentSpace space) {
 		DocumentSpaceData data = getViewForSpace(space).clone();
-		View<PageDetails> pw = new View<PageDetails>(data.pageDetails, fromIndex, toIndex);
+		View<PageDetails> pw = new View<PageDetails>((PersistentVector)data.pageDetails, fromIndex, toIndex);
 		for (PageDetails p : pw.getItems()) {
 			p.setVolumeNumber(volumeNumber);
 		}
@@ -213,8 +217,8 @@ class SearchInfo implements Cloneable {
 	
 	private Optional<PageDetails> getPageDetails(PageId p) {
 		DocumentSpaceData data = getViewForSpace(p.getSequenceId().getSpace());
-		if (p.getPageIndex()<data.pageDetails.size()) {
-			return Optional.ofNullable(data.pageDetails.get(p.getPageIndex()));
+		if (p.getPageIndex()<data.pageDetails.count()) {
+			return Optional.ofNullable(data.pageDetails.nth(p.getPageIndex()));
 		} else {
 			return Optional.empty();
 		}

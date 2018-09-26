@@ -5,9 +5,12 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
+import com.github.krukow.clj_ds.PersistentVector;
+import com.github.krukow.clj_ds.Transients;
+import com.github.krukow.clj_lang.ITransientVector;
+
 import org.daisy.dotify.api.formatter.TransitionBuilderProperties.ApplicationRange;
 import org.daisy.dotify.api.writer.SectionProperties;
-import org.daisy.dotify.common.collection.ImmutableList;
 import org.daisy.dotify.common.splitter.SplitPointDataSource;
 import org.daisy.dotify.common.splitter.Supplements;
 import org.daisy.dotify.formatter.impl.core.FormatterContext;
@@ -53,14 +56,14 @@ public class SheetDataSource implements SplitPointDataSource<Sheet,SheetDataSour
 	private boolean wasSplitInsideSequence;
 	private boolean volumeEnded;
 	//Output buffer
-	private ImmutableList.Builder<Sheet> sheetBuffer;
+	private ITransientVector<Sheet> sheetBuffer;
 	private int bufferIndex;
 
 	public SheetDataSource(FormatterContext context, Integer volumeGroup, List<BlockSequence> seqsIterator) {
 		this.context = context;
 		this.volumeGroup = volumeGroup;
 		this.seqsIterator = seqsIterator;
-		this.sheetBuffer = ImmutableList.<Sheet>empty().builder();
+		this.sheetBuffer = (ITransientVector)Transients.transientVector();
 		this.bufferIndex = 0;
 		this.volBreakAllowed = true;
 		this.seqsIndex = 0;
@@ -95,7 +98,11 @@ public class SheetDataSource implements SplitPointDataSource<Sheet,SheetDataSour
 		this.sectionProperties = template.sectionProperties;
 		this.sheetIndex = template.sheetIndex;
 		this.pageIndex = template.pageIndex;
-		this.sheetBuffer = template.sheetBuffer.clone();
+		{
+			PersistentVector persistent = (PersistentVector)template.sheetBuffer.persistent();
+			this.sheetBuffer = (ITransientVector)persistent.asTransient();
+			template.sheetBuffer = (ITransientVector)persistent.asTransient();
+		}
 		this.bufferIndex = template.bufferIndex;
 		this.volBreakAllowed = template.volBreakAllowed;
 		this.counter = template.counter;
@@ -159,7 +166,7 @@ public class SheetDataSource implements SplitPointDataSource<Sheet,SheetDataSour
 	@Override
 	public boolean isEmpty() {
 		checkInitialized();
-		return seqsIndex>=seqsIterator.size() && bufferIndex >= sheetBuffer.size() && (psb==null || !psb.hasNext());
+		return seqsIndex>=seqsIterator.size() && bufferIndex >= sheetBuffer.count() && (psb==null || !psb.hasNext());
 	}
 	
 	@Override
@@ -195,7 +202,7 @@ public class SheetDataSource implements SplitPointDataSource<Sheet,SheetDataSour
 
 		@Override
 		public boolean hasNext() {
-			return seqsIndex < seqsIterator.size() || bufferIndex < sheetBuffer.size() || (psb != null && psb.hasNext());
+			return seqsIndex < seqsIterator.size() || bufferIndex < sheetBuffer.count() || (psb != null && psb.hasNext());
 		}
 
 		/** @param position is ignored */
@@ -210,7 +217,7 @@ public class SheetDataSource implements SplitPointDataSource<Sheet,SheetDataSour
 			
 			Sheet.Builder s = null;
 			SheetIdentity si = null;
-			while (sheetBuffer.size() <= bufferIndex) {
+			while (sheetBuffer.count() <= bufferIndex) {
 				if (updateCounter) {
 					if(counter!=null) {
 						initialPageOffset = getContext().getRefs().getPageNumberOffset(counter) - psb.size();
@@ -222,7 +229,7 @@ public class SheetDataSource implements SplitPointDataSource<Sheet,SheetDataSour
 				if (psb==null || !psb.hasNext()) {
 					if (s!=null) {
 						//Last page in the sequence doesn't need volume keep priority
-						sheetBuffer.add(s.build());
+						sheetBuffer = (ITransientVector)sheetBuffer.conj(s.build());
 						s=null;
 						continue;
 					}
@@ -247,12 +254,12 @@ public class SheetDataSource implements SplitPointDataSource<Sheet,SheetDataSour
 					sheetIndex = 0;
 					pageIndex = 0;
 				}
-				int currentSize = sheetBuffer.size();
-				while (psb.hasNext() && currentSize == sheetBuffer.size()) {
+				int currentSize = sheetBuffer.count();
+				while (psb.hasNext() && currentSize == sheetBuffer.count()) {
 					if (!sectionProperties.duplex() || pageIndex % 2 == 0 || volumeEnded || s==null) {
 						if (s!=null) {
 							Sheet r = s.build();
-							sheetBuffer.add(r);
+							sheetBuffer = (ITransientVector)sheetBuffer.conj(r);
 							s = null;
 							if (volumeEnded) {
 								pageIndex += pageIndex%2==1?1:0;
@@ -263,7 +270,7 @@ public class SheetDataSource implements SplitPointDataSource<Sheet,SheetDataSour
 						}
 						volBreakAllowed = true;
 						s = new Sheet.Builder(sectionProperties);
-						si = new SheetIdentity(getContext().getSpace(), getContext().getCurrentVolume(), volumeGroup, sheetBuffer.size());
+						si = new SheetIdentity(getContext().getSpace(), getContext().getCurrentVolume(), volumeGroup, sheetBuffer.count());
 						sheetIndex++;
 					}
 	
@@ -361,7 +368,7 @@ public class SheetDataSource implements SplitPointDataSource<Sheet,SheetDataSour
 			} else {
 				wasSplitInsideSequence = false;
 			}
-			return sheetBuffer.get(bufferIndex++);
+			return sheetBuffer.nth(bufferIndex++);
 		}
 
 		@Override
