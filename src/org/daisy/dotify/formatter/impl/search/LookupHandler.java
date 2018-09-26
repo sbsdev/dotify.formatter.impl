@@ -2,15 +2,16 @@ package org.daisy.dotify.formatter.impl.search;
 
 import java.util.HashSet;
 
-import org.daisy.dotify.common.collection.ImmutableMap;
+import com.github.krukow.clj_ds.Persistents;
+import com.github.krukow.clj_lang.IPersistentMap;
 
 public class LookupHandler<K, V> implements Cloneable {
-	private ImmutableMap<K, V> keyValueMap;
+	private IPersistentMap<K, V> keyValueMap;
 	// private HashSet<K> requestedKeys;
 	private Runnable setDirty;
 	
 	LookupHandler(Runnable setDirty) {
-		this.keyValueMap = ImmutableMap.empty();
+		this.keyValueMap = (IPersistentMap)Persistents.hashMap();
 		// this.requestedKeys = new HashSet<>();
 		this.setDirty = setDirty;
 	}
@@ -21,7 +22,7 @@ public class LookupHandler<K, V> implements Cloneable {
 
 	V get(K key, V def) {
 		// requestedKeys.add(key);
-		V ret = keyValueMap.get(key);
+		V ret = keyValueMap.valAt(key);
 		if (ret==null) {
 			setDirty.run();
 			//ret is null here, so if def is also null, either variable can be returned
@@ -34,8 +35,8 @@ public class LookupHandler<K, V> implements Cloneable {
 	// FIXME: move to Builder and/or return new LookupHandler?
 	// -> in this case clone method can also be removed
 	void put(K key, V value) {
-		V prv = keyValueMap.get(key);
-		keyValueMap = ImmutableMap.put(keyValueMap, key, value);
+		V prv = keyValueMap.valAt(key);
+		keyValueMap = keyValueMap.assoc(key, value);
 		if (/*requestedKeys.contains(key) &&*/ prv!=null && !prv.equals(value)) {
 			setDirty.run();
 		}

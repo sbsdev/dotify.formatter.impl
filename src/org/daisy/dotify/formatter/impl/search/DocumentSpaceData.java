@@ -1,9 +1,8 @@
 package org.daisy.dotify.formatter.impl.search;
 
 import com.github.krukow.clj_ds.Persistents;
+import com.github.krukow.clj_lang.IPersistentMap;
 import com.github.krukow.clj_lang.IPersistentVector;
-
-import org.daisy.dotify.common.collection.ImmutableMap;
 
 /**
  * Provides the data needed for searching a document space.  
@@ -12,13 +11,13 @@ import org.daisy.dotify.common.collection.ImmutableMap;
 class DocumentSpaceData implements Cloneable {
 
 		IPersistentVector<PageDetails> pageDetails;
-		ImmutableMap<Integer, View<PageDetails>> volumeViews;
-		ImmutableMap<Integer, View<PageDetails>> sequenceViews;
+		IPersistentMap<Integer, View<PageDetails>> volumeViews;
+		IPersistentMap<Integer, View<PageDetails>> sequenceViews;
 		
 		DocumentSpaceData() {
 			this.pageDetails = (IPersistentVector)Persistents.<PageDetails>vector();
-			this.volumeViews = ImmutableMap.empty();
-			this.sequenceViews = ImmutableMap.empty();
+			this.volumeViews = (IPersistentMap)Persistents.hashMap();
+			this.sequenceViews = (IPersistentMap)Persistents.hashMap();
 		}
 		
 		@Override

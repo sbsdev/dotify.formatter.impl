@@ -3,7 +3,9 @@ package org.daisy.dotify.formatter.impl.search;
 import java.util.List;
 import java.util.Optional;
 
+import com.github.krukow.clj_ds.Persistents;
 import com.github.krukow.clj_ds.PersistentVector;
+import com.github.krukow.clj_lang.IPersistentMap;
 import com.github.krukow.clj_lang.IPersistentVector;
 import com.github.krukow.clj_lang.ITransientVector;
 
@@ -11,15 +13,14 @@ import org.daisy.dotify.api.formatter.Marker;
 import org.daisy.dotify.api.formatter.MarkerReferenceField;
 import org.daisy.dotify.api.formatter.MarkerReferenceField.MarkerSearchDirection;
 import org.daisy.dotify.api.formatter.MarkerReferenceField.MarkerSearchScope;
-import org.daisy.dotify.common.collection.ImmutableMap;
 
 class SearchInfo implements Cloneable {
 
-	private ImmutableMap<DocumentSpace, DocumentSpaceData> spaces;
+	private IPersistentMap<DocumentSpace, DocumentSpaceData> spaces;
 	private Runnable setDirty;
 	
 	SearchInfo(Runnable setDirty) {
-		this.spaces = ImmutableMap.empty();
+		this.spaces = (IPersistentMap)Persistents.hashMap();
 		this.setDirty = setDirty;
 	}
 	
@@ -39,7 +40,7 @@ class SearchInfo implements Cloneable {
 			setDirty.run();
 		}
 		data.pageDetails = (IPersistentVector)pageDetails.persistent();
-		spaces = ImmutableMap.put(spaces, space, data);
+		spaces = spaces.assoc(space, data);
 	}
 
 	View<PageDetails> getPageView(DocumentSpace space) {
@@ -47,11 +48,11 @@ class SearchInfo implements Cloneable {
 	}
 
 	View<PageDetails> getContentsInVolume(int volumeNumber, DocumentSpace space) {
-		return getViewForSpace(space).volumeViews.get(volumeNumber);
+		return getViewForSpace(space).volumeViews.valAt(volumeNumber);
 	}
 	
 	View<PageDetails> getContentsInSequence(SequenceId seqId) {
-		return getViewForSpace(seqId.getSpace()).sequenceViews.get(seqId.getOrdinal());
+		return getViewForSpace(seqId.getSpace()).sequenceViews.valAt(seqId.getOrdinal());
 	}
 	
 	// FIXME: move to Builder and/or return new SearchInfo object?
@@ -59,8 +60,8 @@ class SearchInfo implements Cloneable {
 	void setSequenceScope(DocumentSpace space, int sequenceNumber, int fromIndex, int toIndex) {
 		DocumentSpaceData data = getViewForSpace(space).clone();
 		View<PageDetails> pw = new View<PageDetails>((PersistentVector)data.pageDetails, fromIndex, toIndex);
-		data.sequenceViews = ImmutableMap.put(data.sequenceViews, sequenceNumber, pw);
-		spaces = ImmutableMap.put(spaces, space, data);
+		data.sequenceViews = data.sequenceViews.assoc(sequenceNumber, pw);
+		spaces = spaces.assoc(space, data);
 	}
 	
 	// FIXME: move to Builder and/or return new SearchInfo object?
@@ -77,15 +78,15 @@ class SearchInfo implements Cloneable {
 		for (PageDetails p : pw.getItems()) {
 			p.setVolumeNumber(volumeNumber);
 		}
-		data.volumeViews = ImmutableMap.put(data.volumeViews, volumeNumber, pw);
-		spaces = ImmutableMap.put(spaces, space, data);
+		data.volumeViews = data.volumeViews.assoc(volumeNumber, pw);
+		spaces = spaces.assoc(space, data);
 	}
 	
 	DocumentSpaceData getViewForSpace(DocumentSpace space) {
-		DocumentSpaceData ret = spaces.get(space);
+		DocumentSpaceData ret = spaces.valAt(space);
 		if (ret==null) {
 			ret = new DocumentSpaceData();
-			spaces = ImmutableMap.put(spaces, space, ret);
+			spaces = spaces.assoc(space, ret);
 		}
 		return ret;
 	}

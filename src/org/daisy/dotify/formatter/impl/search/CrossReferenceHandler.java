@@ -8,9 +8,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
+import com.github.krukow.clj_ds.Persistents;
+import com.github.krukow.clj_lang.IPersistentMap;
+
 import org.daisy.dotify.api.formatter.Marker;
 import org.daisy.dotify.api.formatter.MarkerReferenceField;
-import org.daisy.dotify.common.collection.ImmutableMap;
 
 public class CrossReferenceHandler implements Cloneable {
 	protected LookupHandler<String, Integer> pageRefs;
@@ -23,8 +25,8 @@ public class CrossReferenceHandler implements Cloneable {
     protected LookupHandler<BlockAddress, List<Marker>> groupMarkers;
     protected LookupHandler<BlockAddress, List<String>> groupIdentifiers;
 	protected LookupHandler<PageId, TransitionProperties> transitionProperties;
-	protected ImmutableMap<Integer, Overhead> volumeOverhead;
-    protected ImmutableMap<String, Integer> counters;
+	protected IPersistentMap<Integer, Overhead> volumeOverhead;
+    protected IPersistentMap<String, Integer> counters;
 	protected SearchInfo searchInfo;
 	private static final String VOLUMES_KEY = "volumes";
 	private static final String SHEETS_IN_VOLUME = "sheets-in-volume-";
@@ -52,8 +54,8 @@ public class CrossReferenceHandler implements Cloneable {
         this.groupMarkers = new LookupHandler<>(nop);
         this.groupIdentifiers = new LookupHandler<>(setDirty);
 		this.transitionProperties = new LookupHandler<>(() -> dirty.set(true));
-		this.volumeOverhead = ImmutableMap.empty();
-		this.counters = ImmutableMap.empty();
+		this.volumeOverhead = (IPersistentMap)Persistents.hashMap();
+		this.counters = (IPersistentMap)Persistents.hashMap();
 		this.searchInfo = new SearchInfo(setDirty);
         this.pageIds = new HashSet<>();
         this.setDirty = setDirty;
@@ -99,16 +101,16 @@ public class CrossReferenceHandler implements Cloneable {
 		if (volumeNumber<1) {
 			throw new IndexOutOfBoundsException("Volume must be greater than or equal to 1");
 		}
-		if (volumeOverhead.get(volumeNumber)==null) {
+		if (volumeOverhead.valAt(volumeNumber)==null) {
 			// inserting null values is not considered mutating
-			volumeOverhead = ImmutableMap.put(volumeOverhead, volumeNumber, new Overhead(0, 0));
+			volumeOverhead = volumeOverhead.assoc(volumeNumber, new Overhead(0, 0));
 			setDirty.run();
 		}
-		return volumeOverhead.get(volumeNumber);
+		return volumeOverhead.valAt(volumeNumber);
 	}
 	
 	public Integer getPageNumberOffset(String key) {
-		return counters.get(key);
+		return counters.valAt(key);
 	}
 
 	/**
@@ -347,14 +349,14 @@ public class CrossReferenceHandler implements Cloneable {
 		public Builder setOverhead(int volumeNumber, Overhead overhead) {
 			if (readonly)
 				throw new UnsupportedOperationException("Already built");
-			volumeOverhead = ImmutableMap.put(volumeOverhead, volumeNumber, overhead);
+			volumeOverhead = volumeOverhead.assoc(volumeNumber, overhead);
 			return this;
 		}
 
 		public Builder setPageNumberOffset(String key, Integer value) {
 			if (readonly)
 				throw new UnsupportedOperationException("Already built");
-			counters = ImmutableMap.put(counters, key, value);
+			counters = counters.assoc(key, value);
 			return this;
 		}
 		
@@ -410,7 +412,7 @@ public class CrossReferenceHandler implements Cloneable {
 		public Builder resetCounters() {
 			if (readonly)
 				throw new UnsupportedOperationException("Already built");
-			counters = ImmutableMap.empty();
+			counters = (IPersistentMap)Persistents.hashMap();
 			return this;
 		}
 	}
