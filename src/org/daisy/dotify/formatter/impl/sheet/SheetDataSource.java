@@ -336,7 +336,7 @@ public class SheetDataSource implements SplitPointDataSource<Sheet,SheetDataSour
 					volBreakAllowed &= p.allowsVolumeBreak();
 					if (!sectionProperties.duplex() || pageIndex % 2 == 1) {
 						final SheetIdentity _si = si;
-						modifyRefs(refs -> refs.setBreakable(_si, volBreakAllowed));
+						modifyRefs(refs -> refs.keepBreakable(_si, volBreakAllowed));
 					}
 					s.add(p);
 					pageIndex++;
@@ -381,7 +381,7 @@ public class SheetDataSource implements SplitPointDataSource<Sheet,SheetDataSour
 			//TODO: simplify this?
 			for (int x = start; i < p && x > 0; x--) {
 				SheetIdentity si = new SheetIdentity(getContext().getSpace(), getContext().getCurrentVolume(), volumeGroup, x);
-				modifyRefs(refs -> refs.setBreakable(si, false));
+				modifyRefs(refs -> refs.keepBreakable(si, false));
 				i++;
 			}
 		}

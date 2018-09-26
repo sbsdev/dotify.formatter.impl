@@ -359,6 +359,7 @@ public class VolumeProvider {
 		            .getContext()
 		            .getRefs()
 		            .builder()
+		            .commitBreakable()
 		            .trimPageDetails()
 		            .setVolumeCount(groups.getVolumeCount())
 		            .setSheetsInDocument(groups.countTotalSheets())

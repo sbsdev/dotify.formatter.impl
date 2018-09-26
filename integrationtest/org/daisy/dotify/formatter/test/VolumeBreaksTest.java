@@ -60,8 +60,13 @@ public class VolumeBreaksTest extends AbstractFormatterEngineTest {
 	}
 	
 	@Test @Ignore
-	public void testKeeVolumeKeepPrevious() throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
+	public void testKeepVolumeKeepPrevious() throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
 		testPEF("resource-files/volume-breaks-keep-previous-input.obfl", "resource-files/volume-breaks-keep-previous-expected.pef", false);
+	}
+
+	@Test
+	public void testKeepVolumeKeepPrevious2() throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
+		testPEF("resource-files/volume-breaks-keep-previous-2-input.obfl", "resource-files/volume-breaks-keep-previous-2-expected.pef", false);
 	}
 
 }

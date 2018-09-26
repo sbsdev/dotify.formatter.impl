@@ -1,17 +1,20 @@
 package org.daisy.dotify.formatter.impl.search;
 
 import java.util.HashSet;
+import java.util.Map;
 
 import com.github.krukow.clj_ds.Persistents;
 import com.github.krukow.clj_lang.IPersistentMap;
 
 public class LookupHandler<K, V> implements Cloneable {
 	private IPersistentMap<K, V> keyValueMap;
+	private IPersistentMap<K, V> uncommitted;
 	// private HashSet<K> requestedKeys;
 	private Runnable setDirty;
 	
 	LookupHandler(Runnable setDirty) {
 		this.keyValueMap = (IPersistentMap)Persistents.hashMap();
+		this.uncommitted = (IPersistentMap)Persistents.hashMap();
 		// this.requestedKeys = new HashSet<>();
 		this.setDirty = setDirty;
 	}
@@ -29,6 +32,31 @@ public class LookupHandler<K, V> implements Cloneable {
 			return def;
 		} else {
 			return ret;
+		}
+	}
+
+	/**
+	 * Keeps a value for later commit. Unlike put, multiple calls to keep for the same key will not
+	 * affect the status of the LookupHandler. Upon calling commit, the final value for each key are put
+	 * and, if changed, affects the status of the LookupHandler. Note that kept variables cannot
+	 * be read unless committed.
+	 *
+	 * @param key the value to keep
+	 * @param value the value
+	 */
+	void keep(K key, V value) {
+		uncommitted = uncommitted.assoc(key, value);
+	}
+	
+	/**
+	 * Commits values stored with keep.
+	 */
+	void commit() {
+		if (uncommitted.count() > 0) {
+			for (Map.Entry<K,V> e : uncommitted) {
+				put(e.getKey(), e.getValue());
+			}
+			uncommitted = (IPersistentMap)Persistents.hashMap();
 		}
 	}
 	

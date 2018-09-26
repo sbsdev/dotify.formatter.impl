@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<obfl xmlns="http://www.daisy.org/ns/2011/obfl" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2011-1" hyphenate="true" xml:lang="sv">
+	<meta xmlns:dc="http://purl.org/dc/elements/1.1/">
+		<dc:title>Volume keep with previous test 2</dc:title>
+		<dc:description>This test doesn't really have to do with volume breaking. It is just a
+		regression test for a "keep-with-previous-sheets" related bug that was fixed.</dc:description>
+	</meta>
+	<layout-master name="main" page-width="10" page-height="5" duplex="false">
+		<default-template>
+			<header/>
+			<footer/>
+		</default-template>
+	</layout-master>
+	<sequence master="main">
+		<block>
+			<!-- sheet 1 -->
+			aaaa aaaa aaaa aaaa aaaa aaaa aaaa aaaa aaaa aaaa
+			<!-- sheet 2 -->
+			bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb
+			<!-- sheet 3 -->
+			cccc cccc cccc cccc cccc cccc
+		</block>
+		<block keep-with-previous-sheets="1">
+			cccc cccc cccc cccc
+			<!-- sheet 4 -->
+			dddd dddd dddd dddd dddd dddd dddd dddd dddd
+		</block>
+	</sequence>
+</obfl>

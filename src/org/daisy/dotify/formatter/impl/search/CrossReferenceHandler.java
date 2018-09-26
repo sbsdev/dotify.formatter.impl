@@ -297,10 +297,17 @@ public class CrossReferenceHandler implements Cloneable {
 		// 	breakable.commit();
 		// }
 	
-		public Builder setBreakable(SheetIdentity ident, boolean value) {
+		public Builder keepBreakable(SheetIdentity ident, boolean value) {
 			if (readonly)
 				throw new UnsupportedOperationException("Already built");
-			breakable.put(ident, value);
+			breakable.keep(ident, value);
+			return this;
+		}
+
+		public Builder commitBreakable() {
+			if (readonly)
+				throw new UnsupportedOperationException("Already built");
+			breakable.commit();
 			return this;
 		}
 
