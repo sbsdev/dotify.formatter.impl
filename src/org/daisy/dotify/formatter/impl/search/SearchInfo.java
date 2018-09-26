@@ -69,12 +69,10 @@ class SearchInfo implements Cloneable {
 	// -> in this case clone method can also be removed
 	void setVolumeScope(int volumeNumber, int fromIndex, int toIndex, DocumentSpace space) {
 		DocumentSpaceData data = getViewForSpace(space).clone();
-		ImmutableList.Builder<PageDetails> pageDetails = data.pageDetails.builder();
-		View<PageDetails> pw = new View<PageDetails>(pageDetails, fromIndex, toIndex);
+		View<PageDetails> pw = new View<PageDetails>(data.pageDetails, fromIndex, toIndex);
 		for (PageDetails p : pw.getItems()) {
 			p.setVolumeNumber(volumeNumber);
 		}
-		data.pageDetails = pageDetails.build();
 		data.volumeViews = ImmutableMap.put(data.volumeViews, volumeNumber, pw);
 		spaces = ImmutableMap.put(spaces, space, data);
 	}
