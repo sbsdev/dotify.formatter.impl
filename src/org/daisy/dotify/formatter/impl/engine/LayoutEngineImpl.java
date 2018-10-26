@@ -3,9 +3,10 @@ package org.daisy.dotify.formatter.impl.engine;
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamException;
@@ -91,14 +92,11 @@ class LayoutEngineImpl implements FormatterEngine {
 				}
 
 				logger.info("Rendering output...");
-				ArrayList<MetaDataItem> meta = new ArrayList<>();
-				for (MetaDataItem item : obflParser.getMetaData()) {
+				List<MetaDataItem> meta = obflParser.getMetaData().stream()
 					// Filter out identifier, date and format from the OBFL meta data
 					// because the meta data in the OBFL file is about itself, and these properties are not transferable
-					if (!(item.getKey().equals(DC_IDENTIFIER) || item.getKey().equals(DC_DATE) || item.getKey().equals(DC_FORMAT))) {
-						meta.add(item);
-					}
-				}
+					.filter(item->!(item.getKey().equals(DC_IDENTIFIER) || item.getKey().equals(DC_DATE) || item.getKey().equals(DC_FORMAT)))
+					.collect(Collectors.toList());
 				writer.prepare(meta);
 				writer.open(output);
 				formatter.write(writer);
