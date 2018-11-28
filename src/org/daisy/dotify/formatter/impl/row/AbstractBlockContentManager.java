@@ -24,7 +24,7 @@ public abstract class AbstractBlockContentManager implements BlockStatistics {
 	
 	protected AbstractBlockContentManager(int flowWidth, RowDataProperties rdp, FormatterCoreContext fcontext, Integer minWidth) {
 		this.flowWidth = flowWidth;
-		this.margins = new BlockMargin(rdp, fcontext.getSpaceCharacter());
+		this.margins = rdp.getMargins();
 		this.spacing = new BlockSpacing(margins, rdp, flowWidth, fcontext.getSpaceCharacter());
 		this.fcontext = fcontext;
 		this.rdp = rdp;
