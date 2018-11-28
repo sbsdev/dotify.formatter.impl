@@ -10,6 +10,7 @@ import org.daisy.dotify.formatter.impl.core.LayoutMaster;
 import org.daisy.dotify.formatter.impl.datatype.VolumeKeepPriority;
 import org.daisy.dotify.formatter.impl.row.AbstractBlockContentManager;
 import org.daisy.dotify.formatter.impl.row.BlockStatistics;
+import org.daisy.dotify.formatter.impl.row.LineProperties;
 import org.daisy.dotify.formatter.impl.row.RowImpl;
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.search.DefaultContext;
@@ -86,16 +87,16 @@ class RowGroupProvider {
 		return bcm;
 	}
 	
-	public RowGroup next(DefaultContext context, boolean wholeWordsOnly) {
+	public RowGroup next(DefaultContext context, LineProperties lineProps) {
 		if (this.context==null || !this.context.equals(context)) {
 			this.context = g.contextWithMeta(context);
 			bcm.setContext(this.context);
 		}
-		RowGroup b = nextInner(wholeWordsOnly);
+		RowGroup b = nextInner(lineProps);
 		return b;
 	}
 
-	private RowGroup nextInner(boolean wholeWordsOnly) {
+	private RowGroup nextInner(LineProperties lineProps) {
 		if (phase==0) {
 			phase++;
 			//if there is a row group, return it (otherwise, try next phase)
@@ -126,7 +127,7 @@ class RowGroupProvider {
 		}
 		if (phase==3) {
 			Optional<RowImpl> rt;
-			if ((rt=bcm.getNext(wholeWordsOnly)).isPresent()) {
+			if ((rt=bcm.getNext(lineProps)).isPresent()) {
 				RowImpl r = rt.get();
 				rowIndex++;
 				boolean hasNext = bcm.hasNext(); 

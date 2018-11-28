@@ -62,10 +62,10 @@ public abstract class AbstractBlockContentManager implements BlockStatistics {
      * @return returns the next row
      */
 	public Optional<RowImpl> getNext() {
-		return getNext(false);
+		return getNext(LineProperties.DEFAULT);
 	}
 	
-    public abstract Optional<RowImpl> getNext(boolean wholeWordsOnly);
+    public abstract Optional<RowImpl> getNext(LineProperties lineProps);
 
 	/**
 	 * Returns true if this manager supports rows with variable maximum
