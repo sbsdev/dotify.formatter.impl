@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.daisy.dotify.api.formatter.FieldList;
 import org.daisy.dotify.api.formatter.Marker;
 import org.daisy.dotify.api.formatter.PageAreaProperties;
 import org.daisy.dotify.api.translator.BrailleTranslator;
@@ -75,11 +76,7 @@ public class PageImpl implements Page {
 	}
 	
 	void newRow(RowImpl r) {
-		if (!hasRows) {
-			//add the header
-	        finalRows.addAll(fieldResolver.renderFields(getDetails(), template.getHeader(), filter));
-	        //add the top page area
-			addTopPageArea();
+		if (addHeaderIfNotAdded()) {
 			getDetails().startsContentMarkers();
 			hasRows = true;
 		}
@@ -159,6 +156,20 @@ public class PageImpl implements Page {
 			finalRows.addAll(pageAreaTemplate.getAfter());
 		}
 	}
+	
+	private boolean addHeaderIfNotAdded() {
+		if (!hasRows) { // the header hasn't been added yet 
+			//add the header
+			for (FieldList fields : template.getHeader()) {
+				finalRows.addRow(fieldResolver.renderField(getDetails(), fields, filter));
+			}
+			//add top page area
+			addTopPageArea();
+			return true;
+		} else {
+			return false;
+		}
+	}
 
 	/*
 	 * The assumption is made that by now all pages have been added to the parent sequence and volume scopes
@@ -168,12 +179,7 @@ public class PageImpl implements Page {
 	public List<Row> getRows() {
 		try {
 			if (!finalRows.isClosed()) {
-				if (!hasRows) { // the header hasn't been added yet 
-					//add the header
-			        finalRows.addAll(fieldResolver.renderFields(getDetails(), template.getHeader(), filter));
-			      //add top page area
-					addTopPageArea();
-				}
+				addHeaderIfNotAdded();
 		        float headerHeight = template.getHeaderHeight();
 		        if (!template.getFooter().isEmpty() || finalRows.hasBorder() || (master.getPageArea()!=null && master.getPageArea().getAlignment()==PageAreaProperties.Alignment.BOTTOM && !pageArea.isEmpty())) {
 		            float areaSize = (master.getPageArea()!=null && master.getPageArea().getAlignment()==PageAreaProperties.Alignment.BOTTOM ? pageAreaSpaceNeeded() : 0);
