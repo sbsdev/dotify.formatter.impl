@@ -191,7 +191,9 @@ public class PageImpl implements Page {
 						finalRows.addAll(pageArea);
 						finalRows.addAll(pageAreaTemplate.getAfter());
 					}
-		            finalRows.addAll(fieldResolver.renderFields(getDetails(), template.getFooter(), filter));
+					for (FieldList fields : template.getFooter()) {
+						finalRows.addRow(fieldResolver.renderField(getDetails(), fields, filter));
+					}
 				}
 			}
 			return finalRows.getRows();

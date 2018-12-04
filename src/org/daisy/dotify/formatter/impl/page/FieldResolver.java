@@ -36,14 +36,6 @@ class FieldResolver implements PageShape {
 		this.crh = crh;
 		this.detailsTemplate = detailsTemplate;
 	}
-	
-    List<RowImpl> renderFields(PageDetails p, List<FieldList> fields, BrailleTranslator translator) throws PaginatorException {
-        ArrayList<RowImpl> ret = new ArrayList<>();
-		for (FieldList row : fields) {
-            ret.add(renderField(p, row, translator));
-		}
-		return ret;
-	}
     
     RowImpl renderField(PageDetails p, FieldList field, BrailleTranslator translator) throws PaginatorException {
     	try {
