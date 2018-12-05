@@ -50,7 +50,9 @@ public class PageImpl implements Page {
 	private final BrailleTranslator filter;
 	
 	private int renderedHeaderRows;
+	private int renderedFooterRows;
 	private boolean topPageAreaProcessed;
+	private boolean bottomPageAreaProcessed;
 	
 	public PageImpl(FieldResolver fieldResolver, PageDetails details, LayoutMaster master, FormatterContext fcontext, PageAreaContent pageAreaTemplate) {
 		this.fieldResolver = fieldResolver;
@@ -72,7 +74,9 @@ public class PageImpl implements Page {
 		this.hasRows = false;
 		this.filter = fcontext.getDefaultTranslator();
 		this.renderedHeaderRows = 0;
+		this.renderedFooterRows = 0;
 		this.topPageAreaProcessed = false;
+		this.bottomPageAreaProcessed = false;
 	}
 
 	void addToPageArea(List<RowImpl> block) {
@@ -95,7 +99,6 @@ public class PageImpl implements Page {
 				finalRows.addRow(fieldResolver.renderField(getDetails(), fields, filter, Optional.empty()));
 			}
 		}
-		
 		if (renderedHeaderRows>=template.getHeader().size()) {
 			if (!topPageAreaProcessed) {
 				addTopPageArea();
@@ -105,7 +108,21 @@ public class PageImpl implements Page {
 			if (hasBodyRowsLeft()) {
 				finalRows.addRow(r);
 			} else {
-				//FIXME:
+				if (!bottomPageAreaProcessed) {
+					addBottomPageArea();
+					bottomPageAreaProcessed = true;
+				}
+				while (renderedFooterRows<template.getFooter().size()) {
+					FieldList fields = template.getFooter().get(renderedFooterRows);
+					renderedFooterRows++;
+					if (fields.getFields().stream().anyMatch(v->v instanceof NoField)) {
+						finalRows.addRow(fieldResolver.renderField(getDetails(), fields, filter, Optional.of(r)));
+						addRowDetails(r);
+						return;
+					} else {
+						finalRows.addRow(fieldResolver.renderField(getDetails(), fields, filter, Optional.empty()));
+					}
+				}
 			}
 			addRowDetails(r);
 		}
@@ -224,12 +241,13 @@ public class PageImpl implements Page {
 			while (hasBodyRowsLeft()) {
 				finalRows.addRow(new RowImpl());
 			}
-			if (master.getPageArea()!=null && master.getPageArea().getAlignment()==PageAreaProperties.Alignment.BOTTOM && !pageArea.isEmpty()) {
-				finalRows.addAll(pageAreaTemplate.getBefore());
-				finalRows.addAll(pageArea);
-				finalRows.addAll(pageAreaTemplate.getAfter());
+			if (!bottomPageAreaProcessed) {
+				addBottomPageArea();
+				bottomPageAreaProcessed = true;
 			}
-			for (FieldList fields : template.getFooter()) {
+			while (renderedFooterRows<template.getFooter().size()) {
+				FieldList fields = template.getFooter().get(renderedFooterRows);
+				renderedFooterRows++;
 				finalRows.addRow(fieldResolver.renderField(getDetails(), fields, filter, Optional.empty()));
 			}
 		}
