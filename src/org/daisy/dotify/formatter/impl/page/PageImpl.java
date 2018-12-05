@@ -89,7 +89,8 @@ public class PageImpl implements Page {
 			renderedHeaderRows++;
 			if (fields.getFields().stream().anyMatch(v->v instanceof NoField)) {
 				finalRows.addRow(fieldResolver.renderField(getDetails(), fields, filter, Optional.of(r)));
-				break;
+				addRowDetails(r);
+				return;
 			} else {
 				finalRows.addRow(fieldResolver.renderField(getDetails(), fields, filter, Optional.empty()));
 			}
@@ -101,11 +102,19 @@ public class PageImpl implements Page {
 				getDetails().startsContentMarkers();
 				topPageAreaProcessed = true;
 			}
-			finalRows.addRow(r);
-			getDetails().getMarkers().addAll(r.getMarkers());
-			anchors.addAll(r.getAnchors());
-			identifiers.addAll(r.getIdentifiers());
+			if (hasBodyRowsLeft()) {
+				finalRows.addRow(r);
+			} else {
+				//FIXME:
+			}
+			addRowDetails(r);
 		}
+	}
+	
+	private void addRowDetails(RowImpl r) {
+		getDetails().getMarkers().addAll(r.getMarkers());
+		anchors.addAll(r.getAnchors());
+		identifiers.addAll(r.getIdentifiers());
 	}
 	
 	void addMarkers(List<Marker> m) {
@@ -229,7 +238,7 @@ public class PageImpl implements Page {
 	private boolean hasBodyRowsLeft() {
 		float headerHeight = template.getHeaderHeight();
 		float areaSize = (master.getPageArea()!=null && master.getPageArea().getAlignment()==PageAreaProperties.Alignment.BOTTOM ? pageAreaSpaceNeeded() : 0);
-		return Math.ceil(finalRows.getOffsetHeight() + areaSize) < getFlowHeight() + headerHeight;
+		return Math.ceil(finalRows.getOffsetHeight() + areaSize) < getFlowHeight() + headerHeight - template.validateAndAnalyzeHeader() - template.validateAndAnalyzeFooter();
 	}
 
 	/*
