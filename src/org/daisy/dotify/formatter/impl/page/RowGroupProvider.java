@@ -97,6 +97,11 @@ class RowGroupProvider {
 	}
 
 	private RowGroup nextInner(LineProperties lineProps) {
+		if (lineProps.getReservedWidth()>0 && !bcm.supportsVariableWidth()) {
+			return new RowGroup.Builder(master.getRowSpacing()).add(new RowImpl())
+					.mergeable(false)
+					.collapsible(false).skippable(false).breakable(false).build();
+		}
 		if (phase==0) {
 			phase++;
 			//if there is a row group, return it (otherwise, try next phase)

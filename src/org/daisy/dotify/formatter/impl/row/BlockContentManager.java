@@ -81,7 +81,11 @@ public class BlockContentManager extends AbstractBlockContentManager {
 	
 	@Override
 	public boolean supportsVariableWidth() {
-		return true;
+		return rdp.getMargins().getLeftMargin().isSpaceOnly()
+			&& rdp.getMargins().getRightMargin().isSpaceOnly()
+			&& rdp.getUnderlineStyle()==null
+			&& rdp.getLeadingDecoration()==null
+			&& rdp.getTrailingDecoration()==null;
 	}
 	
     @Override

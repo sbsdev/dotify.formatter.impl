@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
 import org.daisy.dotify.api.formatter.BlockPosition;
 import org.daisy.dotify.api.formatter.FallbackRule;
@@ -210,6 +211,10 @@ public class PageSequenceBuilder2 {
 					.flowWidth(master.getFlowWidth() - master.getTemplate(current.getPageNumber()).getTotalMarginRegionWidth())
 					.build();
 			data.setContext(bc);
+			Function<Integer, Integer> reservedWidths = x->{
+				return master.getFlowWidth()-fieldResolver.getWidth(current.getPageNumber(), x);
+			}; 
+			data.setReservedWidths(reservedWidths);
 			Optional<Boolean> blockBoundary = Optional.empty();
 			if (!data.isEmpty()) {
 				RowGroupDataSource copy = new RowGroupDataSource(data);
@@ -268,13 +273,19 @@ public class PageSequenceBuilder2 {
 						addTransition = false;
 					}
 				} else {
+					SplitPointCost<RowGroup> cost = (SplitPointDataSource<RowGroup, ?> units, int in, int limit)->{
+							double variableWidthCost = (reservedWidths.apply(in)>0 && !units.get(in).isMergeable())?10:0;
+							return (
+										(units.get(in).isBreakable()?1:2) + variableWidthCost
+									)*limit-in;
+					};
 					float seqHeight = 0;
 					if (wasSplitInSequence) {
 						seqHeight = height(seqTransitionText, false);
 					}
 					// Either RESUME, or no transition on this page.
 					float flowHeight = current.getFlowHeight() - anyHeight - seqHeight;
-					spec = sph.find(flowHeight, copy, force?StandardSplitOption.ALLOW_FORCE:null);
+					spec = sph.find(flowHeight, copy, cost, force?StandardSplitOption.ALLOW_FORCE:null);
 				}
 				// Now apply the information to the live data
 				data.setAllowHyphenateLastLine(hyphenateLastLine);
