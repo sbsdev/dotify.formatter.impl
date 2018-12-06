@@ -549,7 +549,7 @@ public class PageSequenceBuilder2 {
 		@Override
 		public RowGroup get(String id) {
 			if (collection!=null) {
-				RowGroup.Builder b = new RowGroup.Builder(master.getRowSpacing());
+				RowGroup.Builder b = new RowGroup.Builder(master.getRowSpacing()).mergeable(false);
 				for (Block g : collection.getBlocks(id)) {
 					AbstractBlockContentManager bcm = g.getBlockContentManager(c);
 					b.addAll(bcm.getCollapsiblePreContentRows());
