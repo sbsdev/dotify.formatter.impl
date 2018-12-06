@@ -66,31 +66,6 @@ public class PageImpl implements Page {
 		this.hasRows = false;
 		this.filter = fcontext.getDefaultTranslator();
 	}
-	
-	public PageImpl(PageImpl template) {
-		this.fieldResolver = template.fieldResolver;
-		this.details = template.details;
-		this.master = template.master;
-		this.fcontext = template.fcontext;
-		this.pageAreaTemplate = template.pageAreaTemplate;
-	    this.pageArea = new ArrayList<>(template.pageArea);
-	    this.anchors = new ArrayList<>(template.anchors);
-	    this.identifiers = new ArrayList<>(template.identifiers);
-		this.flowHeight = template.flowHeight;
-		this.template = template.template;
-		this.pageMargin = template.pageMargin;
-		this.finalRows = new BorderManager(template.finalRows);
-
-		this.hasRows = template.hasRows;
-		this.isVolBreakAllowed = template.isVolBreakAllowed;
-		this.keepPreviousSheets = template.keepPreviousSheets;
-		this.volumeBreakAfterPriority = template.volumeBreakAfterPriority;
-		this.filter = template.filter;
-	}
-	
-	public static PageImpl copyUnlessNull(PageImpl page) {
-		return page==null?null:new PageImpl(page);
-	}
 
 	void addToPageArea(List<RowImpl> block) {
 		if (hasRows) {
