@@ -93,7 +93,7 @@ class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<
 
 	@Override
 	public boolean isEmpty() {
-		return this.currentRowCount()==0 && blockIndex>=blocks.size() && !hasNextInBlock();
+		return this.groupSize()==0 && blockIndex>=blocks.size() && !hasNextInBlock();
 	}
 
 	@Override
@@ -110,7 +110,7 @@ class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<
 		if (this.groups==null) {
 			return Collections.emptyList();
 		} else {
-			return this.groups.subList(0, currentRowCount());
+			return this.groups.subList(0, groupSize());
 		}
 	}
 
@@ -118,7 +118,7 @@ class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<
 	public int getSize(int limit) {
 		if (!ensureBuffer(limit))  {
 			//we have buffered all elements
-			return this.currentRowCount();
+			return this.groupSize();
 		} else {
 			return limit;
 		}
@@ -159,7 +159,7 @@ class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<
 	 * @return returns true if the index element was available, false otherwise
 	 */
 	private boolean ensureBuffer(int index) {
-		while (index<0 || this.currentRowCount()<index) {
+		while (index<0 || this.groupSize()<index) {
 			if (blockIndex>=blocks.size() && !hasNextInBlock()) {
 				return false;
 			}
@@ -173,7 +173,7 @@ class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<
 			// This is reasonable: The very last line in a result would never be hyphenated, so suppressing
 			// hyphenation is unnecessary. Also, actively doing this would be difficult, because we do not know
 			// if the line produced below is the last line or not, until after the call has already been made.
-			processNextRowGroup(bc, !allowHyphenateLastLine && index>-1 && currentRowCount()>=index-1);
+			processNextRowGroup(bc, !allowHyphenateLastLine && index>-1 && groupSize()>=index-1);
 		}
 		return true;
 	}
@@ -227,7 +227,7 @@ class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<
 		groups.add(rg);
 	}
 	
-	int currentRowCount() {
+	private int groupSize() {
 		return groups==null?0:groups.size();
 	}
 }
