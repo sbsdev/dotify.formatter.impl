@@ -2,6 +2,7 @@ package org.daisy.dotify.formatter.impl.page;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -37,9 +38,12 @@ class FieldResolver implements PageShape {
 		this.detailsTemplate = detailsTemplate;
 	}
     
-    RowImpl renderField(PageDetails p, FieldList field, BrailleTranslator translator) throws PaginatorException {
+    RowImpl renderField(PageDetails p, FieldList field, BrailleTranslator translator, Optional<RowImpl> r) throws PaginatorException {
     	try {
-            return new RowImpl.Builder(distribute(p, field, master.getFlowWidth(), fcontext.getSpaceCharacter()+"", translator))
+    		int mr = r.isPresent()?master.getTemplate(p.getPageNumber()).getTotalMarginRegionWidth():0;
+    		String data = distribute(p, field, master.getFlowWidth()-mr, fcontext.getSpaceCharacter()+"", translator, r.map(v->v.getChars()));
+    		RowImpl.Builder builder = r.map(v->new RowImpl.Builder(v).text(data)).orElse(new RowImpl.Builder(data));
+            return builder
             		.rowSpacing(field.getRowSpacing())
             		.build();
         } catch (PaginatorToolsException e) {
@@ -47,11 +51,11 @@ class FieldResolver implements PageShape {
 		}
     }
     
-    private List<String> resolveField(PageDetails p, FieldList chunks, int width, String padding, BrailleTranslator translator) throws PaginatorToolsException {
+    private List<String> resolveField(PageDetails p, FieldList chunks, int width, String padding, BrailleTranslator translator, Optional<String> noField) throws PaginatorToolsException {
 		ArrayList<String> chunkF = new ArrayList<>();
 		for (Field f : chunks.getFields()) {
 			DefaultTextAttribute.Builder b = new DefaultTextAttribute.Builder(null);
-            String resolved = softHyphen.matcher(resolveField(f, p, b)).replaceAll("");
+            String resolved = softHyphen.matcher(resolveField(f, p, b, noField)).replaceAll("");
 			Translatable.Builder tr = Translatable.text(fcontext.getConfiguration().isMarkingCapitalLetters()?resolved:resolved.toLowerCase()).
 										hyphenate(false);
 			if (resolved.length()>0) {
@@ -66,8 +70,8 @@ class FieldResolver implements PageShape {
 		return chunkF;
     }
 	
-    private String distribute(PageDetails p, FieldList chunks, int width, String padding, BrailleTranslator translator) throws PaginatorToolsException {
-    	List<String> chunkF = resolveField(p, chunks, width, padding, translator);
+    private String distribute(PageDetails p, FieldList chunks, int width, String padding, BrailleTranslator translator, Optional<String> noField) throws PaginatorToolsException {
+    	List<String> chunkF = resolveField(p, chunks, width, padding, translator, noField);
         return PaginatorTools.distribute(chunkF, width, padding,
                 fcontext.getConfiguration().isAllowingTextOverflowTrimming()?
                 PaginatorTools.DistributeMode.EQUAL_SPACING_TRUNCATE:
@@ -79,14 +83,14 @@ class FieldResolver implements PageShape {
 	 * Note that the result of this function is not constant because getPageInSequenceWithOffset(),
 	 * getPageInVolumeWithOffset() and shouldAdjustOutOfBounds() are not constant.
 	 */
-	private String resolveField(Field field, PageDetails p, DefaultTextAttribute.Builder b) {
+	private String resolveField(Field field, PageDetails p, DefaultTextAttribute.Builder b, Optional<String> noField) {
 		if (field instanceof NoField) {
-			return "";
+			return noField.orElse("");
 		}
 		String ret;
 		DefaultTextAttribute.Builder b2 = new DefaultTextAttribute.Builder(field.getTextStyle());
 		if (field instanceof CompoundField) {
-			ret = resolveCompoundField((CompoundField)field, p, b2);
+			ret = resolveCompoundField((CompoundField)field, p, b2, noField);
 		} else if (field instanceof MarkerReferenceField) {
 			ret = crh.findMarker(p.getPageId(), (MarkerReferenceField)field);
 		} else if (field instanceof CurrentPageField) {
@@ -100,8 +104,8 @@ class FieldResolver implements PageShape {
 		return ret;
 	}
 
-	private String resolveCompoundField(CompoundField f, PageDetails p, DefaultTextAttribute.Builder b) {
-		return f.stream().map(f2 -> resolveField(f2, p, b)).collect(Collectors.joining());
+	private String resolveCompoundField(CompoundField f, PageDetails p, DefaultTextAttribute.Builder b, Optional<String> noField) {
+		return f.stream().map(f2 -> resolveField(f2, p, b, noField)).collect(Collectors.joining());
 	}
 	
 	private static String resolveCurrentPageField(CurrentPageField f, PageDetails p) {
@@ -133,7 +137,7 @@ class FieldResolver implements PageShape {
 		return getWidth(detailsTemplate.with(pagenum-1), rowOffset);
 	}
 
-	int getWidth(PageDetails details, int rowOffset) {
+	private int getWidth(PageDetails details, int rowOffset) {
 		PageTemplate p = master.getTemplate(details.getPageNumber());
 		int flowHeader = p.validateAndAnalyzeHeader();
 		int flowFooter = p.validateAndAnalyzeFooter();
@@ -158,7 +162,7 @@ class FieldResolver implements PageShape {
 
 	private int getAvailableForNoField(PageDetails details, FieldList list) {
 		try {
-			List<String> parts = resolveField(details, list, master.getFlowWidth(), fcontext.getSpaceCharacter()+"", fcontext.getDefaultTranslator());
+			List<String> parts = resolveField(details, list, master.getFlowWidth(), fcontext.getSpaceCharacter()+"", fcontext.getDefaultTranslator(), Optional.empty());
 			int size = parts.stream().mapToInt(str -> str.length()).sum();
 			return master.getFlowWidth()-size;
 		} catch (PaginatorToolsException e) {

@@ -3,6 +3,7 @@ package org.daisy.dotify.formatter.impl.page;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import org.daisy.dotify.api.formatter.FieldList;
 import org.daisy.dotify.api.formatter.Marker;
@@ -175,7 +176,7 @@ public class PageImpl implements Page {
 		if (!hasRows) { // the header hasn't been added yet 
 			//add the header
 			for (FieldList fields : template.getHeader()) {
-				finalRows.addRow(fieldResolver.renderField(getDetails(), fields, filter));
+				finalRows.addRow(fieldResolver.renderField(getDetails(), fields, filter, Optional.empty()));
 			}
 			//add top page area
 			addTopPageArea();
@@ -202,7 +203,7 @@ public class PageImpl implements Page {
 					}
 					addBottomPageArea();
 					for (FieldList fields : template.getFooter()) {
-						finalRows.addRow(fieldResolver.renderField(getDetails(), fields, filter));
+						finalRows.addRow(fieldResolver.renderField(getDetails(), fields, filter, Optional.empty()));
 					}
 				}
 			}

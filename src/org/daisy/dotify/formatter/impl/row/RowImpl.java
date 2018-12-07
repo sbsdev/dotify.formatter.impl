@@ -71,7 +71,7 @@ public final class RowImpl implements Row {
 			this.leaderSpace = template.leaderSpace;
 		}
 
-		Builder text(String value) {
+		public Builder text(String value) {
 			this.chars = value;
 			return this;
 		}
