@@ -48,6 +48,9 @@ public class PageImpl implements Page {
 	private VolumeKeepPriority volumeBreakAfterPriority;
 	private final BrailleTranslator filter;
 	
+	private int renderedHeaderRows;
+	private boolean topPageAreaProcessed;
+	
 	public PageImpl(FieldResolver fieldResolver, PageDetails details, LayoutMaster master, FormatterContext fcontext, PageAreaContent pageAreaTemplate) {
 		this.fieldResolver = fieldResolver;
 		this.details = details;
@@ -67,6 +70,8 @@ public class PageImpl implements Page {
 		this.finalRows = new BorderManager(master, fcontext, pageMargin);
 		this.hasRows = false;
 		this.filter = fcontext.getDefaultTranslator();
+		this.renderedHeaderRows = 0;
+		this.topPageAreaProcessed = false;
 	}
 
 	void addToPageArea(List<RowImpl> block) {
@@ -77,14 +82,24 @@ public class PageImpl implements Page {
 	}
 	
 	void newRow(RowImpl r) {
-		if (addHeaderIfNotAdded()) {
-			getDetails().startsContentMarkers();
-			hasRows = true;
+		hasRows = true;
+		while (renderedHeaderRows<template.getHeader().size()) {
+			FieldList fields = template.getHeader().get(renderedHeaderRows);
+			renderedHeaderRows++;
+			finalRows.addRow(fieldResolver.renderField(getDetails(), fields, filter, Optional.of(r)));
 		}
-		finalRows.addRow(r);
-		getDetails().getMarkers().addAll(r.getMarkers());
-		anchors.addAll(r.getAnchors());
-		identifiers.addAll(r.getIdentifiers());
+		
+		if (renderedHeaderRows>=template.getHeader().size()) {
+			if (!topPageAreaProcessed) {
+				addTopPageArea();
+				getDetails().startsContentMarkers();
+				topPageAreaProcessed = true;
+			}
+			finalRows.addRow(r);
+			getDetails().getMarkers().addAll(r.getMarkers());
+			anchors.addAll(r.getAnchors());
+			identifiers.addAll(r.getIdentifiers());
+		}
 	}
 	
 	void addMarkers(List<Marker> m) {
