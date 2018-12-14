@@ -95,7 +95,7 @@ public final class RowImpl implements Row {
 			this.rightMargin = value;
 			return this;
 		}
-		Builder alignment(Alignment value) {
+		public Builder alignment(Alignment value) {
 			this.alignment = value;
 			return this;
 		}

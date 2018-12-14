@@ -93,13 +93,14 @@ public class PageImpl implements Page {
 	}
 	
 	void newRow(RowImpl r) {
-		r = addMarginRegion(r);
 		hasRows = true;
 		while (renderedHeaderRows<template.getHeader().size()) {
 			FieldList fields = template.getHeader().get(renderedHeaderRows);
 			renderedHeaderRows++;
 			if (fields.getFields().stream().anyMatch(v->v instanceof NoField)) {
-				finalRows.addRow(fieldResolver.renderField(getDetails(), fields, filter, Optional.of(r)));
+				//
+				RowImpl r2 = fieldResolver.renderField(getDetails(), fields, filter, Optional.of(r));
+				finalRows.addRow(r2.shouldAdjustForMargin()?addMarginRegion(r2):r2);
 				addRowDetails(r);
 				return;
 			} else {
@@ -113,7 +114,8 @@ public class PageImpl implements Page {
 				topPageAreaProcessed = true;
 			}
 			if (hasBodyRowsLeft()) {
-				finalRows.addRow(r);
+				//
+				finalRows.addRow(r.shouldAdjustForMargin()?addMarginRegion(r):r);
 			} else {
 				if (!bottomPageAreaProcessed) {
 					addBottomPageArea();
@@ -123,7 +125,9 @@ public class PageImpl implements Page {
 					FieldList fields = template.getFooter().get(renderedFooterRows);
 					renderedFooterRows++;
 					if (fields.getFields().stream().anyMatch(v->v instanceof NoField)) {
-						finalRows.addRow(fieldResolver.renderField(getDetails(), fields, filter, Optional.of(r)));
+						//
+						RowImpl r2 = fieldResolver.renderField(getDetails(), fields, filter, Optional.of(r));
+						finalRows.addRow(r2.shouldAdjustForMargin()?addMarginRegion(r2):r2);
 						addRowDetails(r);
 						return;
 					} else {

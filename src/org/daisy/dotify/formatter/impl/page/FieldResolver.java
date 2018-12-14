@@ -14,8 +14,11 @@ import org.daisy.dotify.api.formatter.MarkerReferenceField;
 import org.daisy.dotify.api.formatter.NoField;
 import org.daisy.dotify.api.translator.BrailleTranslator;
 import org.daisy.dotify.api.translator.DefaultTextAttribute;
+import org.daisy.dotify.api.translator.TextBorderStyle;
 import org.daisy.dotify.api.translator.Translatable;
 import org.daisy.dotify.api.translator.TranslationException;
+import org.daisy.dotify.formatter.impl.core.BorderManager;
+import org.daisy.dotify.formatter.impl.core.BorderManagerProperties;
 import org.daisy.dotify.formatter.impl.core.FormatterContext;
 import org.daisy.dotify.formatter.impl.core.LayoutMaster;
 import org.daisy.dotify.formatter.impl.core.PageTemplate;
@@ -41,8 +44,28 @@ class FieldResolver implements PageShape {
     RowImpl renderField(PageDetails p, FieldList field, BrailleTranslator translator, Optional<RowImpl> r) throws PaginatorException {
     	try {
     		int mr = r.isPresent()?master.getTemplate(p.getPageNumber()).getTotalMarginRegionWidth():0;
-    		String data = distribute(p, field, master.getFlowWidth()-mr, fcontext.getSpaceCharacter()+"", translator, r.map(v->v.getChars()));
-    		RowImpl.Builder builder = r.map(v->new RowImpl.Builder(v).text(data)).orElse(new RowImpl.Builder(data));
+    		BorderManagerProperties mp = new SimpleBorderManagerProperties(getAvailableForNoField(p, master.getFlowWidth()-mr, field));
+
+			Optional<String> x =
+					r.map(v->{
+				BorderManager bm = new BorderManager(mp, fcontext, 0);
+				bm.addRow(new RowImpl.Builder(v.getChars())
+						.leftMargin(v.getLeftMargin())
+						.rightMargin(v.getRightMargin())
+						.alignment(v.getAlignment())
+						.build());
+				return bm.getRows().get(0).getChars();
+			});
+    		String data = distribute(p, field, master.getFlowWidth()-mr, fcontext.getSpaceCharacter()+"", translator, x);
+    		
+    		RowImpl.Builder builder = r.map(v->
+    				new RowImpl.Builder(data)
+    					.addAnchors(v.getAnchors())
+    					.addMarkers(v.getMarkers())
+    					.addIdentifiers(v.getIdentifiers())
+    					.adjustedForMargin(true)
+    				)
+    				.orElse(new RowImpl.Builder(data));
             return builder
             		.rowSpacing(field.getRowSpacing())
             		.build();
@@ -50,7 +73,34 @@ class FieldResolver implements PageShape {
             throw new PaginatorException("Error while rendering header", e);
 		}
     }
-    
+	
+	private static class SimpleBorderManagerProperties implements BorderManagerProperties {
+		private final int width;
+		private SimpleBorderManagerProperties(int width) {
+			this.width = width;
+		}
+
+		@Override
+		public float getRowSpacing() {
+			return 1.0f;
+		}
+
+		@Override
+		public int getPageWidth() {
+			return width;
+		}
+
+		@Override
+		public int getFlowWidth() {
+			return width;
+		}
+
+		@Override
+		public TextBorderStyle getBorder() {
+			return null;
+		}
+	}
+
     private List<String> resolveField(PageDetails p, FieldList chunks, int width, String padding, BrailleTranslator translator, Optional<String> noField) throws PaginatorToolsException {
 		ArrayList<String> chunkF = new ArrayList<>();
 		for (Field f : chunks.getFields()) {
@@ -147,11 +197,11 @@ class FieldResolver implements PageShape {
 			if (rowOffset<flowHeader) {
 				//this is a shared row
 				int start = p.getHeader().size()-flowHeader;
-				return getAvailableForNoField(details, p.getHeader().get(start+rowOffset));
+				return getAvailableForNoField(details, master.getFlowWidth()-p.getTotalMarginRegionWidth(), p.getHeader().get(start+rowOffset));
 			} else if (rowOffset>=flowHeight-flowFooter) {
 				//this is a shared row
 				int rowsLeftOnPage = flowHeight-rowOffset;
-				return getAvailableForNoField(details, p.getFooter().get(flowFooter-rowsLeftOnPage));
+				return getAvailableForNoField(details, master.getFlowWidth()-p.getTotalMarginRegionWidth(), p.getFooter().get(flowFooter-rowsLeftOnPage));
 			} else {
 				return master.getFlowWidth();
 			}
@@ -160,9 +210,9 @@ class FieldResolver implements PageShape {
 		}
 	}
 
-	private int getAvailableForNoField(PageDetails details, FieldList list) {
+	private int getAvailableForNoField(PageDetails details, int flowWidth, FieldList list) {
 		try {
-			List<String> parts = resolveField(details, list, master.getFlowWidth(), fcontext.getSpaceCharacter()+"", fcontext.getDefaultTranslator(), Optional.empty());
+			List<String> parts = resolveField(details, list, flowWidth, fcontext.getSpaceCharacter()+"", fcontext.getDefaultTranslator(), Optional.empty());
 			int size = parts.stream().mapToInt(str -> str.length()).sum();
 			return master.getFlowWidth()-size;
 		} catch (PaginatorToolsException e) {
