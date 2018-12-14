@@ -6,10 +6,14 @@ import java.util.List;
 import java.util.Optional;
 
 import org.daisy.dotify.api.formatter.FieldList;
+import org.daisy.dotify.api.formatter.MarginRegion;
 import org.daisy.dotify.api.formatter.Marker;
+import org.daisy.dotify.api.formatter.MarkerIndicatorRegion;
 import org.daisy.dotify.api.formatter.NoField;
 import org.daisy.dotify.api.formatter.PageAreaProperties;
 import org.daisy.dotify.api.translator.BrailleTranslator;
+import org.daisy.dotify.api.translator.Translatable;
+import org.daisy.dotify.api.translator.TranslationException;
 import org.daisy.dotify.api.writer.Row;
 import org.daisy.dotify.formatter.impl.core.BorderManager;
 import org.daisy.dotify.formatter.impl.core.FormatterContext;
@@ -18,6 +22,8 @@ import org.daisy.dotify.formatter.impl.core.LayoutMaster;
 import org.daisy.dotify.formatter.impl.core.PageTemplate;
 import org.daisy.dotify.formatter.impl.core.PaginatorException;
 import org.daisy.dotify.formatter.impl.datatype.VolumeKeepPriority;
+import org.daisy.dotify.formatter.impl.page.PageSequenceBuilder2.MarkerRef;
+import org.daisy.dotify.formatter.impl.row.MarginProperties;
 import org.daisy.dotify.formatter.impl.row.RowImpl;
 import org.daisy.dotify.formatter.impl.search.PageDetails;
 import org.daisy.dotify.formatter.impl.writer.Page;
@@ -87,6 +93,7 @@ public class PageImpl implements Page {
 	}
 	
 	void newRow(RowImpl r) {
+		r = addMarginRegion(r);
 		hasRows = true;
 		while (renderedHeaderRows<template.getHeader().size()) {
 			FieldList fields = template.getHeader().get(renderedHeaderRows);
@@ -126,6 +133,61 @@ public class PageImpl implements Page {
 			}
 			addRowDetails(r);
 		}
+	}
+	
+	private RowImpl addMarginRegion(RowImpl r) {
+		RowImpl.Builder b = new RowImpl.Builder(r);
+		MarkerRef rf = r::hasMarkerWithName;
+		MarginProperties margin = r.getLeftMargin();
+		for (MarginRegion mr : getPageTemplate().getLeftMarginRegion()) {
+			margin = getMarginRegionValue(mr, rf, false).append(margin);
+		}
+		b.leftMargin(margin);
+		margin = r.getRightMargin();
+		for (MarginRegion mr : getPageTemplate().getRightMarginRegion()) {
+			margin = margin.append(getMarginRegionValue(mr, rf, true));
+		}
+		b.rightMargin(margin);
+		return b.build();
+	}
+	
+	private MarginProperties getMarginRegionValue(MarginRegion mr, MarkerRef r, boolean rightSide) throws PaginatorException {
+		String ret = "";
+		int w = mr.getWidth();
+		if (mr instanceof MarkerIndicatorRegion) {
+			ret = firstMarkerForRow(r, (MarkerIndicatorRegion)mr);
+			if (ret.length()>0) {
+				try {
+					ret = fcontext.getDefaultTranslator().translate(Translatable.text(fcontext.getConfiguration().isMarkingCapitalLetters()?ret:ret.toLowerCase()).build()).getTranslatedRemainder();
+				} catch (TranslationException e) {
+					throw new PaginatorException("Failed to translate: " + ret, e);
+				}
+			}
+			boolean spaceOnly = ret.length()==0;
+			if (ret.length()<w) {
+				StringBuilder sb = new StringBuilder();
+				if (rightSide) {
+					while (sb.length()<w-ret.length()) { sb.append(fcontext.getSpaceCharacter()); }
+					sb.append(ret);
+				} else {
+					sb.append(ret);				
+					while (sb.length()<w) { sb.append(fcontext.getSpaceCharacter()); }
+				}
+				ret = sb.toString();
+			} else if (ret.length()>w) {
+				throw new PaginatorException("Cannot fit " + ret + " into a margin-region of size "+ mr.getWidth());
+			}
+			return new MarginProperties(ret, spaceOnly);
+		} else {
+			throw new PaginatorException("Unsupported margin-region type: " + mr.getClass().getName());
+		}
+	}
+	
+	private String firstMarkerForRow(MarkerRef r, MarkerIndicatorRegion mrr) {
+		return mrr.getIndicators().stream()
+				.filter(mi -> r.hasMarkerWithName(mi.getName()))
+				.map(mi -> mi.getIndicator())
+				.findFirst().orElse("");
 	}
 	
 	private void addRowDetails(RowImpl r) {

@@ -9,13 +9,9 @@ import java.util.Optional;
 import org.daisy.dotify.api.formatter.BlockPosition;
 import org.daisy.dotify.api.formatter.FallbackRule;
 import org.daisy.dotify.api.formatter.FormattingTypes.BreakBefore;
-import org.daisy.dotify.api.formatter.MarginRegion;
-import org.daisy.dotify.api.formatter.MarkerIndicatorRegion;
 import org.daisy.dotify.api.formatter.PageAreaProperties;
 import org.daisy.dotify.api.formatter.RenameFallbackRule;
 import org.daisy.dotify.api.formatter.TransitionBuilderProperties.ApplicationRange;
-import org.daisy.dotify.api.translator.Translatable;
-import org.daisy.dotify.api.translator.TranslationException;
 import org.daisy.dotify.common.splitter.SplitPoint;
 import org.daisy.dotify.common.splitter.SplitPointCost;
 import org.daisy.dotify.common.splitter.SplitPointDataSource;
@@ -33,7 +29,6 @@ import org.daisy.dotify.formatter.impl.core.TransitionContent;
 import org.daisy.dotify.formatter.impl.core.TransitionContent.Type;
 import org.daisy.dotify.formatter.impl.datatype.VolumeKeepPriority;
 import org.daisy.dotify.formatter.impl.row.AbstractBlockContentManager;
-import org.daisy.dotify.formatter.impl.row.MarginProperties;
 import org.daisy.dotify.formatter.impl.row.RowImpl;
 import org.daisy.dotify.formatter.impl.search.DefaultContext;
 import org.daisy.dotify.formatter.impl.search.DocumentSpace;
@@ -398,26 +393,11 @@ public class PageSequenceBuilder2 {
 			int j = rows.size();
 			for (RowImpl r : rows) {
 				j--;
-				if (r.shouldAdjustForMargin() || (i == 0 && j == 0)) {
+				if ((i == 0 && j == 0)) {
 					// clone the row as not to append the margins twice
 					RowImpl.Builder b = new RowImpl.Builder(r);
-					if (r.shouldAdjustForMargin()) {
-						MarkerRef rf = r::hasMarkerWithName;
-						MarginProperties margin = r.getLeftMargin();
-						for (MarginRegion mr : p.getPageTemplate().getLeftMarginRegion()) {
-							margin = getMarginRegionValue(mr, rf, false).append(margin);
-						}
-						b.leftMargin(margin);
-						margin = r.getRightMargin();
-						for (MarginRegion mr : p.getPageTemplate().getRightMarginRegion()) {
-							margin = margin.append(getMarginRegionValue(mr, rf, true));
-						}
-						b.rightMargin(margin);
-					}
-					if (i == 0 && j == 0) {
-						// this is the last row; set row spacing to 1 because this is how sph treated it
-						b.rowSpacing(null);
-					}
+					// this is the last row; set row spacing to 1 because this is how sph treated it
+					b.rowSpacing(null);
 					p.newRow(b.build());
 				} else {
 					p.newRow(r);
@@ -455,44 +435,7 @@ public class PageSequenceBuilder2 {
 		boolean hasMarkerWithName(String name);
 	}
 	
-	private MarginProperties getMarginRegionValue(MarginRegion mr, MarkerRef r, boolean rightSide) throws PaginatorException {
-		String ret = "";
-		int w = mr.getWidth();
-		if (mr instanceof MarkerIndicatorRegion) {
-			ret = firstMarkerForRow(r, (MarkerIndicatorRegion)mr);
-			if (ret.length()>0) {
-				try {
-					ret = context.getDefaultTranslator().translate(Translatable.text(context.getConfiguration().isMarkingCapitalLetters()?ret:ret.toLowerCase()).build()).getTranslatedRemainder();
-				} catch (TranslationException e) {
-					throw new PaginatorException("Failed to translate: " + ret, e);
-				}
-			}
-			boolean spaceOnly = ret.length()==0;
-			if (ret.length()<w) {
-				StringBuilder sb = new StringBuilder();
-				if (rightSide) {
-					while (sb.length()<w-ret.length()) { sb.append(context.getSpaceCharacter()); }
-					sb.append(ret);
-				} else {
-					sb.append(ret);				
-					while (sb.length()<w) { sb.append(context.getSpaceCharacter()); }
-				}
-				ret = sb.toString();
-			} else if (ret.length()>w) {
-				throw new PaginatorException("Cannot fit " + ret + " into a margin-region of size "+ mr.getWidth());
-			}
-			return new MarginProperties(ret, spaceOnly);
-		} else {
-			throw new PaginatorException("Unsupported margin-region type: " + mr.getClass().getName());
-		}
-	}
-	
-	private String firstMarkerForRow(MarkerRef r, MarkerIndicatorRegion mrr) {
-		return mrr.getIndicators().stream()
-				.filter(mi -> r.hasMarkerWithName(mi.getName()))
-				.map(mi -> mi.getIndicator())
-				.findFirst().orElse("");
-	}
+
 	
 	private void addProperties(PageImpl p, RowGroup rg) {
 		p.addIdentifiers(rg.getIdentifiers());
