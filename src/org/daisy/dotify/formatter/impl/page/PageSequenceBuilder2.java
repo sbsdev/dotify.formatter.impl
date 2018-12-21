@@ -182,6 +182,8 @@ public class PageSequenceBuilder2 {
 			nextEmpty = false;
 			return current;
 		}
+		// The purpose of this is to prevent supplements from combining with header/footer
+		cd.setExtraOverhead(current.getPageTemplate().validateAndAnalyzeHeader() + current.getPageTemplate().validateAndAnalyzeFooter());
 		while (dataGroupsIndex<dataGroups.size() || (data!=null && !data.isEmpty())) {
 			if ((data==null || data.isEmpty()) && dataGroupsIndex<dataGroups.size()) {
 				//pick up next group
@@ -483,21 +485,27 @@ public class PageSequenceBuilder2 {
 	
 	static class CollectionData implements Supplements<RowGroup> {
 		private final BlockContext c;
-		private final PageAreaContent staticAreaContent;
+		private final double overhead;
 		private final LayoutMaster master;
 		private final ContentCollectionImpl collection;
+		private double extraOverhead = 0;
 		
 		private CollectionData(PageAreaContent staticAreaContent, BlockContext c, LayoutMaster master, ContentCollectionImpl collection) {
 			this.c = c;
-			this.staticAreaContent = staticAreaContent;
 			this.master = master;
 			this.collection = collection;
+			
+			this.overhead = PageImpl.rowsNeeded(staticAreaContent.getBefore(), master.getRowSpacing())
+					+ PageImpl.rowsNeeded(staticAreaContent.getAfter(), master.getRowSpacing());
+		}
+		
+		private void setExtraOverhead(double extra) {
+			this.extraOverhead = extra;
 		}
 		
 		@Override
 		public double getOverhead() {
-			return PageImpl.rowsNeeded(staticAreaContent.getBefore(), master.getRowSpacing()) 
-					+ PageImpl.rowsNeeded(staticAreaContent.getAfter(), master.getRowSpacing());
+			return overhead + extraOverhead;
 		}
 
 		@Override
