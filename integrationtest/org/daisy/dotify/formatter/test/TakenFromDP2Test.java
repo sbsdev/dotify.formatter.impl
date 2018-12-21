@@ -33,16 +33,6 @@ public class TakenFromDP2Test extends AbstractFormatterEngineTest {
 		        "resource-files/dp2/page-number-follows-leader-expected.pef", false);
 	}
 	@Test
-	public void testVerticalPositionAlignBefore() throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
-		testPEF("resource-files/dp2/vertical-position-align-before-input.obfl",
-		        "resource-files/dp2/vertical-position-align-before-expected.pef", false);
-	}
-	@Test
-	public void testVerticalPositionAlignBeforeNestedBlocks() throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
-		testPEF("resource-files/dp2/vertical-position-align-before-nested-blocks-input.obfl",
-		        "resource-files/dp2/vertical-position-align-before-nested-blocks-expected.pef", false);
-	}
-	@Test
 	public void testLayoutMasterRowSpacing() throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
 		testPEF("resource-files/dp2/layout-master-row-spacing-input.obfl",
 		        "resource-files/dp2/layout-master-row-spacing-expected.pef", false);
