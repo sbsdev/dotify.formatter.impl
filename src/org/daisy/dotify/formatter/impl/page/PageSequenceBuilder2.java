@@ -5,17 +5,14 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
 import org.daisy.dotify.api.formatter.BlockPosition;
 import org.daisy.dotify.api.formatter.FallbackRule;
 import org.daisy.dotify.api.formatter.FormattingTypes.BreakBefore;
-import org.daisy.dotify.api.formatter.MarginRegion;
-import org.daisy.dotify.api.formatter.MarkerIndicatorRegion;
 import org.daisy.dotify.api.formatter.PageAreaProperties;
 import org.daisy.dotify.api.formatter.RenameFallbackRule;
 import org.daisy.dotify.api.formatter.TransitionBuilderProperties.ApplicationRange;
-import org.daisy.dotify.api.translator.Translatable;
-import org.daisy.dotify.api.translator.TranslationException;
 import org.daisy.dotify.common.splitter.SplitPoint;
 import org.daisy.dotify.common.splitter.SplitPointCost;
 import org.daisy.dotify.common.splitter.SplitPointDataSource;
@@ -33,7 +30,6 @@ import org.daisy.dotify.formatter.impl.core.TransitionContent;
 import org.daisy.dotify.formatter.impl.core.TransitionContent.Type;
 import org.daisy.dotify.formatter.impl.datatype.VolumeKeepPriority;
 import org.daisy.dotify.formatter.impl.row.AbstractBlockContentManager;
-import org.daisy.dotify.formatter.impl.row.MarginProperties;
 import org.daisy.dotify.formatter.impl.row.RowImpl;
 import org.daisy.dotify.formatter.impl.search.DefaultContext;
 import org.daisy.dotify.formatter.impl.search.DocumentSpace;
@@ -186,6 +182,8 @@ public class PageSequenceBuilder2 {
 			nextEmpty = false;
 			return current;
 		}
+		// The purpose of this is to prevent supplements from combining with header/footer
+		cd.setExtraOverhead(current.getPageTemplate().validateAndAnalyzeHeader() + current.getPageTemplate().validateAndAnalyzeFooter());
 		while (dataGroupsIndex<dataGroups.size() || (data!=null && !data.isEmpty())) {
 			if ((data==null || data.isEmpty()) && dataGroupsIndex<dataGroups.size()) {
 				//pick up next group
@@ -215,6 +213,10 @@ public class PageSequenceBuilder2 {
 					.flowWidth(master.getFlowWidth() - master.getTemplate(current.getPageNumber()).getTotalMarginRegionWidth())
 					.build();
 			data.setContext(bc);
+			Function<Integer, Integer> reservedWidths = x->{
+				return master.getFlowWidth()-fieldResolver.getWidth(current.getPageNumber(), x);
+			}; 
+			data.setReservedWidths(reservedWidths);
 			Optional<Boolean> blockBoundary = Optional.empty();
 			if (!data.isEmpty()) {
 				RowGroupDataSource copy = new RowGroupDataSource(data);
@@ -273,13 +275,19 @@ public class PageSequenceBuilder2 {
 						addTransition = false;
 					}
 				} else {
+					SplitPointCost<RowGroup> cost = (SplitPointDataSource<RowGroup, ?> units, int in, int limit)->{
+							double variableWidthCost = (reservedWidths.apply(in)>0 && !units.get(in).isMergeable())?10:0;
+							return (
+										(units.get(in).isBreakable()?1:2) + variableWidthCost
+									)*limit-in;
+					};
 					float seqHeight = 0;
 					if (wasSplitInSequence) {
 						seqHeight = height(seqTransitionText, false);
 					}
 					// Either RESUME, or no transition on this page.
 					float flowHeight = current.getFlowHeight() - anyHeight - seqHeight;
-					spec = sph.find(flowHeight, copy, force?StandardSplitOption.ALLOW_FORCE:null);
+					spec = sph.find(flowHeight, copy, cost, force?StandardSplitOption.ALLOW_FORCE:null);
 				}
 				// Now apply the information to the live data
 				data.setAllowHyphenateLastLine(hyphenateLastLine);
@@ -398,26 +406,11 @@ public class PageSequenceBuilder2 {
 			int j = rows.size();
 			for (RowImpl r : rows) {
 				j--;
-				if (r.shouldAdjustForMargin() || (i == 0 && j == 0)) {
+				if ((i == 0 && j == 0)) {
 					// clone the row as not to append the margins twice
 					RowImpl.Builder b = new RowImpl.Builder(r);
-					if (r.shouldAdjustForMargin()) {
-						MarkerRef rf = r::hasMarkerWithName;
-						MarginProperties margin = r.getLeftMargin();
-						for (MarginRegion mr : p.getPageTemplate().getLeftMarginRegion()) {
-							margin = getMarginRegionValue(mr, rf, false).append(margin);
-						}
-						b.leftMargin(margin);
-						margin = r.getRightMargin();
-						for (MarginRegion mr : p.getPageTemplate().getRightMarginRegion()) {
-							margin = margin.append(getMarginRegionValue(mr, rf, true));
-						}
-						b.rightMargin(margin);
-					}
-					if (i == 0 && j == 0) {
-						// this is the last row; set row spacing to 1 because this is how sph treated it
-						b.rowSpacing(null);
-					}
+					// this is the last row; set row spacing to 1 because this is how sph treated it
+					b.rowSpacing(null);
 					p.newRow(b.build());
 				} else {
 					p.newRow(r);
@@ -455,44 +448,7 @@ public class PageSequenceBuilder2 {
 		boolean hasMarkerWithName(String name);
 	}
 	
-	private MarginProperties getMarginRegionValue(MarginRegion mr, MarkerRef r, boolean rightSide) throws PaginatorException {
-		String ret = "";
-		int w = mr.getWidth();
-		if (mr instanceof MarkerIndicatorRegion) {
-			ret = firstMarkerForRow(r, (MarkerIndicatorRegion)mr);
-			if (ret.length()>0) {
-				try {
-					ret = context.getDefaultTranslator().translate(Translatable.text(context.getConfiguration().isMarkingCapitalLetters()?ret:ret.toLowerCase()).build()).getTranslatedRemainder();
-				} catch (TranslationException e) {
-					throw new PaginatorException("Failed to translate: " + ret, e);
-				}
-			}
-			boolean spaceOnly = ret.length()==0;
-			if (ret.length()<w) {
-				StringBuilder sb = new StringBuilder();
-				if (rightSide) {
-					while (sb.length()<w-ret.length()) { sb.append(context.getSpaceCharacter()); }
-					sb.append(ret);
-				} else {
-					sb.append(ret);				
-					while (sb.length()<w) { sb.append(context.getSpaceCharacter()); }
-				}
-				ret = sb.toString();
-			} else if (ret.length()>w) {
-				throw new PaginatorException("Cannot fit " + ret + " into a margin-region of size "+ mr.getWidth());
-			}
-			return new MarginProperties(ret, spaceOnly);
-		} else {
-			throw new PaginatorException("Unsupported margin-region type: " + mr.getClass().getName());
-		}
-	}
-	
-	private String firstMarkerForRow(MarkerRef r, MarkerIndicatorRegion mrr) {
-		return mrr.getIndicators().stream()
-				.filter(mi -> r.hasMarkerWithName(mi.getName()))
-				.map(mi -> mi.getIndicator())
-				.findFirst().orElse("");
-	}
+
 	
 	private void addProperties(PageImpl p, RowGroup rg) {
 		p.addIdentifiers(rg.getIdentifiers());
@@ -529,27 +485,33 @@ public class PageSequenceBuilder2 {
 	
 	static class CollectionData implements Supplements<RowGroup> {
 		private final BlockContext c;
-		private final PageAreaContent staticAreaContent;
+		private final double overhead;
 		private final LayoutMaster master;
 		private final ContentCollectionImpl collection;
+		private double extraOverhead = 0;
 		
 		private CollectionData(PageAreaContent staticAreaContent, BlockContext c, LayoutMaster master, ContentCollectionImpl collection) {
 			this.c = c;
-			this.staticAreaContent = staticAreaContent;
 			this.master = master;
 			this.collection = collection;
+			
+			this.overhead = PageImpl.rowsNeeded(staticAreaContent.getBefore(), master.getRowSpacing())
+					+ PageImpl.rowsNeeded(staticAreaContent.getAfter(), master.getRowSpacing());
+		}
+		
+		private void setExtraOverhead(double extra) {
+			this.extraOverhead = extra;
 		}
 		
 		@Override
 		public double getOverhead() {
-			return PageImpl.rowsNeeded(staticAreaContent.getBefore(), master.getRowSpacing()) 
-					+ PageImpl.rowsNeeded(staticAreaContent.getAfter(), master.getRowSpacing());
+			return overhead + extraOverhead;
 		}
 
 		@Override
 		public RowGroup get(String id) {
 			if (collection!=null) {
-				RowGroup.Builder b = new RowGroup.Builder(master.getRowSpacing());
+				RowGroup.Builder b = new RowGroup.Builder(master.getRowSpacing()).mergeable(false);
 				for (Block g : collection.getBlocks(id)) {
 					AbstractBlockContentManager bcm = g.getBlockContentManager(c);
 					b.addAll(bcm.getCollapsiblePreContentRows());
