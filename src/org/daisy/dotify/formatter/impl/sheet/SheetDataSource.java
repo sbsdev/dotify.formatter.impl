@@ -293,7 +293,7 @@ public class SheetDataSource implements SplitPointDataSource<Sheet, SheetDataSou
 
 				setPreviousSheet(si.getSheetIndex()-1, Math.min(p.keepPreviousSheets(), sheetIndex-1), rcontext);
 				volBreakAllowed &= p.allowsVolumeBreak();
-				if (!sectionProperties.duplex() || pageIndex % 2 == 1) {
+				if (!sectionProperties.duplex() || pageIndex % 2 == 1 || volumeEnded) {
 					rcontext.getRefs().keepBreakable(si, volBreakAllowed);
 				}
 				s.add(p);
