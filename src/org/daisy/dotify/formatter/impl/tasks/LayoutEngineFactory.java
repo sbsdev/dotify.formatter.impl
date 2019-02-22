@@ -6,6 +6,8 @@ import java.util.Set;
 
 import org.daisy.dotify.api.engine.FormatterEngineFactoryService;
 import org.daisy.dotify.api.engine.FormatterEngineMaker;
+import org.daisy.dotify.api.translator.BrailleTranslatorFactoryMaker;
+import org.daisy.dotify.api.translator.BrailleTranslatorFactoryMakerService;
 import org.daisy.dotify.api.writer.PagedMediaWriterFactoryMaker;
 import org.daisy.dotify.api.writer.PagedMediaWriterFactoryMakerService;
 import org.daisy.streamline.api.tasks.TaskGroup;
@@ -30,6 +32,7 @@ public class LayoutEngineFactory implements TaskGroupFactory {
 	private PagedMediaWriterFactoryMakerService pmw;
 	private FormatterEngineFactoryService fe;
 	private ValidatorFactoryMakerService vf;
+	private BrailleTranslatorFactoryMakerService translatorFactory;
 
 	/**
 	 * Creates a new layout engine factory.
@@ -48,7 +51,7 @@ public class LayoutEngineFactory implements TaskGroupFactory {
 	
 	@Override
 	public TaskGroup newTaskGroup(TaskGroupSpecification spec) {
-		return new LayoutEngine(spec, pmw, fe, vf);
+		return new LayoutEngine(spec, pmw, fe, vf, translatorFactory);
 	}
 
 	@Override
@@ -65,6 +68,9 @@ public class LayoutEngineFactory implements TaskGroupFactory {
 		}
 		if (vf == null) {
 			vf = ValidatorFactoryMaker.newInstance();
+		}
+		if (translatorFactory == null) {
+			translatorFactory = BrailleTranslatorFactoryMaker.newInstance();
 		}
 	}
 	
@@ -118,4 +124,22 @@ public class LayoutEngineFactory implements TaskGroupFactory {
 	public void unsetValidatorFactory(ValidatorFactoryMakerService service) {
 		this.vf = null;
 	}
+	
+	/**
+	 * Sets a factory dependency.
+	 * @param service the dependency
+	 */
+	@Reference(cardinality=ReferenceCardinality.OPTIONAL)
+	public void setTranslator(BrailleTranslatorFactoryMakerService service) {
+		this.translatorFactory = service;
+	}
+
+	/**
+	 * Removes a factory dependency.
+	 * @param service the dependency to remove
+	 */
+	public void unsetTranslator(BrailleTranslatorFactoryMakerService service) {
+		this.translatorFactory = null;
+	}
+	
 }
