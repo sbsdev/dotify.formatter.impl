@@ -1,5 +1,7 @@
 package org.daisy.dotify.formatter.impl.page;
 
+import java.util.Optional;
+
 import org.daisy.dotify.api.formatter.FormattingTypes.BreakBefore;
 import org.daisy.dotify.formatter.impl.core.Block;
 import org.daisy.dotify.formatter.impl.core.BlockContext;
@@ -8,6 +10,7 @@ import org.daisy.dotify.formatter.impl.row.AbstractBlockContentManager;
 import org.daisy.dotify.formatter.impl.row.BlockStatistics;
 import org.daisy.dotify.formatter.impl.row.LineProperties;
 import org.daisy.dotify.formatter.impl.row.RowImpl;
+import org.daisy.dotify.formatter.impl.search.BlockAddress;
 import org.daisy.dotify.formatter.impl.search.DefaultContext;
 
 /**
@@ -45,9 +48,13 @@ abstract class BlockProcessor {
 		rowGroupProvider = new RowGroupProvider(master, g, bcm, bc, keepWithNext);
 	}
 	
-	protected void processNextRowGroup(DefaultContext context, LineProperties lineProps) {
+	protected Optional<RowGroup> processNextRowGroup(DefaultContext context, LineProperties lineProps) {
 		if (hasNextInBlock()) {
-			addRowGroup(rowGroupProvider.next(context, lineProps));
+			RowGroup ret = rowGroupProvider.next(context, lineProps);
+			addRowGroup(ret);
+			return Optional.of(ret);
+		} else {
+			return Optional.empty();
 		}
 	}
 	
@@ -76,6 +83,10 @@ abstract class BlockProcessor {
 		} else {
 			return null;
 		}
+	}
+	
+	BlockAddress getBlockAddress() {
+		return rowGroupProvider!=null?rowGroupProvider.getBlockAddress():null;
 	}
 
 }

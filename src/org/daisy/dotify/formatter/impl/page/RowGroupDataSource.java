@@ -3,6 +3,7 @@ package org.daisy.dotify.formatter.impl.page;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 
 import org.daisy.dotify.api.formatter.FormattingTypes.BreakBefore;
@@ -16,6 +17,7 @@ import org.daisy.dotify.formatter.impl.core.Block;
 import org.daisy.dotify.formatter.impl.core.BlockContext;
 import org.daisy.dotify.formatter.impl.core.LayoutMaster;
 import org.daisy.dotify.formatter.impl.row.LineProperties;
+import org.daisy.dotify.formatter.impl.search.BlockLineLocation;
 
 /**
  * <p>Provides a data source for row groups.</p>
@@ -42,6 +44,7 @@ class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<
 	private Function<Integer, Integer> reservedWidths = x->0;
 	private int blockIndex;
 	private boolean allowHyphenateLastLine;
+	private int offsetInBlock;
 
 	RowGroupDataSource(LayoutMaster master, BlockContext bc, List<Block> blocks, BreakBefore breakBefore, VerticalSpacing vs, Supplements<RowGroup> supplements) {
 		super();
@@ -54,6 +57,7 @@ class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<
 		this.vs = vs;
 		this.blockIndex = 0;
 		this.allowHyphenateLastLine = true;
+		this.offsetInBlock = 0;
 	}
 
 	RowGroupDataSource(RowGroupDataSource template) {
@@ -72,6 +76,7 @@ class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<
 		} else {
 			this.groups = new ArrayList<>();
 		}
+		this.offsetInBlock = template.offsetInBlock;
 		this.blocks = template.blocks;
 		this.supplements = template.supplements;
 		this.breakBefore = template.breakBefore;
@@ -175,16 +180,19 @@ class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<
 				//get next block
 				Block b = blocks.get(blockIndex);
 				blockIndex++;
+				offsetInBlock=0;
 				loadBlock(master, b, bc);
 			}
 			// Requesting all items implies that no special last line hyphenation processing is needed.
 			// This is reasonable: The very last line in a result would never be hyphenated, so suppressing
 			// hyphenation is unnecessary. Also, actively doing this would be difficult, because we do not know
 			// if the line produced below is the last line or not, until after the call has already been made.
-			processNextRowGroup(bc, new LineProperties.Builder()
+			Optional<RowGroup> added = processNextRowGroup(bc, new LineProperties.Builder()
 				.suppressHyphenation(!allowHyphenateLastLine && index>-1 && groupSize()>=index-1)
-				.reservedWidth(reservedWidths.apply(countRows())).build()
-			);
+				.reservedWidth(reservedWidths.apply(countRows()))
+				.lineBlockLocation(new BlockLineLocation(getBlockAddress(), offsetInBlock))
+				.build());
+			offsetInBlock += added.map(v->v.getRows().size()).orElse(0);
 		}
 		return true;
 	}

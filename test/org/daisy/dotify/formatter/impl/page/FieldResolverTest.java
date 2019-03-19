@@ -58,6 +58,7 @@ public class FieldResolverTest {
 						0
 					)
 				), 
+				null,
 				0);
 		FieldResolver resolver = new FieldResolver(master, fcontext, null, details);
 
