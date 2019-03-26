@@ -27,7 +27,6 @@ import org.osgi.service.component.annotations.ReferenceCardinality;
  */
 @Component
 public class LayoutEngineFactory implements TaskGroupFactory {
-	private static final String LOCALE = "sv-SE";
 	private final Set<TaskGroupInformation> information;
 	private PagedMediaWriterFactoryMakerService pmw;
 	private FormatterEngineFactoryService fe;
@@ -39,7 +38,7 @@ public class LayoutEngineFactory implements TaskGroupFactory {
 	 */
 	public LayoutEngineFactory() {
 		Set<TaskGroupInformation> tmp = new HashSet<>();
-		tmp.add(TaskGroupInformation.newConvertBuilder("obfl", Keys.PEF_FORMAT).locale(LOCALE).build());
+		tmp.add(TaskGroupInformation.newConvertBuilder("obfl", Keys.PEF_FORMAT).build());
 		tmp.add(TaskGroupInformation.newConvertBuilder("obfl", Keys.TEXT_FORMAT).build());
 		information = Collections.unmodifiableSet(tmp);
 	}
