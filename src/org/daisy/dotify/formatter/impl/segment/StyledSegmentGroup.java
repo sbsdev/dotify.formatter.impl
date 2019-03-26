@@ -1,9 +1,15 @@
 package org.daisy.dotify.formatter.impl.segment;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import org.daisy.dotify.api.translator.DefaultTextAttribute;
 import org.daisy.dotify.api.translator.MarkerProcessor;
@@ -15,6 +21,19 @@ import org.daisy.dotify.formatter.impl.common.FormatterCoreContext;
  * Associates a text style with a group of segments.
  */
 public class StyledSegmentGroup extends SegmentGroup {
+	private static final Logger logger = Logger.getLogger(StyledSegmentGroup.class.getCanonicalName());
+	private static final Map<String, Instant> MISSING_MARKER_PROCESSOR_WARNING_ISSUED = Collections.synchronizedMap(new HashMap<>());
+	private static final MarkerProcessor DEFAULT_MARKER_PROCESSOR = new MarkerProcessor() {
+		@Override
+		public String[] processAttributesRetain(TextAttribute atts, String[] text) {
+			return text;
+		}
+		
+		@Override
+		public String processAttributes(TextAttribute atts, String... text) {
+			return Arrays.asList(text).stream().collect(Collectors.joining());
+		}
+	};
 	private final FormatterCoreContext fc;
 	private final StyledSegmentGroup parentStyle;
 	private final int idx;
@@ -67,12 +86,21 @@ public class StyledSegmentGroup extends SegmentGroup {
 	
 	private MarkerProcessor getMarkerProcessor() {
 		if (markerProcessorCache == null) {
+			String locale = fc.getConfiguration().getLocale();
+			String mode = fc.getTranslatorMode();
 			try {
-				String locale = fc.getConfiguration().getLocale();
-				String mode = fc.getTranslatorMode();
 				markerProcessorCache = fc.getMarkerProcessorFactoryMakerService().newMarkerProcessor(locale, mode);
 			} catch (MarkerProcessorConfigurationException e) {
-				throw new IllegalArgumentException(e);
+				// Note that the marker processor probably should not be accessed at all by the formatter.
+				// Instead, the resolved text segments should have their text attributes updated and the
+				// results should be sent to the translator.
+				String key = locale + "/" + mode;
+				Instant t = MISSING_MARKER_PROCESSOR_WARNING_ISSUED.get(key);
+				if (t==null || Instant.now().isAfter(t.plusSeconds(10))) {
+					MISSING_MARKER_PROCESSOR_WARNING_ISSUED.put(key, Instant.now());
+					logger.warning(String.format("No marker processor for %s/%s", locale, mode));
+				}
+				markerProcessorCache = DEFAULT_MARKER_PROCESSOR;
 			}
 		}
 		return markerProcessorCache;
