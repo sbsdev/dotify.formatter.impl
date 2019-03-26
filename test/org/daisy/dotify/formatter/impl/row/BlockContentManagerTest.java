@@ -11,11 +11,11 @@ import org.daisy.dotify.api.formatter.FormatterConfiguration;
 import org.daisy.dotify.api.formatter.Leader;
 import org.daisy.dotify.api.formatter.Position;
 import org.daisy.dotify.api.formatter.TextProperties;
-import org.daisy.dotify.api.translator.BrailleTranslatorFactory;
 import org.daisy.dotify.api.translator.BrailleTranslatorFactoryMaker;
 import org.daisy.dotify.api.translator.MarkerProcessorFactoryMaker;
 import org.daisy.dotify.api.translator.TextBorderFactoryMaker;
 import org.daisy.dotify.api.translator.TranslatorConfigurationException;
+import org.daisy.dotify.api.translator.TranslatorType;
 import org.daisy.dotify.formatter.impl.core.FormatterContext;
 import org.daisy.dotify.formatter.impl.row.AbstractBlockContentManager;
 import org.daisy.dotify.formatter.impl.row.BlockContentManager;
@@ -35,7 +35,7 @@ public class BlockContentManagerTest {
 	@Test
 	public void testHangingIndent() throws TranslatorConfigurationException {
 		//setup
-		FormatterContext c = new FormatterContext(BrailleTranslatorFactoryMaker.newInstance(), TextBorderFactoryMaker.newInstance(), MarkerProcessorFactoryMaker.newInstance(), FormatterConfiguration.with("sv-SE", BrailleTranslatorFactory.MODE_UNCONTRACTED).build());
+		FormatterContext c = new FormatterContext(BrailleTranslatorFactoryMaker.newInstance(), TextBorderFactoryMaker.newInstance(), MarkerProcessorFactoryMaker.newInstance(), FormatterConfiguration.with("sv-SE", TranslatorType.UNCONTRACTED.toString()).build());
 		Stack<Segment> segments = new Stack<>();
 		for (int i=0; i<6; i++) {
 			segments.push(new TextSegment("... ", new TextProperties.Builder("sv-SE").build()));
@@ -55,7 +55,7 @@ public class BlockContentManagerTest {
 	@Test
 	public void testLeader() throws TranslatorConfigurationException {
 		//setup
-		FormatterContext c = new FormatterContext(BrailleTranslatorFactoryMaker.newInstance(), TextBorderFactoryMaker.newInstance(), MarkerProcessorFactoryMaker.newInstance(), FormatterConfiguration.with("sv-SE", BrailleTranslatorFactory.MODE_UNCONTRACTED).build());
+		FormatterContext c = new FormatterContext(BrailleTranslatorFactoryMaker.newInstance(), TextBorderFactoryMaker.newInstance(), MarkerProcessorFactoryMaker.newInstance(), FormatterConfiguration.with("sv-SE", TranslatorType.UNCONTRACTED.toString()).build());
 		Stack<Segment> segments = new Stack<>();
 		segments.push(new LeaderSegment(
 				new Leader.Builder().align(org.daisy.dotify.api.formatter.Leader.Alignment.RIGHT).pattern(" ").position(new Position(1.0, true)).build())
@@ -75,7 +75,7 @@ public class BlockContentManagerTest {
 	@Test
 	public void testNewLine() throws TranslatorConfigurationException {
 		//setup
-		FormatterContext c = new FormatterContext(BrailleTranslatorFactoryMaker.newInstance(), TextBorderFactoryMaker.newInstance(), MarkerProcessorFactoryMaker.newInstance(), FormatterConfiguration.with("sv-SE", BrailleTranslatorFactory.MODE_UNCONTRACTED).build());
+		FormatterContext c = new FormatterContext(BrailleTranslatorFactoryMaker.newInstance(), TextBorderFactoryMaker.newInstance(), MarkerProcessorFactoryMaker.newInstance(), FormatterConfiguration.with("sv-SE", TranslatorType.UNCONTRACTED.toString()).build());
 		Stack<Segment> segments = new Stack<>();
 		segments.push(new TextSegment("... ... ...", new TextProperties.Builder("sv-SE").build()));
 		segments.push(new NewLineSegment());

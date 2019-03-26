@@ -21,7 +21,7 @@ import org.daisy.dotify.api.engine.FormatterEngine;
 import org.daisy.dotify.api.engine.FormatterEngineFactoryService;
 import org.daisy.dotify.api.engine.LayoutEngineException;
 import org.daisy.dotify.api.formatter.FormatterConfiguration;
-import org.daisy.dotify.api.translator.BrailleTranslatorFactory;
+import org.daisy.dotify.api.translator.TranslatorType;
 import org.daisy.dotify.api.writer.AttributeItem;
 import org.daisy.dotify.api.writer.MediaTypes;
 import org.daisy.dotify.api.writer.MetaDataItem;
@@ -112,9 +112,9 @@ public class LayoutEngineTask extends ReadWriteTask  {
 	private static String getTranslationMode(Properties p2, FormatIdentifier out) throws TaskSystemException {
 		switch (out.getIdentifier()) {
 			case Keys.PEF_FORMAT:
-				return p2.getProperty(TRANSLATE, BrailleTranslatorFactory.MODE_UNCONTRACTED);
+				return p2.getProperty(TRANSLATE, TranslatorType.UNCONTRACTED.toString());
 			case Keys.TEXT_FORMAT:
-				return p2.getProperty(TRANSLATE, BrailleTranslatorFactory.MODE_BYPASS);
+				return p2.getProperty(TRANSLATE, TranslatorType.BYPASS.toString());
 			default:
 				throw new TaskSystemException("Unknown format: " + out);
 		}
