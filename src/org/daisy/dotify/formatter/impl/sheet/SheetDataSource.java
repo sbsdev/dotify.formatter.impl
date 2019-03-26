@@ -245,11 +245,18 @@ public class SheetDataSource implements SplitPointDataSource<Sheet, SheetDataSou
 							Optional<PageDetails> next = rcontext.getRefs().getNextPageDetailsInSequence(thisPageId);
 							// If there is a page details in this sequence and volume break is preferred on this page
 							if (next.isPresent()) {
-								TransitionProperties st = rcontext.getRefs().getTransitionProperties(thisPageId);
-								double v1 = st.getVolumeKeepPriority().orElse(10) + (st.hasBlockBoundary()?0.5:0);
-								st = rcontext.getRefs().getTransitionProperties(next.get().getPageLocation());
-								double v2 = st.getVolumeKeepPriority().orElse(10) + (st.hasBlockBoundary()?0.5:0);
-								if (v1>v2) {
+								Optional<TransitionProperties> st1 = rcontext.getRefs().getTransitionProperties(thisPageId);
+								TransitionProperties p = st1.orElse(TransitionProperties.empty());
+								double v1 = p.getVolumeKeepPriority().orElse(10) + (p.hasBlockBoundary()?0.5:0);
+								Optional<TransitionProperties> st2 = rcontext.getRefs().getTransitionProperties(next.get().getPageLocation());
+								p = st2.orElse(TransitionProperties.empty());
+								double v2 = p.getVolumeKeepPriority().orElse(10) + (p.hasBlockBoundary()?0.5:0);
+								if (v1>v2 || !st1.isPresent()) {
+									// this page is preferable to break on
+									// or, if st1 isn't present the lookup has been marked as dirty. This will cause
+									// a value to be recorded for this position (st1 will be present for the next iteration)
+									// and there will be at least one more iteration to get it right.
+									
 									//break here
 									transition = context.getTransitionBuilder().getInterruptTransition();
 								}

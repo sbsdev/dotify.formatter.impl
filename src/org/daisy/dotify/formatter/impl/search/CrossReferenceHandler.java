@@ -234,8 +234,8 @@ public class CrossReferenceHandler {
 		return breakable.get(ident, true);
 	}
 	
-	public TransitionProperties getTransitionProperties(BlockLineLocation id) {
-		return transitionProperties.get(id, TransitionProperties.empty());
+	public Optional<TransitionProperties> getTransitionProperties(BlockLineLocation id) {
+		return Optional.ofNullable(transitionProperties.get(id));
 	}
 
 	public List<String> getGroupAnchors(BlockAddress blockId) {
