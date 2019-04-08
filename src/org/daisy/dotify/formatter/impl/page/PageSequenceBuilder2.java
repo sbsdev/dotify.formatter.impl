@@ -575,10 +575,15 @@ public class PageSequenceBuilder2 {
 	}
 	
 	public int getSizeLast() {
-		if (master.duplex() && (size() % 2)==1) {
-			return size() + 1;
+		return getSizeLast(fromIndex);
+	}
+	
+	public int getSizeLast(int fromIndex) {
+		int size = getToIndex()-fromIndex;
+		if (master.duplex() && (size % 2)==1) {
+			return size + 1;
 		} else {
-			return size();
+			return size;
 		}
 	}
 	
