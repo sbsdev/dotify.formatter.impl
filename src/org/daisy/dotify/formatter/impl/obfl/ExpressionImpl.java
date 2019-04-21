@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -136,7 +135,7 @@ class ExpressionImpl implements Expression {
 		} else if ("%".equals(operator)) {
 			return modulo(args);
 		} else if ("=".equals(operator)) {
-			return equals(args);
+			return equalsOp(args);
 		} else if ("<".equals(operator)) {
 			return smallerThan(args);
 		}  else if ("<=".equals(operator)) {
@@ -222,7 +221,8 @@ class ExpressionImpl implements Expression {
 		return ret;
 	}
 	
-	private static boolean equals(Object[] input) {
+	//Renamed method because PMD is a bit stupid 
+	private static boolean equalsOp(Object[] input) {
 		try {
 			for (int i=1; i<input.length; i++) { 
 				if (((Double)(input[i-1])).doubleValue()!=((Double)(input[i])).doubleValue()) {

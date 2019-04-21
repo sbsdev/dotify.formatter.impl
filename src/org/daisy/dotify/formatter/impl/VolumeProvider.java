@@ -297,10 +297,8 @@ public class VolumeProvider {
 	 * @return returns true if the volumes can be accepted, false otherwise  
 	 */
 	boolean done() {
-		if (groups.hasNext()) {
-			if (logger.isLoggable(Level.FINE)) {
-				logger.fine("There is more content (sheets: " + groups.countRemainingSheets() + ", pages: " + groups.countRemainingPages() + ")");
-			}
+		if (groups.hasNext() && logger.isLoggable(Level.FINE)) {
+			logger.fine("There is more content (sheets: " + groups.countRemainingSheets() + ", pages: " + groups.countRemainingPages() + ")");
 		}
 		// this changes the value of groups.getVolumeCount() to the newly computed
 		// required number of volume based on groups.countTotalSheets()

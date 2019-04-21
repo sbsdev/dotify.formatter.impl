@@ -171,26 +171,24 @@ class TocSequenceEventImpl implements VolumeSequence {
 					if (b.getBlockIdentifier()!=null) {
 						String ref = data.getRefForID(b.getBlockIdentifier());
 						Integer vol = crh.getVolumeNumber(ref);
-						if (vol!=null) {
-							if (nv!=vol) {
-								ArrayList<Block> rr = new ArrayList<>();
-								if (nv>0) {
-									Iterable<Block> ib1 = getVolumeEnd(DefaultContext.from(vars).metaVolume(nv).build());
-									for (Block b1 : ib1) {
-										//set the meta volume for each block, for later evaluation
-										b1.setMetaVolume(nv);
-										rr.add(b1);
-									}
-								}
-								nv = vol;
-								Iterable<Block> ib1 = getVolumeStart(DefaultContext.from(vars).metaVolume(vol).build());
+						if (vol!=null && nv!=vol) {
+							ArrayList<Block> rr = new ArrayList<>();
+							if (nv>0) {
+								Iterable<Block> ib1 = getVolumeEnd(DefaultContext.from(vars).metaVolume(nv).build());
 								for (Block b1 : ib1) {
 									//set the meta volume for each block, for later evaluation
-									b1.setMetaVolume(vol);
+									b1.setMetaVolume(nv);
 									rr.add(b1);
 								}
-								statics.put(b.getBlockIdentifier(), rr);
 							}
+							nv = vol;
+							Iterable<Block> ib1 = getVolumeStart(DefaultContext.from(vars).metaVolume(vol).build());
+							for (Block b1 : ib1) {
+								//set the meta volume for each block, for later evaluation
+								b1.setMetaVolume(vol);
+								rr.add(b1);
+							}
+							statics.put(b.getBlockIdentifier(), rr);
 						}
 					}
 				}

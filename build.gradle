@@ -13,6 +13,7 @@ plugins {
 	id 'maven-publish'
 	id 'signing'
 	//id 'jacoco'
+	id 'pmd'
 }
 
 apply plugin: 'biz.aQute.bnd.builder'
@@ -217,6 +218,37 @@ publishing {
 		}
 	}
 }
+
+pmd.ruleSets = [
+	// New rule sets:
+	//'category/java/bestpractices.xml',
+	//'category/java/codestyle.xml',
+	//'category/java/design.xml',
+	//'category/java/documentation.xml',
+	//'category/java/errorprone.xml',
+	//'category/java/multithreading.xml',
+	//'category/java/performance.xml',
+	'category/java/security.xml',
+	
+	// Old rule sets (use for now):
+	'java-basic',
+	'java-braces',
+	//'java-clone',
+	//'java-codesize',
+	//'java-comments',
+	//'java-controversial',
+	//'java-coupling',
+	//'java-design',
+	//'java-empty',
+	'java-finalizers',
+	'java-imports',
+	//'java-optimizations',
+	//->'java-strictexception',
+	//'java-strings',
+	//->'java-typeresolution',
+	//'java-unnecessary',
+	//->'java-unusedcode'
+]
 
 wrapper {
 	distributionType = Wrapper.DistributionType.ALL

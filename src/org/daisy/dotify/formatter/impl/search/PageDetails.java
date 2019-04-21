@@ -147,27 +147,36 @@ public class PageDetails {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (obj == null)
+		}
+		if (obj == null) {
 			return false;
-		if (getClass() != obj.getClass())
+		}
+		if (getClass() != obj.getClass()) {
 			return false;
+		}
 		PageDetails other = (PageDetails) obj;
-		if (contentMarkersBegin != other.contentMarkersBegin)
+		if (contentMarkersBegin != other.contentMarkersBegin) {
 			return false;
-		if (duplex != other.duplex)
+		}
+		if (duplex != other.duplex) {
 			return false;
+		}
 		if (markers == null) {
-			if (other.markers != null)
+			if (other.markers != null) {
 				return false;
-		} else if (!markers.equals(other.markers))
+			}
+		} else if (!markers.equals(other.markers)) {
 			return false;
+		}
 		if (pageId == null) {
-			if (other.pageId != null)
+			if (other.pageId != null) {
 				return false;
-		} else if (!pageId.equals(other.pageId))
+			}
+		} else if (!pageId.equals(other.pageId)) {
 			return false;
+		}
 		return true;
 	}
 

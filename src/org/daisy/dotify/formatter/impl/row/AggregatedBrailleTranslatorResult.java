@@ -196,10 +196,8 @@ class AggregatedBrailleTranslatorResult implements BrailleTranslatorResult {
 		if (METRIC_FORCED_BREAK.equals(metric) || METRIC_HYPHEN_COUNT.equals(metric)) {
 			for (int i = 0; i <= currentIndex && i < results.size(); i++) {
 				Object o = results.get(i);
-				if (o instanceof BrailleTranslatorResult) {
-					if (!((BrailleTranslatorResult)o).supportsMetric(metric)) {
-						return false;
-					}
+				if (o instanceof BrailleTranslatorResult && !((BrailleTranslatorResult)o).supportsMetric(metric)) {
+					return false;
 				}
 			}
 			return true;

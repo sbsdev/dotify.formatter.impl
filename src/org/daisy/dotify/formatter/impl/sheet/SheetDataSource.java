@@ -117,7 +117,7 @@ public class SheetDataSource implements SplitPointDataSource<Sheet, SheetDataSou
 		this.volBreakAllowed = template.volBreakAllowed;
 		this.counter = template.counter;
 		this.initialPageOffset = template.initialPageOffset;
-		this.updateCounter = tail?true:template.updateCounter;
+		this.updateCounter = tail || template.updateCounter;
 		this.allowsSplit = true;
 		this.isFirst = template.isFirst;
 		this.wasSplitInsideSequence = template.wasSplitInsideSequence;

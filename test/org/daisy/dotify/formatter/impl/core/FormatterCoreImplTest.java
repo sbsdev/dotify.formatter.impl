@@ -7,7 +7,6 @@ import java.util.List;
 
 import org.daisy.dotify.api.formatter.BlockProperties;
 import org.daisy.dotify.formatter.impl.common.FormatterCoreContext;
-import org.daisy.dotify.formatter.impl.core.FormatterCoreImpl;
 import org.daisy.dotify.formatter.impl.row.BlockMargin;
 import org.daisy.dotify.formatter.impl.row.Margin;
 import org.daisy.dotify.formatter.impl.row.Margin.Type;

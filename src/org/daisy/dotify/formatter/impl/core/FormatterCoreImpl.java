@@ -131,40 +131,38 @@ public class FormatterCoreImpl extends Stack<Block> implements FormatterCore, Bl
 					outerSpaceBefore(p.getMargin().getTopSpacing()).
 					underlineStyle(p.getUnderlineStyle());
 		Block c = newBlock(blockId, rdp.build());
-		if (propsContext.size()>0) {
-			if (propsContext.peek().getBlockProperties().getListType()!=FormattingTypes.ListStyle.NONE) {
-				String listLabel = p.getListItemLabel();
-				switch (propsContext.peek().getBlockProperties().getListType()) {
-				case OL:
-					Integer item = null;
-					if (listLabel!=null) {
-						try {
-							item = Integer.parseInt(listLabel);
-							propsContext.peek().setListNumber(item);
-						} catch (NumberFormatException e) {
-							logger.log(Level.FINE, "Failed to convert a list item label to an integer.", e);
-						}
-					} else {
-						item = propsContext.peek().nextListNumber();
+		if (propsContext.size()>0 && propsContext.peek().getBlockProperties().getListType()!=FormattingTypes.ListStyle.NONE) {
+			String listLabel = p.getListItemLabel();
+			switch (propsContext.peek().getBlockProperties().getListType()) {
+			case OL:
+				Integer item = null;
+				if (listLabel!=null) {
+					try {
+						item = Integer.parseInt(listLabel);
+						propsContext.peek().setListNumber(item);
+					} catch (NumberFormatException e) {
+						logger.log(Level.FINE, "Failed to convert a list item label to an integer.", e);
 					}
-					if (item!=null) {
-						NumeralStyle f = propsContext.peek().getBlockProperties().getListNumberFormat();
-						listLabel = f.format(item.intValue());
-					}
-					break;
-				case UL:
-					if (listLabel==null) {
-						listLabel = propsContext.peek().getBlockProperties().getDefaultListLabel();
-						if (listLabel==null) {
-							listLabel = "•";
-						}
-					}
-					break;
-				case PL: default:
-					listLabel = "";
+				} else {
+					item = propsContext.peek().nextListNumber();
 				}
-				listItem = new ListItem(listLabel, propsContext.peek().getBlockProperties().getListType());
+				if (item!=null) {
+					NumeralStyle f = propsContext.peek().getBlockProperties().getListNumberFormat();
+					listLabel = f.format(item.intValue());
+				}
+				break;
+			case UL:
+				if (listLabel==null) {
+					listLabel = propsContext.peek().getBlockProperties().getDefaultListLabel();
+					if (listLabel==null) {
+						listLabel = "•";
+					}
+				}
+				break;
+			case PL: default:
+				listLabel = "";
 			}
+			listItem = new ListItem(listLabel, propsContext.peek().getBlockProperties().getListType());
 		}
 		c.setBreakBeforeType(p.getBreakBeforeType());
 		c.setKeepType(p.getKeepType());
