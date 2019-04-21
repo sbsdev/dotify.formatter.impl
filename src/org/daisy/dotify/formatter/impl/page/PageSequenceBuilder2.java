@@ -137,10 +137,8 @@ public class PageSequenceBuilder2 {
 		if (keepNextSheets>0) {
 			ret.setAllowsVolumeBreak(false);
 		}
-		if (!master.duplex() || pageCount%2==0) {
-			if (keepNextSheets>0) {
-				keepNextSheets--;
-			}
+		if ((!master.duplex() || pageCount%2==0) && keepNextSheets>0) {
+			keepNextSheets--;
 		}
 		return ret;
 	}

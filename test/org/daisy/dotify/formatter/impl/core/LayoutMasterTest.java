@@ -13,9 +13,6 @@ import org.daisy.dotify.api.formatter.StringField;
 import org.daisy.dotify.api.translator.BrailleTranslatorFactoryMaker;
 import org.daisy.dotify.api.translator.MarkerProcessorFactoryMaker;
 import org.daisy.dotify.api.translator.TextBorderFactoryMaker;
-import org.daisy.dotify.formatter.impl.core.FormatterContext;
-import org.daisy.dotify.formatter.impl.core.LayoutMaster;
-import org.daisy.dotify.formatter.impl.core.PageTemplate;
 import org.junit.Test;
 
 public class LayoutMasterTest {

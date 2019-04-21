@@ -25,7 +25,6 @@ import org.daisy.dotify.formatter.impl.row.RowDataProperties;
 import org.daisy.dotify.formatter.impl.row.RowImpl;
 import org.daisy.dotify.formatter.impl.search.DefaultContext;
 import org.daisy.dotify.formatter.impl.segment.Segment;
-import org.daisy.dotify.formatter.impl.segment.TextSegment;
 
 class Table extends Block {
 	private static final Logger logger = Logger.getLogger(Table.class.getCanonicalName());

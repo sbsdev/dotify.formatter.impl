@@ -200,11 +200,9 @@ class SearchInfo {
 			//Keep while moving: next = page.getPageInScope(page.getSequenceParent(), dir, false);
 			next = page.getPageInScope(getContentsInSequence(page.getSequenceId()), dir, false);
 		} //else if (markerRef.getSearchScope() == MarkerSearchScope.SPREAD && page.isWithinDocumentSpreadScope(dir)) {
-		  else if (markerRef.getSearchScope() == MarkerSearchScope.SPREAD ||
-		           markerRef.getSearchScope() == MarkerSearchScope.SPREAD_CONTENT) {
-			if (isWithinVolumeSpreadScope(page, dir)) {
-				next = getPageInVolumeWithOffset(page, dir, false);
-			}
+		  else if ((markerRef.getSearchScope() == MarkerSearchScope.SPREAD ||
+		           markerRef.getSearchScope() == MarkerSearchScope.SPREAD_CONTENT) && isWithinVolumeSpreadScope(page, dir)) {
+			next = getPageInVolumeWithOffset(page, dir, false);
 		}
 		if (next!=null) {
 			return findMarker(next, markerRef);

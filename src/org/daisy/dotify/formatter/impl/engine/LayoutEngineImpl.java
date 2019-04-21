@@ -111,10 +111,8 @@ class LayoutEngineImpl implements FormatterEngine {
 				throw new LayoutEngineException("FormatterException while running task.", e);
 			}
 		} finally {
-			if (f != null) {
-				if (!f.delete()) {
-					f.deleteOnExit();
-				}
+			if (f != null && !f.delete()) {
+				f.deleteOnExit();
 			}
 		}
 	}
