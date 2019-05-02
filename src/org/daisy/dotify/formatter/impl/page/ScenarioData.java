@@ -61,6 +61,11 @@ class ScenarioData extends BlockProcessor {
 		dataGroups.add(rgs);
 	}
 	
+	@Override
+	protected void setVerticalSpacing(VerticalSpacing vs) {
+		dataGroups.push(new RowGroupSequence(dataGroups.pop(), vs));
+	}
+	
 	protected void addRowGroup(RowGroup rg) {
 		dataGroups.peek().getGroup().add(rg);
 	}

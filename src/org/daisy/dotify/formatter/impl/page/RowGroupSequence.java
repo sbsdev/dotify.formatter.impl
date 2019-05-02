@@ -24,12 +24,15 @@ class RowGroupSequence {
 	 * @param template the instance to copy
 	 */
 	RowGroupSequence(RowGroupSequence template) {
+		this(template, template.vSpacing);
+	}
+	RowGroupSequence(RowGroupSequence template, VerticalSpacing vs) {
 		this.blocks = new ArrayList<>(template.blocks);
 		this.group = new ArrayList<>();
 		for (RowGroup rg : template.group) {
 			group.add(new RowGroup(rg));
 		}
-		this.vSpacing = template.vSpacing;
+		this.vSpacing = vs;
 		this.breakBefore = template.breakBefore;
 	}
 

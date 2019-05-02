@@ -22,6 +22,7 @@ abstract class BlockProcessor {
 	private RowGroupProvider rowGroupProvider;
 	
 	protected abstract void newRowGroupSequence(BreakBefore breakBefore, VerticalSpacing vs);
+	protected abstract void setVerticalSpacing(VerticalSpacing vs);
 	protected abstract boolean hasSequence();
 	protected abstract boolean hasResult();
 	protected abstract void addRowGroup(RowGroup rg);
@@ -42,6 +43,8 @@ abstract class BlockProcessor {
                                     :null
             );
 			keepWithNext = -1;
+		} else if (g.getVerticalPosition()!=null  && !hasResult()) {
+			setVerticalSpacing(new VerticalSpacing(g.getVerticalPosition(), new RowImpl("", bcm.getLeftMarginParent(), bcm.getRightMarginParent())));
 		} else if (rowGroupProvider!=null) {
 			keepWithNext = rowGroupProvider.getKeepWithNext();
 		}

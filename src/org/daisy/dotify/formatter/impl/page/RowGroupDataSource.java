@@ -224,11 +224,17 @@ class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<
 
 	@Override
 	protected void newRowGroupSequence(BreakBefore breakBefore, VerticalSpacing vs) {
+		// Vertical spacing isn't used at this stage.
 		if (groups!=null) {
 			throw new IllegalStateException();
 		} else {
 			groups = new ArrayList<>();
 		}
+	}
+	
+	@Override
+	protected void setVerticalSpacing(VerticalSpacing vs) {
+		// Vertical spacing isn't used at this stage.
 	}
 
 	@Override
