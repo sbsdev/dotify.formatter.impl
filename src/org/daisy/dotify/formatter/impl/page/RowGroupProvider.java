@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.Optional;
 
 import org.daisy.dotify.api.formatter.FormattingTypes.Keep;
+import org.daisy.dotify.formatter.impl.common.VolumeKeepPriority;
 import org.daisy.dotify.formatter.impl.core.Block;
 import org.daisy.dotify.formatter.impl.core.BlockContext;
 import org.daisy.dotify.formatter.impl.core.LayoutMaster;
-import org.daisy.dotify.formatter.impl.datatype.VolumeKeepPriority;
 import org.daisy.dotify.formatter.impl.row.AbstractBlockContentManager;
 import org.daisy.dotify.formatter.impl.row.BlockStatistics;
 import org.daisy.dotify.formatter.impl.row.LineProperties;

@@ -1,4 +1,4 @@
-package org.daisy.dotify.formatter.impl.datatype;
+package org.daisy.dotify.formatter.impl.common;
 
 import static org.junit.Assert.assertEquals;
 

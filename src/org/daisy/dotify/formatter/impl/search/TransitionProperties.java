@@ -1,6 +1,6 @@
 package org.daisy.dotify.formatter.impl.search;
 
-import org.daisy.dotify.formatter.impl.datatype.VolumeKeepPriority;
+import org.daisy.dotify.formatter.impl.common.VolumeKeepPriority;
 
 /**
  * Provides details about a page that are needed for advanced volume transitions.
