@@ -22,7 +22,7 @@ import org.daisy.dotify.api.obfl.ObflParserFactoryService;
 import org.daisy.dotify.api.writer.MetaDataItem;
 import org.daisy.dotify.api.writer.PagedMediaWriter;
 import org.daisy.dotify.api.writer.PagedMediaWriterException;
-import org.daisy.dotify.formatter.impl.FactoryManager;
+import org.daisy.dotify.formatter.impl.common.FactoryManager;
 
 /**
  * <p>
