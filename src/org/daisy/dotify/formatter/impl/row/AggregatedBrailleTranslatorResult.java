@@ -55,7 +55,7 @@ class AggregatedBrailleTranslatorResult implements BrailleTranslatorResult {
 		
 		/**
 		 * Adds an identifier segment to the aggregated result.
-		 * @param as the identifier segment to add
+		 * @param is as the identifier segment to add
 		 */
 		void add(IdentifierSegment is) {
 			results.add(is);

@@ -218,8 +218,8 @@ public class PageImpl implements Page {
 	
 	/**
 	 * Gets the page space needed to render the rows. 
-	 * @param rows
-	 * @param defSpacing a value >= 1.0
+	 * @param rows the rows to render
+	 * @param defSpacing a value &gt;= 1.0
 	 * @return returns the space, in rows
 	 */
 	static float rowsNeeded(Collection<? extends Row> rows, float defSpacing) {

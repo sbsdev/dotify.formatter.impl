@@ -25,7 +25,7 @@ import org.daisy.dotify.api.text.IntegerOutOfRange;
  * must be surrounded with parentheses.
  * </p>
  * <p>
- * The following operators are defined: +, -, *, /, %, =, &lt;, &lt;=, >, >=,
+ * The following operators are defined: +, -, *, /, %, =, &lt;, &lt;=, &gt;, &gt;=,
  * &amp;, |
  * </p>
  * <p>
