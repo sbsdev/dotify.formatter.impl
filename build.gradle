@@ -52,6 +52,7 @@ javadoc {
 	options {
 		encoding = 'UTF-8'
 		source = 8
+		overview = 'src/javadoc-overview.html'
 		links('https://docs.oracle.com/javase/8/docs/api/')
 		links("https://brailleapps.github.io/dotify.api/$versions.dotifyApi/javadoc/")
 		links("https://brailleapps.github.io/dotify.common/$versions.dotifyCommon/javadoc/")
