@@ -8,7 +8,11 @@ import org.daisy.dotify.api.formatter.VolumeContentBuilder;
 import org.daisy.dotify.api.formatter.VolumeTemplateBuilder;
 import org.daisy.dotify.formatter.impl.common.FormatterCoreContext;
 
-
+/**
+ * Provides a {@link VolumeTemplateBuilder} implementation.
+ * 
+ * @author Joel Håkansson
+ */
 public class VolumeTemplate implements VolumeTemplateBuilder {
 	private final Condition condition;
 	private final int splitterMax;

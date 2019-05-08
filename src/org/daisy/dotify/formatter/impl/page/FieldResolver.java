@@ -27,7 +27,7 @@ import org.daisy.dotify.formatter.impl.row.RowImpl;
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.search.PageDetails;
 
-class FieldResolver implements PageShape {
+class FieldResolver {
 	private static final Pattern softHyphen = Pattern.compile("\u00ad");
 	private final LayoutMaster master;
 	private final FormatterContext fcontext;
@@ -163,7 +163,6 @@ class FieldResolver implements PageShape {
 		return f.getNumeralStyle().format(pagenum);
 	}
 
-	@Override
 	public int getWidth(int pagenum, int rowOffset) {
 		while (true) {
 			// Iterates until rowOffset is less than the height of the page.

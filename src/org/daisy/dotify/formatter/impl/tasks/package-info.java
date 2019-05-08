@@ -1,6 +1,5 @@
 /**
- * <p>Provides an {@link org.daisy.dotify.api.obfl.ObflParserFactoryService} implementation and an
- * {@link org.daisy.dotify.api.obfl.ExpressionFactory} implementation.</p>
+ * <p>Provides {@link org.daisy.streamline.api.tasks.TaskGroupFactory} implementations.</p>
  *
  * <p><b>IMPORTANT: This package contains implementations that should only be 
  * accessed using the Java SPI or OSGi. Additional classes in this package 
@@ -8,4 +7,4 @@
  * </p>
  * @author Joel Håkansson
  */
-package org.daisy.dotify.formatter.impl.obfl;
+package org.daisy.dotify.formatter.impl.tasks;

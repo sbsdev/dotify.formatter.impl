@@ -33,7 +33,8 @@ import org.daisy.dotify.formatter.impl.volume.VolumeTemplate;
 
 
 /**
- * Breaks flow into rows, page related block properties are left to next step
+ * Provides an implementation of the {@link Formatter} API.
+ * 
  * @author Joel Håkansson
  */
 class FormatterImpl implements Formatter {
@@ -133,6 +134,27 @@ class FormatterImpl implements Formatter {
 
 		ArrayList<VolumeImpl> ret;
 
+		/*
+		 * Inside this loop a result is created. The volume provider does all the work, and this loop
+		 * simply controls the number of iterations and adds the content to the result. If
+		 * the volume provider indicates that something is wrong with its result, another iteration
+		 * is attempted. The reason that more than one iteration may be needed, is because of
+		 * references. For example, in order to produce a TOC, information about the volume and page
+		 * number for each item is typically requested before that page has been produced.
+		 * Therefore, these values are recorded on the first iteration and then used in the second
+		 * and so on. But even subsequent iterations may contain errors, due to different
+		 * constraints being activated when the dynamic text changes, which leads to different
+		 * volume breaks etc.
+		 *
+		 * The maximum number of iterations below is a balance between giving up when in fact a
+		 * solution could be found and pointless iterations when in fact no solution will ever be
+		 * found. When no solution is found, this is either because of an error in the input OBFL,
+		 * or because of a bug in the code. In other words, in theory this should never happen.
+		 *
+		 * Experience and a solid understanding of the algorithm should be involved when changing
+		 * this value permanently. It should therefore not be parameterized.  Having that said,
+		 * changing this value temporarily could be useful for debugging purposes.
+		 */
 		int maxIterations = 50;
 		for (int j=1;j<=maxIterations;j++) {
 			try {

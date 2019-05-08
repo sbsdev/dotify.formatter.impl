@@ -48,8 +48,8 @@ class LayoutEngineImpl implements FormatterEngine {
 	
 	/**
 	 * Creates a new instance of LayoutEngineTask.
-	 * @param locale
-	 * @param mode
+	 * @param locale the locale
+	 * @param mode the mode
 	 * @param writer the output writer
 	 * @param fm factory manager
 	 * @param obflFactoryService the obfl factory service
