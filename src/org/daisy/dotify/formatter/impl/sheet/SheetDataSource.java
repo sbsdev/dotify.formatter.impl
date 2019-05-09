@@ -11,7 +11,6 @@ import org.daisy.dotify.common.splitter.DefaultSplitResult;
 import org.daisy.dotify.common.splitter.SplitPointDataSource;
 import org.daisy.dotify.common.splitter.SplitResult;
 import org.daisy.dotify.common.splitter.Supplements;
-import org.daisy.dotify.formatter.impl.common.VolumeKeepPriority;
 import org.daisy.dotify.formatter.impl.core.FormatterContext;
 import org.daisy.dotify.formatter.impl.core.TransitionContent;
 import org.daisy.dotify.formatter.impl.page.BlockSequence;
@@ -26,6 +25,7 @@ import org.daisy.dotify.formatter.impl.search.PageDetails;
 import org.daisy.dotify.formatter.impl.search.SequenceId;
 import org.daisy.dotify.formatter.impl.search.SheetIdentity;
 import org.daisy.dotify.formatter.impl.search.TransitionProperties;
+import org.daisy.dotify.formatter.impl.search.VolumeKeepPriority;
 
 /**
  * Provides a data source for sheets. Given a list of 

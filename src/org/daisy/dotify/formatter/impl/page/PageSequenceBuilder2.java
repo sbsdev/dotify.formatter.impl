@@ -20,7 +20,6 @@ import org.daisy.dotify.common.splitter.SplitPointHandler;
 import org.daisy.dotify.common.splitter.SplitPointSpecification;
 import org.daisy.dotify.common.splitter.StandardSplitOption;
 import org.daisy.dotify.common.splitter.Supplements;
-import org.daisy.dotify.formatter.impl.common.VolumeKeepPriority;
 import org.daisy.dotify.formatter.impl.core.Block;
 import org.daisy.dotify.formatter.impl.core.BlockContext;
 import org.daisy.dotify.formatter.impl.core.ContentCollectionImpl;
@@ -37,6 +36,7 @@ import org.daisy.dotify.formatter.impl.search.PageDetails;
 import org.daisy.dotify.formatter.impl.search.PageId;
 import org.daisy.dotify.formatter.impl.search.SequenceId;
 import org.daisy.dotify.formatter.impl.search.TransitionProperties;
+import org.daisy.dotify.formatter.impl.search.VolumeKeepPriority;
 
 public class PageSequenceBuilder2 {
 	private final FormatterContext context;

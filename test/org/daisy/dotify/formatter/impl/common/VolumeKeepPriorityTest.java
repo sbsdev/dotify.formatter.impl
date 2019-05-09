@@ -2,6 +2,7 @@ package org.daisy.dotify.formatter.impl.common;
 
 import static org.junit.Assert.assertEquals;
 
+import org.daisy.dotify.formatter.impl.search.VolumeKeepPriority;
 import org.junit.Test;
 
 @SuppressWarnings("javadoc")

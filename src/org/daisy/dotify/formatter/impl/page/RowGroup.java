@@ -9,9 +9,9 @@ import java.util.Objects;
 import org.daisy.dotify.api.formatter.Marker;
 import org.daisy.dotify.api.writer.Row;
 import org.daisy.dotify.common.splitter.SplitPointUnit;
-import org.daisy.dotify.formatter.impl.common.VolumeKeepPriority;
 import org.daisy.dotify.formatter.impl.row.LineProperties;
 import org.daisy.dotify.formatter.impl.row.RowImpl;
+import org.daisy.dotify.formatter.impl.search.VolumeKeepPriority;
 
 class RowGroup implements SplitPointUnit {
 	private final List<RowImpl> rows;

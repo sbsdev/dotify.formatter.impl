@@ -7,8 +7,8 @@ import java.util.Objects;
 
 import org.daisy.dotify.api.writer.SectionProperties;
 import org.daisy.dotify.common.splitter.SplitPointUnit;
-import org.daisy.dotify.formatter.impl.common.VolumeKeepPriority;
 import org.daisy.dotify.formatter.impl.page.PageImpl;
+import org.daisy.dotify.formatter.impl.search.VolumeKeepPriority;
 public class Sheet implements SplitPointUnit {
 	private static final List<String> SUPPLEMENTS = Collections.unmodifiableList(new ArrayList<String>());
 	private final SectionProperties master;

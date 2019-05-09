@@ -16,7 +16,6 @@ import org.daisy.dotify.api.translator.Translatable;
 import org.daisy.dotify.api.translator.TranslationException;
 import org.daisy.dotify.api.writer.Row;
 import org.daisy.dotify.formatter.impl.common.Page;
-import org.daisy.dotify.formatter.impl.common.VolumeKeepPriority;
 import org.daisy.dotify.formatter.impl.core.BorderManager;
 import org.daisy.dotify.formatter.impl.core.FormatterContext;
 import org.daisy.dotify.formatter.impl.core.HeightCalculator;
@@ -27,6 +26,7 @@ import org.daisy.dotify.formatter.impl.page.PageSequenceBuilder2.MarkerRef;
 import org.daisy.dotify.formatter.impl.row.MarginProperties;
 import org.daisy.dotify.formatter.impl.row.RowImpl;
 import org.daisy.dotify.formatter.impl.search.PageDetails;
+import org.daisy.dotify.formatter.impl.search.VolumeKeepPriority;
 
 
 //FIXME: scope spread is currently implemented using document wide scope, i.e. across volume boundaries. This is wrong, but is better than the previous sequence scope.

@@ -1,4 +1,4 @@
-package org.daisy.dotify.formatter.impl.common;
+package org.daisy.dotify.formatter.impl.search;
 
 import java.util.NoSuchElementException;
 
