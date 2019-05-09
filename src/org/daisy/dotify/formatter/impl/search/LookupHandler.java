@@ -3,6 +3,7 @@ package org.daisy.dotify.formatter.impl.search;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 class LookupHandler<K, V> {
@@ -44,6 +45,7 @@ class LookupHandler<K, V> {
 	 * @param value the value
 	 */
 	void keep(K key, V value) {
+		Objects.requireNonNull(value);
 		uncommitted.put(key, value);
 	}
 	
@@ -59,6 +61,7 @@ class LookupHandler<K, V> {
 	}
 	
 	void put(K key, V value) {
+		Objects.requireNonNull(value);
 		if (uncommitted.containsKey(key)) {
 			throw new IllegalStateException(key + " has uncommitted values. Commit before putting.");
 		}
