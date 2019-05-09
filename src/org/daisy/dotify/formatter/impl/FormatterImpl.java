@@ -2,7 +2,6 @@ package org.daisy.dotify.formatter.impl;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -27,7 +26,6 @@ import org.daisy.dotify.formatter.impl.common.WriterHandler;
 import org.daisy.dotify.formatter.impl.page.BlockSequence;
 import org.daisy.dotify.formatter.impl.page.RestartPaginationException;
 import org.daisy.dotify.formatter.impl.sheet.VolumeImpl;
-import org.daisy.dotify.formatter.impl.volume.TableOfContentsImpl;
 import org.daisy.dotify.formatter.impl.volume.VolumeTemplate;
 
 
@@ -38,7 +36,6 @@ import org.daisy.dotify.formatter.impl.volume.VolumeTemplate;
  */
 class FormatterImpl implements Formatter {
 
-	private final HashMap<String, TableOfContentsImpl> tocs;
 	private final Stack<VolumeTemplate> volumeTemplates;
 	private final Logger logger;
 
@@ -59,7 +56,6 @@ class FormatterImpl implements Formatter {
 		this.context = new LazyFormatterContext(translatorFactory, tbf, mpf, FormatterConfiguration.with(locale, mode).build());
 		this.blocks = new Stack<>();
 		this.unopened = true;
-		this.tocs = new HashMap<>();
 		this.volumeTemplates = new Stack<>();
 		
 		this.logger = Logger.getLogger(this.getClass().getCanonicalName());
@@ -98,7 +94,7 @@ class FormatterImpl implements Formatter {
 	@Override
 	public VolumeTemplateBuilder newVolumeTemplate(VolumeTemplateProperties props) {
 		unopened = false;
-		VolumeTemplate template = new VolumeTemplate(context.getFormatterContext(), tocs, props.getCondition(), props.getSplitterMax());
+		VolumeTemplate template = new VolumeTemplate(context.getFormatterContext(), props.getCondition(), props.getSplitterMax());
 		volumeTemplates.push(template);
 		return template;
 	}
@@ -106,9 +102,7 @@ class FormatterImpl implements Formatter {
 	@Override
 	public TableOfContents newToc(String tocName) {
 		unopened = false;
-		TableOfContentsImpl toc = new TableOfContentsImpl(context.getFormatterContext());
-		tocs.put(tocName, toc);
-		return toc;
+		return context.getFormatterContext().newTableOfContents(tocName);
 	}
 
 	@Override

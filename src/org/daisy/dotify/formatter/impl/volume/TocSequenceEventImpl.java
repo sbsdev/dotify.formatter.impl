@@ -15,15 +15,15 @@ import org.daisy.dotify.formatter.impl.common.FormatterCoreContext;
 import org.daisy.dotify.formatter.impl.core.Block;
 import org.daisy.dotify.formatter.impl.core.FormatterContext;
 import org.daisy.dotify.formatter.impl.core.FormatterCoreImpl;
+import org.daisy.dotify.formatter.impl.core.TableOfContentsImpl;
 import org.daisy.dotify.formatter.impl.page.BlockSequence;
 import org.daisy.dotify.formatter.impl.search.BlockAddress;
 import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.search.DefaultContext;
 
 class TocSequenceEventImpl implements VolumeSequence {
-	private final SequenceProperties props;
-	private final TableOfContentsImpl data;
-	private final TocProperties.TocRange range;
+	private final TocProperties props;
+	
 	private final ArrayList<ConditionalBlock> tocStartEvents;
 	private final ArrayList<ConditionalBlock> volumeStartEvents;
 	private final ArrayList<ConditionalBlock> volumeEndEvents;
@@ -32,11 +32,9 @@ class TocSequenceEventImpl implements VolumeSequence {
 	private final long groupNumber;
 	private BlockAddress currentBlockAddress;
 	
-	TocSequenceEventImpl(FormatterCoreContext fc, SequenceProperties props, TableOfContentsImpl data, TocProperties.TocRange range, String volEventVar) {
+	TocSequenceEventImpl(FormatterCoreContext fc, TocProperties props) {
 		this.fc = fc;
 		this.props = props;
-		this.data = data;
-		this.range = range;
 		this.tocStartEvents = new ArrayList<>();
 		this.volumeStartEvents = new ArrayList<>();
 		this.volumeEndEvents = new ArrayList<>();
@@ -71,7 +69,7 @@ class TocSequenceEventImpl implements VolumeSequence {
 	}
 
 	TocProperties.TocRange getRange() {
-		return range;
+		return props.getRange();
 	}
 
 	private Iterable<Block> getCompoundIterableB(Iterable<ConditionalBlock> events, Context vars) {
@@ -114,6 +112,7 @@ class TocSequenceEventImpl implements VolumeSequence {
 
 	@Override
 	public BlockSequence getBlockSequence(FormatterContext context, DefaultContext vars, CrossReferenceHandler crh) {
+		TableOfContentsImpl data = context.getTocs().get(props.getTocName());
 		currentBlockAddress = new BlockAddress(groupNumber, 0);
 		try {
 			BlockSequenceManipulator fsm = new BlockSequenceManipulator(
