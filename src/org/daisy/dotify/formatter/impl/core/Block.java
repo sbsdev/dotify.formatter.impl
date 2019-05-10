@@ -152,14 +152,6 @@ public abstract class Block {
 		return keepWithNextSheets;
 	}
 	
-	Integer getVolumeKeepInsidePriority() {
-		return avoidVolumeBreakInsidePriority;
-	}
-	
-	Integer getVolumeKeepAfterPriority() {
-		return avoidVolumeBreakAfterPriority;
-	}
-	
 	public String getIdentifier() {
 		return id;
 	}
@@ -186,14 +178,6 @@ public abstract class Block {
 	
 	void setKeepWithNextSheets(int keepWithNextSheets) {
 		this.keepWithNextSheets = keepWithNextSheets;
-	}
-	
-	void setVolumeKeepInsidePriority(Integer priority) {
-		this.avoidVolumeBreakInsidePriority = priority;
-	}
-	
-	void setVolumeKeepAfterPriority(Integer priority) {
-		this.avoidVolumeBreakAfterPriority = priority;
 	}
 	
 	void setIdentifier(String id) {
@@ -260,6 +244,10 @@ public abstract class Block {
 	
 	public Integer getAvoidVolumeBreakInsidePriority() {
 		return avoidVolumeBreakInsidePriority;
+	}
+	
+	void setAvoidVolumeBreakInsidePriority(Integer value) {
+		this.avoidVolumeBreakInsidePriority = value;
 	}
 
 }

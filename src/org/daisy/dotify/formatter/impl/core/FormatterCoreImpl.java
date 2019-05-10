@@ -102,7 +102,7 @@ public class FormatterCoreImpl extends Stack<Block> implements FormatterCore, Bl
 			throw new IllegalStateException("A table is open.");
 		}
 		if (endStart!=null && endStart == true) {
-			getCurrentBlock().setVolumeKeepAfterPriority(getCurrentVolumeKeepPriority());
+			getCurrentBlock().setAvoidVolumeBreakAfterPriority(getCurrentVolumeKeepPriority());
 		}
 		endStart = null;
 		String lb = "";
@@ -174,8 +174,8 @@ public class FormatterCoreImpl extends Stack<Block> implements FormatterCore, Bl
 		c.setVerticalPosition(p.getVerticalPosition());
 		AncestorContext ac = new AncestorContext(p, inheritVolumeKeepPriority(p.getVolumeKeepPriority()));
 		// We don't get the volume keep priority from block properties, because it could have been inherited from an ancestor
-		c.setVolumeKeepInsidePriority(ac.getVolumeKeepPriority());
-		c.setVolumeKeepAfterPriority(ac.getVolumeKeepPriority());
+		c.setAvoidVolumeBreakInsidePriority(ac.getVolumeKeepPriority());
+		c.setAvoidVolumeBreakAfterPriority(ac.getVolumeKeepPriority());
 		propsContext.push(ac);
 		Block bi = getCurrentBlock();
 		RowDataProperties.Builder builder = new RowDataProperties.Builder(bi.getRowDataProperties());
@@ -231,7 +231,7 @@ public class FormatterCoreImpl extends Stack<Block> implements FormatterCore, Bl
 		bi.setKeepWithPreviousSheets(p.getKeepWithPreviousSheets());
 		bi.setRowDataProperties(builder.build());
 		//set the volume keep after for the closing block to the parent priority 
-		bi.setVolumeKeepAfterPriority(getCurrentVolumeKeepPriority());
+		bi.setAvoidVolumeBreakAfterPriority(getCurrentVolumeKeepPriority());
 		if (bi.isEmpty()) {
 			// if this group doesn't have data, then 
 			// apply this blocks volume break after priority to the previous block 
@@ -270,8 +270,8 @@ public class FormatterCoreImpl extends Stack<Block> implements FormatterCore, Bl
 			c.setKeepType(keep);
 			c.setKeepWithNext(next);
 			// We don't get the volume keep priority from the BlockProperties, as it could have been inherited from an ancestor
-			c.setVolumeKeepInsidePriority(getCurrentVolumeKeepPriority());
-			c.setVolumeKeepAfterPriority(getParentVolumeKeepPriority());
+			c.setAvoidVolumeBreakInsidePriority(getCurrentVolumeKeepPriority());
+			c.setAvoidVolumeBreakAfterPriority(getParentVolumeKeepPriority());
 		}
 		//firstRow = true;
 	}
