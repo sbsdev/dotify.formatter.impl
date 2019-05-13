@@ -19,7 +19,7 @@ import org.daisy.dotify.formatter.impl.search.DefaultContext;
  * 
  * @author Joel Håkansson
  */
-abstract class BlockProcessor {
+final class BlockProcessor {
 	protected RowGroupProvider rowGroupProvider;
 	
 	BlockProcessor() { }

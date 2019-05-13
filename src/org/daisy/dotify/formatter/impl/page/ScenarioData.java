@@ -15,11 +15,12 @@ import org.daisy.dotify.formatter.impl.row.LineProperties;
  * 
  * @author Joel Håkansson
  */
-class ScenarioData extends BlockProcessor {
+class ScenarioData {
+	private final BlockProcessor blockProcessor;
 	private Stack<RowGroupSequence> dataGroups = new Stack<>();
 
 	ScenarioData() {
-		super();
+		blockProcessor = new BlockProcessor();
 		dataGroups = new Stack<>();
 	}
 
@@ -28,7 +29,7 @@ class ScenarioData extends BlockProcessor {
 	 * @param template the instance to copy
 	 */
 	ScenarioData(ScenarioData template) {
-		super(template);
+		this.blockProcessor = new BlockProcessor(template.blockProcessor);
 		dataGroups = new Stack<>();
 		for (RowGroupSequence rgs : template.dataGroups) {
 			dataGroups.add(new RowGroupSequence(rgs));
@@ -75,9 +76,9 @@ class ScenarioData extends BlockProcessor {
 	}
 	
 	void processBlock(LayoutMaster master, Block g, BlockContext bc) {
-		loadBlock(master, g, bc, hasSequence(), hasResult(), this::newRowGroupSequence, this::setVerticalSpacing);
-		while (hasNextInBlock()) {
-			getNextRowGroup(bc, LineProperties.DEFAULT)
+		blockProcessor.loadBlock(master, g, bc, hasSequence(), hasResult(), this::newRowGroupSequence, this::setVerticalSpacing);
+		while (blockProcessor.hasNextInBlock()) {
+			blockProcessor.getNextRowGroup(bc, LineProperties.DEFAULT)
 			.ifPresent(rg->dataGroups.peek().getGroup().add(rg));
 		}
 		dataGroups.peek().getBlocks().add(g);
@@ -89,8 +90,8 @@ class ScenarioData extends BlockProcessor {
 	 * @return returns the block statistics, or null
 	 */
 	BlockStatistics getBlockStatistics() {
-		if (rowGroupProvider!=null) {
-			return rowGroupProvider.getBlockStatistics();
+		if (blockProcessor.rowGroupProvider!=null) {
+			return blockProcessor.rowGroupProvider.getBlockStatistics();
 		} else {
 			return null;
 		}

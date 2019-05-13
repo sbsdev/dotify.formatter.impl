@@ -27,13 +27,14 @@ import org.daisy.dotify.formatter.impl.search.BlockLineLocation;
  * things will break.</p>
  * @author Joel Håkansson
  */
-class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<RowGroup, RowGroupDataSource> {
+class RowGroupDataSource implements SplitPointDataSource<RowGroup, RowGroupDataSource> {
 	private static final Supplements<RowGroup> EMPTY_SUPPLEMENTS = new Supplements<RowGroup>() {
 		@Override
 		public RowGroup get(String id) {
 			return null;
 		}
 	};
+	private final BlockProcessor blockProcessor;
 	private final LayoutMaster master;
 	private final Supplements<RowGroup> supplements;
 	private final BreakBefore breakBefore;
@@ -48,6 +49,7 @@ class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<
 
 	RowGroupDataSource(LayoutMaster master, BlockContext bc, List<Block> blocks, BreakBefore breakBefore, VerticalSpacing vs, Supplements<RowGroup> supplements) {
 		super();
+		this.blockProcessor = new BlockProcessor();
 		this.master = master;
 		this.bc = bc;
 		this.groups = null;
@@ -65,7 +67,7 @@ class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<
 	}
 	
 	RowGroupDataSource(RowGroupDataSource template, int offset) {
-		super(template);
+		this.blockProcessor = new BlockProcessor(template.blockProcessor);
 		this.master = template.master;
 		this.bc = template.bc;
 		if (template.groups==null) {
@@ -102,7 +104,7 @@ class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<
 
 	@Override
 	public boolean isEmpty() {
-		return this.groupSize()==0 && blockIndex>=blocks.size() && !hasNextInBlock();
+		return this.groupSize()==0 && blockIndex>=blocks.size() && !blockProcessor.hasNextInBlock();
 	}
 
 	@Override
@@ -173,24 +175,24 @@ class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<
 	 */
 	private boolean ensureBuffer(int index) {
 		while (index<0 || this.groupSize()<index) {
-			if (blockIndex>=blocks.size() && !hasNextInBlock()) {
+			if (blockIndex>=blocks.size() && !blockProcessor.hasNextInBlock()) {
 				return false;
 			}
-			if (!hasNextInBlock()) {
+			if (!blockProcessor.hasNextInBlock()) {
 				//get next block
 				Block b = blocks.get(blockIndex);
 				blockIndex++;
 				offsetInBlock=0;
-				loadBlock(master, b, bc, hasSequence(), hasResult(), this::newRowGroupSequence, v->{});
+				blockProcessor.loadBlock(master, b, bc, hasSequence(), hasResult(), this::newRowGroupSequence, v->{});
 			}
 			// Requesting all items implies that no special last line hyphenation processing is needed.
 			// This is reasonable: The very last line in a result would never be hyphenated, so suppressing
 			// hyphenation is unnecessary. Also, actively doing this would be difficult, because we do not know
 			// if the line produced below is the last line or not, until after the call has already been made.
-			Optional<RowGroup> added = getNextRowGroup(bc, new LineProperties.Builder()
+			Optional<RowGroup> added = blockProcessor.getNextRowGroup(bc, new LineProperties.Builder()
 				.suppressHyphenation(!allowHyphenateLastLine && index>-1 && groupSize()>=index-1)
 				.reservedWidth(reservedWidths.apply(countRows()))
-				.lineBlockLocation(new BlockLineLocation(getBlockAddress(), offsetInBlock))
+				.lineBlockLocation(new BlockLineLocation(blockProcessor.getBlockAddress(), offsetInBlock))
 				.build());
 			added.ifPresent(rg->groups.add(rg));
 			offsetInBlock += added.map(v->v.getRows().size()).orElse(0);
