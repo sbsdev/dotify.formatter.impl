@@ -463,13 +463,6 @@ public class PageSequenceBuilder2 {
 		return master.getPageArea()!=null && collection!=null;
 	}
 	
-	@FunctionalInterface
-	interface MarkerRef {
-		boolean hasMarkerWithName(String name);
-	}
-	
-
-	
 	private void addProperties(PageImpl p, RowGroup rg) {
 		p.addIdentifiers(rg.getIdentifiers());
 		p.addMarkers(rg.getMarkers());

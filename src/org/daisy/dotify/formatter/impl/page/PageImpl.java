@@ -22,7 +22,6 @@ import org.daisy.dotify.formatter.impl.core.HeightCalculator;
 import org.daisy.dotify.formatter.impl.core.LayoutMaster;
 import org.daisy.dotify.formatter.impl.core.PageTemplate;
 import org.daisy.dotify.formatter.impl.core.PaginatorException;
-import org.daisy.dotify.formatter.impl.page.PageSequenceBuilder2.MarkerRef;
 import org.daisy.dotify.formatter.impl.row.MarginProperties;
 import org.daisy.dotify.formatter.impl.row.RowImpl;
 import org.daisy.dotify.formatter.impl.search.PageDetails;
@@ -137,6 +136,11 @@ public class PageImpl implements Page {
 			}
 			addRowDetails(r);
 		}
+	}
+	
+	@FunctionalInterface
+	interface MarkerRef {
+		boolean hasMarkerWithName(String name);
 	}
 	
 	private RowImpl addMarginRegion(RowImpl r) {
