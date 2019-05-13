@@ -48,11 +48,11 @@ class ScenarioData extends BlockProcessor {
 		return (dataGroups.isEmpty()||dataGroups.peek().getGroup().isEmpty());
 	}
 	
-	protected boolean hasSequence() {
+	private boolean hasSequence() {
 		return !dataGroups.isEmpty();
 	}
 	
-	protected boolean hasResult() {
+	private boolean hasResult() {
 		return !isDataEmpty();
 	}
 	
@@ -65,11 +65,7 @@ class ScenarioData extends BlockProcessor {
 	protected void setVerticalSpacing(VerticalSpacing vs) {
 		dataGroups.push(new RowGroupSequence(dataGroups.pop(), vs));
 	}
-	
-	protected void addRowGroup(RowGroup rg) {
-		dataGroups.peek().getGroup().add(rg);
-	}
-	
+
 	RowGroup peekResult() {
 		return dataGroups.peek().currentGroup();
 	}
@@ -79,9 +75,10 @@ class ScenarioData extends BlockProcessor {
 	}
 	
 	void processBlock(LayoutMaster master, Block g, BlockContext bc) {
-		loadBlock(master, g, bc);
+		loadBlock(master, g, bc, hasSequence(), hasResult());
 		while (hasNextInBlock()) {
-			processNextRowGroup(bc, LineProperties.DEFAULT);
+			getNextRowGroup(bc, LineProperties.DEFAULT)
+			.ifPresent(rg->dataGroups.peek().getGroup().add(rg));
 		}
 		dataGroups.peek().getBlocks().add(g);
 	}

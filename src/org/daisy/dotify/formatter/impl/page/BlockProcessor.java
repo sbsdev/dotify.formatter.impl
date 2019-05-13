@@ -23,9 +23,6 @@ abstract class BlockProcessor {
 	
 	protected abstract void newRowGroupSequence(BreakBefore breakBefore, VerticalSpacing vs);
 	protected abstract void setVerticalSpacing(VerticalSpacing vs);
-	protected abstract boolean hasSequence();
-	protected abstract boolean hasResult();
-	protected abstract void addRowGroup(RowGroup rg);
 	
 	BlockProcessor() { }
 
@@ -33,17 +30,17 @@ abstract class BlockProcessor {
 		this.rowGroupProvider = copyUnlessNull(template.rowGroupProvider);
 	}
 	
-	protected void loadBlock(LayoutMaster master, Block g, BlockContext bc) {
+	protected void loadBlock(LayoutMaster master, Block g, BlockContext bc, boolean hasSequence, boolean hasResult) {
 		AbstractBlockContentManager bcm = g.getBlockContentManager(bc);
 		int keepWithNext = 0;
-		if (!hasSequence() || ((g.getBreakBeforeType()!=BreakBefore.AUTO || g.getVerticalPosition()!=null) && hasResult())) {
+		if (!hasSequence || ((g.getBreakBeforeType()!=BreakBefore.AUTO || g.getVerticalPosition()!=null) && hasResult)) {
             newRowGroupSequence(g.getBreakBeforeType(), 
                     g.getVerticalPosition()!=null?
                             new VerticalSpacing(g.getVerticalPosition(), new RowImpl("", bcm.getLeftMarginParent(), bcm.getRightMarginParent()))
                                     :null
             );
 			keepWithNext = -1;
-		} else if (g.getVerticalPosition()!=null  && !hasResult()) {
+		} else if (g.getVerticalPosition()!=null  && !hasResult) {
 			setVerticalSpacing(new VerticalSpacing(g.getVerticalPosition(), new RowImpl("", bcm.getLeftMarginParent(), bcm.getRightMarginParent())));
 		} else if (rowGroupProvider!=null) {
 			keepWithNext = rowGroupProvider.getKeepWithNext();
@@ -51,11 +48,9 @@ abstract class BlockProcessor {
 		rowGroupProvider = new RowGroupProvider(master, g, bcm, bc, keepWithNext);
 	}
 	
-	protected Optional<RowGroup> processNextRowGroup(DefaultContext context, LineProperties lineProps) {
+	protected Optional<RowGroup> getNextRowGroup(DefaultContext context, LineProperties lineProps) {
 		if (hasNextInBlock()) {
-			RowGroup ret = rowGroupProvider.next(context, lineProps);
-			addRowGroup(ret);
-			return Optional.of(ret);
+			return Optional.of(rowGroupProvider.next(context, lineProps));
 		} else {
 			return Optional.empty();
 		}

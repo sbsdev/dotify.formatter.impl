@@ -181,17 +181,18 @@ class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<
 				Block b = blocks.get(blockIndex);
 				blockIndex++;
 				offsetInBlock=0;
-				loadBlock(master, b, bc);
+				loadBlock(master, b, bc, hasSequence(), hasResult());
 			}
 			// Requesting all items implies that no special last line hyphenation processing is needed.
 			// This is reasonable: The very last line in a result would never be hyphenated, so suppressing
 			// hyphenation is unnecessary. Also, actively doing this would be difficult, because we do not know
 			// if the line produced below is the last line or not, until after the call has already been made.
-			Optional<RowGroup> added = processNextRowGroup(bc, new LineProperties.Builder()
+			Optional<RowGroup> added = getNextRowGroup(bc, new LineProperties.Builder()
 				.suppressHyphenation(!allowHyphenateLastLine && index>-1 && groupSize()>=index-1)
 				.reservedWidth(reservedWidths.apply(countRows()))
 				.lineBlockLocation(new BlockLineLocation(getBlockAddress(), offsetInBlock))
 				.build());
+			added.ifPresent(rg->groups.add(rg));
 			offsetInBlock += added.map(v->v.getRows().size()).orElse(0);
 		}
 		return true;
@@ -237,21 +238,14 @@ class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<
 		// Vertical spacing isn't used at this stage.
 	}
 
-	@Override
-	protected boolean hasSequence() {
+	private boolean hasSequence() {
 		return groups!=null;
 	}
 
-	@Override
-	protected boolean hasResult() {
+	private boolean hasResult() {
 		return hasSequence() && !groups.isEmpty();
 	}
 
-	@Override
-	protected void addRowGroup(RowGroup rg) {
-		groups.add(rg);
-	}
-	
 	private int groupSize() {
 		return groups==null?0:groups.size();
 	}
