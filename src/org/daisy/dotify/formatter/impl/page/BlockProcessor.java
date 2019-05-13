@@ -1,6 +1,8 @@
 package org.daisy.dotify.formatter.impl.page;
 
 import java.util.Optional;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import org.daisy.dotify.api.formatter.FormattingTypes.BreakBefore;
 import org.daisy.dotify.formatter.impl.core.Block;
@@ -20,27 +22,24 @@ import org.daisy.dotify.formatter.impl.search.DefaultContext;
 abstract class BlockProcessor {
 	protected RowGroupProvider rowGroupProvider;
 	
-	protected abstract void newRowGroupSequence(BreakBefore breakBefore, VerticalSpacing vs);
-	protected abstract void setVerticalSpacing(VerticalSpacing vs);
-	
 	BlockProcessor() { }
 
 	BlockProcessor(BlockProcessor template) {
 		this.rowGroupProvider = copyUnlessNull(template.rowGroupProvider);
 	}
 	
-	protected void loadBlock(LayoutMaster master, Block g, BlockContext bc, boolean hasSequence, boolean hasResult) {
+	protected void loadBlock(LayoutMaster master, Block g, BlockContext bc, boolean hasSequence, boolean hasResult, BiConsumer<BreakBefore, VerticalSpacing> newRowGroupSequence, Consumer<VerticalSpacing> updateVerticalSpacing) {
 		AbstractBlockContentManager bcm = g.getBlockContentManager(bc);
 		int keepWithNext = 0;
 		if (!hasSequence || ((g.getBreakBeforeType()!=BreakBefore.AUTO || g.getVerticalPosition()!=null) && hasResult)) {
-            newRowGroupSequence(g.getBreakBeforeType(), 
+            newRowGroupSequence.accept(g.getBreakBeforeType(), 
                     g.getVerticalPosition()!=null?
                             new VerticalSpacing(g.getVerticalPosition(), new RowImpl("", bcm.getLeftMarginParent(), bcm.getRightMarginParent()))
                                     :null
             );
 			keepWithNext = -1;
 		} else if (g.getVerticalPosition()!=null  && !hasResult) {
-			setVerticalSpacing(new VerticalSpacing(g.getVerticalPosition(), new RowImpl("", bcm.getLeftMarginParent(), bcm.getRightMarginParent())));
+			updateVerticalSpacing.accept(new VerticalSpacing(g.getVerticalPosition(), new RowImpl("", bcm.getLeftMarginParent(), bcm.getRightMarginParent())));
 		} else if (rowGroupProvider!=null) {
 			keepWithNext = rowGroupProvider.getKeepWithNext();
 		}

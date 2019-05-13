@@ -57,13 +57,12 @@ class ScenarioData extends BlockProcessor {
 		return !isDataEmpty();
 	}
 	
-	protected void newRowGroupSequence(BreakBefore breakBefore, VerticalSpacing vs) {
+	private void newRowGroupSequence(BreakBefore breakBefore, VerticalSpacing vs) {
 		RowGroupSequence rgs = new RowGroupSequence(breakBefore, vs);
 		dataGroups.add(rgs);
 	}
 	
-	@Override
-	protected void setVerticalSpacing(VerticalSpacing vs) {
+	private void setVerticalSpacing(VerticalSpacing vs) {
 		dataGroups.push(new RowGroupSequence(dataGroups.pop(), vs));
 	}
 
@@ -76,7 +75,7 @@ class ScenarioData extends BlockProcessor {
 	}
 	
 	void processBlock(LayoutMaster master, Block g, BlockContext bc) {
-		loadBlock(master, g, bc, hasSequence(), hasResult());
+		loadBlock(master, g, bc, hasSequence(), hasResult(), this::newRowGroupSequence, this::setVerticalSpacing);
 		while (hasNextInBlock()) {
 			getNextRowGroup(bc, LineProperties.DEFAULT)
 			.ifPresent(rg->dataGroups.peek().getGroup().add(rg));

@@ -181,7 +181,7 @@ class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<
 				Block b = blocks.get(blockIndex);
 				blockIndex++;
 				offsetInBlock=0;
-				loadBlock(master, b, bc, hasSequence(), hasResult());
+				loadBlock(master, b, bc, hasSequence(), hasResult(), this::newRowGroupSequence, v->{});
 			}
 			// Requesting all items implies that no special last line hyphenation processing is needed.
 			// This is reasonable: The very last line in a result would never be hyphenated, so suppressing
@@ -223,19 +223,13 @@ class RowGroupDataSource extends BlockProcessor implements SplitPointDataSource<
 		return this;
 	}
 
-	@Override
-	protected void newRowGroupSequence(BreakBefore breakBefore, VerticalSpacing vs) {
+	private void newRowGroupSequence(BreakBefore breakBefore, VerticalSpacing vs) {
 		// Vertical spacing isn't used at this stage.
 		if (groups!=null) {
 			throw new IllegalStateException();
 		} else {
 			groups = new ArrayList<>();
 		}
-	}
-	
-	@Override
-	protected void setVerticalSpacing(VerticalSpacing vs) {
-		// Vertical spacing isn't used at this stage.
 	}
 
 	private boolean hasSequence() {
