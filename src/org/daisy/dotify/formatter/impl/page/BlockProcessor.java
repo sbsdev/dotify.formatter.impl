@@ -7,7 +7,6 @@ import org.daisy.dotify.formatter.impl.core.Block;
 import org.daisy.dotify.formatter.impl.core.BlockContext;
 import org.daisy.dotify.formatter.impl.core.LayoutMaster;
 import org.daisy.dotify.formatter.impl.row.AbstractBlockContentManager;
-import org.daisy.dotify.formatter.impl.row.BlockStatistics;
 import org.daisy.dotify.formatter.impl.row.LineProperties;
 import org.daisy.dotify.formatter.impl.row.RowImpl;
 import org.daisy.dotify.formatter.impl.search.BlockAddress;
@@ -19,7 +18,7 @@ import org.daisy.dotify.formatter.impl.search.DefaultContext;
  * @author Joel Håkansson
  */
 abstract class BlockProcessor {
-	private RowGroupProvider rowGroupProvider;
+	protected RowGroupProvider rowGroupProvider;
 	
 	protected abstract void newRowGroupSequence(BreakBefore breakBefore, VerticalSpacing vs);
 	protected abstract void setVerticalSpacing(VerticalSpacing vs);
@@ -69,18 +68,6 @@ abstract class BlockProcessor {
 	
 	private RowGroupProvider copyUnlessNull(RowGroupProvider template) {
 		return template==null?null:new RowGroupProvider(template);
-	}
-
-	/**
-	 * Gets the current block's statistics, or null if no block has been loaded.
-	 * @return returns the block statistics, or null
-	 */
-	BlockStatistics getBlockStatistics() {
-		if (rowGroupProvider!=null) {
-			return rowGroupProvider.getBlockStatistics();
-		} else {
-			return null;
-		}
 	}
 	
 	BlockAddress getBlockAddress() {

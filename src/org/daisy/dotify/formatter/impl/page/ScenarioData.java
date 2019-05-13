@@ -7,6 +7,7 @@ import org.daisy.dotify.api.formatter.FormattingTypes.BreakBefore;
 import org.daisy.dotify.formatter.impl.core.Block;
 import org.daisy.dotify.formatter.impl.core.BlockContext;
 import org.daisy.dotify.formatter.impl.core.LayoutMaster;
+import org.daisy.dotify.formatter.impl.row.BlockStatistics;
 import org.daisy.dotify.formatter.impl.row.LineProperties;
 
 /**
@@ -81,5 +82,18 @@ class ScenarioData extends BlockProcessor {
 			.ifPresent(rg->dataGroups.peek().getGroup().add(rg));
 		}
 		dataGroups.peek().getBlocks().add(g);
+	}
+	
+
+	/**
+	 * Gets the current block's statistics, or null if no block has been loaded.
+	 * @return returns the block statistics, or null
+	 */
+	BlockStatistics getBlockStatistics() {
+		if (rowGroupProvider!=null) {
+			return rowGroupProvider.getBlockStatistics();
+		} else {
+			return null;
+		}
 	}
 }
