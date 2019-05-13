@@ -67,10 +67,6 @@ class ScenarioData {
 		dataGroups.peek().setVerticalSpacing(vs);
 	}
 
-	RowGroup peekResult() {
-		return dataGroups.peek().currentGroup();
-	}
-
 	List<RowGroupSequence> getDataGroups() {
 		return dataGroups;
 	}

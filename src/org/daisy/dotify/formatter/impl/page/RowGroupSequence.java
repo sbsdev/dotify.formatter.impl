@@ -56,7 +56,7 @@ class RowGroupSequence {
 		this.breakBefore = template.breakBefore;
 	}
 
-	public List<RowGroup> getGroup() {
+	List<RowGroup> getGroup() {
 		return group;
 	}
 	
@@ -66,14 +66,6 @@ class RowGroupSequence {
 	
 	List<Block> getBlocks() {
 		return blocks;
-	}
-
-	RowGroup currentGroup() {
-		if (group.isEmpty()) {
-			return null;
-		} else {
-			return group.get(group.size()-1);
-		}
 	}
 	
 	VerticalSpacing getVerticalSpacing() {
