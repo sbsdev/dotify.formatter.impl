@@ -26,7 +26,6 @@ import org.daisy.dotify.formatter.impl.common.Volume;
 import org.daisy.dotify.formatter.impl.common.WriterHandler;
 import org.daisy.dotify.formatter.impl.page.BlockSequence;
 import org.daisy.dotify.formatter.impl.page.RestartPaginationException;
-import org.daisy.dotify.formatter.impl.search.CrossReferenceHandler;
 import org.daisy.dotify.formatter.impl.sheet.VolumeImpl;
 import org.daisy.dotify.formatter.impl.volume.TableOfContentsImpl;
 import org.daisy.dotify.formatter.impl.volume.VolumeTemplate;
@@ -129,8 +128,7 @@ class FormatterImpl implements Formatter {
 	}
 
 	private Iterable<? extends Volume> getVolumes() {
-		CrossReferenceHandler crh = new CrossReferenceHandler();
-		VolumeProvider volumeProvider = new VolumeProvider(blocks, volumeTemplates, context, crh);
+		VolumeProvider volumeProvider = new VolumeProvider(blocks, volumeTemplates, context);
 
 		ArrayList<VolumeImpl> ret;
 
@@ -160,7 +158,7 @@ class FormatterImpl implements Formatter {
 			try {
 				ret = new ArrayList<>();
 				volumeProvider.prepare();
-				for (int i=1;i<= crh.getVolumeCount();i++) {
+				for (int i=1;i<= volumeProvider.getVolumeCount();i++) {
 					ret.add(volumeProvider.nextVolume());
 				}
 	

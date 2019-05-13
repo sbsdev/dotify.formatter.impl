@@ -65,8 +65,9 @@ public class VolumeProvider {
 	 * @param context the formatter context
 	 * @param crh the cross reference handler
 	 */
-	VolumeProvider(List<BlockSequence> blocks, Stack<VolumeTemplate> volumeTemplates, LazyFormatterContext context, CrossReferenceHandler crh) {
+	VolumeProvider(List<BlockSequence> blocks, Stack<VolumeTemplate> volumeTemplates, LazyFormatterContext context) {
 		this.blocks = blocks;
+		this.crh = new CrossReferenceHandler();
 		this.splitterLimit = volumeNumber -> {
             final DefaultContext c = new DefaultContext.Builder(crh)
                     .currentVolume(volumeNumber)
@@ -81,7 +82,6 @@ public class VolumeProvider {
         };
 		this.volumeTemplates = volumeTemplates;
 		this.context = context;
-		this.crh = crh;
 		this.volSplitter = new SplitPointHandler<>();
 	}
 		
@@ -317,6 +317,10 @@ public class VolumeProvider {
 		}
 		j++;
 		return false;
+	}
+	
+	int getVolumeCount() {
+		return crh.getVolumeCount();
 	}
 
 }
