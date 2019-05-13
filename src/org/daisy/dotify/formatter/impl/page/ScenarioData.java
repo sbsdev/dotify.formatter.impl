@@ -64,7 +64,7 @@ class ScenarioData {
 	}
 	
 	private void setVerticalSpacing(VerticalSpacing vs) {
-		dataGroups.push(new RowGroupSequence(dataGroups.pop(), vs));
+		dataGroups.peek().setVerticalSpacing(vs);
 	}
 
 	RowGroup peekResult() {
