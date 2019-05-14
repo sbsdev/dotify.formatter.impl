@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.daisy.dotify.api.formatter.BlockProperties;
+import org.daisy.dotify.api.formatter.FormatterConfiguration;
+import org.daisy.dotify.api.formatter.TextProperties;
 import org.daisy.dotify.formatter.impl.common.FormatterCoreContext;
 import org.daisy.dotify.formatter.impl.row.BlockMargin;
 import org.daisy.dotify.formatter.impl.row.Margin;
@@ -16,11 +18,15 @@ import org.junit.Test;
 import org.mockito.Mockito;
 @SuppressWarnings("javadoc")
 public class FormatterCoreImplTest {
+	private final TextProperties UND_TEXT_PROPERTIES = new TextProperties.Builder("und").build();
 	private final FormatterCoreContext context;
 	
 	public FormatterCoreImplTest() {
 		context = Mockito.mock(FormatterCoreContext.class);
 		Mockito.when(context.getSpaceCharacter()).thenReturn(' ');
+		FormatterConfiguration conf = Mockito.mock(FormatterConfiguration.class);
+		Mockito.when(conf.isMarkingCapitalLetters()).thenReturn(true);
+		Mockito.when(context.getConfiguration()).thenReturn(conf);
 	}
 
 	@Test
@@ -66,11 +72,11 @@ public class FormatterCoreImplTest {
 		formatter.startBlock(new BlockProperties.Builder().volumeKeepPriority(1).build());
 		formatter.startBlock(new BlockProperties.Builder().volumeKeepPriority(2).build());
 		formatter.startBlock(new BlockProperties.Builder().volumeKeepPriority(3).build());
-		formatter.addChars("  ", null); // adds a segment to this block to remain in sync with previous test result
+		formatter.addChars("  ", UND_TEXT_PROPERTIES); // adds a segment to this block to remain in sync with previous test result
 		formatter.endBlock();
-		formatter.addChars("  ", null); // adds a segment to this block to remain in sync with previous test result
+		formatter.addChars("  ", UND_TEXT_PROPERTIES); // adds a segment to this block to remain in sync with previous test result
 		formatter.endBlock();
-		formatter.addChars("  ", null); // adds a segment to this block to remain in sync with previous test result
+		formatter.addChars("  ", UND_TEXT_PROPERTIES); // adds a segment to this block to remain in sync with previous test result
 		formatter.endBlock();
 		
 		//Test
@@ -119,9 +125,9 @@ public class FormatterCoreImplTest {
 		formatter.endBlock();
 		formatter.startBlock(new BlockProperties.Builder().build());
 		formatter.endBlock();
-		formatter.addChars("  ", null); // adds a segment to this block to remain in sync with previous test result
+		formatter.addChars("  ", UND_TEXT_PROPERTIES); // adds a segment to this block to remain in sync with previous test result
 		formatter.endBlock();
-		formatter.addChars("  ", null); // adds a segment to this block to remain in sync with previous test result
+		formatter.addChars("  ", UND_TEXT_PROPERTIES); // adds a segment to this block to remain in sync with previous test result
 		formatter.endBlock();
 		
 		//Test

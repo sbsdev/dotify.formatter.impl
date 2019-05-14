@@ -1,16 +1,21 @@
 package org.daisy.dotify.formatter.impl.segment;
 
+import java.util.Objects;
+import java.util.Optional;
+
 import org.daisy.dotify.api.formatter.TextProperties;
 import org.daisy.dotify.api.translator.BrailleTranslatorResult;
 
 public class TextSegment implements Segment {
 	private final String chars;
 	private final TextProperties tp;
+	private final boolean markCapitalLetters;
 	private BrailleTranslatorResult cache;
 
-	public TextSegment(String chars, TextProperties tp) {
-		this.chars = chars;
-		this.tp = tp;
+	public TextSegment(String chars, TextProperties tp, boolean markCapitalLetters) {
+		this.chars = Objects.requireNonNull(chars);
+		this.tp = Objects.requireNonNull(tp);
+		this.markCapitalLetters = markCapitalLetters;
 	}
 	
 	public boolean canMakeResult() {
@@ -74,6 +79,36 @@ public class TextSegment implements Segment {
 			return false;
 		}
 		return true;
+	}
+
+	@Override
+	public String peek() {
+		return chars;
+	}
+
+	@Override
+	public String resolve() {
+		return chars;
+	}
+
+	@Override
+	public boolean isStatic() {
+		return true;
+	}
+
+	@Override
+	public Optional<String> getLocale() {
+		return Optional.of(tp.getLocale());
+	}
+
+	@Override
+	public boolean shouldHyphenate() {
+		return tp.isHyphenating();
+	}
+
+	@Override
+	public boolean shouldMarkCapitalLetters() {
+		return markCapitalLetters;
 	}
 
 }

@@ -1,5 +1,7 @@
 package org.daisy.dotify.formatter.impl.segment;
 
+import java.util.function.Supplier;
+
 import org.daisy.dotify.api.formatter.NumeralStyle;
 
 
@@ -8,18 +10,21 @@ import org.daisy.dotify.api.formatter.NumeralStyle;
  * 
  * @author Joel Håkansson
  */
-public class PageNumberReference extends SegmentBase {
+public class PageNumberReference implements Segment {
 	private final String refid;
 	private final NumeralStyle style;
+	private final boolean markCapitalLetters;
+	private Supplier<String> v=()->"";
+	private String resolved;
 	
-	public PageNumberReference(String refid, NumeralStyle style) {
-		this(refid, style, null);
+	public PageNumberReference(String refid, NumeralStyle style, boolean markCapitalLetters) {
+		this(refid, style, null, markCapitalLetters);
 	}
 	
-	public PageNumberReference(String refid, NumeralStyle style, MarkerValue marker) {
-		super(marker);
+	public PageNumberReference(String refid, NumeralStyle style, MarkerValue marker, boolean markCapitalLetters) {
 		this.refid = refid;
 		this.style = style;
+		this.markCapitalLetters = markCapitalLetters;
 	}
 	
 	/**
@@ -46,7 +51,7 @@ public class PageNumberReference extends SegmentBase {
 	@Override
 	public int hashCode() {
 		final int prime = 31;
-		int result = super.hashCode();
+		int result = 1;
 		result = prime * result + ((refid == null) ? 0 : refid.hashCode());
 		result = prime * result + ((style == null) ? 0 : style.hashCode());
 		return result;
@@ -57,7 +62,7 @@ public class PageNumberReference extends SegmentBase {
 		if (this == obj) {
 			return true;
 		}
-		if (!super.equals(obj)) {
+		if (obj == null) {
 			return false;
 		}
 		if (getClass() != obj.getClass()) {
@@ -76,5 +81,37 @@ public class PageNumberReference extends SegmentBase {
 		}
 		return true;
 	}
+
+	@Override
+	public String peek() {
+		return resolved==null?"00":resolved;
+	}
+
+	@Override
+	public String resolve() {
+		if (resolved==null) {
+			resolved = v.get();
+			if (resolved == null) {
+				resolved = "";
+			}
+		}
+		return resolved;
+	}
+	
+	public void setResolver(Supplier<String> v) {
+		this.resolved = null;
+		this.v = v;
+	}
+	
+	@Override
+	public boolean isStatic() {
+		return false;
+	}
+
+	@Override
+	public boolean shouldMarkCapitalLetters() {
+		return markCapitalLetters;
+	}
+
 
 }

@@ -53,4 +53,26 @@ public class Style implements Segment {
 	public SegmentType getSegmentType() {
 		return SegmentType.Style;
 	}
+
+	@Override
+	public String peek() {
+		// Style doesn't support this operation, since style segments are not meant to be sent to the translator.
+		// Styles are removed in SegmentProcessor.
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public String resolve() {
+		// Style doesn't support this operation, since style segments are not meant to be sent to the translator.
+		// Styles are removed in SegmentProcessor.
+		throw new UnsupportedOperationException();
+	}
+	
+	@Override
+	public boolean isStatic() {
+		// Style doesn't support this operation, since style segments are not meant to be sent to the translator.
+		// Styles are removed in SegmentProcessor.
+		throw new UnsupportedOperationException();
+	}
+
 }

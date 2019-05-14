@@ -1,5 +1,8 @@
 package org.daisy.dotify.formatter.impl.segment;
 
+import java.util.Optional;
+import java.util.function.Supplier;
+
 import org.daisy.dotify.api.formatter.DynamicContent;
 import org.daisy.dotify.api.formatter.TextProperties;
 
@@ -10,30 +13,30 @@ import org.daisy.dotify.api.formatter.TextProperties;
  * @author Joel Håkansson
  *
  */
-public class Evaluate extends SegmentBase {
+public class Evaluate implements Segment {
 	private final DynamicContent expression;
 	private final TextProperties props;
+	private final boolean markCapitalLetters;
+	private Supplier<String> v = ()->"";
+	private String resolved;
 	
 	/**
 	 * @param expression the expression
 	 * @param props the text properties
+	 * @param markCapitalLetters true if capital letters should be marked
 	 */
-	public Evaluate(DynamicContent expression, TextProperties props) {
-		this(expression, props, null);
+	public Evaluate(DynamicContent expression, TextProperties props, boolean markCapitalLetters) {
+		this(expression, props, markCapitalLetters, null);
 	}
 
-	public Evaluate(DynamicContent expression, TextProperties props, MarkerValue marker) {
-		super(marker);
+	public Evaluate(DynamicContent expression, TextProperties props, boolean markCapitalLetters, MarkerValue marker) {
 		this.expression = expression;
 		this.props = props;
+		this.markCapitalLetters = markCapitalLetters;
 	}
 	
 	public DynamicContent getExpression() {
 		return expression;
-	}
-
-	public TextProperties getTextProperties() {
-		return props;
 	}
 
 	@Override
@@ -44,7 +47,7 @@ public class Evaluate extends SegmentBase {
 	@Override
 	public int hashCode() {
 		final int prime = 31;
-		int result = super.hashCode();
+		int result = 1;
 		result = prime * result + ((expression == null) ? 0 : expression.hashCode());
 		result = prime * result + ((props == null) ? 0 : props.hashCode());
 		return result;
@@ -55,7 +58,7 @@ public class Evaluate extends SegmentBase {
 		if (this == obj) {
 			return true;
 		}
-		if (!super.equals(obj)) {
+		if (obj == null) {
 			return false;
 		}
 		if (getClass() != obj.getClass()) {
@@ -79,5 +82,45 @@ public class Evaluate extends SegmentBase {
 		return true;
 	}
 
+	@Override
+	public String peek() {
+		return resolved==null?v.get():resolved;
+	}
+
+	@Override
+	public String resolve() {
+		if (resolved==null) {
+			resolved = v.get();
+			if (resolved == null) {
+				resolved = "";
+			}
+		}
+		return resolved;
+	}
+
+	public void setResolver(Supplier<String> v) {
+		this.resolved = null;
+		this.v = v;
+	}
+
+	@Override
+	public boolean isStatic() {
+		return false;
+	}
 	
+	@Override
+	public Optional<String> getLocale() {
+		return Optional.of(props.getLocale());
+	}
+
+	@Override
+	public boolean shouldHyphenate() {
+		return props.isHyphenating();
+	}
+
+	@Override
+	public boolean shouldMarkCapitalLetters() {
+		return markCapitalLetters;
+	}
+
 }
