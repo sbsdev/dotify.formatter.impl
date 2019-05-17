@@ -8,7 +8,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.daisy.dotify.api.formatter.NumeralStyle;
@@ -383,11 +382,11 @@ class ExpressionImpl implements Expression {
 			Instant t = CONFIGURATION_WARNING_ISSUED.get(input[1].toString());
 			if (t==null || Instant.now().isAfter(t.plusSeconds(10))) {
 				CONFIGURATION_WARNING_ISSUED.put(input[1].toString(), Instant.now());
-				logger.log(Level.WARNING, "Locale not supported: " + input[1], e);
+				logger.warning("Locale not supported: " + input[1]);
 			}
 			return Integer.toString(val);
 		} catch (IntegerOutOfRange e) {
-			logger.log(Level.WARNING, "Integer out of range: " + input[0], e);
+			logger.warning("Integer out of range: " + input[0]);
 			return Integer.toString(val);
 		}
 	}
