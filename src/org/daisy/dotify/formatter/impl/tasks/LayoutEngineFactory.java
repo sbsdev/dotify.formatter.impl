@@ -39,7 +39,7 @@ public class LayoutEngineFactory implements TaskGroupFactory {
 	public LayoutEngineFactory() {
 		Set<TaskGroupInformation> tmp = new HashSet<>();
 		tmp.add(TaskGroupInformation.newConvertBuilder("obfl", Keys.PEF_FORMAT).build());
-		tmp.add(TaskGroupInformation.newConvertBuilder("obfl", Keys.TEXT_FORMAT).build());
+		tmp.add(TaskGroupInformation.newConvertBuilder("obfl", Keys.FORMATTED_TEXT_FORMAT).build());
 		information = Collections.unmodifiableSet(tmp);
 	}
 

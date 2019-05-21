@@ -90,7 +90,7 @@ public class LayoutEngineTask extends ReadWriteTask  {
 	 * @throws TaskSystemException if the instance could not be created 
 	 */
 	public LayoutEngineTask(Properties p2, TaskGroupSpecification spec, PagedMediaWriterFactoryMakerService pmw, FormatterEngineFactoryService fe, ValidatorFactoryMakerService vf, BrailleTranslatorFactoryMakerService translatorFactory) throws TaskSystemException {
-		super(buildName(spec.getOutputType().getIdentifier().toUpperCase()));
+		super(buildName(spec.getOutputType().getIdentifier().toUpperCase().replace('-', ' ')));
 		addDefaults(p2);
 		String translatorMode = getTranslationMode(p2, spec.getOutputType(), spec.getLocale(), translatorFactory);
 		this.spec = spec;
@@ -126,7 +126,7 @@ public class LayoutEngineTask extends ReadWriteTask  {
 										.orElse(null)
 									)
 							).orElseThrow(()->new TaskSystemException("No supported translator for " + locale));
-			case Keys.TEXT_FORMAT:
+			case Keys.FORMATTED_TEXT_FORMAT:
 				return p2.getProperty(TRANSLATE, TranslatorType.BYPASS.toString());
 			default:
 				throw new TaskSystemException("Unknown format: " + out);
@@ -137,7 +137,7 @@ public class LayoutEngineTask extends ReadWriteTask  {
 		switch (ext.getIdentifier()) {
 			case Keys.PEF_FORMAT:
 				return MediaTypes.PEF_MEDIA_TYPE;
-			case Keys.TEXT_FORMAT:
+			case Keys.FORMATTED_TEXT_FORMAT:
 				return MediaTypes.TEXT_MEDIA_TYPE;
 			default:
 				throw new TaskSystemException("Unknown format: " + ext);
