@@ -55,7 +55,7 @@ public class SegmentProcessorTest {
 		t = new TextSegment("ghi", tp, true);
 		segments.add(t);
 		expecteds.add(t);
-		FormatterContext fc = new FormatterContext(BrailleTranslatorFactoryMaker.newInstance(), null, null, conf);
+		FormatterContext fc = new FormatterContext(BrailleTranslatorFactoryMaker.newInstance(), null, conf);
 
 		SegmentProcessor sp = new SegmentProcessor("", segments, 100, null, null, 100, rdp.getMargins(), fc, rdp);
 		System.out.println(sp.getNext(LineProperties.DEFAULT).get().getChars());
@@ -78,7 +78,7 @@ public class SegmentProcessorTest {
 
 		BrailleTranslatorFactoryMakerService sr = Mockito.mock(BrailleTranslatorFactoryMakerService.class);
 		Mockito.when(sr.newTranslator(loc, mode)).thenReturn(trr);
-		FormatterContext fc = new FormatterContext(sr, null, null, conf);
+		FormatterContext fc = new FormatterContext(sr, null, conf);
 		SegmentProcessor sp = new SegmentProcessor("", segments, 100, null, null, 100, rdp.getMargins(), fc, rdp);
 		assertEquals("abcxdefyghi", sp.getNext(LineProperties.DEFAULT).get().getChars());
 	}
@@ -103,7 +103,7 @@ public class SegmentProcessorTest {
 
 		BrailleTranslatorFactoryMakerService sr = Mockito.mock(BrailleTranslatorFactoryMakerService.class);
 		Mockito.when(sr.newTranslator(loc, mode)).thenReturn(trr);
-		FormatterContext fc = new FormatterContext(sr, null, null, conf);
+		FormatterContext fc = new FormatterContext(sr, null, conf);
 		SegmentProcessor sp = new SegmentProcessor("", segments, 100, null, null, 100, rdp.getMargins(), fc, rdp);
 		assertEquals("abcxdefy", sp.getNext(LineProperties.DEFAULT).get().getChars());
 	}

@@ -7,7 +7,6 @@ import org.daisy.dotify.api.formatter.FormatterConfiguration;
 import org.daisy.dotify.api.formatter.LayoutMasterBuilder;
 import org.daisy.dotify.api.formatter.LayoutMasterProperties;
 import org.daisy.dotify.api.translator.BrailleTranslatorFactoryMakerService;
-import org.daisy.dotify.api.translator.MarkerProcessorFactoryMakerService;
 import org.daisy.dotify.api.translator.TextBorderFactoryMakerService;
 import org.daisy.dotify.formatter.impl.common.FormatterCoreContext;
 
@@ -23,8 +22,8 @@ public class FormatterContext extends FormatterCoreContext {
 	private final TransitionBuilderImpl transitionBuilder;
 	
 
-	public FormatterContext(BrailleTranslatorFactoryMakerService translatorFactory, TextBorderFactoryMakerService tbf, MarkerProcessorFactoryMakerService mpf, FormatterConfiguration config) {
-		super(translatorFactory, tbf, config, mpf);
+	public FormatterContext(BrailleTranslatorFactoryMakerService translatorFactory, TextBorderFactoryMakerService tbf, FormatterConfiguration config) {
+		super(translatorFactory, tbf, config);
 		this.masters = new HashMap<>();
 		this.collections = new HashMap<>();
 		this.tocs = new HashMap<>();

@@ -57,7 +57,6 @@ public class RegularBlockTest {
 		FormatterContext fc = new FormatterContext(
 				sr,
 				null,
-				null,
 				new FormatterConfiguration.Builder(loc, mode).build());
 
 		FormatterCoreImpl f = new FormatterCoreImpl(fc);

@@ -67,7 +67,6 @@ public class FormatterImplTest {
 		Formatter f1 = new FormatterImpl(
 				sr,
 				null,
-				null, 
 				new FormatterConfiguration.Builder(loc, mode).hyphenate(false).build());
 		f1.newLayoutMaster("main", new LayoutMasterProperties.Builder(50, 20).build());
 		

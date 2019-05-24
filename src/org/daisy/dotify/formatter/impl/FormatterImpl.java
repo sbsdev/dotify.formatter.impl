@@ -18,7 +18,6 @@ import org.daisy.dotify.api.formatter.TransitionBuilder;
 import org.daisy.dotify.api.formatter.VolumeTemplateBuilder;
 import org.daisy.dotify.api.formatter.VolumeTemplateProperties;
 import org.daisy.dotify.api.translator.BrailleTranslatorFactoryMakerService;
-import org.daisy.dotify.api.translator.MarkerProcessorFactoryMakerService;
 import org.daisy.dotify.api.translator.TextBorderFactoryMakerService;
 import org.daisy.dotify.api.writer.PagedMediaWriter;
 import org.daisy.dotify.formatter.impl.common.Volume;
@@ -52,8 +51,8 @@ class FormatterImpl implements Formatter {
 	 * @param locale a locale
 	 * @param mode a braille mode
 	 */
-	FormatterImpl(BrailleTranslatorFactoryMakerService translatorFactory, TextBorderFactoryMakerService tbf, MarkerProcessorFactoryMakerService mpf, String locale, String mode) {
-		this(translatorFactory, tbf, mpf, FormatterConfiguration.with(locale, mode).build());
+	FormatterImpl(BrailleTranslatorFactoryMakerService translatorFactory, TextBorderFactoryMakerService tbf, String locale, String mode) {
+		this(translatorFactory, tbf, FormatterConfiguration.with(locale, mode).build());
 	}
 
 	/**
@@ -63,8 +62,8 @@ class FormatterImpl implements Formatter {
 	 * @param mpf a marker processor factory maker service
 	 * @param config the configuration
 	 */
-	FormatterImpl(BrailleTranslatorFactoryMakerService translatorFactory, TextBorderFactoryMakerService tbf, MarkerProcessorFactoryMakerService mpf, FormatterConfiguration config) {
-		this.context = new LazyFormatterContext(translatorFactory, tbf, mpf, config);
+	FormatterImpl(BrailleTranslatorFactoryMakerService translatorFactory, TextBorderFactoryMakerService tbf, FormatterConfiguration config) {
+		this.context = new LazyFormatterContext(translatorFactory, tbf, config);
 		this.blocks = new Stack<>();
 		this.unopened = true;
 		this.volumeTemplates = new Stack<>();
