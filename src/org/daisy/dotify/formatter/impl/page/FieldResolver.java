@@ -48,7 +48,7 @@ class FieldResolver {
 
 			Optional<String> x =
 					r.map(v->{
-				BorderManager bm = new BorderManager(mp, fcontext, 0);
+				BorderManager bm = new BorderManager(mp, fcontext, 0, 0);
 				bm.addRow(new RowImpl.Builder(v.getChars())
 						.leftMargin(v.getLeftMargin())
 						.rightMargin(v.getRightMargin())

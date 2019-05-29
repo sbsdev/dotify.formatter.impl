@@ -45,7 +45,6 @@ public class PageImpl implements Page {
     private final ArrayList<String> identifiers;
 	private final int flowHeight;
 	private final PageTemplate template;
-	private final int pageMargin;
 	private final BorderManager finalRows;
 
 	private boolean hasRows;
@@ -74,8 +73,11 @@ public class PageImpl implements Page {
 		this.isVolBreakAllowed = true;
 		this.keepPreviousSheets = 0;
 		this.volumeBreakAfterPriority = VolumeKeepPriority.empty();
-		this.pageMargin = ((details.getPageId().getOrdinal() % 2 == 0) ? master.getInnerMargin() : master.getOuterMargin());
-		this.finalRows = new BorderManager(master, fcontext, pageMargin);
+		if (master.duplex() && details.getPageId().getOrdinal() % 2 == 1) {
+			this.finalRows = new BorderManager(master, fcontext, master.getOuterMargin(), master.getInnerMargin());
+		} else {
+			this.finalRows = new BorderManager(master, fcontext, master.getInnerMargin(), master.getOuterMargin());
+		}
 		this.hasRows = false;
 		this.filter = fcontext.getDefaultTranslator();
 		this.renderedHeaderRows = 0;

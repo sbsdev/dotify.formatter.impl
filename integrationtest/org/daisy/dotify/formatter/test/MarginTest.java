@@ -27,4 +27,9 @@ public class MarginTest extends AbstractFormatterEngineTest {
 	public void testCollapsingMargin_04() throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
 		testPEF("resource-files/margin/margin-nested2-input.obfl", "resource-files/margin/margin-nested2-expected.pef", false);
 	}
+	
+	@Test
+	public void testUnevenMargin_01() throws LayoutEngineException, IOException, PagedMediaWriterConfigurationException {
+		testPEF("resource-files/margin/margin-uneven-input.obfl", "resource-files/margin/margin-uneven-expected.pef", false);
+	}
 }
