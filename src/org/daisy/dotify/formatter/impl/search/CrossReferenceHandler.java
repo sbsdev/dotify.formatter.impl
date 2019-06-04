@@ -68,7 +68,7 @@ public class CrossReferenceHandler {
 	 * @return returns the volume number, one-based
 	 */
 	public Integer getVolumeNumber(String refid) {
-		return volumeRefs.get(refid);
+		return volumeRefs.get(refid, null, readOnly);
 	}
 	
 	public void setVolumeNumber(String refid, int volume) {
@@ -82,7 +82,7 @@ public class CrossReferenceHandler {
 	 * @return returns the page number, one-based
 	 */
 	public Integer getPageNumber(String refid) {
-		return pageRefs.get(refid);
+		return pageRefs.get(refid, null, readOnly);
 	}
 	
 	public void setPageNumber(String refid, int page) {
@@ -94,7 +94,7 @@ public class CrossReferenceHandler {
 	}
 	
 	public Iterable<AnchorData> getAnchorData(int volume) {
-		return anchorRefs.get(volume);
+		return anchorRefs.get(volume, null, readOnly);
 	}
 	
 	public void setAnchorData(int volume, Iterable<AnchorData> data) {
@@ -211,47 +211,47 @@ public class CrossReferenceHandler {
 	 * @return returns the number of volumes
 	 */
 	public int getVolumeCount() {
-		return variables.get(VOLUMES_KEY, 1);
+		return variables.get(VOLUMES_KEY, 1, readOnly);
 	}
 	
 	public int getSheetsInVolume(int volume) {
-		return variables.get(SHEETS_IN_VOLUME+volume, 0);
+		return variables.get(SHEETS_IN_VOLUME+volume, 0, readOnly);
 	}
 
 	public int getSheetsInDocument() {
-		return variables.get(SHEETS_IN_DOCUMENT, 0);
+		return variables.get(SHEETS_IN_DOCUMENT, 0, readOnly);
 	}
 	
 	public int getPagesInVolume(int volume) {
-		return variables.get(PAGES_IN_VOLUME+volume, 0);
+		return variables.get(PAGES_IN_VOLUME+volume, 0, readOnly);
 	}
 
 	public int getPagesInDocument() {
-		return variables.get(PAGES_IN_DOCUMENT, 0);
+		return variables.get(PAGES_IN_DOCUMENT, 0, readOnly);
 	}
 	
 	public boolean getBreakable(SheetIdentity ident) {
-		return breakable.get(ident, true);
+		return breakable.get(ident, true, readOnly);
 	}
 	
 	public Optional<TransitionProperties> getTransitionProperties(BlockLineLocation id) {
-		return Optional.ofNullable(transitionProperties.get(id));
+		return Optional.ofNullable(transitionProperties.get(id, null, readOnly));
 	}
 
 	public List<String> getGroupAnchors(BlockAddress blockId) {
-		return groupAnchors.get(blockId, Collections.emptyList());
+		return groupAnchors.get(blockId, Collections.emptyList(), readOnly);
 	}
 
 	public List<Marker> getGroupMarkers(BlockAddress blockId) {
-		return groupMarkers.get(blockId, Collections.emptyList());
+		return groupMarkers.get(blockId, Collections.emptyList(), readOnly);
 	}
 	
 	public List<String> getGroupIdentifiers(BlockAddress blockId) {
-		return groupIdentifiers.get(blockId, Collections.emptyList());
+		return groupIdentifiers.get(blockId, Collections.emptyList(), readOnly);
 	}
 	
 	public int getRowCount(BlockAddress blockId) {
-		return rowCount.get(blockId, Integer.MAX_VALUE);
+		return rowCount.get(blockId, Integer.MAX_VALUE, readOnly);
 	}
 	
 	public void keepPageDetails(PageDetails value) {
@@ -306,7 +306,7 @@ public class CrossReferenceHandler {
 	}
 
 	public Optional<PageDetails> getNextPageDetailsInSequence(BlockLineLocation id) {
-		return Optional.ofNullable(nextPageDetails.get(id));
+		return Optional.ofNullable(nextPageDetails.get(id, null, readOnly));
 	}
 	
 	public void setNextPageDetailsInSequence(BlockLineLocation id, PageDetails details) {

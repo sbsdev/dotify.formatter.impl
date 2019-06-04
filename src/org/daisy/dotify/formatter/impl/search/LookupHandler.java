@@ -7,10 +7,40 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * <p>Provides a way to keep track of changes to key/value mappings.
- * If the value of a key is changed, {@link #isDirty()} will return true.
- * The value can be changed either via {@link #put(Object, Object)}
- * or via {@link #commit()}.</p>
+ * <p>Provides a way for an iterative process to get and put values out 
+ * of temporal order. If the value of a key is changed after it has been
+ * requested with one of the <code>get</code> methods, the {@link LookupHandler} is 
+ * marked as "dirty".
+ * When a new iteration is started, the dirty status is reset by calling
+ * {@link #setDirty(boolean)}.
+ * If all requested values between calls to {@link #setDirty(boolean)} are
+ * unchanged, {@link #isDirty()} will return false.</p>
+ * 
+ * <p>A typical use case involves self-referential output. Here's an
+ * example that uses {@link LookupHandler} to calculate the length of
+ * a string that indicates its own length:</p>
+ * 
+ * <pre>
+String charCountKey = "character-count";
+LookupHandler&lt;String, Integer&gt; variables = new LookupHandler&lt;&gt;();
+String message;
+do {
+	variables.setDirty(false);
+	message = String.format("This string is %s characters long.",
+			// 0 is returned when no value has been put
+			variables.get(charCountKey, 0)  
+		);
+	variables.put(charCountKey, message.length());
+} while (variables.isDirty());
+ * </pre>
+ * 
+ * <p>A value can be changed in one of two ways, either via 
+ * {@link #put(Object, Object)} (as seen above) or via {@link #keep(Object, Object)}
+ * followed by {@link #commit()}. The purpose of the latter is
+ * to support <em>multiple</em> puts of the same key with (possibly) different values
+ * within a single iteration. Once the iteration is completed, a call to {@link #commit()}
+ * stores the last kept value. Interleaving calls to {@link #get(Object)}
+ * will not be affected by the kept, but uncommitted, values.</p>
  * 
  * <p>Note that, if a key is requested that is not in the map, the value
  * of this key is also considered to have changed. It is therefore
@@ -64,10 +94,29 @@ class LookupHandler<K, V> {
 	 * if this map contains no mapping for the key
 	 */
 	V get(K key, V def) {
-		requestedKeys.add(key);
+		return get(key, def, false);
+	}
+	
+	/**
+	 * Returns the value to which the specified key is mapped, or the default value 
+	 * if this map contains no mapping for the key.
+	 * @param key the key
+	 * @param def the default value
+	 * @param traceless when true, the integrity mechanism is bypassed. In other
+	 * 		words, a value can be retrieved without affecting the value 
+	 * 		of {@link #isDirty()}. Use with care.
+	 * @return the value to which the specified key is mapped, or the default value 
+	 * if this map contains no mapping for the key
+	 */
+	V get(K key, V def, boolean traceless) {
+		if (!traceless) {
+			requestedKeys.add(key);
+		}
 		V ret = keyValueMap.get(key);
 		if (ret==null) {
-			dirty = true;
+			if (!traceless) {
+				dirty = true;
+			}
 			//ret is null here, so if def is also null, either variable can be returned
 			return def;
 		} else {
