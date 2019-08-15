@@ -4,9 +4,12 @@ import java.util.NoSuchElementException;
 
 /**
  * <p>Provides a simple data type for volume keep priority, where 1 represents the highest priority
- * and 9 the lowest. This class is modeled on Java's Optional and provides similar
- * capabilities. As with Optional, setting a field with this type to null is strongly
- * discouraged. Instead, use {@link #empty()} to create an empty instance.</p>
+ * and 9 the lowest. A high priority means that we do more effort to avoid splitting a volume within
+ * the area the priority is declared on.</p>
+ *
+ * <p>This class is modeled on Java's Optional and provides similar capabilities. As with Optional,
+ * setting a field with this type to null is strongly discouraged. Instead, use {@link #empty()} to
+ * create an empty instance.</p>
  * 
  * <p>The primary reason for creating a special class is to make the meaning of the 
  * number contained in it clearer. But in addition, it makes it possible to enforce 
