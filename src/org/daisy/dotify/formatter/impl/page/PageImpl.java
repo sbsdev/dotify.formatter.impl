@@ -399,4 +399,7 @@ public class PageImpl implements Page {
 		return details;
 	}
 
+	boolean hasRows() {
+		return hasRows;
+	}
 }
