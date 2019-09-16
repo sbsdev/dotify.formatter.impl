@@ -268,11 +268,13 @@ public class PageSequenceBuilder2 {
 	private PageImpl nextPageInner(int pageNumberOffset, boolean hyphenateLastLine, Optional<TransitionContent> transitionContent, boolean wasSplitInSequence, boolean isFirst) throws PaginatorException, RestartPaginationException // pagination must be restarted in PageStructBuilder.paginateInner
 	{
 		PageImpl current = newPage(pageNumberOffset);
-		if (pcbl!=null) {
+		if (pcbl!=null
 			// Store a mapping from the BlockLineLocation of the last line of the page before the
 			// previous page to the BlockLineLocation of the last line of the previous page. This
 			// info is used (in the next iteration) in SheetDataSource to obtain info about the
 			// verso page of a sheet when we are on a recto page of that sheet.
+			&& transitionContent.isPresent() && transitionContent.get().getType()==TransitionContent.Type.INTERRUPT) {
+
 			blockContext.getRefs().setNextPageDetailsInSequence(pcbl, current.getDetails());
 		}
 		if (nextEmpty) {
@@ -477,7 +479,9 @@ public class PageSequenceBuilder2 {
 					// Determine whether there is a block boundary on the page, with enough space
 					// available after this point for sequence-interrupted and any-interrupted.
 					boolean hasBlockBoundary = blockBoundary.isPresent()?blockBoundary.get():res.getHead().stream().filter(r->r.isLastRowGroupInBlock()).findFirst().isPresent();
-					bc.getRefs().keepTransitionProperties(current.getDetails().getPageLocation(), new TransitionProperties(current.getAvoidVolumeBreakAfter(), hasBlockBoundary));
+					if (transitionContent.isPresent() && transitionContent.get().getType()==TransitionContent.Type.INTERRUPT) {
+						bc.getRefs().keepTransitionProperties(current.getDetails().getPageLocation(), new TransitionProperties(current.getAvoidVolumeBreakAfter(), hasBlockBoundary));
+					}
 				}
 				// Discard collapsed margins, but retain their properties (identifiers, markers,
 				// keep-with-next-sheets, keep-with-previous-sheets).
